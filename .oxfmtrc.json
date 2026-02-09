@@ -1,0 +1,6 @@
+{
+  "ignorePatterns": ["base-ui"],
+  "semi": false,
+  "singleQuote": true,
+  "experimentalSortImports": {}
+}
