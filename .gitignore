@@ -1,4 +1,5 @@
 node_modules
 dist
-base-ui
+nuxt-ui
+coss
 .worktrees

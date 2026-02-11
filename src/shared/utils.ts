@@ -1,5 +1,4 @@
 import type { JSX } from 'solid-js'
-
 import { createUniqueId } from 'solid-js'
 
 /**

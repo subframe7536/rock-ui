@@ -5,7 +5,7 @@
     "jsxImportSource": "solid-js",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["vite/client", "@testing-library/jest-dom"],
+    "types": ["vite/client", "@testing-library/dom", "@types/node"],
     "allowJs": true,
     "strict": true,
     "strictNullChecks": true,

@@ -1,4 +1,5 @@
 import path from 'node:path'
+
 import uno from 'unocss/vite'
 import solid from 'vite-plugin-solid'
 import { defineConfig } from 'vitest/config'

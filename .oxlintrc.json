@@ -7,12 +7,6 @@
   },
   "overrides": [
     {
-      "files": ["script/*.ts"],
-      "rules": {
-        "no-unused-expressions": "off"
-      }
-    },
-    {
       "files": ["src/**/*.tsx", "playground/**/*.tsx"],
       "jsPlugins": ["eslint-plugin-solid", "@unocss/eslint-plugin"],
       "rules": {
@@ -160,7 +154,7 @@
       }
     ],
     "import/consistent-type-specifier-style": "error",
-    "import/sort-imports": "error",
+    "import/sort-imports": "off",
     "import/no-duplicates": "error",
     "import/no-import-assign": "error",
     "import/no-self-import": "error",

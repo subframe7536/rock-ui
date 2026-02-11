@@ -1,9 +1,7 @@
 import type { ComponentProps, JSX } from 'solid-js'
-
 import { splitProps, createMemo } from 'solid-js'
 
 import type { ButtonVariantProps } from './button.class'
-
 import { buttonVariants } from './button.class'
 
 export interface ButtonProps extends ComponentProps<'button'>, ButtonVariantProps {
@@ -54,7 +52,7 @@ export const Button = (props: ButtonProps) => {
       return null
     }
     if (local.icon && local.trailing && local.children) {
-      return <span class="flex items-center ml-auto">{local.icon}</span> // ml-auto push to right if needed, or just normal flow
+      return <span class="ml-auto flex items-center">{local.icon}</span> // ml-auto push to right if needed, or just normal flow
     }
     return null
   }

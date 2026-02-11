@@ -1,6 +1,5 @@
-import type { InlineConfig } from 'tsdown'
-
 import { unocss } from 'rolldown-plugin-unocss'
+import type { InlineConfig } from 'tsdown'
 import { defineConfig } from 'tsdown'
 import solid from 'vite-plugin-solid'
 

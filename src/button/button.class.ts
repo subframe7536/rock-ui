@@ -1,5 +1,4 @@
 import type { VariantProps } from 'cls-variant'
-
 import { cva } from 'cls-variant/cva'
 
 export const buttonVariants = cva(
