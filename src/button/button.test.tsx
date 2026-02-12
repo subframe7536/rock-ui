@@ -69,6 +69,47 @@ describe('Button', () => {
     expect(button.className).toContain('h-8')
   })
 
+  test('applies xs icon slot classes for leading and trailing', () => {
+    const screen = render(() => (
+      <Button size="xs" leading={<span>L</span>} trailing={<span>T</span>}>
+        Label
+      </Button>
+    ))
+
+    const button = screen.getByRole('button', { name: 'LLabelT' })
+    const leading = button.querySelector('[data-slot="leading"]')
+    const trailing = button.querySelector('[data-slot="trailing"]')
+
+    expect(leading?.className).toContain('text-xs')
+    expect(trailing?.className).toContain('text-xs')
+  })
+
+  test('applies xl icon slot classes for leading and trailing', () => {
+    const screen = render(() => (
+      <Button size="xl" leading={<span>L</span>} trailing={<span>T</span>}>
+        Label
+      </Button>
+    ))
+
+    const button = screen.getByRole('button', { name: 'LLabelT' })
+    const leading = button.querySelector('[data-slot="leading"]')
+    const trailing = button.querySelector('[data-slot="trailing"]')
+
+    expect(leading?.className).toContain('text-base')
+    expect(trailing?.className).toContain('text-base')
+  })
+
+  test('applies icon-xl icon slot class', () => {
+    const screen = render(() => (
+      <Button size="icon-xl" leading={<span>L</span>} aria-label="Icon XL" />
+    ))
+
+    const button = screen.getByRole('button', { name: 'Icon XL' })
+    const leading = button.querySelector('[data-slot="leading"]')
+
+    expect(leading?.className).toContain('text-lg')
+  })
+
   test('renders leading and trailing content in normal state', () => {
     const screen = render(() => (
       <Button

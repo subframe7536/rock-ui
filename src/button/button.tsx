@@ -7,7 +7,7 @@ import { useComponentIcons } from '../shared/use-component-icons'
 import { callHandler, cn } from '../shared/utils'
 
 import type { ButtonVariantProps } from './button.class'
-import { buttonVariants } from './button.class'
+import { buttonIconSizeVariants, buttonVariants } from './button.class'
 
 /**
  * Class overrides for Button slots.
@@ -97,7 +97,7 @@ function isPromiseLike(value: unknown): value is PromiseLikeWithFinally {
 /**
  * Rock UI Button built on top of Kobalte `Button.Root` with polymorphic `as` support.
  */
-export const Button = <T extends ValidComponent = 'button'>(props: ButtonProps<T>) => {
+export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T>): JSX.Element {
   const [local, rest] = splitProps(props as ButtonProps, [
     'class',
     'variant',
@@ -111,7 +111,6 @@ export const Button = <T extends ValidComponent = 'button'>(props: ButtonProps<T
     'loadingIcon',
     'classes',
     'onClick',
-    'onclick',
     'children',
   ])
 
@@ -121,15 +120,10 @@ export const Button = <T extends ValidComponent = 'button'>(props: ButtonProps<T
     Boolean(local.loading || (local.loadingAuto && loadingAutoState())),
   )
 
-  const buttonClass = createMemo(() => {
-    return buttonVariants(
-      {
-        variant: local.variant,
-        size: local.size,
-      },
-      isLoading() && 'cursor-wait opacity-80',
-      local.class,
-    )
+  const iconSizeClass = createMemo(() => {
+    return buttonIconSizeVariants({
+      size: local.size,
+    })
   })
 
   const { isLeading, leadingIcon, trailingIcon } = useComponentIcons(() => ({
@@ -153,8 +147,7 @@ export const Button = <T extends ValidComponent = 'button'>(props: ButtonProps<T
       return
     }
 
-    const handler = local.onClick ?? local.onclick
-    const { result: handlerResult, defaultPrevented } = callHandler(event, handler)
+    const { result: handlerResult, defaultPrevented } = callHandler(event, local.onClick)
 
     if (!local.loadingAuto || defaultPrevented || isLoading() || !isPromiseLike(handlerResult)) {
       return
@@ -169,7 +162,14 @@ export const Button = <T extends ValidComponent = 'button'>(props: ButtonProps<T
   return (
     <KobalteButton.Root
       data-slot="button"
-      class={buttonClass()}
+      class={buttonVariants(
+        {
+          variant: local.variant,
+          size: local.size,
+        },
+        isLoading() && 'cursor-wait opacity-80',
+        local.class,
+      )}
       aria-busy={isLoading() ? true : undefined}
       data-loading={isLoading() ? '' : undefined}
       disabled={isLoading() || local.disabled}
@@ -181,6 +181,7 @@ export const Button = <T extends ValidComponent = 'button'>(props: ButtonProps<T
           data-slot="leading"
           class={cn(
             'flex items-center',
+            iconSizeClass(),
             local.classes?.leading,
             isLoading() && local.classes?.loading,
           )}
@@ -198,7 +199,10 @@ export const Button = <T extends ValidComponent = 'button'>(props: ButtonProps<T
 
       <Show when={trailingIcon()}>
         {(trailingResolved) => (
-          <span data-slot="trailing" class={cn('flex items-center', local.classes?.trailing)}>
+          <span
+            data-slot="trailing"
+            class={cn('flex items-center', iconSizeClass(), local.classes?.trailing)}
+          >
             {trailingResolved()}
           </span>
         )}

@@ -8,7 +8,16 @@ export interface UseComponentIconsProps {
   loadingIcon?: JSX.Element
 }
 
-export function useComponentIcons(componentProps: Accessor<UseComponentIconsProps>) {
+interface UseComponentIconsReturn {
+  isLeading: Accessor<boolean>
+  isTrailing: Accessor<boolean>
+  leadingIcon: Accessor<JSX.Element>
+  trailingIcon: Accessor<JSX.Element>
+}
+
+export function useComponentIcons(
+  componentProps: Accessor<UseComponentIconsProps>,
+): UseComponentIconsReturn {
   const props = createMemo(componentProps)
 
   const leadingIcon = createMemo(() => {

@@ -16,6 +16,11 @@ export default defineConfig({
     presetFunctionCompletion(),
   ],
   transformers: [transformerVariantGroup()],
+  content: {
+    pipeline: {
+      include: ['src/**/*.tsx', 'src/**/*.class.ts'],
+    },
+  },
   theme: {
     animation: {
       durations: {

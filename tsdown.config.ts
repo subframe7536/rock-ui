@@ -8,7 +8,7 @@ const base: InlineConfig = {
   entry,
   unbundle: true,
   exports: true,
-  external: ['@solid-primitives/props', '@solid-primitives/utils'],
+  external: ['@solid-primitives/props', '@solid-primitives/utils', '@kobalte/core'],
 }
 // export both js and jsx
 export default defineConfig([
