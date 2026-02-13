@@ -1,0 +1,14 @@
+## Solid Reactivity Rules For Ports
+
+These rules apply to all future component ports:
+
+1. Treat `useId` as an accessor built with `createMemo`; always read IDs with `id()`.
+2. Do NOT use `createEffect` to mirror reactive values into signals.
+3. Use Solid `children` API (`children(() => ...)`) for child normalization and slot rendering:
+  https://docs.solidjs.com/reference/component-apis/children
+4. Use `mergeProps` to define default props when default key count is 3 or more.
+5. Only handle `camelCase` event listener (like `onClick`)
+6. For new shared/component contexts
+  1. Use `createContextProvider` (from `src/shared/create-context-provider.ts`) to define `Provider + hook` pairs instead of ad-hoc `createContext` boilerplate.
+  2. Use getter-based context values for reactive context fields (for example: `get name() { return local.name }`) instead of accessor.
+  3. Set default value to `null` if the context is optional, and check if it is null before using it or use `ctx?.key`

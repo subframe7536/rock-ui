@@ -149,7 +149,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
 
     const { result: handlerResult, defaultPrevented } = callHandler(event, local.onClick)
 
-    if (!local.loadingAuto || defaultPrevented || isLoading() || !isPromiseLike(handlerResult)) {
+    if (!local.loadingAuto || defaultPrevented || !isPromiseLike(handlerResult)) {
       return
     }
 

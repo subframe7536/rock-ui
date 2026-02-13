@@ -221,7 +221,7 @@ describe('Button', () => {
     const deferred = createDeferred()
     const onclick = vi.fn(() => deferred.promise)
     const screen = render(() => (
-      <Button loadingAuto onclick={onclick}>
+      <Button loadingAuto onClick={onclick}>
         Submit
       </Button>
     ))

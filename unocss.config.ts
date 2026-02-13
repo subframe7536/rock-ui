@@ -18,7 +18,7 @@ export default defineConfig({
   transformers: [transformerVariantGroup()],
   content: {
     pipeline: {
-      include: ['src/**/*.tsx', 'src/**/*.class.ts'],
+      include: ['**/*.tsx', '**/*.class.ts', 'node_modules/**/*.*'],
     },
   },
   theme: {

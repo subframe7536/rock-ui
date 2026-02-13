@@ -1,5 +1,5 @@
-import type { JSX } from 'solid-js'
-import { createUniqueId } from 'solid-js'
+import type { Accessor, JSX } from 'solid-js'
+import { createMemo, createUniqueId } from 'solid-js'
 
 /**
  * Generates a unique identifier for accessibility and form association.
@@ -16,24 +16,31 @@ import { createUniqueId } from 'solid-js'
  * @example
  * ```tsx
  * // Auto-generated ID
- * const id = useId() // 'rock-1'
+ * const id = useId()
+ * id() // 'rock-1'
  *
  * // With custom prefix
  * const [local, rest] = splitProps(props, ['id'])
- * const id = useId(() => local.id, 'dialog') // 'dialog-cl-2'
+ * const id = useId(() => local.id, 'dialog')
+ * id() // 'dialog-cl-2'
  * ```
  */
-export function useId(deterministicId?: () => string | null | undefined, prefix?: string): string {
+export function useId(
+  deterministicId?: () => string | null | undefined,
+  prefix?: string,
+): Accessor<string> {
   // Get the actual value if it's a function
-  const id = typeof deterministicId === 'function' ? deterministicId() : deterministicId
+  return createMemo(() => {
+    const id = typeof deterministicId === 'function' ? deterministicId() : deterministicId
 
-  // Return deterministic ID if provided
-  if (id) {
-    return id
-  }
+    // Return deterministic ID if provided
+    if (id) {
+      return id
+    }
 
-  // Fallback to auto-incrementing counter
-  return `${prefix}-${createUniqueId()}`
+    // Fallback to auto-incrementing counter
+    return `${prefix}-${createUniqueId()}`
+  })
 }
 
 export { combineStyle } from '@solid-primitives/props'
