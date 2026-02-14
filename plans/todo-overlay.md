@@ -7,4 +7,4 @@
 - [ ] popover | nuxt:Popover.vue | coss:popover.tsx | rock:src/popover/ | tests+exports
 - [ ] slideover | nuxt:Slideover.vue | coss:sheet.tsx | rock:src/slideover/ | tests+exports
 - [ ] toast | nuxt:Toast.vue | coss:toast.tsx | rock:src/toast/ | tests+exports
-- [ ] tooltip | nuxt:Tooltip.vue | coss:tooltip.tsx | rock:src/tooltip/ | tests+exports
+- [x] tooltip | nuxt:Tooltip.vue | coss:tooltip.tsx | rock:src/tooltip/ | tests+exports
