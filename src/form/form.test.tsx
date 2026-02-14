@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from '@solidjs/testing-library'
+import { onMount } from 'solid-js'
 import { describe, expect, test, vi } from 'vitest'
 
 import { FormField } from '../form-field'
@@ -6,6 +7,7 @@ import { useFormField } from '../form-field/form-field-context'
 
 import type { FormSubmitEvent } from './form'
 import { Form } from './form'
+import { useFormContext } from './form-context'
 
 interface TestState {
   value: string
@@ -32,6 +34,16 @@ function TestInput(props: { state: TestState; deferInputValidation?: boolean }) 
       onFocus={() => field.emitFormFocus()}
     />
   )
+}
+
+function SetErrorsOnMount() {
+  const formContext = useFormContext()
+
+  onMount(() => {
+    formContext?.setErrors([{ name: 'value', message: 'Manual error' }])
+  })
+
+  return null
 }
 
 describe('Form', () => {
@@ -147,5 +159,68 @@ describe('Form', () => {
       expect(onSubmit).toHaveBeenCalledTimes(1)
     })
     expect(onError).not.toHaveBeenCalled()
+  })
+
+  test('supports setErrors through form context', async () => {
+    const state: TestState = { value: '' }
+
+    const screen = render(() => (
+      <Form state={state} validate={() => []}>
+        <FormField name="value" label="Value">
+          <TestInput state={state} />
+        </FormField>
+        <SetErrorsOnMount />
+      </Form>
+    ))
+
+    await waitFor(() => {
+      expect(screen.getByText('Manual error')).not.toBeNull()
+    })
+    expect(screen.getByTestId('input').getAttribute('aria-invalid')).toBe('true')
+  })
+
+  test('validates on blur when validateOn is blur', async () => {
+    const state: TestState = { value: '' }
+
+    const screen = render(() => (
+      <Form
+        state={state}
+        validateOn={['blur']}
+        validateOnInputDelay={0}
+        validate={(currentState) => {
+          if (currentState?.value === 'valid') {
+            return []
+          }
+
+          return [{ name: 'value', message: 'Error message' }]
+        }}
+      >
+        <FormField name="value" label="Value">
+          <TestInput state={state} />
+        </FormField>
+      </Form>
+    ))
+
+    const input = screen.getByTestId('input')
+
+    await fireEvent.input(input, { target: { value: 'invalid' } })
+    await waitFor(() => {
+      expect(screen.queryByText('Error message')).toBeNull()
+    })
+
+    await fireEvent.blur(input)
+    await waitFor(() => {
+      expect(screen.getByText('Error message')).not.toBeNull()
+    })
+
+    await fireEvent.input(input, { target: { value: 'valid' } })
+    await waitFor(() => {
+      expect(screen.getByText('Error message')).not.toBeNull()
+    })
+
+    await fireEvent.blur(input)
+    await waitFor(() => {
+      expect(screen.queryByText('Error message')).toBeNull()
+    })
   })
 })

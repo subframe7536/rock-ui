@@ -8,4 +8,4 @@ export interface FieldGroupContextValue {
 }
 
 export const [FieldGroupProvider, useFieldGroupContext] =
-  createContextProvider<FieldGroupContextValue>('FieldGroup')
+  createContextProvider<FieldGroupContextValue | null>('FieldGroup', null)

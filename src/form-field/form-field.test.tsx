@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 
 import { Form } from '../form'
 import { useFormContext } from '../form/form-context'
+import { RadioGroup } from '../radio-group'
 
 import { FormField } from './form-field'
 import { useFormField } from './form-field-context'
@@ -124,5 +125,20 @@ describe('FormField', () => {
     const screen = render(() => <FieldControl />)
 
     expect(screen.getByTestId('control')).not.toBeNull()
+  })
+
+  test('does not bind form-field label for grouped controls', () => {
+    const state = { value: '' }
+
+    const screen = render(() => (
+      <Form state={state} validate={() => []}>
+        <FormField name="value" label="Radio group">
+          <RadioGroup id="plan-input" items={['Basic', 'Pro']} value={state.value} />
+        </FormField>
+      </Form>
+    ))
+
+    const label = screen.getByText('Radio group')
+    expect(label.getAttribute('for')).toBeNull()
   })
 })

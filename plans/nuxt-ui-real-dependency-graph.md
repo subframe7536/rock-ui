@@ -99,86 +99,86 @@ Derived from source imports in `nuxt-ui/src/runtime/components/<Pascal>.vue` for
 
 ## Layout
 
-| Component | Scoped deps | Out-of-scope deps |
-| --- | --- | --- |
-| `app` | — | `OverlayProvider`, `Toaster` |
-| `container` | — | — |
-| `error` | `button` | — |
-| `footer` | `container` | — |
-| `header` | `button`, `container`, `drawer`, `link`, `modal`, `slideover` | — |
-| `main` | — | — |
-| `theme` | — | — |
+| Component   | Scoped deps                                                   | Out-of-scope deps            |
+| ----------- | ------------------------------------------------------------- | ---------------------------- |
+| `app`       | —                                                             | `OverlayProvider`, `Toaster` |
+| `container` | —                                                             | —                            |
+| `error`     | `button`                                                      | —                            |
+| `footer`    | `container`                                                   | —                            |
+| `header`    | `button`, `container`, `drawer`, `link`, `modal`, `slideover` | —                            |
+| `main`      | —                                                             | —                            |
+| `theme`     | —                                                             | —                            |
 
 ## Element
 
-| Component | Scoped deps | Out-of-scope deps |
-| --- | --- | --- |
-| `alert` | `avatar`, `button`, `icon` | — |
-| `avatar` | `chip`, `icon` | — |
-| `avatar-group` | `avatar` | — |
-| `badge` | `avatar`, `icon` | — |
-| `banner` | `button`, `container`, `icon`, `link` | — |
-| `button` | `avatar`, `icon`, `link` | `LinkBase` |
-| `calendar` | `button` | — |
-| `card` | — | — |
-| `chip` | — | — |
-| `collapsible` | — | — |
-| `field-group` | — | — |
-| `icon` | — | — |
-| `kbd` | — | — |
-| `progress` | — | — |
-| `separator` | `avatar`, `icon` | — |
-| `skeleton` | — | — |
+| Component      | Scoped deps                           | Out-of-scope deps |
+| -------------- | ------------------------------------- | ----------------- |
+| `alert`        | `avatar`, `button`, `icon`            | —                 |
+| `avatar`       | `chip`, `icon`                        | —                 |
+| `avatar-group` | `avatar`                              | —                 |
+| `badge`        | `avatar`, `icon`                      | —                 |
+| `banner`       | `button`, `container`, `icon`, `link` | —                 |
+| `button`       | `avatar`, `icon`, `link`              | `LinkBase`        |
+| `calendar`     | `button`                              | —                 |
+| `card`         | —                                     | —                 |
+| `chip`         | —                                     | —                 |
+| `collapsible`  | —                                     | —                 |
+| `field-group`  | —                                     | —                 |
+| `icon`         | —                                     | —                 |
+| `kbd`          | —                                     | —                 |
+| `progress`     | —                                     | —                 |
+| `separator`    | `avatar`, `icon`                      | —                 |
+| `skeleton`     | —                                     | —                 |
 
 ## Form
 
-| Component | Scoped deps | Out-of-scope deps |
-| --- | --- | --- |
-| `checkbox` | `icon` | — |
-| `checkbox-group` | `checkbox` | — |
-| `color-picker` | — | — |
-| `file-upload` | `avatar`, `button`, `icon` | — |
-| `form` | — | — |
-| `form-field` | — | — |
-| `input` | `avatar`, `icon` | — |
-| `input-date` | `avatar`, `icon` | — |
-| `input-menu` | `avatar`, `button`, `chip`, `icon` | — |
-| `input-number` | `button` | — |
-| `input-tags` | `avatar`, `icon` | — |
-| `input-time` | `avatar`, `icon` | — |
-| `pin-input` | — | — |
-| `radio-group` | — | — |
-| `select` | `avatar`, `chip`, `icon` | — |
-| `select-menu` | `avatar`, `button`, `chip`, `icon`, `input` | — |
-| `slider` | `tooltip` | — |
-| `switch` | `icon` | — |
-| `textarea` | `avatar`, `icon` | — |
+| Component        | Scoped deps                                 | Out-of-scope deps |
+| ---------------- | ------------------------------------------- | ----------------- |
+| `checkbox`       | `icon`                                      | —                 |
+| `checkbox-group` | `checkbox`                                  | —                 |
+| `color-picker`   | —                                           | —                 |
+| `file-upload`    | `avatar`, `button`, `icon`                  | —                 |
+| `form`           | —                                           | —                 |
+| `form-field`     | —                                           | —                 |
+| `input`          | `avatar`, `icon`                            | —                 |
+| `input-date`     | `avatar`, `icon`                            | —                 |
+| `input-menu`     | `avatar`, `button`, `chip`, `icon`          | —                 |
+| `input-number`   | `button`                                    | —                 |
+| `input-tags`     | `avatar`, `icon`                            | —                 |
+| `input-time`     | `avatar`, `icon`                            | —                 |
+| `pin-input`      | —                                           | —                 |
+| `radio-group`    | —                                           | —                 |
+| `select`         | `avatar`, `chip`, `icon`                    | —                 |
+| `select-menu`    | `avatar`, `button`, `chip`, `icon`, `input` | —                 |
+| `slider`         | `tooltip`                                   | —                 |
+| `switch`         | `icon`                                      | —                 |
+| `textarea`       | `avatar`, `icon`                            | —                 |
 
 ## Navigation
 
-| Component | Scoped deps | Out-of-scope deps |
-| --- | --- | --- |
-| `breadcrumb` | `avatar`, `icon`, `link` | `LinkBase` |
-| `command-palette` | `avatar`, `button`, `chip`, `icon`, `input`, `kbd`, `link` | `LinkBase` |
-| `footer-columns` | `icon`, `link` | `LinkBase` |
-| `link` | — | `LinkBase` |
-| `navigation-menu` | `avatar`, `badge`, `icon`, `link`, `popover`, `tooltip` | `LinkBase` |
-| `pagination` | `button` | — |
-| `stepper` | `icon` | — |
-| `tabs` | `avatar`, `badge`, `icon` | — |
+| Component         | Scoped deps                                                | Out-of-scope deps |
+| ----------------- | ---------------------------------------------------------- | ----------------- |
+| `breadcrumb`      | `avatar`, `icon`, `link`                                   | `LinkBase`        |
+| `command-palette` | `avatar`, `button`, `chip`, `icon`, `input`, `kbd`, `link` | `LinkBase`        |
+| `footer-columns`  | `icon`, `link`                                             | `LinkBase`        |
+| `link`            | —                                                          | `LinkBase`        |
+| `navigation-menu` | `avatar`, `badge`, `icon`, `link`, `popover`, `tooltip`    | `LinkBase`        |
+| `pagination`      | `button`                                                   | —                 |
+| `stepper`         | `icon`                                                     | —                 |
+| `tabs`            | `avatar`, `badge`, `icon`                                  | —                 |
 
 ## Overlay
 
-| Component | Scoped deps | Out-of-scope deps |
-| --- | --- | --- |
-| `context-menu` | — | `ContextMenuContent` |
-| `drawer` | — | — |
-| `dropdown-menu` | — | `DropdownMenuContent` |
-| `modal` | `button` | — |
-| `popover` | — | — |
-| `slideover` | `button` | — |
-| `toast` | `avatar`, `button`, `icon`, `progress` | — |
-| `tooltip` | `kbd` | — |
+| Component       | Scoped deps                            | Out-of-scope deps     |
+| --------------- | -------------------------------------- | --------------------- |
+| `context-menu`  | —                                      | `ContextMenuContent`  |
+| `drawer`        | —                                      | —                     |
+| `dropdown-menu` | —                                      | `DropdownMenuContent` |
+| `modal`         | `button`                               | —                     |
+| `popover`       | —                                      | —                     |
+| `slideover`     | `button`                               | —                     |
+| `toast`         | `avatar`, `button`, `icon`, `progress` | —                     |
+| `tooltip`       | `kbd`                                  | —                     |
 
 ## Out-of-Scope Runtime Components Referenced
 

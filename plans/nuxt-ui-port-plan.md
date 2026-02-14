@@ -45,10 +45,6 @@ Each component must follow:
 - `src/<kebab>/index.ts`
 - export from `src/index.ts`
 
-ID utility rule:
-
-- `useId` returns an accessor (`Accessor<string>`), not a static string; always read IDs as `id()` and pass accessor results into attrs/context values.
-
 ## Solid Reactivity Rules For Ports
 
 agent MUST follows [port rules](./rules.md)
@@ -116,11 +112,12 @@ Do port:
 
 ## Required Test Scenarios
 
-1. Baseline render + accessibility assertions for every component.
-2. Keyboard/state behavior for interactive primitives.
-3. Controlled and uncontrolled behavior where applicable.
-4. Overlay lifecycle behavior (open/close/dismiss/portal) where applicable.
-5. Icon rendering for string and component icons without SVG-coupled selectors.
+1. **Port ALL test suite from nuxt-ui**
+2. Baseline render + accessibility assertions for every component.
+3. Keyboard/state behavior for interactive primitives.
+4. Controlled and uncontrolled behavior where applicable.
+5. Overlay lifecycle behavior (open/close/dismiss/portal) where applicable.
+6. Icon rendering for string and component icons without SVG-coupled selectors.
 
 ## Acceptance Criteria
 

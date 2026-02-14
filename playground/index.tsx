@@ -3,10 +3,10 @@ import 'uno.css'
 
 import { render } from 'solid-js/web'
 
-import { ButtonDemos } from './components/button-demos'
+import { FormDemos } from './components/form-demos'
 
 function App() {
-  return <ButtonDemos />
+  return <FormDemos />
 }
 
 render(() => <App />, document.getElementById('app')!)

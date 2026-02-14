@@ -101,8 +101,16 @@ export function FormField(props: FormFieldProps): JSX.Element {
   const formContext = useFormContext()
 
   const ariaId = useId(() => local.id, 'form-field')
-  const [manualInputId, setManualInputId] = createSignal<string | undefined>(undefined)
-  const inputId = createMemo(() => manualInputId() ?? local.id ?? ariaId())
+  const [manualInputId, setManualInputId] = createSignal<string | null | undefined>(undefined)
+  const inputId = createMemo(() => {
+    const manualId = manualInputId()
+
+    if (manualId === null) {
+      return undefined
+    }
+
+    return manualId ?? local.id ?? ariaId()
+  })
 
   const resolvedError = createMemo(() => {
     if (local.error === false) {

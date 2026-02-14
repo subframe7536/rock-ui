@@ -19,7 +19,7 @@ export interface FormFieldInjectedOptions {
 
 export interface InputIdContextValue {
   id?: string
-  setId: (next: string | undefined) => void
+  setId: (next: string | null | undefined) => void
 }
 
 export interface UseFormFieldProps {
@@ -56,11 +56,11 @@ export const [InputIdProvider, useInputIdContext] =
   createContextProvider<InputIdContextValue | null>('InputId', null)
 
 function createInputIdContextFallback(): InputIdContextValue {
-  const [id, setId] = createSignal<string | undefined>(undefined)
+  const [id, setId] = createSignal<string | null | undefined>(undefined)
 
   return {
     get id() {
-      return id()
+      return id() ?? undefined
     },
     setId,
   }
@@ -124,9 +124,11 @@ export function useFormField(
 
   if (formField) {
     if (!options().bind) {
-      inputId.setId(undefined)
+      inputId.setId(null)
     } else if (fieldProps().id !== undefined) {
       inputId.setId(fieldProps().id)
+    } else {
+      inputId.setId(undefined)
     }
   }
 
