@@ -18,7 +18,9 @@ export const cardRootVariants = cva(
   },
 )
 
-export const cardHeaderVariants = cva('grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6')
+export const cardHeaderVariants = cva(
+  'grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6',
+)
 export const cardBodyVariants = cva('flex-1 p-6')
 export const cardFooterVariants = cva('flex items-center p-6')
 

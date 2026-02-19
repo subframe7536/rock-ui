@@ -1,8 +1,11 @@
 import MagicString from 'magic-string'
 import { describe, expect, test } from 'vitest'
 
-import { createInjectRockPrefixTransformer, prefixClassList } from './unocss-transformer-inject-rock-prefix'
 import { ROCK_PREFIX } from './unocss-preset-theme'
+import {
+  createInjectRockPrefixTransformer,
+  prefixClassList,
+} from './unocss-transformer-inject-rock-prefix'
 
 type InjectTransformer = ReturnType<typeof createInjectRockPrefixTransformer>
 type TransformContext = Parameters<InjectTransformer['transform']>[2]
