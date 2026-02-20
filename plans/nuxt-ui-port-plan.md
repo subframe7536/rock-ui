@@ -128,6 +128,21 @@ Do port:
 - `bun run test --run` passes.
 - `bun run typecheck` passes.
 
+## Current Progress Update (2026-02-20)
+
+- `element/progress` is now implemented in `src/progress/` with logic + styles + tests + exports.
+- This update applies `remove as` only within `Progress` scope:
+  - no public `as` prop
+  - legacy `as` input is stripped and ignored at runtime
+- `value` API is used (`value?: number | null`), `modelValue` alias is not introduced.
+- `max` supports both `number` and `string[]` (step mode).
+- `animation` remains class-mapped only; no keyframes are introduced in this batch.
+- `element/separator` is now implemented in `src/separator/` with logic + styles + tests + exports.
+- `Separator` follows current Rock API constraints:
+  - no public `as` prop
+  - legacy `as` / `class` inputs are stripped and ignored
+  - `avatar` accepts `JSX.Element` only in this phase
+
 ## Coss Style Alias Map
 
 | Nuxt Component    | Coss Seed                                       |
