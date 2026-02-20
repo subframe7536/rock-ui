@@ -9,7 +9,7 @@
         "@kobalte/core": "^0.13.11",
         "@solid-primitives/props": "^3.2.2",
         "@solid-primitives/refs": "^1.1.2",
-        "cls-variant": "^1.1.0",
+        "cls-variant": "^1.1.1",
       },
       "devDependencies": {
         "@iconify-json/lucide": "^1.2.90",
@@ -482,7 +482,7 @@
 
     "citty": ["citty@0.1.6", "https://registry.npmmirror.com/citty/-/citty-0.1.6.tgz", { "dependencies": { "consola": "^3.2.3" } }, "sha512-tskPPKEs8D2KPafUypv2gxwJP8h/OaJmC82QQGGDQcHvXX43xF2VDACcJVmZ0EuSxkpO9Kc4MlrA3q0+FG58AQ=="],
 
-    "cls-variant": ["cls-variant@1.1.0", "https://registry.npmmirror.com/cls-variant/-/cls-variant-1.1.0.tgz", {}, "sha512-VBoEWUjm2XabmmzS4j+LdgURbdUwjqAxPDTR3eGokSbdlsA1Mp3R2oK00D7UkUOhgzc5ZXazScWIY0Ef70ocIg=="],
+    "cls-variant": ["cls-variant@1.1.1", "https://registry.npmmirror.com/cls-variant/-/cls-variant-1.1.1.tgz", {}, "sha512-rW0P5QAnsFhY3Zm9yViPbZiG+aW7jwtyP2xXMWFMCdMGs716d0qN/cTRTzmNamfrmAJMELwbEfarcV5Gyn1qIw=="],
 
     "color-convert": ["color-convert@2.0.1", "https://registry.npmmirror.com/color-convert/-/color-convert-2.0.1.tgz", { "dependencies": { "color-name": "~1.1.4" } }, "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ=="],
 

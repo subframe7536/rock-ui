@@ -11,7 +11,7 @@
 - [ ] (SKIP) chip | nuxt:Chip.vue | coss:badge.tsx | rock:src/chip/ | tests+exports | note: completed, unblocks form P1 `select`
 - [x] collapsible | nuxt:Collapsible.vue | coss:collapsible.tsx | rock:src/collapsible/ | tests+exports
 - [x] field-group | nuxt:FieldGroup.vue | coss:fieldset.tsx | rock:src/field-group/ | tests+exports
-- [ ] kbd | nuxt:Kbd.vue | coss:kbd.tsx | rock:src/kbd/ | tests+exports
+- [x] kbd | nuxt:Kbd.vue | coss:kbd.tsx | rock:src/kbd/ | tests+exports
 - [ ] progress | nuxt:Progress.vue | coss:progress.tsx | rock:src/progress/ | tests+exports
 - [ ] separator | nuxt:Separator.vue | coss:separator.tsx | rock:src/separator/ | tests+exports
 - [ ] (SKIP) skeleton | nuxt:Skeleton.vue | coss:skeleton.tsx | rock:src/skeleton/ | tests+exports
