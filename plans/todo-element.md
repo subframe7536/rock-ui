@@ -12,7 +12,7 @@
 - [x] collapsible | nuxt:Collapsible.vue | coss:collapsible.tsx | rock:src/collapsible/ | tests+exports
 - [x] field-group | nuxt:FieldGroup.vue | coss:fieldset.tsx | rock:src/field-group/ | tests+exports
 - [x] kbd | nuxt:Kbd.vue | coss:kbd.tsx | rock:src/kbd/ | tests+exports
-- [ ] progress | nuxt:Progress.vue | coss:progress.tsx | rock:src/progress/ | tests+exports
+- [x] progress | nuxt:Progress.vue | coss:progress.tsx | rock:src/progress/ | tests+exports
 - [ ] separator | nuxt:Separator.vue | coss:separator.tsx | rock:src/separator/ | tests+exports
 - [ ] (SKIP) skeleton | nuxt:Skeleton.vue | coss:skeleton.tsx | rock:src/skeleton/ | tests+exports
 - [x] icon | nuxt:Icon.vue | coss:none-rock-owned | rock:src/icon/ | tests+exports
