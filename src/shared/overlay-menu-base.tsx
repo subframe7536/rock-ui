@@ -28,8 +28,8 @@ export interface OverlayMenuBaseContentProps<
   items?: OverlayMenuItems<TItem>
   size?: TSize
   classes?: OverlayMenuSharedClasses
-  checkedIcon: IconName
-  submenuIcon: IconName
+  checkedIcon?: IconName
+  submenuIcon?: IconName
   itemRender?: (context: OverlayMenuSharedItemRenderContext<TItem>) => JSX.Element
   contentTop?: OverlayMenuContentSlot
   contentBottom?: OverlayMenuContentSlot
@@ -131,7 +131,7 @@ export function OverlayMenuBaseContent<
               <span
                 data-slot="item-kbds"
                 class={cn(
-                  'inline-flex items-center gap-1 text-muted-foreground text-xs tracking-widest',
+                  'inline-flex items-center gap-1 text-muted-foreground',
                   props.classes?.itemKbds,
                 )}
               >
@@ -171,7 +171,7 @@ export function OverlayMenuBaseContent<
       const subSide: OverlayMenuSide = 'right'
 
       return (
-        <props.primitives.Sub open={item.open} defaultOpen={item.defaultOpen}>
+        <props.primitives.Sub open={item.open} defaultOpen={item.defaultOpen} overflowPadding={2}>
           <props.primitives.SubTrigger
             data-slot="item"
             disabled={item.disabled}

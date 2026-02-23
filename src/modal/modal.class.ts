@@ -17,7 +17,7 @@ export const modalOverlayVariants = cva(
 )
 
 export const modalContentVariants = cva(
-  'z-50 w-full min-w-0 max-h-full min-h-0 bg-background text-foreground outline-none ring-1 ring-foreground/10',
+  'z-50 w-full min-w-0 max-h-full min-h-0 border border-border bg-background text-foreground outline-none ring-1 ring-foreground/10',
   {
     defaultVariants: {
       layout: 'default',
@@ -26,9 +26,9 @@ export const modalContentVariants = cva(
     variants: {
       layout: {
         default:
-          'fixed left-1/2 top-1/2 grid max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl text-sm sm:max-w-sm',
+          'fixed left-1/2 top-1/2 grid max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl text-sm sm:max-w-sm',
         scrollable:
-          'relative row-start-2 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-xl text-sm sm:max-w-sm',
+          'relative row-start-2 grid w-full max-w-[calc(100%-2rem)] rounded-xl text-sm sm:max-w-sm',
         fullscreen: 'fixed inset-0 flex max-w-none flex-col rounded-none ring-0',
       },
       transition: {

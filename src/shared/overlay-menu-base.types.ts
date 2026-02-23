@@ -38,7 +38,6 @@ export interface OverlayMenuSharedClasses {
   itemKbds?: string
   itemIndicator?: string
   itemSubIcon?: string
-  arrow?: string
 }
 
 export interface OverlayMenuSharedItemRenderContext<TItem> {
@@ -63,5 +62,4 @@ export interface OverlayMenuPrimitives {
   Sub: OverlayMenuPrimitive
   SubTrigger: OverlayMenuPrimitive
   SubContent: OverlayMenuPrimitive
-  Arrow: OverlayMenuPrimitive
 }

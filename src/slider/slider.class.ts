@@ -28,7 +28,7 @@ export const sliderRootVariants = cva('relative flex touch-none select-none', {
       vertical: 'h-full min-h-44 flex-col items-center',
     },
     highlight: {
-      true: 'rounded-md ring-1 ring-inset ring-border/70',
+      true: 'rounded-md ring-1 ring-border/50',
     },
     disabled: {
       true: 'pointer-events-none opacity-64',
@@ -65,7 +65,7 @@ export const sliderTrackVariants = cva(
         vertical: 'h-full before:(inset-x-0 inset-y-0.5)',
       },
       highlight: {
-        true: 'ring-1 ring-inset ring-border/70',
+        true: 'ring-1 ring-border/50',
       },
       disabled: {
         true: 'opacity-64',
@@ -122,7 +122,7 @@ export const sliderRangeVariants = cva('absolute select-none rounded-full', {
 })
 
 export const sliderThumbVariants = cva(
-  'relative block shrink-0 select-none rounded-full border bg-white not-dark:bg-clip-padding shadow-xs/5 outline-none transition data-dragging:(scale-120 shadow-none) focus-visible:ring-3px dark:border-background',
+  'relative block shrink-0 select-none rounded-full border border-ring bg-white not-dark:bg-clip-padding shadow-xs/5 outline-none transition-[box-shadow,transform] ring-ring/50 data-dragging:(scale-120 shadow-none) data-dragging:ring-3 hover:ring-3 focus-visible:ring-3 dark:border-background',
   {
     defaultVariants: {
       color: 'primary',
@@ -133,10 +133,10 @@ export const sliderThumbVariants = cva(
     },
     variants: {
       color: {
-        primary: 'focus-visible:ring-primary/24 dark:focus-visible:ring-primary/48',
-        secondary: 'focus-visible:ring-secondary/24 dark:focus-visible:ring-secondary/48',
-        neutral: 'focus-visible:ring-ring/24 dark:focus-visible:ring-ring/48',
-        error: 'focus-visible:ring-destructive/24 dark:focus-visible:ring-destructive/48',
+        primary: '',
+        secondary: '',
+        neutral: '',
+        error: '',
       },
       size: {
         xs: 'size-3',

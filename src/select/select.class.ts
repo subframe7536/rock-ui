@@ -2,7 +2,7 @@ import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
 export const selectControlVariants = cva(
-  'flex w-full cursor-pointer items-center rounded-md text-foreground outline-none',
+  'flex w-full cursor-pointer items-center rounded-md border border-input bg-transparent text-foreground outline-none transition-[color,box-shadow] dark:bg-input/30 focus-within:(border-ring ring-3 ring-ring/50)',
   {
     defaultVariants: {
       color: 'primary',
@@ -11,10 +11,10 @@ export const selectControlVariants = cva(
     },
     variants: {
       color: {
-        primary: 'focus-within:(ring-2 ring-inset ring-primary)',
-        secondary: 'focus-within:(ring-2 ring-inset ring-secondary)',
-        neutral: 'focus-within:(ring-2 ring-inset ring-foreground)',
-        error: 'focus-within:(ring-2 ring-inset ring-destructive)',
+        primary: '',
+        secondary: '',
+        neutral: '',
+        error: '',
       },
       size: {
         sm: 'min-h-8 text-xs',
@@ -22,28 +22,23 @@ export const selectControlVariants = cva(
         lg: 'min-h-10 text-sm',
       },
       variant: {
-        outline: 'border bg-background',
+        outline: 'bg-transparent',
         soft: 'border-transparent bg-muted/50 hover:bg-muted',
-        subtle: 'border bg-muted',
+        subtle: 'bg-muted',
         ghost: 'border-transparent hover:bg-muted',
-        none: 'border-transparent',
+        none: 'border-transparent bg-transparent',
       },
       highlight: {
-        true: 'ring-1 ring-inset ring-border',
+        true: 'ring-1 ring-border/50',
       },
       disabled: {
         true: 'cursor-not-allowed opacity-75',
       },
       invalid: {
-        true: 'border-destructive/36',
+        true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
       },
     },
-    compoundVariants: [
-      { color: 'primary', highlight: true, class: 'ring-primary' },
-      { color: 'secondary', highlight: true, class: 'ring-secondary' },
-      { color: 'neutral', highlight: true, class: 'ring-foreground' },
-      { color: 'error', highlight: true, class: 'ring-destructive' },
-    ],
+    compoundVariants: [],
   },
 )
 

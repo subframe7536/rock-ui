@@ -49,7 +49,7 @@ describe('DropdownMenu', () => {
     expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
   })
 
-  test('renders item matrix, nested submenu, arrow and content slots', async () => {
+  test('renders item matrix, nested submenu, and content slots', async () => {
     const contentTop = vi.fn((props: { sub: boolean }) => (
       <div data-testid={props.sub ? 'content-top-sub' : 'content-top-root'}>
         {props.sub ? 'Top Sub' : 'Top Root'}
@@ -65,10 +65,8 @@ describe('DropdownMenu', () => {
       <DropdownMenu
         defaultOpen
         placement="left-start"
-        arrow
         classes={{
           content: 'content-class',
-          arrow: 'arrow-class',
         }}
         contentTop={contentTop}
         contentBottom={contentBottom}
@@ -108,7 +106,6 @@ describe('DropdownMenu', () => {
     })
 
     const rootContent = document.body.querySelector('[data-slot="content"]')
-    const arrow = document.body.querySelector('[data-slot="arrow"]')
 
     expect(document.body.textContent).toContain('Account')
     expect(document.body.querySelector('[data-slot="separator"]')).not.toBeNull()
@@ -123,8 +120,6 @@ describe('DropdownMenu', () => {
     expect(rootContent?.className).toContain('ring-foreground/10')
     expect(rootContent?.className).toContain('slide-in-from-right-2')
     expect(rootContent?.className).toContain('content-class')
-
-    expect(arrow?.className).toContain('arrow-class')
 
     expect(document.body.querySelector('[data-testid="content-top-root"]')).not.toBeNull()
     expect(document.body.querySelector('[data-testid="content-bottom-root"]')).not.toBeNull()

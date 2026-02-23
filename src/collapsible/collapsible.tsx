@@ -26,24 +26,24 @@ export interface CollapsibleBaseProps {
 }
 
 export type CollapsibleProps = CollapsibleBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof CollapsibleBaseProps | 'children' | 'class'>
+  Omit<KobalteCollapsible.CollapsibleRootProps, keyof CollapsibleBaseProps | 'children' | 'class'>
 
 export function Collapsible(props: CollapsibleProps): JSX.Element {
-  const [local, rest] = splitProps(props as CollapsibleProps, [
+  const [contentProps, rootProps] = splitProps(props as CollapsibleProps, [
     'classes',
     'children',
     'renderTrigger',
   ])
 
   return (
-    <KobalteCollapsible.Root data-slot="root" class={local.classes?.root} {...rest}>
-      <Show when={local.renderTrigger}>
+    <KobalteCollapsible.Root data-slot="root" class={contentProps.classes?.root} {...rootProps}>
+      <Show when={contentProps.renderTrigger}>
         {(render) => {
           const context = KobalteCollapsible.useCollapsibleContext()
           return (
             <KobalteCollapsible.Trigger
               data-slot="trigger"
-              class={cn('cursor-pointer', props.classes?.trigger)}
+              class={cn('cursor-pointer', contentProps.classes?.trigger)}
             >
               {render()({ open: context.isOpen() })}
             </KobalteCollapsible.Trigger>
@@ -55,10 +55,10 @@ export function Collapsible(props: CollapsibleProps): JSX.Element {
         data-slot="content"
         class={cn(
           'h-$kb-collapsible-content-height overflow-hidden transition-height duration-200 data-closed:h-0',
-          local.classes?.content,
+          contentProps.classes?.content,
         )}
       >
-        {local.children}
+        {contentProps.children}
       </KobalteCollapsible.Content>
     </KobalteCollapsible.Root>
   )

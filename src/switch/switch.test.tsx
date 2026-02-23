@@ -85,7 +85,6 @@ describe('Switch', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOnInputDelay={0}
         validate={(currentState) => {
@@ -107,7 +106,7 @@ describe('Switch', () => {
       </Form>
     ))
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
 
     await waitFor(() => {
       expect(screen.getByText('Enable this option')).not.toBeNull()
@@ -189,7 +188,6 @@ describe('Switch', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOn={['input']}
         validateOnInputDelay={0}
@@ -214,7 +212,7 @@ describe('Switch', () => {
 
     const switchInput = screen.getByRole('switch', { name: 'Enable option' })
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('Enable this option')).not.toBeNull()
     })

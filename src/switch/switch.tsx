@@ -48,22 +48,6 @@ export interface SwitchBaseProps extends SwitchVariantProps {
 export type SwitchProps = SwitchBaseProps &
   Omit<KobalteSwitch.SwitchRootProps, keyof SwitchBaseProps | 'children' | 'class'>
 
-function normalizeSwitchColor(value?: string): SwitchColor {
-  if (value === 'secondary' || value === 'neutral' || value === 'error') {
-    return value
-  }
-
-  return 'primary'
-}
-
-function normalizeSwitchSize(value?: string): SwitchSize {
-  if (value === 'xs' || value === 'sm' || value === 'lg' || value === 'xl') {
-    return value
-  }
-
-  return 'md'
-}
-
 export function Switch(props: SwitchProps): JSX.Element {
   const merged = mergeProps(
     {
@@ -75,81 +59,69 @@ export function Switch(props: SwitchProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as SwitchProps, [
-    'id',
-    'name',
-    'checked',
-    'defaultChecked',
-    'required',
-    'disabled',
-    'readOnly',
-    'value',
-    'onChange',
-    'loading',
-    'loadingIcon',
-    'checkedIcon',
-    'uncheckedIcon',
-    'size',
-    'color',
-    'label',
-    'description',
-    'classes',
-  ])
+  const [formProps, rootStateProps, displayProps, styleProps, rootProps] = splitProps(
+    merged as SwitchProps,
+    ['id', 'name', 'disabled', 'onChange'],
+    ['value', 'checked', 'defaultChecked', 'required', 'readOnly'],
+    ['loading', 'loadingIcon', 'checkedIcon', 'uncheckedIcon', 'label', 'description'],
+    ['size', 'color', 'classes'],
+  )
 
   const field = useFormField(() => ({
-    id: local.id,
-    name: local.name,
-    size: local.size,
-    color: local.color,
-    disabled: local.disabled || local.loading,
+    id: formProps.id,
+    name: formProps.name,
+    size: styleProps.size,
+    color: styleProps.color,
+    disabled: formProps.disabled || displayProps.loading,
   }))
-  const generatedId = useId(() => local.id, 'switch')
+  const generatedId = useId(() => formProps.id, 'switch')
 
   const inputId = createMemo(() => field.id() ?? generatedId())
   const rootId = createMemo(() => `${inputId()}-root`)
-  const resolvedColor = createMemo(() => normalizeSwitchColor(field.color() ?? local.color))
-  const resolvedSize = createMemo(() => normalizeSwitchSize(field.size() ?? local.size))
+  const resolvedColor = createMemo(() => (field.color() ?? styleProps.color) as SwitchColor)
+  const resolvedSize = createMemo(() => (field.size() ?? styleProps.size) as SwitchSize)
   const disabled = createMemo(() => field.disabled())
   const ariaAttrs = createMemo(() => field.ariaAttrs() ?? {})
+  const invalid = createMemo(() => {
+    const value = ariaAttrs()['aria-invalid']
+
+    return value === true || value === 'true'
+  })
 
   function onChange(nextChecked: boolean): void {
-    local.onChange?.(nextChecked)
+    formProps.onChange?.(nextChecked)
     field.emitFormChange()
     field.emitFormInput()
   }
 
   return (
     <KobalteSwitch.Root
+      {...rootStateProps}
       id={rootId()}
       name={field.name()}
-      value={local.value}
-      checked={local.checked}
-      defaultChecked={local.defaultChecked}
-      required={local.required}
       disabled={disabled()}
-      readOnly={local.readOnly}
       onChange={onChange}
       data-slot="root"
       class={switchRootVariants(
         {
           disabled: disabled(),
         },
-        local.classes?.root,
+        styleProps.classes?.root,
       )}
-      {...rest}
+      {...rootProps}
     >
       {(state) => {
         const checked = createMemo(() => state.checked())
         const iconName = createMemo<IconName | undefined>(() => {
-          if (local.loading) {
-            return local.loadingIcon
+          if (displayProps.loading) {
+            return displayProps.loadingIcon
           }
 
           if (checked()) {
-            return local.checkedIcon
+            return displayProps.checkedIcon
           }
 
-          return local.uncheckedIcon
+          return displayProps.uncheckedIcon
         })
 
         return (
@@ -160,7 +132,7 @@ export function Switch(props: SwitchProps): JSX.Element {
                 {
                   size: resolvedSize(),
                 },
-                local.classes?.container,
+                styleProps.classes?.container,
               )}
             >
               <KobalteSwitch.Input id={inputId()} data-slot="input" {...ariaAttrs()} />
@@ -172,8 +144,9 @@ export function Switch(props: SwitchProps): JSX.Element {
                     color: resolvedColor(),
                     size: resolvedSize(),
                     disabled: disabled(),
+                    invalid: invalid(),
                   },
-                  local.classes?.base,
+                  styleProps.classes?.base,
                 )}
               >
                 <KobalteSwitch.Thumb
@@ -182,7 +155,7 @@ export function Switch(props: SwitchProps): JSX.Element {
                     {
                       size: resolvedSize(),
                     },
-                    local.classes?.thumb,
+                    styleProps.classes?.thumb,
                   )}
                 >
                   <Show when={iconName()}>
@@ -193,11 +166,11 @@ export function Switch(props: SwitchProps): JSX.Element {
                           root: switchIconVariants(
                             {
                               color: resolvedColor(),
-                              checked: !local.loading && checked(),
-                              unchecked: !local.loading && !checked(),
-                              loading: local.loading,
+                              checked: !displayProps.loading && checked(),
+                              unchecked: !displayProps.loading && !checked(),
+                              loading: displayProps.loading,
                             },
-                            local.classes?.icon,
+                            styleProps.classes?.icon,
                           ),
                         }}
                       />
@@ -207,43 +180,43 @@ export function Switch(props: SwitchProps): JSX.Element {
               </KobalteSwitch.Control>
             </div>
 
-            <Show when={local.label || local.description}>
+            <Show when={displayProps.label || displayProps.description}>
               <div
                 data-slot="wrapper"
                 class={switchWrapperVariants(
                   {
                     size: resolvedSize(),
                   },
-                  local.classes?.wrapper,
+                  styleProps.classes?.wrapper,
                 )}
               >
-                <Show when={local.label}>
+                <Show when={displayProps.label}>
                   <label
                     for={inputId()}
                     data-slot="label"
                     class={switchLabelVariants(
                       {
-                        required: local.required,
+                        required: rootStateProps.required,
                         disabled: disabled(),
                       },
-                      local.classes?.label,
+                      styleProps.classes?.label,
                     )}
                   >
-                    {local.label}
+                    {displayProps.label}
                   </label>
                 </Show>
 
-                <Show when={local.description}>
+                <Show when={displayProps.description}>
                   <p
                     data-slot="description"
                     class={switchDescriptionVariants(
                       {
                         disabled: disabled(),
                       },
-                      local.classes?.description,
+                      styleProps.classes?.description,
                     )}
                   >
-                    {local.description}
+                    {displayProps.description}
                   </p>
                 </Show>
               </div>

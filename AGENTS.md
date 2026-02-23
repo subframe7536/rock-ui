@@ -1,7 +1,9 @@
 # AGENTS.md
 
-This file contains definitive guidelines for agentic coding agents working on Rock UI, a SolidJS component library based on Kobalte.
+This file contains definitive guidelines for agentic coding agents working on Rock UI, a SolidJS component library that ports Nuxt UI behavior and uses `zaidan/` as the style/base component source.
 Agents must follow these instructions to ensure consistency, quality, and maintainability.
+
+Current stage: pre-alpha. breaking change allowed.
 
 ## Essential Commands
 
@@ -44,7 +46,14 @@ playground/          # Dev playground with examples
 
 ## Porting Guidelines
 
-This project ports logic from **Nuxt UI** and styles from **Coss**. Base component lib is **@kobalte/core**, but not stick to it.
+This project ports logic from **Nuxt UI** and ports style/base component structure from **Zaidan** (`zaidan/`).
+
+### 0. Migration Principle (Zaidan/Shadcn)
+
+- Follow Zaidan/Shadcn composition principles first: reuse existing component structure and behavior whenever possible.
+- Port that reused base into a Rock **Nuxt-UI-level sealed component** (stable Rock API surface; implementation details remain internal).
+- Verify behavior with tests and in the playground before final style cleanup.
+- Inline/adapt styles only after behavior is sealed and verified.
 
 ### 1. Logic: Porting from Nuxt UI
 
@@ -62,20 +71,21 @@ This project ports logic from **Nuxt UI** and styles from **Coss**. Base compone
   - Port this pattern using `createSignal` for loading states inside the event handler.
   - **Do not** use `async` components (SolidJS components are synchronous setup functions).
 - **Accessibility:**
-  - Use **Kobalte** primitives where possible to handle complex accessibility logic (e.g., Tabs, Dialogs).
-  - If Nuxt UI has custom a11y logic not covered by Kobalte, port it manually.
+  - Use **Zaidan** component implementations in `zaidan/src/registry/kobalte/ui/*.tsx` as the first base reference.
+  - If Zaidan has no equivalent pattern, use **@kobalte/core** primitives directly for accessibility-heavy interactions.
+  - If Nuxt UI has custom a11y logic not covered by either, port it manually.
 
-### 2. Style: Porting from Coss
+### 2. Style + Base Component: Porting from Zaidan
 
-- **Source:** Refer to `coss/packages/ui/src/components/*.tsx` for visual design.
-- **Goal:** Replicate the visual style using **UnoCSS** and **cva**.
+- **Source:** Refer to `zaidan/src/registry/kobalte/ui/*.tsx` for style and base component structure.
+- **Goal:** Replicate the visual/slot structure using **UnoCSS** and **cva** in Rock.
 - **Implementation:**
   - Create a `{component}.class.ts` file.
   - Use `cva` from `cls-variant/cva` to define variants.
-  - Copy class names from Coss, but adapt them to UnoCSS.
+  - Copy class/composition patterns from Zaidan, but adapt them to UnoCSS.
   - Use UnoCSS variant groups for cleaner code: `hover:(bg-red-500 text-white)` instead of `hover:bg-red-500 hover:text-white`.
-  - Ensure `size` and `variant` props match the Coss design system structure.
-  - **Do not** import styles directly from the `coss` folder; copy the logic/classes.
+  - Ensure `size` and `variant` props match the Zaidan design system structure where applicable.
+  - **Do not** import implementation files directly from `zaidan/`; copy/adapt logic and classes into Rock files.
 
 ## Code Style & Conventions
 
@@ -117,8 +127,9 @@ This project ports logic from **Nuxt UI** and styles from **Coss**. Base compone
 
 ## Before Making Changes
 
-1. **Analyze:** Read the corresponding `nuxt-ui` logic and `coss` style files.
-2. **Plan:** Identify which Kobalte primitive fits best.
-3. **Implement:** Create the `.tsx` and `.class.ts` files.
-4. **Test:** Write a `*.test.tsx` file and run `bun run test <file>`.
-5. **QA:** Run `bun run qa` to ensure formatting and linting pass.
+1. **Analyze:** Read the corresponding `nuxt-ui` logic and `zaidan` style/base component files.
+2. **Plan:** Identify which `zaidan/src/registry/kobalte/ui/*` component pattern (or fallback `@kobalte/core` primitive) fits best, and define the sealed Nuxt-UI-level Rock API.
+3. **Implement (reuse-first):** Reuse/adapt the base component behavior in `.tsx` first.
+4. **Verify behavior:** Write/execute `*.test.tsx` and verify interaction in playground via `bun run play`.
+5. **Inline styles:** Finalize `.class.ts` and slot-level style inlining after behavior is verified.
+6. **QA:** Run `bun run qa` to ensure formatting and linting pass.

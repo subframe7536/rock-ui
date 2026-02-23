@@ -87,26 +87,19 @@ export function Progress(props: ProgressProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as ProgressProps & { as?: unknown; class?: string }, [
-    'as',
-    'class',
-    'value',
-    'max',
-    'status',
-    'inverted',
-    'orientation',
-    'animation',
-    'color',
-    'size',
-    'renderStatus',
-    'renderStep',
-    'classes',
-  ])
+  const [valueProps, behaviorProps, styleProps, rootProps] = splitProps(
+    merged as ProgressProps,
+    ['value', 'max'],
+    ['status', 'inverted', 'orientation', 'animation', 'renderStatus', 'renderStep'],
+    ['color', 'size', 'classes'],
+  )
 
-  const steps = createMemo<string[]>(() => (Array.isArray(local.max) ? local.max : []))
+  const steps = createMemo<string[]>(() => (Array.isArray(valueProps.max) ? valueProps.max : []))
   const hasSteps = createMemo(() => steps().length > 0)
-  const realMax = createMemo(() => resolveMaxValue(local.max))
-  const isIndeterminate = createMemo(() => local.value === null || local.value === undefined)
+  const realMax = createMemo(() => resolveMaxValue(valueProps.max))
+  const isIndeterminate = createMemo(
+    () => valueProps.value === null || valueProps.value === undefined,
+  )
 
   const kobalteMax = createMemo(() => (realMax() <= 0 ? 1 : realMax()))
   const kobalteValue = createMemo(() => {
@@ -114,7 +107,7 @@ export function Progress(props: ProgressProps): JSX.Element {
       return 0
     }
 
-    const value = Number(local.value)
+    const value = Number(valueProps.value)
     if (!Number.isFinite(value)) {
       return 0
     }
@@ -140,7 +133,7 @@ export function Progress(props: ProgressProps): JSX.Element {
 
     const statusStyle = createMemo<JSX.CSSProperties>(() => {
       const styleValue = `${Math.max(percent() ?? 0, 0)}%`
-      if (local.orientation === 'vertical') {
+      if (behaviorProps.orientation === 'vertical') {
         return { height: styleValue }
       }
 
@@ -154,14 +147,14 @@ export function Progress(props: ProgressProps): JSX.Element {
       }
 
       const distance = 100 - currentPercent
-      if (local.orientation === 'vertical') {
+      if (behaviorProps.orientation === 'vertical') {
         return {
-          transform: `translateY(${local.inverted ? '' : '-'}${distance}%)`,
+          transform: `translateY(${behaviorProps.inverted ? '' : '-'}${distance}%)`,
         }
       }
 
       return {
-        transform: `translateX(${local.inverted ? '' : '-'}${distance}%)`,
+        transform: `translateX(${behaviorProps.inverted ? '' : '-'}${distance}%)`,
       }
     })
 
@@ -188,21 +181,21 @@ export function Progress(props: ProgressProps): JSX.Element {
 
     return (
       <>
-        <Show when={!isIndeterminate() && (local.status || local.renderStatus)}>
+        <Show when={!isIndeterminate() && (behaviorProps.status || behaviorProps.renderStatus)}>
           <div
             data-slot="status"
             class={progressStatusVariants(
               {
-                orientation: local.orientation,
-                size: local.size,
-                color: local.color,
-                inverted: local.inverted,
+                orientation: behaviorProps.orientation,
+                size: styleProps.size,
+                color: styleProps.color,
+                inverted: behaviorProps.inverted,
               },
-              local.classes?.status,
+              styleProps.classes?.status,
             )}
             style={statusStyle()}
           >
-            <Show when={local.renderStatus} fallback={`${percent() ?? 0}%`}>
+            <Show when={behaviorProps.renderStatus} fallback={`${percent() ?? 0}%`}>
               {(renderStatus) => renderStatus()({ percent: percent() })}
             </Show>
           </div>
@@ -212,21 +205,21 @@ export function Progress(props: ProgressProps): JSX.Element {
           data-slot="base"
           class={progressBaseVariants(
             {
-              orientation: local.orientation,
-              size: local.size,
+              orientation: behaviorProps.orientation,
+              size: styleProps.size,
             },
-            local.classes?.base,
+            styleProps.classes?.base,
           )}
         >
           <KobalteProgress.Fill
             data-slot="indicator"
             class={progressIndicatorVariants(
               {
-                color: local.color,
-                orientation: local.orientation,
-                animation: local.animation,
+                color: styleProps.color,
+                orientation: behaviorProps.orientation,
+                animation: behaviorProps.animation,
               },
-              local.classes?.indicator,
+              styleProps.classes?.indicator,
             )}
             style={indicatorStyle()}
           />
@@ -237,11 +230,11 @@ export function Progress(props: ProgressProps): JSX.Element {
             data-slot="steps"
             class={progressStepsVariants(
               {
-                orientation: local.orientation,
-                size: local.size,
-                color: local.color,
+                orientation: behaviorProps.orientation,
+                size: styleProps.size,
+                color: styleProps.color,
               },
-              local.classes?.steps,
+              styleProps.classes?.steps,
             )}
           >
             <For each={steps()}>
@@ -251,14 +244,14 @@ export function Progress(props: ProgressProps): JSX.Element {
                   class={progressStepVariants(
                     {
                       state: stepState(index()),
-                      size: local.size,
-                      color: local.color,
-                      inverted: local.inverted,
+                      size: styleProps.size,
+                      color: styleProps.color,
+                      inverted: behaviorProps.inverted,
                     },
-                    local.classes?.step,
+                    styleProps.classes?.step,
                   )}
                 >
-                  <Show when={local.renderStep} fallback={step}>
+                  <Show when={behaviorProps.renderStep} fallback={step}>
                     {(renderStep) =>
                       renderStep()({
                         step,
@@ -283,14 +276,14 @@ export function Progress(props: ProgressProps): JSX.Element {
       value={kobalteValue()}
       indeterminate={isIndeterminate()}
       data-slot="root"
-      data-orientation={local.orientation}
+      data-orientation={behaviorProps.orientation}
       class={progressRootVariants(
         {
-          orientation: local.orientation,
+          orientation: behaviorProps.orientation,
         },
-        local.classes?.root,
+        styleProps.classes?.root,
       )}
-      {...rest}
+      {...rootProps}
     >
       <ProgressContent />
     </KobalteProgress.Root>

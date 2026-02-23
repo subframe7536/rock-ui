@@ -156,10 +156,11 @@ export const radioGroupContainerVariants = cva('flex items-center', {
 })
 
 export const radioGroupBaseVariants = cva(
-  'inline-flex items-center justify-center overflow-hidden rounded-full border border-input bg-background outline-none transition-shadow focus-visible:effect-fv',
+  'inline-flex items-center justify-center overflow-hidden rounded-full border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 focus-visible:(border-ring ring-3 ring-ring/50)',
   {
     defaultVariants: {
       size: 'md',
+      invalid: false,
     },
     variants: {
       size: {
@@ -171,6 +172,9 @@ export const radioGroupBaseVariants = cva(
       },
       disabled: {
         true: 'cursor-not-allowed',
+      },
+      invalid: {
+        true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
       },
     },
   },

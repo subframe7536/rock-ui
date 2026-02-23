@@ -35,7 +35,7 @@ describe('Sheet', () => {
 
     const content = document.body.querySelector('[data-slot="content"]')
 
-    expect(content?.className).toContain('sm:m-4 sm:rounded-2xl sm:border')
+    expect(content?.className).toContain('sm:(m-4 rounded-2xl border)')
     expect(content?.className).toContain(
       'transition-none data-expanded:animate-none data-closed:animate-none',
     )

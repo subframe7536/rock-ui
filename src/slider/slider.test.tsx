@@ -20,7 +20,6 @@ function createForm(validateOn: Array<'blur' | 'change' | 'input'>) {
 
   const screen = render(() => (
     <Form
-      data-testid="form"
       state={state}
       validateOn={validateOn}
       validateOnInputDelay={0}
@@ -96,7 +95,7 @@ describe('Slider', () => {
     expect(inputs[0]?.readOnly).toBe(true)
     expect(root?.getAttribute('data-orientation')).toBe('vertical')
     expect(track?.className).toContain('bg-input')
-    expect(thumb?.className).toContain('data-dragging:scale-120')
+    expect(thumb?.className).toContain('data-dragging:(scale-120 shadow-none)')
     expect(screen.queryByRole('tooltip')).toBeNull()
   })
 
@@ -292,7 +291,7 @@ describe('Slider', () => {
   test('forwards aria-invalid and aria-describedby to slider inputs', async () => {
     const { screen, input } = createForm(['change'])
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('Error message')).not.toBeNull()
     })

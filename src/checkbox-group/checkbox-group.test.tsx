@@ -75,7 +75,6 @@ describe('CheckboxGroup', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOnInputDelay={0}
         validate={(currentState) => {
@@ -98,7 +97,7 @@ describe('CheckboxGroup', () => {
       </Form>
     ))
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
 
     await waitFor(() => {
       expect(screen.getByText('Select at least one')).not.toBeNull()

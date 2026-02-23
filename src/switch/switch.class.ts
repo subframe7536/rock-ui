@@ -25,12 +25,13 @@ export const switchContainerVariants = cva('flex items-center', {
 })
 
 export const switchBaseVariants = cva(
-  'inline-flex shrink-0 items-center rounded-full border-2 border-transparent p-px outline-none transition-colors focus-visible:effect-fv',
+  'inline-flex shrink-0 items-center rounded-full border border-transparent bg-input p-px outline-none transition-[color,box-shadow] dark:bg-input/80 focus-visible:(border-ring ring-3 ring-ring/50)',
   {
     defaultVariants: {
       color: 'primary',
       size: 'md',
       disabled: false,
+      invalid: false,
     },
     variants: {
       color: {
@@ -48,6 +49,9 @@ export const switchBaseVariants = cva(
       },
       disabled: {
         true: 'cursor-not-allowed',
+      },
+      invalid: {
+        true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
       },
     },
   },

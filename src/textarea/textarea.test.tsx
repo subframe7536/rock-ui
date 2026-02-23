@@ -5,7 +5,6 @@ import { Form } from '../form'
 import { FormField } from '../form-field'
 
 import { Textarea } from './textarea'
-import type { TextareaProps } from './textarea'
 
 function createForm(
   validateOn?: Array<'blur' | 'change' | 'input'>,
@@ -16,7 +15,6 @@ function createForm(
 
   const screen = render(() => (
     <Form
-      data-testid="form"
       state={state}
       validateOn={validateOn}
       validateOnInputDelay={0}
@@ -77,29 +75,6 @@ describe('Textarea', () => {
     expect(screen.container.querySelector('[data-slot="trailing"]')).toBeNull()
     expect(screen.container.querySelector('[data-slot="leadingIcon"]')).toBeNull()
     expect(screen.container.querySelector('[data-slot="trailingIcon"]')).toBeNull()
-  })
-
-  test('swallows legacy icon-related props without forwarding invalid attrs', () => {
-    const legacyProps = {
-      icon: 'i-lucide-search',
-      leading: true,
-      leadingIcon: 'i-lucide-user',
-      trailing: true,
-      trailingIcon: 'i-lucide-mail',
-      loading: true,
-      loadingIcon: 'icon-loading',
-    } as unknown as TextareaProps
-
-    const screen = render(() => <Textarea {...legacyProps} />)
-    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
-
-    expect(textarea.hasAttribute('icon')).toBe(false)
-    expect(textarea.hasAttribute('leading')).toBe(false)
-    expect(textarea.hasAttribute('leadingicon')).toBe(false)
-    expect(textarea.hasAttribute('trailing')).toBe(false)
-    expect(textarea.hasAttribute('trailingicon')).toBe(false)
-    expect(textarea.hasAttribute('loading')).toBe(false)
-    expect(textarea.hasAttribute('loadingicon')).toBe(false)
   })
 
   test('applies trim, number, lazy, nullable and optional modifiers', async () => {
@@ -212,7 +187,7 @@ describe('Textarea', () => {
   test('integrates with form validation aria attrs and validate on blur', async () => {
     const { screen, input } = createForm(['blur'])
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('Error message')).not.toBeNull()
     })

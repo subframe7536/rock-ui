@@ -1,12 +1,10 @@
 import type { JSX } from 'solid-js'
-import { Show, splitProps } from 'solid-js'
+import { Show, mergeProps, splitProps } from 'solid-js'
 
 import { cn } from '../shared/utils'
 
 import type { CardVariantProps } from './card.class'
 import { cardRootVariants } from './card.class'
-
-type CardVariant = NonNullable<CardVariantProps['variant']>
 
 export interface CardClasses {
   root?: string
@@ -22,59 +20,49 @@ export interface CardBaseProps extends CardVariantProps {
   children?: JSX.Element
 }
 
-export type CardProps = CardBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof CardBaseProps | 'children' | 'class'>
-
-function normalizeCardVariant(value?: string): CardVariant {
-  if (value === 'solid' || value === 'soft' || value === 'subtle') {
-    return value
-  }
-
-  return 'outline'
-}
+export type CardProps = CardBaseProps
 
 export function Card(props: CardProps): JSX.Element {
-  const [local, rest] = splitProps(props as CardProps & { class?: string }, [
-    'variant',
-    'header',
-    'footer',
-    'classes',
-    'children',
-    'class',
-  ])
+  const merged = mergeProps(
+    {
+      variant: 'outline' as const,
+    },
+    props,
+  ) as CardProps
+
+  const [styleProps, contentProps] = splitProps(merged, ['variant', 'classes'])
 
   return (
     <div
       data-slot="root"
       class={cardRootVariants(
         {
-          variant: normalizeCardVariant(local.variant),
+          variant: styleProps.variant,
         },
-        local.classes?.root,
+        styleProps.classes?.root,
       )}
-      {...rest}
     >
-      <Show when={local.header}>
+      <Show when={contentProps.header}>
         <div
           data-slot="header"
           class={cn(
             'grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-6',
-            local.classes?.header,
+            styleProps.classes?.header,
           )}
         >
-          {local.header}
+          {contentProps.header}
         </div>
       </Show>
 
-      <Show when={local.children}>
-        <div data-slot="body" class={cn('flex-1 p-6', local.classes?.body)}>
-          {local.children}
+      <Show when={contentProps.children}>
+        <div data-slot="body" class={cn('flex-1 p-6', styleProps.classes?.body)}>
+          {contentProps.children}
         </div>
       </Show>
 
-      <Show when={local.footer}>
-        <div data-slot="footer" class={cn('flex items-center p-6', local.classes?.footer)}>
-          {local.footer}
+      <Show when={contentProps.footer}>
+        <div data-slot="footer" class={cn('flex items-center p-6', styleProps.classes?.footer)}>
+          {contentProps.footer}
         </div>
       </Show>
     </div>

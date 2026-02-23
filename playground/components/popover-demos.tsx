@@ -21,7 +21,6 @@ export const PopoverDemos = () => {
             {(placement) => (
               <Popover
                 placement={placement}
-                arrow
                 content={
                   <div class="space-y-1">
                     <p class="text-sm font-medium capitalize">{placement}</p>
@@ -49,7 +48,6 @@ export const PopoverDemos = () => {
             mode="hover"
             openDelay={180}
             closeDelay={120}
-            arrow
             content={
               <div class="space-y-1">
                 <p class="text-sm font-medium">Hover Card</p>

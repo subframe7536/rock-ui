@@ -16,7 +16,6 @@ import {
 
 type SliderColor = NonNullable<SliderBaseProps['color']>
 type SliderSize = NonNullable<SliderBaseProps['size']>
-type SliderOrientation = NonNullable<SliderBaseProps['orientation']>
 
 export type SliderValue = number | number[]
 
@@ -49,19 +48,7 @@ export interface SliderBaseProps extends Pick<SliderVariantProps, 'color' | 'siz
 }
 
 export type SliderProps = SliderBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof SliderBaseProps | 'id' | 'children' | 'class'>
-
-function normalizeSliderColor(value?: string): SliderColor {
-  return (value as SliderColor | undefined) ?? 'primary'
-}
-
-function normalizeSliderSize(value?: string): SliderSize {
-  return (value as SliderSize | undefined) ?? 'md'
-}
-
-function normalizeSliderOrientation(value?: string): SliderOrientation {
-  return (value as SliderOrientation | undefined) ?? 'horizontal'
-}
+  Omit<KobalteSlider.SliderRootProps, keyof SliderBaseProps | 'id' | 'children' | 'class'>
 
 function normalizeSliderValues(
   value: SliderValue | undefined,
@@ -101,60 +88,54 @@ export function Slider(props: SliderProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as SliderProps, [
-    'as',
-    'id',
-    'name',
-    'value',
-    'defaultValue',
-    'min',
-    'max',
-    'step',
-    'minStepsBetweenThumbs',
-    'orientation',
-    'inverted',
-    'required',
-    'disabled',
-    'readOnly',
-    'onValueChange',
-    'onChange',
-    'color',
-    'size',
-    'highlight',
-    'classes',
-  ])
+  const [formProps, rangeProps, styleProps, rootProps] = splitProps(
+    merged as SliderProps,
+    [
+      'as',
+      'id',
+      'name',
+      'value',
+      'defaultValue',
+      'required',
+      'disabled',
+      'readOnly',
+      'onValueChange',
+      'onChange',
+    ],
+    ['min', 'max', 'step', 'minStepsBetweenThumbs', 'orientation', 'inverted'],
+    ['color', 'size', 'highlight', 'classes'],
+  )
 
   const field = useFormField(() => ({
-    id: local.id,
-    name: local.name,
-    size: local.size,
-    color: local.color,
-    highlight: local.highlight,
-    disabled: local.disabled,
+    id: formProps.id,
+    name: formProps.name,
+    size: styleProps.size,
+    color: styleProps.color,
+    highlight: styleProps.highlight,
+    disabled: formProps.disabled,
   }))
-  const generatedId = useId(() => local.id, 'slider')
+  const generatedId = useId(() => formProps.id, 'slider')
 
   const inputId = () => field.id() ?? generatedId()
-  const resolvedColor = () => normalizeSliderColor(field.color() ?? local.color)
-  const resolvedSize = () => normalizeSliderSize(field.size() ?? local.size)
-  const resolvedOrientation = () => normalizeSliderOrientation(local.orientation)
-  const resolvedHighlight = () => field.highlight() ?? local.highlight
+  const resolvedColor = () => (field.color() ?? styleProps.color) as SliderColor
+  const resolvedSize = () => (field.size() ?? styleProps.size) as SliderSize
+  const resolvedHighlight = () => field.highlight() ?? styleProps.highlight
   const disabled = () => field.disabled()
-  const kobalteValue = createMemo(() => normalizeSliderValues(local.value, local.min!))
+  const kobalteValue = createMemo(() => normalizeSliderValues(formProps.value, rangeProps.min!))
   const kobalteDefaultValue = createMemo(() =>
-    normalizeSliderValues(local.defaultValue, local.min!),
+    normalizeSliderValues(formProps.defaultValue, rangeProps.min!),
   )
   const [uncontrolledValues, setUncontrolledValues] = createSignal<number[]>([0])
 
-  const thumbValues = () => kobalteValue() ?? kobalteDefaultValue() ?? [local.min!]
+  const thumbValues = () => kobalteValue() ?? kobalteDefaultValue() ?? [rangeProps.min!]
   const thumbIndexes = () => Array.from({ length: thumbValues().length }, (_, index) => index)
 
   createEffect(() => {
-    if (local.value !== undefined) {
+    if (formProps.value !== undefined) {
       return
     }
 
-    const initial = kobalteDefaultValue() ?? [local.min!]
+    const initial = kobalteDefaultValue() ?? [rangeProps.min!]
     setUncontrolledValues(initial)
   })
 
@@ -167,23 +148,23 @@ export function Slider(props: SliderProps): JSX.Element {
   }
 
   function toPublicValue(values: number[]): SliderValue {
-    if (Array.isArray(local.value) || Array.isArray(local.defaultValue)) {
+    if (Array.isArray(formProps.value) || Array.isArray(formProps.defaultValue)) {
       return [...values]
     }
 
-    return values[0] ?? local.min!
+    return values[0] ?? rangeProps.min!
   }
 
   function resolveThumbPercent(index: number): number {
-    const range = local.max! - local.min!
+    const range = rangeProps.max! - rangeProps.min!
 
     if (range <= 0) {
       return 0
     }
 
     const visualValues = kobalteValue() ?? uncontrolledValues()
-    const nextValue = visualValues[index] ?? local.min!
-    const percent = ((nextValue - local.min!) / range) * 100
+    const nextValue = visualValues[index] ?? rangeProps.min!
+    const percent = ((nextValue - rangeProps.min!) / range) * 100
 
     if (!Number.isFinite(percent)) {
       return 0
@@ -194,11 +175,10 @@ export function Slider(props: SliderProps): JSX.Element {
 
   function thumbStyle(index: number): JSX.CSSProperties {
     const percent = resolveThumbPercent(index)
-    const orientation = resolvedOrientation()
 
-    if (orientation === 'vertical') {
-      const startEdge = local.inverted ? 'top' : 'bottom'
-      const transform = local.inverted ? 'translateY(-50%)' : 'translateY(50%)'
+    if (rangeProps.orientation === 'vertical') {
+      const startEdge = rangeProps.inverted ? 'top' : 'bottom'
+      const transform = rangeProps.inverted ? 'translateY(-50%)' : 'translateY(50%)'
 
       return {
         [startEdge]: `calc(${percent}%)`,
@@ -206,8 +186,8 @@ export function Slider(props: SliderProps): JSX.Element {
       } as JSX.CSSProperties
     }
 
-    const startEdge = local.inverted ? 'right' : 'left'
-    const transform = local.inverted ? 'translateX(50%)' : 'translateX(-50%)'
+    const startEdge = rangeProps.inverted ? 'right' : 'left'
+    const transform = rangeProps.inverted ? 'translateX(50%)' : 'translateX(-50%)'
 
     return {
       [startEdge]: `calc(${percent}%)`,
@@ -216,35 +196,35 @@ export function Slider(props: SliderProps): JSX.Element {
   }
 
   function onValueChange(values: number[]): void {
-    if (local.value === undefined) {
+    if (formProps.value === undefined) {
       setUncontrolledValues([...values])
     }
 
-    local.onValueChange?.(toPublicValue(values))
+    formProps.onValueChange?.(toPublicValue(values))
     field.emitFormInput()
   }
 
   function onChange(values: number[]): void {
-    local.onChange?.(toPublicValue(values))
+    formProps.onChange?.(toPublicValue(values))
     field.emitFormChange()
   }
 
   return (
     <KobalteSlider.Root
-      as={local.as}
+      as={formProps.as}
       id={`${inputId()}-root`}
       name={field.name()}
+      minValue={rangeProps.min}
+      maxValue={rangeProps.max}
+      step={rangeProps.step}
+      minStepsBetweenThumbs={rangeProps.minStepsBetweenThumbs}
+      orientation={rangeProps.orientation}
+      inverted={rangeProps.inverted}
       value={kobalteValue()}
       defaultValue={kobalteDefaultValue()}
-      minValue={local.min!}
-      maxValue={local.max!}
-      step={local.step}
-      minStepsBetweenThumbs={local.minStepsBetweenThumbs}
-      orientation={resolvedOrientation()}
-      inverted={local.inverted}
-      required={local.required}
+      required={formProps.required}
       disabled={disabled()}
-      readOnly={local.readOnly}
+      readOnly={formProps.readOnly}
       onChange={onValueChange}
       onChangeEnd={onChange}
       data-slot="root"
@@ -252,13 +232,13 @@ export function Slider(props: SliderProps): JSX.Element {
         {
           color: resolvedColor(),
           size: resolvedSize(),
-          orientation: resolvedOrientation(),
+          orientation: rangeProps.orientation,
           highlight: resolvedHighlight(),
           disabled: disabled(),
         },
-        local.classes?.root,
+        styleProps.classes?.root,
       )}
-      {...rest}
+      {...rootProps}
     >
       <KobalteSlider.Track
         data-slot="track"
@@ -266,11 +246,11 @@ export function Slider(props: SliderProps): JSX.Element {
           {
             color: resolvedColor(),
             size: resolvedSize(),
-            orientation: resolvedOrientation(),
+            orientation: rangeProps.orientation,
             highlight: resolvedHighlight(),
             disabled: disabled(),
           },
-          local.classes?.track,
+          styleProps.classes?.track,
         )}
       >
         <KobalteSlider.Fill
@@ -279,11 +259,11 @@ export function Slider(props: SliderProps): JSX.Element {
             {
               color: resolvedColor(),
               size: resolvedSize(),
-              orientation: resolvedOrientation(),
+              orientation: rangeProps.orientation,
               highlight: resolvedHighlight(),
               disabled: disabled(),
             },
-            local.classes?.range,
+            styleProps.classes?.range,
           )}
         />
       </KobalteSlider.Track>
@@ -298,11 +278,11 @@ export function Slider(props: SliderProps): JSX.Element {
               {
                 color: resolvedColor(),
                 size: resolvedSize(),
-                orientation: resolvedOrientation(),
+                orientation: rangeProps.orientation,
                 highlight: resolvedHighlight(),
                 disabled: disabled(),
               },
-              local.classes?.thumb,
+              styleProps.classes?.thumb,
             )}
             onFocus={() => field.emitFormFocus()}
             onBlur={() => field.emitFormBlur()}
@@ -314,11 +294,11 @@ export function Slider(props: SliderProps): JSX.Element {
                 {
                   color: resolvedColor(),
                   size: resolvedSize(),
-                  orientation: resolvedOrientation(),
+                  orientation: rangeProps.orientation,
                   highlight: resolvedHighlight(),
                   disabled: disabled(),
                 },
-                local.classes?.input,
+                styleProps.classes?.input,
               )}
               {...(field.ariaAttrs() ?? {})}
             />

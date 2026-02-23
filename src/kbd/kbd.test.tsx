@@ -19,11 +19,11 @@ describe('Kbd', () => {
     const lg = render(() => <Kbd size="lg">L</Kbd>)
     const xl = render(() => <Kbd size="xl">XL</Kbd>)
 
-    expect(xs.container.querySelector('[data-slot="root"]')?.className).toContain('h-4')
-    expect(sm.container.querySelector('[data-slot="root"]')?.className).toContain('h-5')
-    expect(md.container.querySelector('[data-slot="root"]')?.className).toContain('h-5.5')
-    expect(lg.container.querySelector('[data-slot="root"]')?.className).toContain('h-6')
-    expect(xl.container.querySelector('[data-slot="root"]')?.className).toContain('h-7')
+    expect(xs.container.querySelector('[data-slot="root"]')?.className).toContain('h-2')
+    expect(sm.container.querySelector('[data-slot="root"]')?.className).toContain('h-3')
+    expect(md.container.querySelector('[data-slot="root"]')?.className).toContain('h-4')
+    expect(lg.container.querySelector('[data-slot="root"]')?.className).toContain('h-5')
+    expect(xl.container.querySelector('[data-slot="root"]')?.className).toContain('h-6')
   })
 
   test('falls back to md size when runtime size is invalid', () => {
@@ -31,10 +31,10 @@ describe('Kbd', () => {
     const screen = render(() => <Kbd size="invalid">K</Kbd>)
     const root = screen.container.querySelector('[data-slot="root"]')
 
-    expect(root?.className).toContain('h-5.5')
+    expect(root?.className).toContain('h-4')
   })
 
-  test('applies classes.root override and ignores legacy class prop', () => {
+  test('applies classes.root override', () => {
     const screen = render(() => (
       <Kbd
         classes={{
@@ -47,19 +47,14 @@ describe('Kbd', () => {
     const root = screen.container.querySelector('[data-slot="root"]')
 
     expect(root?.className).toContain('root-override')
-    expect(root?.className).not.toContain('legacy-class')
   })
 
-  test('forwards id/role/aria-* to root', () => {
-    const screen = render(() => (
-      <Kbd id="kbd-root" role="note" aria-label="Keyboard shortcut">
-        K
-      </Kbd>
-    ))
+  test('keeps explicit data-slot support', () => {
+    const screen = render(() => <Kbd data-slot="kbd">K</Kbd>)
     const root = screen.container.querySelector('[data-slot="root"]')
+    const explicitSlotRoot = screen.container.querySelector('[data-slot="kbd"]')
 
-    expect(root?.getAttribute('id')).toBe('kbd-root')
-    expect(root?.getAttribute('role')).toBe('note')
-    expect(root?.getAttribute('aria-label')).toBe('Keyboard shortcut')
+    expect(root).toBeNull()
+    expect(explicitSlotRoot?.tagName).toBe('KBD')
   })
 })

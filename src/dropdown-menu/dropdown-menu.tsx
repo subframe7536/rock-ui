@@ -30,7 +30,6 @@ const DROPDOWN_MENU_PRIMITIVES: OverlayMenuPrimitives = {
   Sub: KobalteDropdownMenu.Sub as unknown as OverlayMenuPrimitives['Sub'],
   SubTrigger: KobalteDropdownMenu.SubTrigger as unknown as OverlayMenuPrimitives['SubTrigger'],
   SubContent: KobalteDropdownMenu.SubContent as unknown as OverlayMenuPrimitives['SubContent'],
-  Arrow: KobalteDropdownMenu.Arrow as unknown as OverlayMenuPrimitives['Arrow'],
 }
 
 type DropdownMenuColor = NonNullable<DropdownMenuItemVariantProps['color']>
@@ -70,7 +69,6 @@ export interface DropdownMenuBaseProps {
   size?: DropdownMenuSize
   disabled?: boolean
   items?: DropdownMenuItems
-  arrow?: boolean
   checkedIcon?: IconName
   submenuIcon?: IconName
   itemRender?: (context: DropdownMenuItemRenderContext) => JSX.Element
@@ -81,7 +79,10 @@ export interface DropdownMenuBaseProps {
 }
 
 export type DropdownMenuProps = DropdownMenuBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof DropdownMenuBaseProps | 'children' | 'class'>
+  Omit<
+    KobalteDropdownMenu.DropdownMenuRootProps,
+    keyof DropdownMenuBaseProps | 'children' | 'class'
+  >
 
 export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
   const merged = mergeProps(
@@ -94,43 +95,41 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
     },
     props,
   ) as DropdownMenuProps
-  const [local, rest] = splitProps(merged, [
-    'defaultOpen',
-    'placement',
-    'gutter',
-    'size',
-    'disabled',
-    'items',
-    'arrow',
-    'checkedIcon',
-    'submenuIcon',
-    'itemRender',
-    'contentTop',
-    'contentBottom',
-    'classes',
-    'children',
-  ])
+  const [rootStateProps, menuProps, triggerProps, rootProps] = splitProps(
+    merged,
+    ['defaultOpen', 'placement', 'disabled'],
+    [
+      'size',
+      'items',
+      'checkedIcon',
+      'submenuIcon',
+      'itemRender',
+      'contentTop',
+      'contentBottom',
+      'classes',
+    ],
+    ['children'],
+  )
 
-  const triggerChildren = children(() => local.children)
+  const triggerChildren = children(() => triggerProps.children)
   const hasTrigger = () => triggerChildren.toArray().length > 0
 
-  const rootSide = () => resolveOverlayMenuSide(local.placement)
+  const rootSide = () => resolveOverlayMenuSide(rootStateProps.placement)
 
   return (
     <KobalteDropdownMenu.Root
-      defaultOpen={local.defaultOpen}
+      defaultOpen={rootStateProps.defaultOpen}
       modal
-      placement={local.placement}
-      gutter={local.gutter}
+      placement={rootStateProps.placement}
       overflowPadding={0}
-      {...rest}
+      {...rootProps}
     >
       <Show when={hasTrigger()}>
         <KobalteDropdownMenu.Trigger
           as="span"
           data-slot="trigger"
-          class={local.classes?.trigger}
-          disabled={local.disabled}
+          class={menuProps.classes?.trigger}
+          disabled={rootStateProps.disabled}
         >
           {triggerChildren()}
         </KobalteDropdownMenu.Trigger>
@@ -138,56 +137,43 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
 
       <OverlayMenuBaseContent<DropdownMenuColor, DropdownMenuItem, DropdownMenuSize>
         primitives={DROPDOWN_MENU_PRIMITIVES}
-        items={local.items}
-        size={local.size}
-        classes={local.classes}
-        checkedIcon={local.checkedIcon}
-        submenuIcon={local.submenuIcon}
-        itemRender={local.itemRender}
-        contentTop={local.contentTop}
-        contentBottom={local.contentBottom}
+        {...menuProps}
         itemClassName={(item) =>
           dropdownMenuItemVariants(
             {
-              size: local.size,
+              size: menuProps.size,
               color: item.color,
             },
-            local.classes?.item,
+            menuProps.classes?.item,
           )
         }
         checkboxItemClassName={(item) =>
           dropdownMenuItemVariants(
             {
-              size: local.size,
+              size: menuProps.size,
               color: item.color,
             },
-            'pr-8 pl-1.5',
-            local.classes?.item,
+            menuProps.classes?.item,
           )
         }
         subTriggerClassName={(item) =>
           dropdownMenuItemVariants(
             {
-              size: local.size,
+              size: menuProps.size,
               color: item.color,
             },
             'data-expanded:(bg-accent text-accent-foreground)',
-            local.classes?.item,
+            menuProps.classes?.item,
           )
         }
         rootContentClassName={(side) =>
-          dropdownMenuContentVariants({ side, sub: false }, local.classes?.content)
+          dropdownMenuContentVariants({ side, sub: false }, menuProps.classes?.content)
         }
         subContentClassName={(side) =>
-          dropdownMenuContentVariants({ side, sub: true }, local.classes?.content)
+          dropdownMenuContentVariants({ side, sub: true }, menuProps.classes?.content)
         }
         rootSide={rootSide()}
         separatorClassName="-mx-1 my-1 h-px bg-border"
-        renderRootExtras={() => (
-          <Show when={local.arrow}>
-            <KobalteDropdownMenu.Arrow data-slot="arrow" class={local.classes?.arrow} />
-          </Show>
-        )}
       />
     </KobalteDropdownMenu.Root>
   )

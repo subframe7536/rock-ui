@@ -123,22 +123,4 @@ describe('Progress', () => {
     expect(steps?.className).toContain('steps-override')
     expect(step?.className).toContain('step-override')
   })
-
-  test('ignores legacy as and class props', () => {
-    const screen = render(() => (
-      <Progress
-        {...({
-          as: 'section',
-          class: 'legacy-class',
-          value: 40,
-          classes: { root: 'root-override' },
-        } as any)}
-      />
-    ))
-    const root = screen.container.querySelector('[data-slot="root"]')
-
-    expect(root?.tagName).toBe('DIV')
-    expect(root?.className).toContain('root-override')
-    expect(root?.className).not.toContain('legacy-class')
-  })
 })

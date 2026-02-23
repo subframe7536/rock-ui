@@ -31,10 +31,12 @@ export interface IconBaseProps {
    * Slot-based class overrides.
    */
   classes?: IconClasses
+  style?: JSX.CSSProperties | string
+  'aria-label'?: string
+  'data-slot'?: string
 }
 
-export type IconProps = IconBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLSpanElement>, keyof IconBaseProps | 'children' | 'class'>
+export type IconProps = IconBaseProps
 
 function parseIconName(value: string): { name: string; prefix?: string } {
   const cleaned = value.startsWith('i-') ? value.slice(2) : value
@@ -47,67 +49,63 @@ function parseIconName(value: string): { name: string; prefix?: string } {
 }
 
 export function Icon(props: IconProps): JSX.Element {
-  const [local, rest] = splitProps(props as IconProps, [
-    'style',
-    'name',
-    'size',
-    'customize',
-    'classes',
-    'aria-label',
-  ])
+  const [sourceProps, a11ySlotProps, styleProps] = splitProps(
+    props as IconProps,
+    ['name', 'size', 'customize'],
+    ['style', 'aria-label', 'data-slot'],
+  )
 
   const sizeStyle = createMemo<JSX.CSSProperties | undefined>(() => {
-    if (local.size === undefined || local.size === null) {
+    if (sourceProps.size === undefined || sourceProps.size === null) {
       return undefined
     }
 
-    if (typeof local.size === 'number') {
+    if (typeof sourceProps.size === 'number') {
       return {
-        'font-size': `${local.size}px`,
+        'font-size': `${sourceProps.size}px`,
       }
     }
 
     return {
-      'font-size': local.size,
+      'font-size': sourceProps.size,
     }
   })
 
   const resolveIconClass = (): string | undefined => {
-    if (typeof local.name !== 'string') {
+    if (typeof sourceProps.name !== 'string') {
       return undefined
     }
 
-    const parsed = parseIconName(local.name)
-    const customized = local.customize?.(parsed.name, parsed.name, parsed.prefix, undefined)
+    const parsed = parseIconName(sourceProps.name)
+    const customized = sourceProps.customize?.(parsed.name, parsed.name, parsed.prefix, undefined)
 
-    return customized ?? local.name
+    return customized ?? sourceProps.name
   }
 
   const renderedContent = createMemo<JSX.Element>(() => {
-    if (typeof local.name === 'function') {
-      return local.name()
+    if (typeof sourceProps.name === 'function') {
+      return sourceProps.name()
     }
 
-    if (typeof local.name === 'string') {
+    if (typeof sourceProps.name === 'string') {
       return ''
     }
 
-    return local.name
+    return sourceProps.name
   })
 
   return (
     <span
-      data-slot="icon"
+      data-slot={a11ySlotProps['data-slot'] ?? 'icon'}
       class={cn(
         'inline-flex shrink-0 items-center justify-center align-middle',
         resolveIconClass(),
-        local.classes?.root,
+        styleProps.classes?.root,
       )}
-      style={combineStyle(local.style, sizeStyle())}
-      aria-hidden={local['aria-label'] ? undefined : true}
-      {...rest}
+      style={combineStyle(a11ySlotProps.style, sizeStyle())}
+      aria-hidden={a11ySlotProps['aria-label'] ? undefined : true}
     >
-      <Show when={typeof local.name !== 'string'}>{renderedContent()}</Show>
+      <Show when={typeof sourceProps.name !== 'string'}>{renderedContent()}</Show>
     </span>
   )
 }

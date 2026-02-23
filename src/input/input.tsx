@@ -45,8 +45,10 @@ export interface InputBaseProps extends InputStyleVariantProps {
   id?: string
   name?: string
   type?: JSX.InputHTMLAttributes<HTMLInputElement>['type']
+  value?: InputValue
   placeholder?: string
   required?: boolean
+  readOnly?: boolean
   autocomplete?: JSX.InputHTMLAttributes<HTMLInputElement>['autocomplete']
   autofocus?: boolean
   autofocusDelay?: number
@@ -60,39 +62,15 @@ export interface InputBaseProps extends InputStyleVariantProps {
   loadingIcon?: IconName
   modelModifiers?: ModelModifiers<InputValue>
   onValueChange?: (value: InputValue) => void
+  onInput?: JSX.EventHandlerUnion<HTMLInputElement, InputEvent>
+  onChange?: JSX.EventHandlerUnion<HTMLInputElement, Event>
+  onBlur?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
+  onFocus?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
   classes?: InputClasses
   children?: JSX.Element
 }
 
-export type InputProps = InputBaseProps &
-  Omit<
-    JSX.InputHTMLAttributes<HTMLInputElement>,
-    keyof InputBaseProps | 'id' | 'children' | 'size' | 'class'
-  >
-
-function normalizeInputColor(value?: string): InputColor {
-  if (value === 'secondary' || value === 'neutral' || value === 'error') {
-    return value
-  }
-
-  return 'primary'
-}
-
-function normalizeInputSize(value?: string): InputSize {
-  if (value === 'xs' || value === 'sm' || value === 'lg' || value === 'xl') {
-    return value
-  }
-
-  return 'md'
-}
-
-function normalizeInputVariant(value?: string): InputVariant {
-  if (value === 'soft' || value === 'subtle' || value === 'ghost' || value === 'none') {
-    return value
-  }
-
-  return 'outline'
-}
+export type InputProps = InputBaseProps
 
 function isRenderableContent(value: unknown): value is JSX.Element {
   return value !== undefined && value !== null && typeof value !== 'boolean'
@@ -113,117 +91,115 @@ export function Input(props: InputProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as InputProps, [
-    'as',
-    'id',
-    'name',
-    'type',
-    'color',
-    'variant',
-    'size',
-    'autofocus',
-    'autofocusDelay',
-    'disabled',
-    'highlight',
-    'icon',
-    'leading',
-    'leadingIcon',
-    'trailing',
-    'trailingIcon',
-    'loading',
-    'loadingIcon',
-    'modelModifiers',
-    'onValueChange',
-    'onInput',
-    'onChange',
-    'onBlur',
-    'onFocus',
-    'classes',
-    'children',
-  ])
+  const [formProps, baseProps, adornmentStyleProps] = splitProps(
+    merged as InputProps,
+    [
+      'id',
+      'name',
+      'value',
+      'required',
+      'disabled',
+      'readOnly',
+      'modelModifiers',
+      'onValueChange',
+      'onInput',
+      'onChange',
+      'onBlur',
+      'onFocus',
+    ],
+    ['as', 'type', 'placeholder', 'autocomplete', 'autofocus', 'autofocusDelay', 'children'],
+  )
 
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      color: local.color,
-      highlight: local.highlight,
-      disabled: local.disabled,
+      id: formProps.id,
+      name: formProps.name,
+      size: adornmentStyleProps.size,
+      color: adornmentStyleProps.color,
+      highlight: adornmentStyleProps.highlight,
+      disabled: formProps.disabled,
     }),
     { deferInputValidation: true },
   )
   const fieldGroup = useFieldGroupContext()
-  const generatedId = useId(() => local.id, 'input')
+  const generatedId = useId(() => formProps.id, 'input')
 
   let inputEl: HTMLInputElement | undefined
 
   const inputId = createMemo(() => field.id() ?? generatedId())
-  const resolvedColor = createMemo(() => normalizeInputColor(field.color() ?? local.color))
-  const resolvedSize = createMemo(() =>
-    normalizeInputSize(local.size ?? fieldGroup?.size ?? field.size()),
+  const resolvedColor = createMemo(() => (field.color() ?? adornmentStyleProps.color) as InputColor)
+  const resolvedSize = createMemo(
+    () => (adornmentStyleProps.size ?? fieldGroup?.size ?? field.size() ?? 'md') as InputSize,
   )
-  const resolvedVariant = createMemo(() => normalizeInputVariant(local.variant))
-  const resolvedHighlight = createMemo(() => field.highlight() ?? local.highlight)
+  const resolvedVariant = createMemo(() => adornmentStyleProps.variant as InputVariant)
+  const resolvedHighlight = createMemo(() => field.highlight() ?? adornmentStyleProps.highlight)
   const disabled = createMemo(() => field.disabled())
   const ariaAttrs = createMemo(() => field.ariaAttrs() ?? {})
-  const isLazy = createMemo(() => Boolean(local.modelModifiers?.lazy))
+  const isLazy = createMemo(() => Boolean(formProps.modelModifiers?.lazy))
 
   const customLeading = createMemo(() =>
-    isRenderableContent(local.leading) ? (local.leading as JSX.Element) : undefined,
+    isRenderableContent(adornmentStyleProps.leading)
+      ? (adornmentStyleProps.leading as JSX.Element)
+      : undefined,
   )
   const customTrailing = createMemo(() =>
-    isRenderableContent(local.trailing) ? (local.trailing as JSX.Element) : undefined,
+    isRenderableContent(adornmentStyleProps.trailing)
+      ? (adornmentStyleProps.trailing as JSX.Element)
+      : undefined,
   )
 
   const isLeadingIcon = createMemo(() => {
-    const hasIcon = Boolean(local.icon)
-    const leading = local.leading === true
-    const trailing = local.trailing === true
+    const hasIcon = Boolean(adornmentStyleProps.icon)
+    const leading = adornmentStyleProps.leading === true
+    const trailing = adornmentStyleProps.trailing === true
 
     return Boolean(
       (hasIcon && leading) ||
       (hasIcon && !trailing) ||
-      (local.loading && !trailing) ||
-      local.leadingIcon,
+      (adornmentStyleProps.loading && !trailing) ||
+      adornmentStyleProps.leadingIcon,
     )
   })
   const isTrailingIcon = createMemo(() => {
-    const hasIcon = Boolean(local.icon)
-    const trailing = local.trailing === true
+    const hasIcon = Boolean(adornmentStyleProps.icon)
+    const trailing = adornmentStyleProps.trailing === true
 
-    return Boolean((hasIcon && trailing) || (local.loading && trailing) || local.trailingIcon)
+    return Boolean(
+      (hasIcon && trailing) ||
+      (adornmentStyleProps.loading && trailing) ||
+      adornmentStyleProps.trailingIcon,
+    )
   })
 
   const leadingIconName = createMemo<IconName | undefined>(() => {
-    if (local.loading) {
-      return local.loadingIcon
+    if (adornmentStyleProps.loading) {
+      return adornmentStyleProps.loadingIcon
     }
 
-    return local.leadingIcon ?? local.icon
+    return adornmentStyleProps.leadingIcon ?? adornmentStyleProps.icon
   })
   const trailingIconName = createMemo<IconName | undefined>(() => {
-    if (local.loading && !isLeadingIcon()) {
-      return local.loadingIcon
+    if (adornmentStyleProps.loading && !isLeadingIcon()) {
+      return adornmentStyleProps.loadingIcon
     }
 
-    return local.trailingIcon ?? local.icon
+    return adornmentStyleProps.trailingIcon ?? adornmentStyleProps.icon
   })
 
   const hasLeading = createMemo(() => Boolean(customLeading() || isLeadingIcon()))
   const hasTrailing = createMemo(() => Boolean(customTrailing() || isTrailingIcon()))
 
   function updateInputValue(value: string | null | undefined): void {
-    const nextValue = applyInputModifiers<InputValue>(value, local.modelModifiers, {
-      number: local.type === 'number',
+    const nextValue = applyInputModifiers<InputValue>(value, formProps.modelModifiers, {
+      number: baseProps.type === 'number',
     })
 
-    local.onValueChange?.(nextValue)
+    formProps.onValueChange?.(nextValue)
     field.emitFormInput()
   }
 
   const onInput: JSX.EventHandlerUnion<HTMLInputElement, InputEvent> = (event) => {
-    callHandler(event, local.onInput as JSX.EventHandlerUnion<HTMLInputElement, InputEvent>)
+    callHandler(event, formProps.onInput as JSX.EventHandlerUnion<HTMLInputElement, InputEvent>)
 
     if (!isLazy()) {
       updateInputValue(event.currentTarget.value)
@@ -237,37 +213,37 @@ export function Input(props: InputProps): JSX.Element {
       updateInputValue(value)
     }
 
-    if (local.modelModifiers?.trim) {
+    if (formProps.modelModifiers?.trim) {
       event.currentTarget.value = value.trim()
     }
 
     field.emitFormChange()
-    callHandler(event, local.onChange as JSX.EventHandlerUnion<HTMLInputElement, Event>)
+    callHandler(event, formProps.onChange as JSX.EventHandlerUnion<HTMLInputElement, Event>)
   }
 
   const onBlur: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
     field.emitFormBlur()
-    callHandler(event, local.onBlur as any)
+    callHandler(event, formProps.onBlur as any)
   }
 
   const onFocus: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
     field.emitFormFocus()
-    callHandler(event, local.onFocus as any)
+    callHandler(event, formProps.onFocus as any)
   }
 
   onMount(() => {
-    if (!local.autofocus) {
+    if (!baseProps.autofocus) {
       return
     }
 
     setTimeout(() => {
       inputEl?.focus()
-    }, local.autofocusDelay ?? 0)
+    }, baseProps.autofocusDelay ?? 0)
   })
 
   return (
     <Dynamic
-      component={local.as}
+      component={baseProps.as}
       data-slot="root"
       class={inputRootVariants(
         {
@@ -277,7 +253,7 @@ export function Input(props: InputProps): JSX.Element {
           highlight: resolvedHighlight(),
           disabled: disabled(),
         },
-        local.classes?.root,
+        adornmentStyleProps.classes?.root,
       )}
       onclick={() => inputEl?.focus()}
     >
@@ -288,7 +264,7 @@ export function Input(props: InputProps): JSX.Element {
             {
               size: resolvedSize(),
             },
-            local.classes?.leading,
+            adornmentStyleProps.classes?.leading,
           )}
         >
           <Show
@@ -303,9 +279,9 @@ export function Input(props: InputProps): JSX.Element {
                       root: inputLeadingIconVariants(
                         {
                           size: resolvedSize(),
-                          loading: local.loading,
+                          loading: adornmentStyleProps.loading,
                         },
-                        local.classes?.leadingIcon,
+                        adornmentStyleProps.classes?.leadingIcon,
                       ),
                     }}
                   />
@@ -321,13 +297,18 @@ export function Input(props: InputProps): JSX.Element {
       <input
         id={inputId()}
         ref={(element) => (inputEl = element)}
-        type={local.type}
+        type={baseProps.type}
+        value={formProps.value as string | number | string[] | undefined}
         name={field.name()}
+        placeholder={baseProps.placeholder}
+        required={formProps.required}
         disabled={disabled()}
+        readOnly={formProps.readOnly}
+        autocomplete={baseProps.autocomplete}
         data-slot="base"
         class={inputBaseVariants(
           {
-            type: local.type === 'file' ? 'file' : undefined,
+            type: baseProps.type === 'file' ? 'file' : undefined,
           },
           hasLeading()
             ? inputStartPaddingWithSlotVariants({
@@ -343,17 +324,16 @@ export function Input(props: InputProps): JSX.Element {
             : inputEndPaddingNoSlotVariants({
                 size: resolvedSize(),
               }),
-          local.classes?.input,
+          adornmentStyleProps.classes?.input,
         )}
         onInput={onInput}
         onChange={onChange}
         onBlur={onBlur}
         onFocus={onFocus}
-        {...rest}
         {...ariaAttrs()}
       />
 
-      {local.children}
+      {baseProps.children}
 
       <Show when={hasTrailing()}>
         <span
@@ -362,7 +342,7 @@ export function Input(props: InputProps): JSX.Element {
             {
               size: resolvedSize(),
             },
-            local.classes?.trailing,
+            adornmentStyleProps.classes?.trailing,
           )}
         >
           <Show
@@ -377,9 +357,9 @@ export function Input(props: InputProps): JSX.Element {
                       root: inputTrailingIconVariants(
                         {
                           size: resolvedSize(),
-                          loading: local.loading,
+                          loading: adornmentStyleProps.loading,
                         },
-                        local.classes?.trailingIcon,
+                        adornmentStyleProps.classes?.trailingIcon,
                       ),
                     }}
                   />

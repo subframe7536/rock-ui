@@ -605,7 +605,6 @@ describe('Select - form integration', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOnInputDelay={0}
         validate={(currentState) => {
@@ -629,7 +628,7 @@ describe('Select - form integration', () => {
       </Form>
     ))
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
 
     await waitFor(() => {
       expect(screen.getByText('Select a fruit')).not.toBeNull()

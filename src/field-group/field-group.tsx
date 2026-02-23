@@ -18,8 +18,7 @@ export interface FieldGroupBaseProps {
   children?: JSX.Element
 }
 
-export type FieldGroupProps = FieldGroupBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof FieldGroupBaseProps | 'children' | 'class'>
+export type FieldGroupProps = FieldGroupBaseProps
 
 export function FieldGroup(props: FieldGroupProps): JSX.Element {
   const merged = mergeProps(
@@ -30,36 +29,34 @@ export function FieldGroup(props: FieldGroupProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as FieldGroupProps & { class?: string }, [
+  const [layoutProps, contentProps] = splitProps(merged as FieldGroupProps, [
     'size',
     'orientation',
     'classes',
-    'children',
   ])
 
   return (
     <FieldGroupProvider
       value={{
         get size() {
-          return local.size
+          return layoutProps.size
         },
         get orientation() {
-          return local.orientation
+          return layoutProps.orientation
         },
       }}
     >
       <div
         data-slot="root"
-        data-orientation={local.orientation}
+        data-orientation={layoutProps.orientation}
         class={fieldGroupVariants(
           {
-            orientation: local.orientation,
+            orientation: layoutProps.orientation,
           },
-          local.classes?.root,
+          layoutProps.classes?.root,
         )}
-        {...rest}
       >
-        {local.children}
+        {contentProps.children}
       </div>
     </FieldGroupProvider>
   )

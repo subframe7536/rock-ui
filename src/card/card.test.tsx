@@ -13,13 +13,6 @@ describe('Card', () => {
     expect(root?.className).toContain('border-border')
   })
 
-  test('always renders static div even when legacy as is passed', () => {
-    const screen = render(() => <Card {...({ as: 'section' } as any)} />)
-    const root = screen.container.querySelector('[data-slot="root"]')
-
-    expect(root?.tagName).toBe('DIV')
-  })
-
   test('renders body slot only when children exist', () => {
     const emptyScreen = render(() => <Card />)
     const hasNoBody = emptyScreen.container.querySelector('[data-slot="body"]')
@@ -89,32 +82,6 @@ describe('Card', () => {
     expect(header?.className).toContain('header-override')
     expect(body?.className).toContain('body-override')
     expect(footer?.className).toContain('footer-override')
-  })
-
-  test('ignores legacy class prop and keeps classes.root as root override channel', () => {
-    const screen = render(() => (
-      <Card
-        {...({
-          class: 'legacy-class',
-          classes: {
-            root: 'root-override',
-          },
-        } as any)}
-      />
-    ))
-
-    const root = screen.container.querySelector('[data-slot="root"]')
-    expect(root?.className).toContain('root-override')
-    expect(root?.className).not.toContain('legacy-class')
-  })
-
-  test('forwards id and aria attributes to root', () => {
-    const screen = render(() => <Card id="card-root" role="region" aria-label="Card Region" />)
-    const root = screen.container.querySelector('[data-slot="root"]')
-
-    expect(root?.getAttribute('id')).toBe('card-root')
-    expect(root?.getAttribute('role')).toBe('region')
-    expect(root?.getAttribute('aria-label')).toBe('Card Region')
   })
 
   test('falls back to outline variant when runtime value is invalid', () => {

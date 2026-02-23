@@ -21,7 +21,7 @@ export const fileUploadRootVariants = cva('relative flex flex-col', {
 })
 
 export const fileUploadBaseVariants = cva(
-  'group relative inline-flex w-full cursor-pointer items-center justify-center rounded-lg border bg-background text-center outline-none transition-colors focus-visible:effect-fv',
+  'group relative inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-input bg-background text-center outline-none transition-[color,box-shadow] dark:bg-input/30 focus-visible:(border-ring ring-3 ring-ring/50)',
   {
     defaultVariants: {
       color: 'primary',
@@ -29,13 +29,14 @@ export const fileUploadBaseVariants = cva(
       dropzone: true,
       disabled: false,
       dragging: false,
+      invalid: false,
     },
     variants: {
       color: {
-        primary: 'focus-visible:(ring-primary border-primary/70)',
-        secondary: 'focus-visible:(ring-secondary border-secondary/70)',
-        neutral: 'focus-visible:(ring-foreground border-foreground/70)',
-        error: 'focus-visible:(ring-destructive border-destructive/70)',
+        primary: '',
+        secondary: '',
+        neutral: '',
+        error: '',
       },
       size: {
         xs: 'min-h-20 gap-1.5 px-2.5 py-2 text-xs',
@@ -45,7 +46,7 @@ export const fileUploadBaseVariants = cva(
         xl: 'min-h-36 gap-3 px-5 py-4 text-base',
       },
       highlight: {
-        true: 'ring-1 ring-inset ring-border',
+        true: 'ring-1 ring-border/50',
       },
       disabled: {
         true: 'cursor-not-allowed',
@@ -57,12 +58,11 @@ export const fileUploadBaseVariants = cva(
         true: 'border-dashed',
         false: 'border-solid',
       },
+      invalid: {
+        true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
+      },
     },
     compoundVariants: [
-      { color: 'primary', highlight: true, class: 'ring-primary' },
-      { color: 'secondary', highlight: true, class: 'ring-secondary' },
-      { color: 'neutral', highlight: true, class: 'ring-foreground' },
-      { color: 'error', highlight: true, class: 'ring-destructive' },
       { color: 'primary', dragging: true, class: 'border-primary bg-primary/8' },
       { color: 'secondary', dragging: true, class: 'border-secondary bg-secondary/8' },
       { color: 'neutral', dragging: true, class: 'border-foreground bg-muted/64' },
@@ -232,7 +232,7 @@ export const fileUploadSizeVariants = cva('truncate text-muted-foreground', {
 })
 
 export const fileUploadRemoveVariants = cva(
-  'inline-flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:(bg-muted text-foreground) focus-visible:effect-fv',
+  'inline-flex items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-colors hover:(bg-muted text-foreground) focus-visible:(border-ring ring-3 ring-ring/50)',
   {
     defaultVariants: {
       size: 'md',

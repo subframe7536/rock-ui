@@ -2,7 +2,7 @@ import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
 export const inputNumberBaseVariants = cva(
-  'w-full rounded-md border border-input bg-background text-foreground outline-none transition-shadow placeholder:text-muted-foreground disabled:(cursor-not-allowed opacity-75)',
+  'w-full rounded-md border border-input bg-transparent text-foreground outline-none transition-[color,box-shadow] dark:bg-input/30 placeholder:text-muted-foreground focus-visible:(border-ring ring-3 ring-ring/50) aria-invalid:(border-destructive ring-3 ring-destructive/20) dark:aria-invalid:(border-destructive/50 ring-destructive/40) disabled:(cursor-not-allowed opacity-75)',
   {
     defaultVariants: {
       color: 'primary',
@@ -12,10 +12,10 @@ export const inputNumberBaseVariants = cva(
     },
     variants: {
       color: {
-        primary: 'focus-visible:(ring-2 ring-inset ring-primary)',
-        secondary: 'focus-visible:(ring-2 ring-inset ring-secondary)',
-        neutral: 'focus-visible:(ring-2 ring-inset ring-neutral)',
-        error: 'focus-visible:(ring-2 ring-inset ring-destructive)',
+        primary: '',
+        secondary: '',
+        neutral: '',
+        error: '',
       },
       size: {
         xs: 'h-7 px-2 text-xs',
@@ -25,7 +25,7 @@ export const inputNumberBaseVariants = cva(
         xl: 'h-11 px-3 text-base',
       },
       variant: {
-        outline: 'border border-input bg-background',
+        outline: 'bg-transparent',
         soft: 'border-transparent bg-muted/50 hover:bg-muted',
         subtle: 'border border-border bg-muted',
         ghost: 'border-transparent bg-transparent hover:bg-muted',
@@ -36,15 +36,10 @@ export const inputNumberBaseVariants = cva(
         vertical: 'text-center pe-9',
       },
       highlight: {
-        true: 'ring-1 ring-inset ring-border',
+        true: 'ring-1 ring-border/50',
       },
     },
-    compoundVariants: [
-      { color: 'primary', highlight: true, class: 'ring-primary' },
-      { color: 'secondary', highlight: true, class: 'ring-secondary' },
-      { color: 'neutral', highlight: true, class: 'ring-foreground' },
-      { color: 'error', highlight: true, class: 'ring-destructive' },
-    ],
+    compoundVariants: [],
   },
 )
 

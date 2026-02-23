@@ -79,7 +79,7 @@ describe('ContextMenu', () => {
     disabledScreen.unmount()
   })
 
-  test('renders item matrix, nested submenu, arrow and content slots', async () => {
+  test('renders item matrix, nested submenu, and content slots', async () => {
     const contentTop = vi.fn((props: { sub: boolean }) => (
       <div data-testid={props.sub ? 'content-top-sub' : 'content-top-root'}>
         {props.sub ? 'Top Sub' : 'Top Root'}

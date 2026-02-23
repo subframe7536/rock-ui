@@ -47,7 +47,7 @@ export interface SheetBaseProps {
 }
 
 export type SheetProps = SheetBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof SheetBaseProps | 'children' | 'class'>
+  Omit<KobalteDialog.DialogRootProps, keyof SheetBaseProps | 'children' | 'class'>
 
 export function Sheet(props: SheetProps): JSX.Element {
   const merged = mergeProps(
@@ -61,33 +61,17 @@ export function Sheet(props: SheetProps): JSX.Element {
     },
     props,
   ) as SheetProps
-  const [local, rest] = splitProps(merged, [
-    'id',
-    'open',
-    'defaultOpen',
-    'onOpenChange',
-    'title',
-    'description',
-    'overlay',
-    'transition',
-    'side',
-    'inset',
-    'close',
-    'dismissible',
-    'onClosePrevent',
-    'header',
-    'body',
-    'footer',
-    'actions',
-    'classes',
-    'children',
-  ])
+  const [behaviorProps, contentProps, rootProps] = splitProps(
+    merged,
+    ['overlay', 'transition', 'side', 'inset', 'close', 'dismissible', 'onClosePrevent'],
+    ['title', 'description', 'header', 'body', 'footer', 'actions', 'classes', 'children'],
+  )
 
-  const triggerChildren = children(() => local.children)
+  const triggerChildren = children(() => contentProps.children)
   const hasTrigger = () => triggerChildren.toArray().length > 0
 
   const preventDismiss = () => {
-    local.onClosePrevent?.()
+    behaviorProps.onClosePrevent?.()
   }
 
   let hasPreventedPointerAttempt = false
@@ -113,7 +97,7 @@ export function Sheet(props: SheetProps): JSX.Element {
   const onPointerDownOutside = (
     event: Parameters<NonNullable<KobalteDialogContentProps['onPointerDownOutside']>>[0],
   ) => {
-    if (local.dismissible) {
+    if (behaviorProps.dismissible) {
       return
     }
 
@@ -126,7 +110,7 @@ export function Sheet(props: SheetProps): JSX.Element {
   const onInteractOutside = (
     event: Parameters<NonNullable<KobalteDialogContentProps['onInteractOutside']>>[0],
   ) => {
-    if (local.dismissible) {
+    if (behaviorProps.dismissible) {
       return
     }
 
@@ -146,7 +130,7 @@ export function Sheet(props: SheetProps): JSX.Element {
   const onEscapeKeyDown = (
     event: Parameters<NonNullable<KobalteDialogContentProps['onEscapeKeyDown']>>[0],
   ) => {
-    if (local.dismissible) {
+    if (behaviorProps.dismissible) {
       return
     }
 
@@ -155,111 +139,122 @@ export function Sheet(props: SheetProps): JSX.Element {
   }
 
   const hasDefaultHeader = () =>
-    Boolean(local.title || local.description || local.actions || local.close)
+    Boolean(
+      contentProps.title || contentProps.description || contentProps.actions || behaviorProps.close,
+    )
 
   const computedContentClass = () => {
-    const transitionClass = local.transition
+    const transitionClass = behaviorProps.transition
       ? ''
       : 'transition-none data-expanded:animate-none data-closed:animate-none'
 
     return sheetContentVariants(
       {
-        side: local.side,
-        inset: local.inset,
+        side: behaviorProps.side,
+        inset: behaviorProps.inset,
       },
       transitionClass,
-      local.classes?.content,
+      contentProps.classes?.content,
     )
   }
 
   const content = () => (
     <KobalteDialog.Content
       data-slot="content"
-      data-side={local.side}
+      data-side={behaviorProps.side}
       class={computedContentClass()}
       onPointerDownOutside={onPointerDownOutside}
       onInteractOutside={onInteractOutside}
       onEscapeKeyDown={onEscapeKeyDown}
     >
-      <Show when={local.header || hasDefaultHeader()}>
+      <Show when={contentProps.header || hasDefaultHeader()}>
         <div
           data-slot="header"
-          class={cn('relative flex flex-col gap-0.5 p-4 pe-12', local.classes?.header)}
+          class={cn('flex items-start gap-2 p-4', contentProps.classes?.header)}
         >
           <Show
-            when={local.header}
+            when={contentProps.header}
             fallback={
               <>
-                <div data-slot="wrapper" class={cn('grid gap-0.5', local.classes?.wrapper)}>
-                  <Show when={local.title}>
+                <div
+                  data-slot="wrapper"
+                  class={cn('min-w-0 flex-1 grid gap-0.5', contentProps.classes?.wrapper)}
+                >
+                  <Show when={contentProps.title}>
                     <KobalteDialog.Title
                       data-slot="title"
-                      class={cn('text-foreground text-base font-medium', local.classes?.title)}
+                      class={cn(
+                        'text-foreground text-base font-medium',
+                        contentProps.classes?.title,
+                      )}
                     >
-                      {local.title}
+                      {contentProps.title}
                     </KobalteDialog.Title>
                   </Show>
 
-                  <Show when={local.description}>
+                  <Show when={contentProps.description}>
                     <KobalteDialog.Description
                       data-slot="description"
-                      class={cn('text-muted-foreground text-sm', local.classes?.description)}
+                      class={cn('text-muted-foreground text-sm', contentProps.classes?.description)}
                     >
-                      {local.description}
+                      {contentProps.description}
                     </KobalteDialog.Description>
                   </Show>
                 </div>
 
-                <Show when={local.actions}>
+                <Show when={contentProps.actions}>
                   <div
                     data-slot="actions"
-                    class={cn('inline-flex items-center gap-2', local.classes?.actions)}
+                    class={cn(
+                      'ms-auto inline-flex shrink-0 items-center gap-2',
+                      contentProps.classes?.actions,
+                    )}
                   >
-                    {local.actions}
+                    {contentProps.actions}
                   </div>
                 </Show>
 
-                <Show when={local.close !== false}>
+                <Show when={behaviorProps.close !== false}>
                   <KobalteDialog.CloseButton
                     data-slot="close"
                     class={cn(
-                      'absolute top-3 right-3 inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:(bg-accent text-accent-foreground) effect-fv',
-                      local.classes?.close,
+                      'inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-colors hover:(bg-accent text-accent-foreground) focus-visible:(border-ring ring-3 ring-ring/50)',
+                      contentProps.classes?.close,
                     )}
                     aria-label="Close"
                   >
-                    <Show when={local.close !== true} fallback={<Icon name="icon-close" />}>
-                      {local.close as JSX.Element}
+                    <Show when={behaviorProps.close !== true} fallback={<Icon name="icon-close" />}>
+                      {behaviorProps.close as JSX.Element}
                     </Show>
                   </KobalteDialog.CloseButton>
                 </Show>
               </>
             }
           >
-            {local.header}
+            {contentProps.header}
           </Show>
         </div>
       </Show>
 
-      <Show when={local.body}>
+      <Show when={contentProps.body}>
         <div
           data-slot="body"
           class={cn(
             'flex-1 overflow-auto',
-            local.header || hasDefaultHeader() ? 'px-4 pb-4 pt-0' : 'p-4',
-            local.classes?.body,
+            contentProps.header || hasDefaultHeader() ? 'px-4 pb-4 pt-0' : 'p-4',
+            contentProps.classes?.body,
           )}
         >
-          {local.body}
+          {contentProps.body}
         </div>
       </Show>
 
-      <Show when={local.footer}>
+      <Show when={contentProps.footer}>
         <div
           data-slot="footer"
-          class={cn('mt-auto flex flex-col gap-2 p-4', local.classes?.footer)}
+          class={cn('mt-auto flex flex-col gap-2 p-4', contentProps.classes?.footer)}
         >
-          {local.footer}
+          {contentProps.footer}
         </div>
       </Show>
     </KobalteDialog.Content>
@@ -267,12 +262,12 @@ export function Sheet(props: SheetProps): JSX.Element {
 
   const layer = () => (
     <>
-      <Show when={local.overlay}>
+      <Show when={behaviorProps.overlay}>
         <KobalteDialog.Overlay
           data-slot="overlay"
           class={cn(
             'fixed inset-0 z-50 bg-black/10 supports-backdrop-filter:backdrop-blur-xs data-expanded:(animate-in fade-in-0) data-closed:(animate-out fade-out-0) data-ending-style:opacity-0 data-starting-style:opacity-0 duration-100',
-            local.classes?.overlay,
+            contentProps.classes?.overlay,
           )}
         />
       </Show>
@@ -282,16 +277,9 @@ export function Sheet(props: SheetProps): JSX.Element {
   )
 
   return (
-    <KobalteDialog.Root
-      id={local.id}
-      open={local.open}
-      defaultOpen={local.defaultOpen}
-      onOpenChange={local.onOpenChange}
-      modal
-      {...rest}
-    >
+    <KobalteDialog.Root modal {...rootProps}>
       <Show when={hasTrigger()}>
-        <KobalteDialog.Trigger as="span" data-slot="trigger" class={local.classes?.trigger}>
+        <KobalteDialog.Trigger as="span" data-slot="trigger" class={contentProps.classes?.trigger}>
           {triggerChildren()}
         </KobalteDialog.Trigger>
       </Show>

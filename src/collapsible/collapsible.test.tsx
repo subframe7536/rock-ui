@@ -42,22 +42,6 @@ describe('Collapsible', () => {
     ).toBe(true)
   })
 
-  test('passes legacy as prop to root element', () => {
-    const screen = render(() => (
-      <Collapsible
-        {...({
-          as: 'section',
-          open: true,
-        } as any)}
-      >
-        <span data-testid="content">Content</span>
-      </Collapsible>
-    ))
-    const root = screen.container.querySelector('[data-slot="root"]')
-
-    expect(root?.tagName).toBe('SECTION')
-  })
-
   test('children render function receives open=true/false', async () => {
     const screen = renderCollapsible({ defaultOpen: false, forceMount: true })
     const trigger = screen.container.querySelector('[data-slot="trigger"]') as HTMLElement
@@ -150,32 +134,9 @@ describe('Collapsible', () => {
     expect(content?.className).toContain('content-override')
   })
 
-  test('legacy class prop overrides classes.root when both are provided', () => {
+  test('forwards id to root', async () => {
     const screen = render(() => (
-      <Collapsible
-        {...({
-          class: 'legacy-class',
-          classes: {
-            root: 'root-override',
-          },
-        } as any)}
-      />
-    ))
-
-    const root = screen.container.querySelector('[data-slot="root"]')
-
-    expect(root?.className).toContain('legacy-class')
-    expect(root?.className).not.toContain('root-override')
-  })
-
-  test('forwards id/role/aria-* to root', async () => {
-    const screen = render(() => (
-      <Collapsible
-        id="collapsible-root"
-        role="region"
-        aria-label="Collapsible Region"
-        renderTrigger={() => 'Trigger'}
-      >
+      <Collapsible id="collapsible-root" renderTrigger={() => 'Trigger'}>
         content
       </Collapsible>
     ))
@@ -184,8 +145,6 @@ describe('Collapsible', () => {
 
     await waitFor(() => {
       expect(root?.getAttribute('id')).toBe('collapsible-root')
-      expect(root?.getAttribute('role')).toBe('region')
-      expect(root?.getAttribute('aria-label')).toBe('Collapsible Region')
     })
   })
 })

@@ -42,24 +42,20 @@ describe('Popover', () => {
     expect(content?.className).toContain(expectedClass)
   })
 
-  test('supports classes for content and arrow', () => {
+  test('supports classes for content slot', () => {
     render(() => (
       <Popover
         open
-        arrow
         classes={{
           content: 'content-slot-class',
-          arrow: 'arrow-slot-class',
         }}
         content="Styled"
       />
     ))
 
     const content = document.body.querySelector('[data-slot="content"]')
-    const arrow = document.body.querySelector('[data-slot="arrow"]')
 
     expect(content?.className).toContain('content-slot-class')
-    expect(arrow?.className).toContain('arrow-slot-class')
   })
 
   test('renders into portal by default', () => {
@@ -116,7 +112,12 @@ describe('Popover', () => {
         <button type="button" data-testid="outside">
           Outside target
         </button>
-        <Popover defaultOpen dismissible={false} onClosePrevent={onClosePrevent} content="Persistent">
+        <Popover
+          defaultOpen
+          dismissible={false}
+          onClosePrevent={onClosePrevent}
+          content="Persistent"
+        >
           <button type="button">Trigger</button>
         </Popover>
       </>
@@ -139,7 +140,12 @@ describe('Popover', () => {
         <button type="button" data-testid="outside">
           Outside target
         </button>
-        <Popover defaultOpen dismissible={false} onClosePrevent={onClosePrevent} content="Persistent">
+        <Popover
+          defaultOpen
+          dismissible={false}
+          onClosePrevent={onClosePrevent}
+          content="Persistent"
+        >
           <button type="button">Trigger</button>
         </Popover>
       </>

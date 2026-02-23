@@ -93,7 +93,10 @@ export interface RadioGroupBaseProps extends RadioGroupVariantProps {
 }
 
 export type RadioGroupProps = RadioGroupBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof RadioGroupBaseProps | 'id' | 'children' | 'class'>
+  Omit<
+    KobalteRadioGroup.RadioGroupRootProps,
+    keyof RadioGroupBaseProps | 'id' | 'children' | 'class'
+  >
 
 function getAtPath(data: Record<string, unknown>, path: string): unknown {
   return path
@@ -107,22 +110,6 @@ function toValueString(value: unknown, fallback: string): RadioGroupValue {
   }
 
   return String(value)
-}
-
-function normalizeRadioGroupSize(value?: string): RadioGroupSize {
-  if (value === 'xs' || value === 'sm' || value === 'lg' || value === 'xl') {
-    return value
-  }
-
-  return 'md'
-}
-
-function normalizeRadioGroupColor(value?: string): RadioGroupColor {
-  if (value === 'secondary' || value === 'neutral' || value === 'error') {
-    return value
-  }
-
-  return 'primary'
 }
 
 export function RadioGroup(props: RadioGroupProps): JSX.Element {
@@ -140,53 +127,44 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as RadioGroupProps, [
-    'id',
-    'name',
-    'legend',
-    'valueKey',
-    'labelKey',
-    'descriptionKey',
-    'items',
-    'value',
-    'defaultValue',
-    'required',
-    'disabled',
-    'readOnly',
-    'onChange',
-    'variant',
-    'indicator',
-    'orientation',
-    'size',
-    'color',
-    'classes',
-  ])
+  const [formProps, rootStateProps, collectionProps, styleProps, rootProps] = splitProps(
+    merged as RadioGroupProps,
+    ['id', 'name', 'disabled', 'onChange'],
+    ['value', 'defaultValue', 'required', 'readOnly'],
+    ['legend', 'items', 'valueKey', 'labelKey', 'descriptionKey'],
+    ['variant', 'indicator', 'orientation', 'size', 'color', 'classes'],
+  )
 
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      color: local.color,
-      size: local.size,
-      disabled: local.disabled,
+      id: formProps.id,
+      name: formProps.name,
+      color: styleProps.color,
+      size: styleProps.size,
+      disabled: formProps.disabled,
     }),
     {
       bind: false,
     },
   )
 
-  const groupId = useId(() => local.id, 'radio-group')
+  const groupId = useId(() => formProps.id, 'radio-group')
   const legendId = createMemo(() => `${groupId()}-legend`)
-  const resolvedSize = createMemo(() => normalizeRadioGroupSize(field.size() ?? local.size))
-  const resolvedColor = createMemo(() => normalizeRadioGroupColor(field.color() ?? local.color))
+  const resolvedSize = createMemo(() => (field.size() ?? styleProps.size) as RadioGroupSize)
+  const resolvedColor = createMemo(() => (field.color() ?? styleProps.color) as RadioGroupColor)
   const disabled = createMemo(() => field.disabled())
   const ariaAttrs = createMemo(() => field.ariaAttrs() ?? {})
+  const invalid = createMemo(() => {
+    const value = ariaAttrs()['aria-invalid']
+
+    return value === true || value === 'true'
+  })
 
   const normalizedItems = createMemo<NormalizedRadioGroupItem[]>(() => {
-    const items = local.items ?? []
-    const valueKey = local.valueKey ?? 'value'
-    const labelKey = local.labelKey ?? 'label'
-    const descriptionKey = local.descriptionKey ?? 'description'
+    const items = collectionProps.items ?? []
+    const valueKey = collectionProps.valueKey ?? 'value'
+    const labelKey = collectionProps.labelKey ?? 'label'
+    const descriptionKey = collectionProps.descriptionKey ?? 'description'
 
     return items.map((item, index) => {
       if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
@@ -240,51 +218,48 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
   })
 
   function onChange(nextValue: string): void {
-    local.onChange?.(nextValue)
+    formProps.onChange?.(nextValue)
     field.emitFormChange()
     field.emitFormInput()
   }
 
   return (
     <KobalteRadioGroup.Root
+      {...rootStateProps}
       id={groupId()}
       name={field.name()}
-      value={local.value}
-      defaultValue={local.defaultValue}
-      required={local.required}
       disabled={disabled()}
-      readOnly={local.readOnly}
-      orientation={local.orientation}
+      orientation={styleProps.orientation}
       onChange={onChange}
       data-slot="root"
-      class={cn('relative', local.classes?.root)}
+      class={cn('relative', styleProps.classes?.root)}
       {...(ariaAttrs() as Record<string, string | boolean | undefined>)}
-      {...rest}
+      {...rootProps}
     >
       <fieldset
         data-slot="fieldset"
-        aria-labelledby={local.legend ? legendId() : undefined}
+        aria-labelledby={collectionProps.legend ? legendId() : undefined}
         class={radioGroupFieldsetVariants(
           {
-            orientation: local.orientation,
+            orientation: styleProps.orientation,
             size: resolvedSize(),
           },
-          local.classes?.fieldset,
+          styleProps.classes?.fieldset,
         )}
       >
-        <Show when={local.legend}>
+        <Show when={collectionProps.legend}>
           <legend
             id={legendId()}
             data-slot="legend"
             class={radioGroupLegendVariants(
               {
                 size: resolvedSize(),
-                required: local.required,
+                required: rootStateProps.required,
               },
-              local.classes?.legend,
+              styleProps.classes?.legend,
             )}
           >
-            {local.legend}
+            {collectionProps.legend}
           </legend>
         </Show>
 
@@ -298,28 +273,29 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
               class={radioGroupItemVariants(
                 {
                   size: resolvedSize(),
-                  variant: local.variant === 'list' ? undefined : local.variant,
-                  indicator: local.indicator === 'hidden' ? undefined : local.indicator,
+                  variant: styleProps.variant === 'list' ? undefined : styleProps.variant,
+                  indicator: styleProps.indicator === 'hidden' ? undefined : styleProps.indicator,
                   disabled: item.disabled || disabled(),
                 },
-                local.variant === 'card' && radioGroupCardPaddingVariants({ size: resolvedSize() }),
-                local.variant === 'table' &&
+                styleProps.variant === 'card' &&
+                  radioGroupCardPaddingVariants({ size: resolvedSize() }),
+                styleProps.variant === 'table' &&
                   radioGroupTablePaddingVariants({
                     size: resolvedSize(),
                   }),
-                local.variant === 'table' &&
+                styleProps.variant === 'table' &&
                   radioGroupTableOrientationVariants({
-                    orientation: local.orientation,
+                    orientation: styleProps.orientation,
                   }),
-                local.variant === 'card' &&
+                styleProps.variant === 'card' &&
                   radioGroupCardCheckedColorVariants({
                     color: resolvedColor(),
                   }),
-                local.variant === 'table' &&
+                styleProps.variant === 'table' &&
                   radioGroupTableCheckedColorVariants({
                     color: resolvedColor(),
                   }),
-                local.classes?.item,
+                styleProps.classes?.item,
                 item.classes?.root,
               )}
             >
@@ -329,7 +305,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                   {
                     size: resolvedSize(),
                   },
-                  local.classes?.container,
+                  styleProps.classes?.container,
                   item.classes?.container,
                 )}
               >
@@ -341,9 +317,10 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                     {
                       size: resolvedSize(),
                       disabled: item.disabled || disabled(),
+                      invalid: invalid(),
                     },
-                    local.indicator === 'hidden' && 'sr-only',
-                    local.classes?.base,
+                    styleProps.indicator === 'hidden' && 'sr-only',
+                    styleProps.classes?.base,
                     item.classes?.base,
                   )}
                 >
@@ -353,7 +330,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                       {
                         color: resolvedColor(),
                       },
-                      local.classes?.indicator,
+                      styleProps.classes?.indicator,
                       item.classes?.indicator,
                     )}
                   >
@@ -363,7 +340,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                         {
                           size: resolvedSize(),
                         },
-                        local.classes?.dot,
+                        styleProps.classes?.dot,
                         item.classes?.dot,
                       )}
                     />
@@ -376,9 +353,9 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                   data-slot="wrapper"
                   class={radioGroupWrapperVariants(
                     {
-                      indicator: local.indicator,
+                      indicator: styleProps.indicator,
                     },
-                    local.classes?.wrapper,
+                    styleProps.classes?.wrapper,
                     item.classes?.wrapper,
                   )}
                 >
@@ -390,7 +367,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                         {
                           disabled: item.disabled || disabled(),
                         },
-                        local.classes?.label,
+                        styleProps.classes?.label,
                         item.classes?.label,
                       )}
                     >
@@ -405,7 +382,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                         {
                           disabled: item.disabled || disabled(),
                         },
-                        local.classes?.description,
+                        styleProps.classes?.description,
                         item.classes?.description,
                       )}
                     >

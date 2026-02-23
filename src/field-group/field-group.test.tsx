@@ -77,7 +77,7 @@ describe('FieldGroup', () => {
     expect(button.className).toContain('h-8')
   })
 
-  test('applies classes.root and ignores legacy class prop', () => {
+  test('applies classes.root', () => {
     const screen = render(() => (
       <FieldGroup
         classes={{
@@ -91,6 +91,5 @@ describe('FieldGroup', () => {
     const root = screen.container.firstElementChild as HTMLElement
 
     expect(root.className).toContain('root-override')
-    expect(root.className).not.toContain('legacy-class')
   })
 })

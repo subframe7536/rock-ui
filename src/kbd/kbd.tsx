@@ -10,27 +10,26 @@ export interface KbdClasses {
 
 export interface KbdBaseProps extends KbdVariantProps {
   classes?: KbdClasses
+  'data-slot'?: string
   children?: JSX.Element
 }
 
-export type KbdProps = KbdBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLElement>, keyof KbdBaseProps | 'children' | 'class' | 'color'>
+export type KbdProps = KbdBaseProps
 
 export function Kbd(props: KbdProps): JSX.Element {
-  const [local, rest] = splitProps(props as KbdProps, ['size', 'classes', 'children'])
+  const [styleProps, contentProps] = splitProps(props as KbdProps, ['size', 'classes'])
 
   return (
     <kbd
-      data-slot="root"
+      data-slot={contentProps['data-slot'] ?? 'root'}
       class={kbdVariants(
         {
-          size: local.size,
+          size: styleProps.size,
         },
-        local.classes?.root,
+        styleProps.classes?.root,
       )}
-      {...rest}
     >
-      {local.children}
+      {contentProps.children}
     </kbd>
   )
 }

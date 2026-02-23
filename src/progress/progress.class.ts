@@ -72,11 +72,11 @@ export const progressBaseVariants = cva(
         vertical: 'h-full min-h-36',
       },
       size: {
-        xs: 'ring-1 ring-inset ring-border/70',
-        sm: 'ring-1 ring-inset ring-border/70',
-        md: 'ring-1 ring-inset ring-border/70',
-        lg: 'ring-1 ring-inset ring-border/70',
-        xl: 'ring-1 ring-inset ring-border/70',
+        xs: '',
+        sm: '',
+        md: '',
+        lg: '',
+        xl: '',
       },
     },
     compoundVariants: [

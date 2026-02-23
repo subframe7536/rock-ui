@@ -54,7 +54,6 @@ describe('Form', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOnInputDelay={0}
         validate={(currentState) => {
@@ -73,7 +72,7 @@ describe('Form', () => {
       </Form>
     ))
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
 
     await waitFor(() => {
       expect(onError).toHaveBeenCalledTimes(1)
@@ -135,7 +134,6 @@ describe('Form', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validate={(currentState) => {
           if (currentState?.value !== 'valid') {
@@ -153,7 +151,7 @@ describe('Form', () => {
       </Form>
     ))
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledTimes(1)
@@ -227,18 +225,15 @@ describe('Form', () => {
   test('applies classes.root override', () => {
     const state: TestState = { value: '' }
     const screen = render(() => (
-      <Form
-        data-testid="form"
-        state={state}
-        validate={() => []}
-        classes={{ root: 'root-override' }}
-      >
+      <Form state={state} validate={() => []} classes={{ root: 'root-override' }}>
         <FormField name="value" label="Value">
           <TestInput state={state} />
         </FormField>
       </Form>
     ))
 
-    expect(screen.getByTestId('form').className).toContain('root-override')
+    expect((screen.container.querySelector('form') as HTMLFormElement).className).toContain(
+      'root-override',
+    )
   })
 })

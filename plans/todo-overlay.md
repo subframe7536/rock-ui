@@ -124,7 +124,7 @@ PORT DETAILS: `./nuxt-ui-port-plan.md`
   - direct dependency for navigation work (`navigation-menu -> popover`)
 - Minimum contract:
   - click + hover behavior parity
-  - `portal`, `arrow`, and content placement defaults
+  - `portal` and content placement defaults
   - outside interaction + `dismissible` behavior
 
 ### P2 - Menu Pair

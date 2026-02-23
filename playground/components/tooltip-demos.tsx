@@ -29,7 +29,7 @@ export const TooltipDemos = () => (
       description="Display keyboard shortcut hints alongside tooltip text."
     >
       <div class="flex flex-wrap gap-4 items-center">
-        <Tooltip text="Save" kbds={['Ctrl', 'S']}>
+        <Tooltip text="Save" kbds={['Ctrl', 'S']} open>
           <Button variant="outline" leading={<div class="i-lucide-save" />}>
             Save
           </Button>

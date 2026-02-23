@@ -158,6 +158,7 @@
     "import/no-import-assign": "error",
     "import/no-self-import": "error",
     "import/no-named-export": "allow",
+    "import/first": "error",
     "jsx-a11y/label-has-associated-control": "off",
     "jsx-a11y/prefer-tag-over-role": "off"
   }

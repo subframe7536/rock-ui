@@ -56,8 +56,7 @@ export interface FormFieldBaseProps extends FormFieldVariantProps {
   children?: JSX.Element | ((props: FormFieldRenderProps) => JSX.Element)
 }
 
-export type FormFieldProps = FormFieldBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLElement>, keyof FormFieldBaseProps | 'id' | 'children' | 'class'>
+export type FormFieldProps = FormFieldBaseProps
 
 export function FormField(props: FormFieldProps): JSX.Element {
   const merged = mergeProps(
@@ -71,28 +70,24 @@ export function FormField(props: FormFieldProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as FormFieldProps, [
-    'as',
-    'id',
-    'name',
-    'errorPattern',
-    'label',
-    'description',
-    'help',
-    'error',
-    'hint',
-    'size',
-    'required',
-    'eagerValidation',
-    'validateOnInputDelay',
-    'classes',
-    'orientation',
-    'children',
-  ])
+  const [identityValidationProps, contentProps, layoutStyleProps] = splitProps(
+    merged as FormFieldProps,
+    [
+      'as',
+      'id',
+      'name',
+      'errorPattern',
+      'error',
+      'required',
+      'eagerValidation',
+      'validateOnInputDelay',
+    ],
+    ['label', 'description', 'hint', 'help', 'children'],
+  )
 
   const formContext = useFormContext()
 
-  const ariaId = useId(() => local.id, 'form-field')
+  const ariaId = useId(() => identityValidationProps.id, 'form-field')
   const [manualInputId, setManualInputId] = createSignal<string | null | undefined>(undefined)
   const inputId = createMemo(() => {
     const manualId = manualInputId()
@@ -101,35 +96,35 @@ export function FormField(props: FormFieldProps): JSX.Element {
       return undefined
     }
 
-    return manualId ?? local.id ?? ariaId()
+    return manualId ?? identityValidationProps.id ?? ariaId()
   })
 
   const resolvedError = createMemo(() => {
-    if (local.error === false) {
+    if (identityValidationProps.error === false) {
       return false
     }
 
-    if (local.error !== undefined && local.error !== null) {
-      return local.error
+    if (identityValidationProps.error !== undefined && identityValidationProps.error !== null) {
+      return identityValidationProps.error
     }
 
-    if (!local.name || !formContext) {
+    if (!identityValidationProps.name || !formContext) {
       return undefined
     }
 
     const error = formContext.errors.find((fieldError) => {
-      if (fieldError.name === local.name) {
+      if (fieldError.name === identityValidationProps.name) {
         return true
       }
 
-      return Boolean(local.errorPattern?.test(fieldError.name ?? ''))
+      return Boolean(identityValidationProps.errorPattern?.test(fieldError.name ?? ''))
     })
 
     return error?.message
   })
 
   createEffect(() => {
-    const name = local.name
+    const name = identityValidationProps.name
 
     if (!formContext || !name) {
       return
@@ -137,7 +132,7 @@ export function FormField(props: FormFieldProps): JSX.Element {
 
     formContext.registerInput(name, {
       id: inputId(),
-      pattern: local.errorPattern,
+      pattern: identityValidationProps.errorPattern,
     })
 
     onCleanup(() => {
@@ -150,28 +145,28 @@ export function FormField(props: FormFieldProps): JSX.Element {
       return resolvedError()
     },
     get name() {
-      return local.name
+      return identityValidationProps.name
     },
     get size() {
-      return local.size
+      return layoutStyleProps.size
     },
     get eagerValidation() {
-      return local.eagerValidation
+      return identityValidationProps.eagerValidation
     },
     get validateOnInputDelay() {
-      return local.validateOnInputDelay
+      return identityValidationProps.validateOnInputDelay
     },
     get errorPattern() {
-      return local.errorPattern
+      return identityValidationProps.errorPattern
     },
     get hint() {
-      return local.hint
+      return contentProps.hint
     },
     get description() {
-      return local.description
+      return contentProps.description
     },
     get help() {
-      return local.help
+      return contentProps.help
     },
     get ariaId() {
       return ariaId()
@@ -186,7 +181,7 @@ export function FormField(props: FormFieldProps): JSX.Element {
 
   function NormalizedChildren(): JSX.Element {
     const resolvedChildren = children(() => {
-      const value = local.children
+      const value = contentProps.children
 
       if (typeof value !== 'function') {
         return value
@@ -222,87 +217,93 @@ export function FormField(props: FormFieldProps): JSX.Element {
     <InputIdProvider value={inputIdContextValue}>
       <FormFieldProvider value={fieldContextValue}>
         <Dynamic
-          component={local.as}
+          component={identityValidationProps.as}
           data-slot="root"
-          data-orientation={local.orientation}
+          data-orientation={layoutStyleProps.orientation}
           class={formFieldSizeVariants(
             {
-              size: local.size,
+              size: layoutStyleProps.size,
             },
-            local.orientation === 'horizontal' && 'flex items-baseline justify-between gap-2',
-            local.classes?.root,
+            layoutStyleProps.orientation === 'horizontal' &&
+              'flex items-baseline justify-between gap-2',
+            layoutStyleProps.classes?.root,
           )}
-          {...rest}
         >
           <div
             data-slot="wrapper"
-            class={cn(local.orientation === 'horizontal' && 'flex-1', local.classes?.wrapper)}
+            class={cn(
+              layoutStyleProps.orientation === 'horizontal' && 'flex-1',
+              layoutStyleProps.classes?.wrapper,
+            )}
           >
-            <Show when={local.label}>
+            <Show when={contentProps.label}>
               <div
                 data-slot="labelWrapper"
-                class={cn('flex items-center justify-between gap-1', local.classes?.labelWrapper)}
+                class={cn(
+                  'flex items-center justify-between gap-1',
+                  layoutStyleProps.classes?.labelWrapper,
+                )}
               >
                 <label
                   for={inputId()}
                   data-slot="label"
                   class={formFieldLabelVariants(
                     {
-                      required: local.required,
+                      required: identityValidationProps.required,
                     },
-                    local.classes?.label,
+                    layoutStyleProps.classes?.label,
                   )}
                 >
-                  {local.label}
+                  {contentProps.label}
                 </label>
 
-                <Show when={local.hint}>
+                <Show when={contentProps.hint}>
                   <span
                     id={`${ariaId()}-hint`}
                     data-slot="hint"
-                    class={cn('text-muted-foreground', local.classes?.hint)}
+                    class={cn('text-muted-foreground', layoutStyleProps.classes?.hint)}
                   >
-                    {local.hint}
+                    {contentProps.hint}
                   </span>
                 </Show>
               </div>
             </Show>
 
-            <Show when={local.description}>
+            <Show when={contentProps.description}>
               <p
                 id={`${ariaId()}-description`}
                 data-slot="description"
-                class={cn('text-muted-foreground', local.classes?.description)}
+                class={cn('text-muted-foreground', layoutStyleProps.classes?.description)}
               >
-                {local.description}
+                {contentProps.description}
               </p>
             </Show>
           </div>
 
           <div
             class={
-              local.label || local.description
+              contentProps.label || contentProps.description
                 ? formFieldContainerVariants(
                     {
-                      orientation: local.orientation,
+                      orientation: layoutStyleProps.orientation,
                     },
-                    local.classes?.container,
+                    layoutStyleProps.classes?.container,
                   )
-                : local.classes?.container
+                : layoutStyleProps.classes?.container
             }
           >
             <NormalizedChildren />
 
             <Show
-              when={local.error !== false && shouldShowError()}
+              when={identityValidationProps.error !== false && shouldShowError()}
               fallback={
-                <Show when={local.help}>
+                <Show when={contentProps.help}>
                   <div
                     id={`${ariaId()}-help`}
                     data-slot="help"
-                    class={cn('mt-2 text-muted-foreground', local.classes?.help)}
+                    class={cn('mt-2 text-muted-foreground', layoutStyleProps.classes?.help)}
                   >
-                    {local.help}
+                    {contentProps.help}
                   </div>
                 </Show>
               }
@@ -310,7 +311,7 @@ export function FormField(props: FormFieldProps): JSX.Element {
               <div
                 id={`${ariaId()}-error`}
                 data-slot="error"
-                class={cn('mt-2 text-destructive', local.classes?.error)}
+                class={cn('mt-2 text-destructive', layoutStyleProps.classes?.error)}
               >
                 {resolvedError() as JSX.Element}
               </div>

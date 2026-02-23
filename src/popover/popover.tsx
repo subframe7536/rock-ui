@@ -28,7 +28,6 @@ export interface PopoverClasses {
   trigger?: string
   content?: string
   body?: string
-  arrow?: string
 }
 
 export interface PopoverBaseProps {
@@ -42,15 +41,16 @@ export interface PopoverBaseProps {
   openDelay?: number
   closeDelay?: number
   content?: JSX.Element
-  arrow?: boolean
   dismissible?: boolean
   classes?: PopoverClasses
   onClosePrevent?: () => void
   children?: JSX.Element
 }
 
-export type PopoverProps = PopoverBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof PopoverBaseProps | 'children' | 'class'>
+type PopoverRootProps = Omit<KobaltePopover.PopoverRootProps, 'children' | 'class'> &
+  Omit<KobalteHoverCard.HoverCardRootProps, 'children' | 'class'>
+
+export type PopoverProps = PopoverBaseProps & Omit<PopoverRootProps, keyof PopoverBaseProps>
 
 function resolvePopoverSide(placement?: PopoverPlacement): PopoverSide {
   if (placement?.startsWith('right')) {
@@ -80,22 +80,17 @@ export function Popover(props: PopoverProps): JSX.Element {
     },
     props,
   ) as PopoverProps
-  const [local, rest] = splitProps(merged, [
-    'mode',
-    'placement',
-    'content',
-    'arrow',
-    'dismissible',
-    'classes',
-    'onClosePrevent',
-    'children',
-  ])
+  const [behaviorProps, contentProps, rootProps] = splitProps(
+    merged,
+    ['mode', 'placement', 'dismissible', 'onClosePrevent'],
+    ['content', 'classes', 'children'],
+  )
 
-  const triggerChildren = children(() => local.children)
+  const triggerChildren = children(() => contentProps.children)
   const hasTrigger = () => triggerChildren.toArray().length > 0
 
   const preventDismiss = () => {
-    local.onClosePrevent?.()
+    behaviorProps.onClosePrevent?.()
   }
 
   let hasPreventedPointerAttempt = false
@@ -121,7 +116,7 @@ export function Popover(props: PopoverProps): JSX.Element {
   const onPointerDownOutside = (
     event: Parameters<NonNullable<KobaltePopoverContentProps['onPointerDownOutside']>>[0],
   ) => {
-    if (local.dismissible) {
+    if (behaviorProps.dismissible) {
       return
     }
 
@@ -134,7 +129,7 @@ export function Popover(props: PopoverProps): JSX.Element {
   const onInteractOutside = (
     event: Parameters<NonNullable<KobaltePopoverContentProps['onInteractOutside']>>[0],
   ) => {
-    if (local.dismissible) {
+    if (behaviorProps.dismissible) {
       return
     }
 
@@ -154,7 +149,7 @@ export function Popover(props: PopoverProps): JSX.Element {
   const onEscapeKeyDown = (
     event: Parameters<NonNullable<KobaltePopoverContentProps['onEscapeKeyDown']>>[0],
   ) => {
-    if (local.dismissible) {
+    if (behaviorProps.dismissible) {
       return
     }
 
@@ -162,23 +157,22 @@ export function Popover(props: PopoverProps): JSX.Element {
     preventDismiss()
   }
 
-  const arrowClass = () => {
-    return local.classes?.arrow
-  }
-
-  const side = () => resolvePopoverSide(local.placement)
+  const side = () => resolvePopoverSide(behaviorProps.placement)
 
   const content = () => {
-    if (local.content === undefined || local.content === null) {
+    if (contentProps.content === undefined || contentProps.content === null) {
       return undefined
     }
 
     return (
       <div
         data-slot="body"
-        class={cn('max-h-$kb-popper-content-available-height overflow-auto', local.classes?.body)}
+        class={cn(
+          'max-h-$kb-popper-content-available-height overflow-auto',
+          contentProps.classes?.body,
+        )}
       >
-        {local.content}
+        {contentProps.content}
       </div>
     )
   }
@@ -186,36 +180,32 @@ export function Popover(props: PopoverProps): JSX.Element {
   const clickContent = () => (
     <KobaltePopover.Content
       data-slot="content"
-      class={popoverContentVariants({ side: side() }, local.classes?.content)}
+      class={popoverContentVariants({ side: side() }, contentProps.classes?.content)}
       onPointerDownOutside={onPointerDownOutside}
       onInteractOutside={onInteractOutside}
       onEscapeKeyDown={onEscapeKeyDown}
     >
       {content()}
-
-      <Show when={local.arrow}>
-        <KobaltePopover.Arrow data-slot="arrow" class={arrowClass()} />
-      </Show>
     </KobaltePopover.Content>
   )
 
   const hoverContent = () => (
     <KobalteHoverCard.Content
       data-slot="content"
-      class={popoverContentVariants({ side: side() }, local.classes?.content)}
+      class={popoverContentVariants({ side: side() }, contentProps.classes?.content)}
     >
       {content()}
-
-      <Show when={local.arrow}>
-        <KobalteHoverCard.Arrow data-slot="arrow" class={arrowClass()} />
-      </Show>
     </KobalteHoverCard.Content>
   )
 
   const hoverRoot = () => (
-    <KobalteHoverCard.Root placement={local.placement} overflowPadding={-8} {...rest}>
+    <KobalteHoverCard.Root placement={behaviorProps.placement} overflowPadding={-4} {...rootProps}>
       <Show when={hasTrigger()}>
-        <KobalteHoverCard.Trigger as="span" data-slot="trigger" class={local.classes?.trigger}>
+        <KobalteHoverCard.Trigger
+          as="span"
+          data-slot="trigger"
+          class={contentProps.classes?.trigger}
+        >
           {triggerChildren()}
         </KobalteHoverCard.Trigger>
       </Show>
@@ -225,9 +215,9 @@ export function Popover(props: PopoverProps): JSX.Element {
   )
 
   const clickRoot = () => (
-    <KobaltePopover.Root placement={local.placement} overflowPadding={-8} {...rest}>
+    <KobaltePopover.Root placement={behaviorProps.placement} overflowPadding={-4} {...rootProps}>
       <Show when={hasTrigger()}>
-        <KobaltePopover.Trigger as="span" data-slot="trigger" class={local.classes?.trigger}>
+        <KobaltePopover.Trigger as="span" data-slot="trigger" class={contentProps.classes?.trigger}>
           {triggerChildren()}
         </KobaltePopover.Trigger>
       </Show>
@@ -237,7 +227,7 @@ export function Popover(props: PopoverProps): JSX.Element {
   )
 
   return (
-    <Show when={local.mode === 'hover'} fallback={clickRoot()}>
+    <Show when={behaviorProps.mode === 'hover'} fallback={clickRoot()}>
       {hoverRoot()}
     </Show>
   )

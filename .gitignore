@@ -1,7 +1,6 @@
 node_modules
 dist
 nuxt-ui
-coss
 zaidan
 .worktrees
 *.local.*

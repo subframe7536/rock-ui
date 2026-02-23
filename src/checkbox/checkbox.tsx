@@ -48,22 +48,6 @@ export interface CheckboxBaseProps extends CheckboxVariantProps {
 export type CheckboxProps = CheckboxBaseProps &
   Omit<KobalteCheckbox.CheckboxRootProps, keyof CheckboxBaseProps | 'children' | 'class'>
 
-function normalizeCheckboxColor(value?: string): CheckboxColor {
-  if (value === 'secondary' || value === 'neutral' || value === 'error') {
-    return value
-  }
-
-  return 'primary'
-}
-
-function normalizeCheckboxSize(value?: string): CheckboxSize {
-  if (value === 'xs' || value === 'sm' || value === 'lg' || value === 'xl') {
-    return value
-  }
-
-  return 'md'
-}
-
 export function Checkbox(props: CheckboxProps): JSX.Element {
   const merged = mergeProps(
     {
@@ -78,82 +62,76 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as CheckboxProps, [
-    'id',
-    'name',
-    'label',
-    'description',
-    'formFieldBind',
-    'checked',
-    'defaultChecked',
-    'indeterminate',
-    'required',
-    'disabled',
-    'readOnly',
-    'value',
-    'onChange',
-    'size',
-    'color',
-    'variant',
-    'indicator',
-    'checkedIcon',
-    'indeterminateIcon',
-    'classes',
-  ])
+  const [formProps, rootStateProps, visualProps, rootProps] = splitProps(
+    merged as CheckboxProps,
+    ['id', 'name', 'formFieldBind', 'disabled', 'onChange'],
+    ['value', 'checked', 'defaultChecked', 'indeterminate', 'required', 'readOnly'],
+    [
+      'label',
+      'description',
+      'size',
+      'color',
+      'variant',
+      'indicator',
+      'checkedIcon',
+      'indeterminateIcon',
+      'classes',
+    ],
+  )
 
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      color: local.color,
-      disabled: local.disabled,
+      id: formProps.id,
+      name: formProps.name,
+      size: visualProps.size,
+      color: visualProps.color,
+      disabled: formProps.disabled,
     }),
     () => ({
-      bind: local.formFieldBind,
+      bind: formProps.formFieldBind,
     }),
   )
-  const generatedId = useId(() => local.id, 'checkbox')
+  const generatedId = useId(() => formProps.id, 'checkbox')
 
   const inputId = createMemo(() => field.id() ?? generatedId())
   const rootId = createMemo(() => `${inputId()}-root`)
-  const resolvedColor = createMemo(() => normalizeCheckboxColor(field.color() ?? local.color))
-  const resolvedSize = createMemo(() => normalizeCheckboxSize(field.size() ?? local.size))
+  const resolvedColor = createMemo(() => (field.color() ?? visualProps.color) as CheckboxColor)
+  const resolvedSize = createMemo(() => (field.size() ?? visualProps.size) as CheckboxSize)
   const disabled = createMemo(() => field.disabled())
   const ariaAttrs = createMemo(() => field.ariaAttrs() ?? {})
+  const invalid = createMemo(() => {
+    const value = ariaAttrs()['aria-invalid']
+
+    return value === true || value === 'true'
+  })
 
   function onChange(nextChecked: boolean): void {
-    local.onChange?.(nextChecked)
+    formProps.onChange?.(nextChecked)
     field.emitFormChange()
     field.emitFormInput()
   }
 
   return (
     <KobalteCheckbox.Root
+      {...rootStateProps}
       id={rootId()}
       name={field.name()}
-      value={local.value}
-      checked={local.checked}
-      defaultChecked={local.defaultChecked}
-      indeterminate={local.indeterminate}
-      required={local.required}
       disabled={disabled()}
-      readOnly={local.readOnly}
       onChange={onChange}
       data-slot="root"
       class={checkboxRootVariants(
         {
-          variant: local.variant === 'card' ? 'card' : undefined,
-          indicator: local.indicator === 'hidden' ? undefined : local.indicator,
+          variant: visualProps.variant === 'card' ? 'card' : undefined,
+          indicator: visualProps.indicator === 'hidden' ? undefined : visualProps.indicator,
           disabled: disabled(),
         },
-        local.variant === 'card' &&
+        visualProps.variant === 'card' &&
           checkboxCardPaddingVariants({
             size: resolvedSize(),
           }),
-        local.classes?.root,
+        visualProps.classes?.root,
       )}
-      {...rest}
+      {...rootProps}
     >
       {(state) => (
         <>
@@ -163,7 +141,7 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
               {
                 size: resolvedSize(),
               },
-              local.classes?.container,
+              visualProps.classes?.container,
             )}
           >
             <KobalteCheckbox.Input
@@ -176,11 +154,13 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
               data-slot="base"
               class={checkboxBaseVariants(
                 {
+                  color: resolvedColor(),
                   size: resolvedSize(),
                   disabled: disabled(),
+                  invalid: invalid(),
                 },
-                local.indicator === 'hidden' && 'sr-only',
-                local.classes?.base,
+                visualProps.indicator === 'hidden' && 'sr-only',
+                visualProps.classes?.base,
               )}
             >
               <KobalteCheckbox.Indicator
@@ -189,33 +169,33 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
                   {
                     color: resolvedColor(),
                   },
-                  local.classes?.indicator,
+                  visualProps.classes?.indicator,
                 )}
               >
                 <Show
                   when={state.indeterminate()}
                   fallback={
                     <Icon
-                      name={local.checkedIcon}
+                      name={visualProps.checkedIcon}
                       classes={{
                         root: checkboxIconVariants(
                           {
                             size: resolvedSize(),
                           },
-                          local.classes?.icon,
+                          visualProps.classes?.icon,
                         ),
                       }}
                     />
                   }
                 >
                   <Icon
-                    name={local.indeterminateIcon}
+                    name={visualProps.indeterminateIcon}
                     classes={{
                       root: checkboxIconVariants(
                         {
                           size: resolvedSize(),
                         },
-                        local.classes?.icon,
+                        visualProps.classes?.icon,
                       ),
                     }}
                   />
@@ -224,44 +204,44 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
             </KobalteCheckbox.Control>
           </div>
 
-          <Show when={local.label || local.description}>
+          <Show when={visualProps.label || visualProps.description}>
             <div
               data-slot="wrapper"
               class={checkboxWrapperVariants(
                 {
-                  indicator: local.indicator,
+                  indicator: visualProps.indicator,
                   size: resolvedSize(),
                 },
-                local.classes?.wrapper,
+                visualProps.classes?.wrapper,
               )}
             >
-              <Show when={local.label}>
+              <Show when={visualProps.label}>
                 <label
                   for={inputId()}
                   data-slot="label"
                   class={checkboxLabelVariants(
                     {
-                      required: local.required,
+                      required: rootStateProps.required,
                       disabled: disabled(),
                     },
-                    local.classes?.label,
+                    visualProps.classes?.label,
                   )}
                 >
-                  {local.label}
+                  {visualProps.label}
                 </label>
               </Show>
 
-              <Show when={local.description}>
+              <Show when={visualProps.description}>
                 <p
                   data-slot="description"
                   class={checkboxDescriptionVariants(
                     {
                       disabled: disabled(),
                     },
-                    local.classes?.description,
+                    visualProps.classes?.description,
                   )}
                 >
-                  {local.description}
+                  {visualProps.description}
                 </p>
               </Show>
             </div>

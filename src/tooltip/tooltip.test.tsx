@@ -38,20 +38,6 @@ describe('Tooltip', () => {
     expect(content?.className).toContain('root-override')
   })
 
-  test('renders arrow when enabled', () => {
-    render(() => (
-      <Tooltip open text="With arrow" arrow>
-        <button type="button">Trigger</button>
-      </Tooltip>
-    ))
-
-    const arrow = document.body.querySelector('[data-slot="arrow"]')
-
-    expect(arrow).not.toBeNull()
-    expect(arrow?.className).toContain('size-2.5')
-    expect(arrow?.className).toContain('bg-foreground')
-  })
-
   test('does not render content when no text or kbds are provided', () => {
     const screen = render(() => (
       <Tooltip open>

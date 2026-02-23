@@ -23,36 +23,4 @@ export default defineConfig<PresetWind4Theme>({
       include: ['**/*.tsx', '**/*.class.ts', 'node_modules/**/*.*'],
     },
   },
-  theme: {
-    animation: {
-      durations: {
-        slideup: '.3s',
-        slidedown: '.3s',
-      },
-      timingFns: {
-        slideup: 'ease-out',
-        slidedown: 'ease-out',
-      },
-      keyframes: {
-        slideup: `
-{
-    0% {
-        height: var(--rock-collapsible-content-height);
-    }
-    100% {
-        height: 0;
-    }
-}`,
-        slidedown: `
-{
-    0% {
-        height: 0;
-    }
-    100% {
-        height: var(--rock-collapsible-content-height);
-    }
-}`,
-      },
-    },
-  },
 })

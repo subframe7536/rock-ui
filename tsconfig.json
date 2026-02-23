@@ -15,5 +15,5 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["src", "test", "playground"]
+  "include": ["src", "test", "playground", "ui"]
 }

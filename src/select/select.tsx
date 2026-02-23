@@ -1,5 +1,6 @@
 import { Combobox, useComboboxContext } from '@kobalte/core/combobox'
 import type {
+  ComboboxRootProps,
   ComboboxRootItemComponentProps,
   ComboboxRootSectionComponentProps,
 } from '@kobalte/core/combobox'
@@ -229,7 +230,10 @@ export interface SelectBaseProps {
 }
 
 export type SelectProps = SelectBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof SelectBaseProps | 'id' | 'children' | 'class'>
+  Omit<
+    ComboboxRootProps<NormalizedOption, NormalizedGroup>,
+    keyof SelectBaseProps | 'id' | 'children' | 'class'
+  >
 
 // ---------------------------------------------------------------------------
 // Normalized option types (internal)
@@ -336,82 +340,82 @@ export function Select(props: SelectProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged as SelectProps, [
-    'ref',
-    'multiple',
-    'options',
-    'fieldNames',
-    'value',
-    'defaultValue',
-    'onChange',
-    'showSearch',
-    'searchValue',
-    'defaultSearchValue',
-    'onSearch',
-    'filterOption',
-    'optionFilterProp',
-    'allowClear',
-    'onClear',
-    'tokenSeparators',
-    'allowCreate',
-    'maxCount',
-    'maxTagCount',
-    'optionRender',
-    'tagRender',
-    'labelRender',
-    'emptyRender',
-    'size',
-    'color',
-    'variant',
-    'highlight',
-    'disabled',
-    'placeholder',
-    'loading',
-    'loadingIcon',
-    'leadingIcon',
-    'triggerIcon',
-    'id',
-    'name',
-    'required',
-    'virtualized',
-    'onScrollEnd',
-    'scrollEndThreshold',
-    'classes',
-  ])
+  const [formProps, searchInteractionProps, renderDisplayProps, styleProps, rootProps] = splitProps(
+    merged as SelectProps,
+    ['id', 'name', 'value', 'defaultValue', 'required', 'disabled', 'onChange'],
+    [
+      'multiple',
+      'showSearch',
+      'searchValue',
+      'defaultSearchValue',
+      'onSearch',
+      'filterOption',
+      'optionFilterProp',
+      'allowClear',
+      'onClear',
+      'tokenSeparators',
+      'allowCreate',
+      'maxCount',
+      'maxTagCount',
+      'virtualized',
+      'onScrollEnd',
+      'scrollEndThreshold',
+    ],
+    [
+      'options',
+      'fieldNames',
+      'optionRender',
+      'tagRender',
+      'labelRender',
+      'emptyRender',
+      'placeholder',
+      'loading',
+      'loadingIcon',
+      'leadingIcon',
+      'triggerIcon',
+    ],
+    ['size', 'color', 'variant', 'highlight', 'classes'],
+  )
 
   // ---- Form field integration ----
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      color: local.color,
-      highlight: local.highlight,
-      disabled: local.disabled,
+      id: formProps.id,
+      name: formProps.name,
+      size: styleProps.size,
+      color: styleProps.color,
+      highlight: styleProps.highlight,
+      disabled: formProps.disabled,
     }),
     { bind: false },
   )
 
-  const componentId = useId(() => local.id, 'select')
+  const componentId = useId(() => formProps.id, 'select')
 
   // ---- Resolved visual props ----
-  const resolvedSize = createMemo<SelectSize>(() => (field.size() ?? local.size) as SelectSize)
-  const resolvedColor = createMemo<SelectColor>(() => (field.color() ?? local.color) as SelectColor)
+  const resolvedSize = createMemo<SelectSize>(() => (field.size() ?? styleProps.size) as SelectSize)
+  const resolvedColor = createMemo<SelectColor>(
+    () => (field.color() ?? styleProps.color) as SelectColor,
+  )
 
   const isInvalid = createMemo(() => field.ariaAttrs()?.['aria-invalid'] === true)
 
   // ---- Mode-derived booleans ----
-  const isMultiple = createMemo(() => Boolean(local.multiple))
-  const isSearchable = createMemo(() => Boolean(local.showSearch))
+  const isMultiple = createMemo(() => Boolean(searchInteractionProps.multiple))
+  const isSearchable = createMemo(() => Boolean(searchInteractionProps.showSearch))
 
   // ---- Dynamically created options (allowCreate) ----
   const [createdTags, setCreatedTags] = createSignal<NormalizedOption[]>([])
 
   // ---- Normalize options for Kobalte ----
   const normalizedOptions = createMemo(() => {
-    const base = normalizeOptions(local.options, local.fieldNames)
+    const base = normalizeOptions(renderDisplayProps.options, renderDisplayProps.fieldNames)
 
-    if (isMultiple() && (local.allowCreate || Boolean(local.tokenSeparators?.length))) {
+    if (
+      isMultiple() &&
+      (searchInteractionProps.allowCreate ||
+        Boolean(searchInteractionProps.tokenSeparators?.length))
+    ) {
       const existingValues = new Set(flattenOptions(base).map((o) => o.value))
       const newTags = createdTags().filter((t) => !existingValues.has(t.value))
 
@@ -440,9 +444,9 @@ export function Select(props: SelectProps): JSX.Element {
       return
     }
 
-    if (local.value === undefined && local.defaultValue !== undefined) {
+    if (formProps.value === undefined && formProps.defaultValue !== undefined) {
       const vals = (
-        Array.isArray(local.defaultValue) ? local.defaultValue : [local.defaultValue]
+        Array.isArray(formProps.defaultValue) ? formProps.defaultValue : [formProps.defaultValue]
       ) as SelectValue[]
       setSelectedValueSet(new Set(vals.map((v) => String(v))))
     }
@@ -451,12 +455,12 @@ export function Select(props: SelectProps): JSX.Element {
   // Options with maxCount enforcement: disable unselected items when at the limit
   const effectiveOptions = createMemo(() => {
     const base = normalizedOptions()
-    if (!isMultiple() || local.maxCount === undefined) {
+    if (!isMultiple() || searchInteractionProps.maxCount === undefined) {
       return base
     }
 
     const selected = selectedValueSet()
-    if (selected.size < local.maxCount!) {
+    if (selected.size < searchInteractionProps.maxCount!) {
       return base
     }
 
@@ -487,19 +491,19 @@ export function Select(props: SelectProps): JSX.Element {
     | ((option: NormalizedOption, inputValue: string) => boolean)
   >(() => {
     // Bypass filtering when search is disabled or explicitly disabled via filterOption={false}
-    if (!isSearchable() || local.filterOption === false) {
+    if (!isSearchable() || searchInteractionProps.filterOption === false) {
       return (): boolean => true
     }
 
-    if (typeof local.filterOption === 'function') {
-      const userFilter = local.filterOption
+    if (typeof searchInteractionProps.filterOption === 'function') {
+      const userFilter = searchInteractionProps.filterOption
 
       return (option: NormalizedOption, inputValue: string): boolean =>
         userFilter(inputValue, option.raw)
     }
 
-    if (local.optionFilterProp) {
-      const prop = local.optionFilterProp
+    if (searchInteractionProps.optionFilterProp) {
+      const prop = searchInteractionProps.optionFilterProp
 
       return (option: NormalizedOption, inputValue: string): boolean => {
         const fieldValue = String(getAtPath(option.raw as Record<string, unknown>, prop) ?? '')
@@ -525,7 +529,7 @@ export function Select(props: SelectProps): JSX.Element {
 
   createEffect(
     on(
-      () => local.searchValue,
+      () => searchInteractionProps.searchValue,
       (searchValue) => {
         if (searchValue !== undefined && inputRef) {
           inputRef.value = searchValue
@@ -544,10 +548,12 @@ export function Select(props: SelectProps): JSX.Element {
 
   // ---- Value conversion memos ----
   const multiKobalteValue = createMemo(() => {
-    if (!isMultiple() || local.value === undefined) {
+    if (!isMultiple() || formProps.value === undefined) {
       return undefined
     }
-    const values = (Array.isArray(local.value) ? local.value : [local.value]) as SelectValue[]
+    const values = (
+      Array.isArray(formProps.value) ? formProps.value : [formProps.value]
+    ) as SelectValue[]
 
     return values
       .map((v) => findOptionByValue(v))
@@ -561,38 +567,38 @@ export function Select(props: SelectProps): JSX.Element {
     if (isMultiple()) {
       return multiKobalteValue()
     }
-    if (local.value === undefined) {
+    if (formProps.value === undefined) {
       return undefined
     }
-    if (local.value === null) {
+    if (formProps.value === null) {
       return null
     }
-    return findOptionByValue(local.value as SelectValue) ?? null
+    return findOptionByValue(formProps.value as SelectValue) ?? null
   })
 
   const kobalteDefaultValue = createMemo((): any => {
     if (isMultiple()) {
-      if (local.defaultValue === undefined) {
+      if (formProps.defaultValue === undefined) {
         return undefined
       }
       const values = (
-        Array.isArray(local.defaultValue) ? local.defaultValue : [local.defaultValue]
+        Array.isArray(formProps.defaultValue) ? formProps.defaultValue : [formProps.defaultValue]
       ) as SelectValue[]
       return values
         .map((v) => findOptionByValue(v))
         .filter((o): o is NormalizedOption => o !== undefined)
     }
-    if (local.defaultValue === undefined || local.defaultValue === null) {
+    if (formProps.defaultValue === undefined || formProps.defaultValue === null) {
       return undefined
     }
-    return findOptionByValue(local.defaultValue as SelectValue)
+    return findOptionByValue(formProps.defaultValue as SelectValue)
   })
 
   // ---- onChange bridges ----
   function handleSingleChange(option: NormalizedOption | null): void {
     const nextValue = option ? (option.raw.value ?? option.value) : null
 
-    local.onChange?.(nextValue as SelectValue | null)
+    formProps.onChange?.(nextValue as SelectValue | null)
     field.emitFormChange()
     field.emitFormInput()
   }
@@ -602,7 +608,7 @@ export function Select(props: SelectProps): JSX.Element {
 
     const nextValue = options.map((o) => (o.raw.value ?? o.value) as SelectValue)
 
-    local.onChange?.(nextValue)
+    formProps.onChange?.(nextValue)
     field.emitFormChange()
     field.emitFormInput()
   }
@@ -618,8 +624,10 @@ export function Select(props: SelectProps): JSX.Element {
   // ---- Input change handler ----
   function handleInputChange(inputValue: string): void {
     // Token separator check for tags mode
-    if (isMultiple() && local.tokenSeparators?.length) {
-      const sepRegex = new RegExp(`[${escapeRegex(local.tokenSeparators.join(''))}]`)
+    if (isMultiple() && searchInteractionProps.tokenSeparators?.length) {
+      const sepRegex = new RegExp(
+        `[${escapeRegex(searchInteractionProps.tokenSeparators.join(''))}]`,
+      )
 
       if (sepRegex.test(inputValue)) {
         const trailingInput = inputValue.split(sepRegex).at(-1) ?? ''
@@ -633,7 +641,7 @@ export function Select(props: SelectProps): JSX.Element {
 
         const current = allFlatOptions().filter((option) => selectedValueSet().has(option.value))
         const nextSelected = [...current]
-        const maxCount = local.maxCount
+        const maxCount = searchInteractionProps.maxCount
 
         for (const token of tokens) {
           const option = addTag(token.trim())
@@ -667,7 +675,7 @@ export function Select(props: SelectProps): JSX.Element {
           setCurrentInputText(remainder)
         }
 
-        local.onSearch?.(remainder)
+        searchInteractionProps.onSearch?.(remainder)
         return
       }
     }
@@ -676,7 +684,7 @@ export function Select(props: SelectProps): JSX.Element {
       setCurrentInputText(inputValue)
     }
 
-    local.onSearch?.(inputValue)
+    searchInteractionProps.onSearch?.(inputValue)
   }
 
   function addTag(text: string): NormalizedOption | undefined {
@@ -742,7 +750,7 @@ export function Select(props: SelectProps): JSX.Element {
   })
 
   function createTag(value?: string): boolean {
-    if (!isMultiple() || !local.allowCreate) {
+    if (!isMultiple() || !searchInteractionProps.allowCreate) {
       return false
     }
 
@@ -768,14 +776,14 @@ export function Select(props: SelectProps): JSX.Element {
     }
 
     setCurrentInputText('')
-    local.onSearch?.('')
+    searchInteractionProps.onSearch?.('')
     return true
   }
 
   // ---- Clear handler ----
   function handleClear(clearFn: () => void): void {
     clearFn()
-    local.onClear?.()
+    searchInteractionProps.onClear?.()
     field.emitFormChange()
     field.emitFormInput()
   }
@@ -783,15 +791,15 @@ export function Select(props: SelectProps): JSX.Element {
   // ---- Scroll end handler (infinite scroll) ----
 
   function handleListboxScroll(e: Event): void {
-    if (!local.onScrollEnd) {
+    if (!searchInteractionProps.onScrollEnd) {
       return
     }
 
     const el = e.target as HTMLElement
-    const threshold = local.scrollEndThreshold ?? 20
+    const threshold = searchInteractionProps.scrollEndThreshold ?? 20
 
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - threshold) {
-      local.onScrollEnd()
+      searchInteractionProps.onScrollEnd()
     }
   }
 
@@ -811,10 +819,10 @@ export function Select(props: SelectProps): JSX.Element {
     return (
       <Combobox.ItemLabel
         data-slot="item-label"
-        class={cn('col-start-1 truncate', local.classes?.itemLabel)}
+        class={cn('col-start-1 truncate', styleProps.classes?.itemLabel)}
       >
-        <Show when={local.labelRender} fallback={fallbackLabel}>
-          {local.labelRender!(option)}
+        <Show when={renderDisplayProps.labelRender} fallback={fallbackLabel}>
+          {renderDisplayProps.labelRender!(option)}
         </Show>
       </Combobox.ItemLabel>
     )
@@ -824,7 +832,7 @@ export function Select(props: SelectProps): JSX.Element {
     return (
       <Combobox.ItemDescription
         data-slot="item-description"
-        class={cn('col-start-1 text-xs text-muted-foreground', local.classes?.itemDescription)}
+        class={cn('col-start-1 text-xs text-muted-foreground', styleProps.classes?.itemDescription)}
       >
         {option.description}
       </Combobox.ItemDescription>
@@ -837,7 +845,7 @@ export function Select(props: SelectProps): JSX.Element {
         data-slot="item-indicator"
         class={cn(
           'col-start-2 inline-flex items-center justify-center text-sm',
-          local.classes?.itemIndicator,
+          styleProps.classes?.itemIndicator,
         )}
       >
         <Icon name={indicatorIcon} />
@@ -853,7 +861,7 @@ export function Select(props: SelectProps): JSX.Element {
   }): JSX.Element {
     return (
       <Show
-        when={local.optionRender}
+        when={renderDisplayProps.optionRender}
         fallback={
           <>
             <Show
@@ -874,7 +882,7 @@ export function Select(props: SelectProps): JSX.Element {
           </>
         }
       >
-        {local.optionRender!(params.option, params.state)}
+        {renderDisplayProps.optionRender!(params.option, params.state)}
       </Show>
     )
   }
@@ -900,7 +908,7 @@ export function Select(props: SelectProps): JSX.Element {
         item={itemProps.item}
         data-slot="item"
         onPointerDown={(e) => e.preventDefault()}
-        class={selectItemVariants({ size: resolvedSize() }, local.classes?.item)}
+        class={selectItemVariants({ size: resolvedSize() }, styleProps.classes?.item)}
       >
         {renderItemContent({
           option: raw(),
@@ -917,13 +925,13 @@ export function Select(props: SelectProps): JSX.Element {
   ) => (
     <Combobox.Section
       data-slot="section"
-      class={cn('[&:not(:first-child)]:mt-1.5', local.classes?.section)}
+      class={cn('[&:not(:first-child)]:mt-1.5', styleProps.classes?.section)}
     >
       <span
         data-slot="section-label"
         class={cn(
           'block px-2 py-1.5 font-medium text-muted-foreground text-xs',
-          local.classes?.sectionLabel,
+          styleProps.classes?.sectionLabel,
         )}
       >
         {sectionProps.section.rawValue.label}
@@ -940,20 +948,20 @@ export function Select(props: SelectProps): JSX.Element {
     const visibleTags = createMemo(() => {
       const selected = state.selectedOptions()
 
-      if (local.maxTagCount === undefined) {
+      if (searchInteractionProps.maxTagCount === undefined) {
         return selected
       }
 
-      return selected.slice(0, local.maxTagCount)
+      return selected.slice(0, searchInteractionProps.maxTagCount)
     })
 
     const overflowCount = createMemo(() => {
-      if (local.maxTagCount === undefined) {
+      if (searchInteractionProps.maxTagCount === undefined) {
         return 0
       }
       const total = state.selectedOptions().length
 
-      return Math.max(0, total - local.maxTagCount!)
+      return Math.max(0, total - searchInteractionProps.maxTagCount!)
     })
 
     const renderInput = (): JSX.Element => (
@@ -971,7 +979,7 @@ export function Select(props: SelectProps): JSX.Element {
           isMultiple() &&
             isSearchable() &&
             selectInputMultiSearchSizeVariants({ size: resolvedSize() }),
-          local.classes?.input,
+          styleProps.classes?.input,
         )}
         readOnly={!isSearchable()}
         onClick={() => {
@@ -1026,7 +1034,7 @@ export function Select(props: SelectProps): JSX.Element {
             input.value = ''
             setCurrentInputText('')
             handleInputChange('')
-          } else if (local.allowCreate) {
+          } else if (searchInteractionProps.allowCreate) {
             createTag(text)
           }
 
@@ -1040,7 +1048,7 @@ export function Select(props: SelectProps): JSX.Element {
     return (
       <>
         {/* Leading icon */}
-        <Show when={local.leadingIcon}>
+        <Show when={renderDisplayProps.leadingIcon}>
           {(icon) => (
             <Icon
               name={icon()}
@@ -1048,7 +1056,7 @@ export function Select(props: SelectProps): JSX.Element {
               classes={{
                 root: selectLeadingIconVariants(
                   { size: resolvedSize() },
-                  local.classes?.leadingIcon,
+                  styleProps.classes?.leadingIcon,
                 ),
               }}
             />
@@ -1061,7 +1069,7 @@ export function Select(props: SelectProps): JSX.Element {
             data-slot="tags-container"
             class={cn(
               'flex flex-1 cursor-pointer select-none flex-wrap items-center gap-1 p-1.5',
-              local.classes?.tagsContainer,
+              styleProps.classes?.tagsContainer,
             )}
             onPointerDown={(e) => {
               e.preventDefault()
@@ -1074,16 +1082,18 @@ export function Select(props: SelectProps): JSX.Element {
             }}
           >
             <Show when={!isSearchable() && state.selectedOptions().length === 0}>
-              <span class="text-sm text-muted-foreground px-1">{local.placeholder}</span>
+              <span class="text-sm text-muted-foreground px-1">
+                {renderDisplayProps.placeholder}
+              </span>
             </Show>
             <For each={visibleTags()}>
               {(option) => (
                 <Show
-                  when={local.tagRender}
+                  when={renderDisplayProps.tagRender}
                   fallback={
                     <span
                       data-slot="tag"
-                      class={selectTagVariants({ size: resolvedSize() }, local.classes?.tag)}
+                      class={selectTagVariants({ size: resolvedSize() }, styleProps.classes?.tag)}
                     >
                       {option.label}
                       <button
@@ -1091,7 +1101,7 @@ export function Select(props: SelectProps): JSX.Element {
                         data-slot="tag-remove"
                         class={cn(
                           'h-full shrink-0 cursor-pointer ps-1 opacity-80 transition-opacity hover:opacity-100',
-                          local.classes?.tagRemove,
+                          styleProps.classes?.tagRemove,
                         )}
                         tabIndex={-1}
                         onClick={(e) => {
@@ -1104,7 +1114,7 @@ export function Select(props: SelectProps): JSX.Element {
                     </span>
                   }
                 >
-                  {local.tagRender!(option.raw, () => state.remove(option))}
+                  {renderDisplayProps.tagRender!(option.raw, () => state.remove(option))}
                 </Show>
               )}
             </For>
@@ -1123,11 +1133,11 @@ export function Select(props: SelectProps): JSX.Element {
         </Show>
 
         {/* Clear button */}
-        <Show when={local.allowClear && state.selectedOptions().length > 0}>
+        <Show when={searchInteractionProps.allowClear && state.selectedOptions().length > 0}>
           <button
             type="button"
             data-slot="clear"
-            class={selectClearVariants({ size: resolvedSize() }, local.classes?.clear)}
+            class={selectClearVariants({ size: resolvedSize() }, styleProps.classes?.clear)}
             tabIndex={-1}
             onClick={(e) => {
               e.stopPropagation()
@@ -1142,18 +1152,21 @@ export function Select(props: SelectProps): JSX.Element {
         <Combobox.Trigger data-slot="trigger" class="outline-none">
           <Combobox.Icon
             data-slot="trigger-icon"
-            class={selectTriggerIconVariants({ size: resolvedSize() }, local.classes?.triggerIcon)}
+            class={selectTriggerIconVariants(
+              { size: resolvedSize() },
+              styleProps.classes?.triggerIcon,
+            )}
           >
             <Show
-              when={!local.loading}
+              when={!renderDisplayProps.loading}
               fallback={
                 <Icon
-                  name={local.loadingIcon ?? 'icon-loading'}
+                  name={renderDisplayProps.loadingIcon ?? 'icon-loading'}
                   classes={{ root: 'animate-spin' }}
                 />
               }
             >
-              <Icon name={local.triggerIcon ?? 'icon-chevron-down'} />
+              <Icon name={renderDisplayProps.triggerIcon ?? 'icon-chevron-down'} />
             </Show>
           </Combobox.Icon>
         </Combobox.Trigger>
@@ -1169,7 +1182,7 @@ export function Select(props: SelectProps): JSX.Element {
           data-slot="content"
           class={cn(
             'z-50 rounded-lg border bg-popover text-popover-foreground shadow-lg overflow-hidden max-h-$kb-popper-available-height min-w-32 origin-$kb-combobox-content-transform-origin overflow-y-auto overflow-x-hidden data-expanded:(animate-in fade-in-0 zoom-in-95) data-closed:(animate-out fade-out-0 zoom-out-95) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 mt-$kb-popper-content-overflow-padding',
-            local.classes?.content,
+            styleProps.classes?.content,
           )}
           onInteractOutside={() => {
             closedByInteractOutside = true
@@ -1195,46 +1208,50 @@ export function Select(props: SelectProps): JSX.Element {
             fallback={
               /* Empty state */
               <Show
-                when={typeof local.emptyRender === 'function'}
+                when={typeof renderDisplayProps.emptyRender === 'function'}
                 fallback={
                   <div
                     data-slot="empty"
                     class={cn(
                       'p-2 text-center text-muted-foreground text-sm',
-                      local.classes?.empty,
+                      styleProps.classes?.empty,
                     )}
                   >
-                    {typeof local.emptyRender === 'string' ? local.emptyRender : 'No options'}
+                    {typeof renderDisplayProps.emptyRender === 'string'
+                      ? renderDisplayProps.emptyRender
+                      : 'No options'}
                   </div>
                 }
               >
-                {(local.emptyRender as (ctx: SelectEmptyRenderContext) => JSX.Element)({
-                  inputValue: currentInputText(),
-                  multiple: isMultiple(),
-                  hasMatches: hasMatches(),
-                  selectedValues: [...selectedValueSet()].map((v) => {
-                    const opt = findOptionByValue(v)
-                    return opt ? (opt.raw.value ?? opt.value) : v
-                  }) as SelectValue[],
-                  isAtMaxCount:
-                    isMultiple() && local.maxCount !== undefined
-                      ? selectedValueSet().size >= local.maxCount
-                      : false,
-                  create: (value?: string): boolean => createTag(value),
-                  close: () => kobalteCtx?.close(),
-                })}
+                {(renderDisplayProps.emptyRender as (ctx: SelectEmptyRenderContext) => JSX.Element)(
+                  {
+                    inputValue: currentInputText(),
+                    multiple: isMultiple(),
+                    hasMatches: hasMatches(),
+                    selectedValues: [...selectedValueSet()].map((v) => {
+                      const opt = findOptionByValue(v)
+                      return opt ? (opt.raw.value ?? opt.value) : v
+                    }) as SelectValue[],
+                    isAtMaxCount:
+                      isMultiple() && searchInteractionProps.maxCount !== undefined
+                        ? selectedValueSet().size >= searchInteractionProps.maxCount
+                        : false,
+                    create: (value?: string): boolean => createTag(value),
+                    close: () => kobalteCtx?.close(),
+                  },
+                )}
               </Show>
             }
           >
             <Show
-              when={local.virtualized}
+              when={searchInteractionProps.virtualized}
               fallback={
                 <Combobox.Listbox
                   // ref={bindListboxScroll}
                   data-slot="listbox"
                   class={cn(
                     'max-h-$kb-popper-content-available-height overflow-y-auto p-1 outline-none',
-                    local.classes?.listbox,
+                    styleProps.classes?.listbox,
                   )}
                   onScrollEnd={handleListboxScroll}
                 />
@@ -1244,7 +1261,7 @@ export function Select(props: SelectProps): JSX.Element {
                 data-slot="listbox"
                 class={cn(
                   'max-h-$kb-popper-content-available-height overflow-y-auto p-1 outline-none',
-                  local.classes?.listbox,
+                  styleProps.classes?.listbox,
                 )}
                 onScrollEnd={handleListboxScroll}
               >
@@ -1281,18 +1298,20 @@ export function Select(props: SelectProps): JSX.Element {
       optionDisabled="disabled"
       optionTextValue="label"
       optionGroupChildren={hasGroups() ? 'options' : undefined}
-      placeholder={isMultiple() && selectedValueSet().size > 0 ? '' : local.placeholder}
+      placeholder={
+        isMultiple() && selectedValueSet().size > 0 ? '' : renderDisplayProps.placeholder
+      }
       onInputChange={handleInputChange}
       defaultFilter={kobalteFilter()}
       triggerMode="manual"
       disabled={field.disabled()}
-      required={local.required}
+      required={formProps.required}
       validationState={isInvalid() ? 'invalid' : 'valid'}
       allowsEmptyCollection={true}
       shouldFocusWrap={true}
-      virtualized={local.virtualized}
-      itemComponent={local.virtualized ? undefined : SelectItemComponent}
-      sectionComponent={local.virtualized ? undefined : SelectSectionComponent}
+      virtualized={searchInteractionProps.virtualized}
+      itemComponent={searchInteractionProps.virtualized ? undefined : SelectItemComponent}
+      sectionComponent={searchInteractionProps.virtualized ? undefined : SelectSectionComponent}
       multiple={isMultiple() as any}
       value={kobalteValue()}
       defaultValue={kobalteDefaultValue()}
@@ -1300,9 +1319,9 @@ export function Select(props: SelectProps): JSX.Element {
       closeOnSelection={!isMultiple()}
       removeOnBackspace={isMultiple()}
       data-slot="root"
-      class={cn('relative inline-flex w-full h-fit', local.classes?.root)}
+      class={cn('relative inline-flex w-full h-fit', styleProps.classes?.root)}
       {...field.ariaAttrs()}
-      {...rest}
+      {...rootProps}
       overflowPadding={-6}
     >
       <ContextBridge />
@@ -1312,12 +1331,12 @@ export function Select(props: SelectProps): JSX.Element {
           {
             size: resolvedSize(),
             color: resolvedColor(),
-            variant: local.variant,
+            variant: styleProps.variant,
             highlight: field.highlight(),
             disabled: field.disabled(),
             invalid: isInvalid(),
           },
-          local.classes?.control,
+          styleProps.classes?.control,
         )}
       >
         {(state) => renderTrigger(state)}

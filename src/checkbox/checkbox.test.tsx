@@ -74,7 +74,6 @@ describe('Checkbox', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOnInputDelay={0}
         validate={(currentState) => {
@@ -96,7 +95,7 @@ describe('Checkbox', () => {
       </Form>
     ))
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('You must agree')).not.toBeNull()
     })
@@ -181,7 +180,6 @@ describe('Checkbox', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOn={['input']}
         validateOnInputDelay={0}
@@ -206,7 +204,7 @@ describe('Checkbox', () => {
 
     const checkbox = screen.getByRole('checkbox', { name: 'Agree' })
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('You must agree')).not.toBeNull()
     })

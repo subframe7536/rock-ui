@@ -63,7 +63,6 @@ function createForm(validateOn: Array<'blur' | 'change' | 'input'>) {
 
   const screen = render(() => (
     <Form
-      data-testid="form"
       state={state}
       validateOn={validateOn}
       validateOnInputDelay={0}
@@ -309,7 +308,7 @@ describe('FileUpload', () => {
   test('forwards aria-invalid and aria-describedby to hidden input', async () => {
     const { screen, input } = createForm(['change'])
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('Error message')).not.toBeNull()
     })

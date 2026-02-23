@@ -117,42 +117,33 @@ function normalizeFieldGroupButtonSize(size?: string): ButtonSize | undefined {
  * Rock UI Button built on top of Kobalte `Button.Root` with polymorphic `as` support.
  */
 export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T>): JSX.Element {
-  const [local, rest] = splitProps(props as ButtonProps, [
-    'class',
-    'variant',
-    'size',
-    'disabled',
-    'loading',
-    'loadingAuto',
-    'leading',
-    'trailing',
-    'label',
-    'loadingIcon',
-    'classes',
-    'onClick',
-    'children',
-  ])
+  const [styleProps, stateProps, contentProps, rootProps] = splitProps(
+    props as ButtonProps,
+    ['class', 'variant', 'size', 'classes'],
+    ['disabled', 'loading', 'loadingAuto', 'loadingIcon', 'onClick'],
+    ['leading', 'trailing', 'label', 'children'],
+  )
 
   const fieldGroup = useFieldGroupContext()
   const [loadingAutoState, setLoadingAutoState] = createSignal(false)
   const resolvedSize = createMemo<ButtonVariantProps['size']>(() => {
-    if (local.size !== undefined) {
-      return local.size
+    if (styleProps.size !== undefined) {
+      return styleProps.size
     }
 
     return normalizeFieldGroupButtonSize(fieldGroup?.size)
   })
 
   const isLoading = createMemo(() =>
-    Boolean(local.loading || (local.loadingAuto && loadingAutoState())),
+    Boolean(stateProps.loading || (stateProps.loadingAuto && loadingAutoState())),
   )
 
   const resolvedLeading = createMemo(() => {
     if (isLoading()) {
-      return local.loadingIcon ?? local.leading
+      return stateProps.loadingIcon ?? contentProps.leading
     }
 
-    return local.leading
+    return contentProps.leading
   })
 
   const resolvedTrailing = createMemo(() => {
@@ -160,7 +151,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
       return undefined
     }
 
-    return local.trailing
+    return contentProps.trailing
   })
 
   const hasLeading = createMemo(() => {
@@ -168,17 +159,17 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
   })
 
   const content = createMemo(() => {
-    if (local.label !== undefined && local.label !== null) {
-      return local.label
+    if (contentProps.label !== undefined && contentProps.label !== null) {
+      return contentProps.label
     }
 
-    return local.children
+    return contentProps.children
   })
 
   const onClick: JSX.EventHandlerUnion<any, MouseEvent> = (event) => {
-    const { result: handlerResult, defaultPrevented } = callHandler(event, local.onClick)
+    const { result: handlerResult, defaultPrevented } = callHandler(event, stateProps.onClick)
 
-    if (!local.loadingAuto || defaultPrevented || !isPromiseLike(handlerResult)) {
+    if (!stateProps.loadingAuto || defaultPrevented || !isPromiseLike(handlerResult)) {
       return
     }
 
@@ -193,17 +184,17 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
       data-slot="button"
       class={buttonVariants(
         {
-          variant: local.variant,
+          variant: styleProps.variant,
           size: resolvedSize(),
         },
         isLoading() && 'cursor-wait opacity-80',
-        local.classes?.root,
+        styleProps.classes?.root,
       )}
       aria-busy={isLoading() ? true : undefined}
       data-loading={isLoading() ? '' : undefined}
-      disabled={isLoading() || local.disabled}
+      disabled={isLoading() || stateProps.disabled}
       onClick={onClick}
-      {...rest}
+      {...rootProps}
     >
       <Show when={hasLeading()}>
         <span
@@ -213,8 +204,8 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
               size: resolvedSize(),
             },
             'flex items-center',
-            local.classes?.leading,
-            isLoading() && local.classes?.loading,
+            styleProps.classes?.leading,
+            isLoading() && styleProps.classes?.loading,
           )}
           aria-hidden={isLoading() ? 'true' : undefined}
         >
@@ -223,7 +214,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
       </Show>
 
       <Show when={content() !== undefined && content() !== null}>
-        <span data-slot="label" class={cn('truncate', local.classes?.label)}>
+        <span data-slot="label" class={cn('truncate', styleProps.classes?.label)}>
           {content()}
         </span>
       </Show>
@@ -237,7 +228,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
                 size: resolvedSize(),
               },
               'flex items-center',
-              local.classes?.trailing,
+              styleProps.classes?.trailing,
             )}
           >
             {trailingResolved()}

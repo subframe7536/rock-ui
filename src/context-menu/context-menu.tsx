@@ -29,7 +29,6 @@ const CONTEXT_MENU_PRIMITIVES: OverlayMenuPrimitives = {
   Sub: KobalteContextMenu.Sub as unknown as OverlayMenuPrimitives['Sub'],
   SubTrigger: KobalteContextMenu.SubTrigger as unknown as OverlayMenuPrimitives['SubTrigger'],
   SubContent: KobalteContextMenu.SubContent as unknown as OverlayMenuPrimitives['SubContent'],
-  Arrow: KobalteContextMenu.Arrow as unknown as OverlayMenuPrimitives['Arrow'],
 }
 
 type ContextMenuColor = NonNullable<ContextMenuItemVariantProps['color']>
@@ -74,7 +73,7 @@ export interface ContextMenuBaseProps {
 }
 
 export type ContextMenuProps = ContextMenuBaseProps &
-  Omit<JSX.HTMLAttributes<HTMLDivElement>, keyof ContextMenuBaseProps | 'children' | 'class'>
+  Omit<KobalteContextMenu.ContextMenuRootProps, keyof ContextMenuBaseProps | 'children' | 'class'>
 
 export function ContextMenu(props: ContextMenuProps): JSX.Element {
   const merged = mergeProps(
@@ -85,43 +84,43 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     },
     props,
   ) as ContextMenuProps
-  const [local, rest] = splitProps(merged, [
-    'id',
-    'onOpenChange',
-    'placement',
-    'gutter',
-    'size',
-    'disabled',
-    'items',
-    'checkedIcon',
-    'submenuIcon',
-    'itemRender',
-    'contentTop',
-    'contentBottom',
-    'classes',
-    'children',
-  ])
+  const [rootStateProps, menuProps, triggerProps, rootProps] = splitProps(
+    merged,
+    ['id', 'onOpenChange', 'placement', 'gutter'],
+    [
+      'size',
+      'disabled',
+      'items',
+      'checkedIcon',
+      'submenuIcon',
+      'itemRender',
+      'contentTop',
+      'contentBottom',
+      'classes',
+    ],
+    ['children'],
+  )
 
-  const triggerChildren = children(() => local.children)
+  const triggerChildren = children(() => triggerProps.children)
   const hasTrigger = () => triggerChildren.toArray().length > 0
 
-  const rootSide = () => resolveOverlayMenuSide(local.placement ?? 'right-start')
+  const rootSide = () => resolveOverlayMenuSide(rootStateProps.placement ?? 'right-start')
 
   return (
     <KobalteContextMenu.Root
-      id={local.id}
-      onOpenChange={local.onOpenChange}
+      id={rootStateProps.id}
+      onOpenChange={rootStateProps.onOpenChange}
       modal
-      placement={local.placement}
-      gutter={local.gutter}
+      placement={rootStateProps.placement}
+      gutter={rootStateProps.gutter}
       overflowPadding={4}
-      {...rest}
+      {...rootProps}
     >
       <Show when={hasTrigger()}>
         <KobalteContextMenu.Trigger
           data-slot="trigger"
-          class={local.classes?.trigger}
-          disabled={local.disabled}
+          class={menuProps.classes?.trigger}
+          disabled={menuProps.disabled}
         >
           {triggerChildren()}
         </KobalteContextMenu.Trigger>
@@ -129,48 +128,40 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
 
       <OverlayMenuBaseContent<ContextMenuColor, ContextMenuItem, ContextMenuSize>
         primitives={CONTEXT_MENU_PRIMITIVES}
-        items={local.items}
-        size={local.size}
-        classes={local.classes}
-        checkedIcon={local.checkedIcon}
-        submenuIcon={local.submenuIcon}
-        itemRender={local.itemRender}
-        contentTop={local.contentTop}
-        contentBottom={local.contentBottom}
+        {...menuProps}
         itemClassName={(item) =>
           contextMenuItemVariants(
             {
-              size: local.size,
+              size: menuProps.size,
               color: item.color,
             },
-            local.classes?.item,
+            menuProps.classes?.item,
           )
         }
         checkboxItemClassName={(item) =>
           contextMenuItemVariants(
             {
-              size: local.size,
+              size: menuProps.size,
               color: item.color,
             },
-            'pr-8 pl-1.5',
-            local.classes?.item,
+            menuProps.classes?.item,
           )
         }
         subTriggerClassName={(item) =>
           contextMenuItemVariants(
             {
-              size: local.size,
+              size: menuProps.size,
               color: item.color,
             },
             'data-expanded:(bg-accent text-accent-foreground)',
-            local.classes?.item,
+            menuProps.classes?.item,
           )
         }
         rootContentClassName={(side) =>
-          contextMenuContentVariants({ side, sub: false }, local.classes?.content)
+          contextMenuContentVariants({ side, sub: false }, menuProps.classes?.content)
         }
         subContentClassName={(side) =>
-          contextMenuContentVariants({ side, sub: true }, local.classes?.content)
+          contextMenuContentVariants({ side, sub: true }, menuProps.classes?.content)
         }
         rootSide={rootSide()}
         separatorClassName="-mx-1 my-1 h-px border-t-border"

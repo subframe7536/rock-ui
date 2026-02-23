@@ -42,7 +42,6 @@ export interface CheckboxGroupClasses {
 
 type CheckboxGroupSize = NonNullable<CheckboxProps['size']>
 type CheckboxGroupColor = NonNullable<CheckboxProps['color']>
-type CheckboxGroupVariant = NonNullable<CheckboxProps['variant']>
 
 export interface CheckboxGroupBaseProps extends CheckboxGroupVariantProps {
   id?: string
@@ -64,11 +63,7 @@ export interface CheckboxGroupBaseProps extends CheckboxGroupVariantProps {
   classes?: CheckboxGroupClasses
 }
 
-export type CheckboxGroupProps = CheckboxGroupBaseProps &
-  Omit<
-    JSX.HTMLAttributes<HTMLDivElement>,
-    keyof CheckboxGroupBaseProps | 'id' | 'children' | 'class'
-  >
+export type CheckboxGroupProps = CheckboxGroupBaseProps
 
 interface NormalizedCheckboxGroupItem {
   id: string
@@ -98,26 +93,6 @@ function toValueString(value: unknown, fallback: string): CheckboxGroupValue {
   return String(value)
 }
 
-function normalizeCheckboxGroupSize(value?: string): CheckboxGroupSize {
-  if (value === 'xs' || value === 'sm' || value === 'lg' || value === 'xl') {
-    return value
-  }
-
-  return 'md'
-}
-
-function normalizeCheckboxGroupColor(value?: string): CheckboxGroupColor {
-  if (value === 'secondary' || value === 'neutral' || value === 'error') {
-    return value
-  }
-
-  return 'primary'
-}
-
-function normalizeCheckboxVariant(value?: string): CheckboxGroupVariant {
-  return value === 'card' ? 'card' : 'list'
-}
-
 export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
   const merged = mergeProps(
     {
@@ -127,64 +102,52 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
       orientation: 'vertical' as const,
       variant: 'list' as const,
       size: 'md' as const,
+      color: 'primary' as const,
       defaultValue: [] as CheckboxGroupValue[],
     },
     props,
   )
 
-  const [local, rest] = splitProps(merged as CheckboxGroupProps, [
-    'id',
-    'name',
-    'legend',
-    'valueKey',
-    'labelKey',
-    'descriptionKey',
-    'items',
-    'color',
-    'size',
-    'variant',
-    'orientation',
-    'indicator',
-    'checkedIcon',
-    'indeterminateIcon',
-    'value',
-    'defaultValue',
-    'required',
-    'disabled',
-    'onChange',
-    'classes',
-  ])
+  const [formProps, collectionProps, styleBehaviorProps] = splitProps(
+    merged as CheckboxGroupProps,
+    ['id', 'name', 'value', 'defaultValue', 'required', 'disabled', 'onChange'],
+    ['legend', 'items', 'valueKey', 'labelKey', 'descriptionKey'],
+  )
 
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      color: local.color,
-      size: local.size,
-      disabled: local.disabled,
+      id: formProps.id,
+      name: formProps.name,
+      color: styleBehaviorProps.color,
+      size: styleBehaviorProps.size,
+      disabled: formProps.disabled,
     }),
     {
       bind: false,
     },
   )
 
-  const groupId = useId(() => local.id, 'checkbox-group')
+  const groupId = useId(() => formProps.id, 'checkbox-group')
   const [uncontrolledValue, setUncontrolledValue] = createSignal<CheckboxGroupValue[]>(
-    local.defaultValue ?? [],
+    formProps.defaultValue ?? [],
   )
 
-  const resolvedSize = createMemo(() => normalizeCheckboxGroupSize(field.size() ?? local.size))
-  const resolvedColor = createMemo(() => normalizeCheckboxGroupColor(field.color() ?? local.color))
+  const resolvedSize = createMemo(
+    () => (field.size() ?? styleBehaviorProps.size) as CheckboxGroupSize,
+  )
+  const resolvedColor = createMemo(
+    () => (field.color() ?? styleBehaviorProps.color) as CheckboxGroupColor,
+  )
   const disabled = createMemo(() => field.disabled())
-  const selectedValues = createMemo(() => local.value ?? uncontrolledValue())
+  const selectedValues = createMemo(() => formProps.value ?? uncontrolledValue())
   const ariaAttrs = createMemo(() => field.ariaAttrs() ?? {})
   const legendId = createMemo(() => `${groupId()}-legend`)
 
   const normalizedItems = createMemo<NormalizedCheckboxGroupItem[]>(() => {
-    const items = local.items ?? []
-    const valueKey = local.valueKey ?? 'value'
-    const labelKey = local.labelKey ?? 'label'
-    const descriptionKey = local.descriptionKey ?? 'description'
+    const items = collectionProps.items ?? []
+    const valueKey = collectionProps.valueKey ?? 'value'
+    const labelKey = collectionProps.labelKey ?? 'label'
+    const descriptionKey = collectionProps.descriptionKey ?? 'description'
 
     return items.map((item, index) => {
       if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
@@ -236,11 +199,11 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
   })
 
   function setValue(nextValue: CheckboxGroupValue[]): void {
-    if (local.value === undefined) {
+    if (formProps.value === undefined) {
       setUncontrolledValue(nextValue)
     }
 
-    local.onChange?.(nextValue)
+    formProps.onChange?.(nextValue)
     field.emitFormChange()
     field.emitFormInput()
   }
@@ -259,35 +222,34 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
     <div
       id={`${groupId()}-root`}
       data-slot="root"
-      class={cn('relative', local.classes?.root)}
-      {...rest}
+      class={cn('relative', styleBehaviorProps.classes?.root)}
     >
       <fieldset
         id={groupId()}
         data-slot="fieldset"
-        aria-labelledby={local.legend ? legendId() : undefined}
+        aria-labelledby={collectionProps.legend ? legendId() : undefined}
         class={checkboxGroupFieldsetVariants(
           {
-            orientation: local.orientation,
+            orientation: styleBehaviorProps.orientation,
             size: resolvedSize(),
           },
-          local.classes?.fieldset,
+          styleBehaviorProps.classes?.fieldset,
         )}
         {...(ariaAttrs() as Record<string, string | boolean | undefined>)}
       >
-        <Show when={local.legend}>
+        <Show when={collectionProps.legend}>
           <legend
             id={legendId()}
             data-slot="legend"
             class={checkboxGroupLegendVariants(
               {
                 size: resolvedSize(),
-                required: local.required,
+                required: formProps.required,
               },
-              local.classes?.legend,
+              styleBehaviorProps.classes?.legend,
             )}
           >
-            {local.legend}
+            {collectionProps.legend}
           </legend>
         </Show>
 
@@ -296,22 +258,22 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
             <div
               data-slot="item"
               class={
-                local.variant === 'table'
+                styleBehaviorProps.variant === 'table'
                   ? checkboxGroupTablePaddingVariants(
                       {
                         size: resolvedSize(),
                       },
                       'border border-border',
                       checkboxGroupTableOrientationVariants({
-                        orientation: local.orientation,
+                        orientation: styleBehaviorProps.orientation,
                       }),
                       item.disabled || disabled() ? 'cursor-not-allowed' : undefined,
-                      local.classes?.item,
+                      styleBehaviorProps.classes?.item,
                       item.classes?.root,
                     )
                   : cn(
                       item.disabled || disabled() ? 'cursor-not-allowed' : undefined,
-                      local.classes?.item,
+                      styleBehaviorProps.classes?.item,
                       item.classes?.root,
                     )
               }
@@ -325,16 +287,18 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
                 label={item.label}
                 description={item.description}
                 disabled={item.disabled || disabled()}
-                required={local.required}
+                required={formProps.required}
                 size={resolvedSize()}
                 color={resolvedColor()}
-                variant={normalizeCheckboxVariant(
-                  local.variant === 'table' ? 'card' : local.variant,
-                )}
-                indicator={local.indicator}
-                checkedIcon={item.checkedIcon ?? local.checkedIcon}
-                indeterminateIcon={item.indeterminateIcon ?? local.indeterminateIcon}
-                classes={{ ...local.classes?.checkbox, ...item.classes?.checkbox }}
+                variant={
+                  styleBehaviorProps.variant === 'table' || styleBehaviorProps.variant === 'card'
+                    ? 'card'
+                    : 'list'
+                }
+                indicator={styleBehaviorProps.indicator}
+                checkedIcon={item.checkedIcon ?? styleBehaviorProps.checkedIcon}
+                indeterminateIcon={item.indeterminateIcon ?? styleBehaviorProps.indeterminateIcon}
+                classes={{ ...styleBehaviorProps.classes?.checkbox, ...item.classes?.checkbox }}
                 onChange={(checked) => onItemCheckedChange(item.value, checked)}
               />
             </div>

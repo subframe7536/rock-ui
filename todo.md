@@ -1,4 +1,3 @@
-- [x] Context Menu / Dropdown Menu port from Coss (`src/context-menu/context-menu.class.ts`, `src/context-menu/context-menu.tsx`, `src/dropdown-menu/dropdown-menu.class.ts`, `src/dropdown-menu/dropdown-menu.tsx`)
-- [x] Sheet animation port from Coss (`src/sheet/sheet.class.ts`, `src/sheet/sheet.tsx`)
-- [x] Modal style port from Coss (`src/modal/modal.class.ts`, `src/modal/modal.tsx`)
-- [x] Keyboard hints in other components migrated to `<Kbd />` (`src/tooltip/tooltip.tsx`, `src/context-menu/context-menu.tsx`, `src/dropdown-menu/dropdown-menu.tsx`)
+- [x] fix broken modal style: separator / action, according to zaidan's style
+- [x] fix input/button/trigger border/ring, according to zaidan's style
+- [x] remove all useless `normalize*()` helpers where TypeScript unions and `mergeProps` fallbacks already cover variant defaults

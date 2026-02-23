@@ -45,11 +45,7 @@ export interface FormBaseProps<TState extends FormState = FormState> {
   children?: JSX.Element | ((props: FormRenderProps) => JSX.Element)
 }
 
-export type FormProps<TState extends FormState = FormState> = FormBaseProps<TState> &
-  Omit<
-    JSX.FormHTMLAttributes<HTMLFormElement>,
-    keyof FormBaseProps<TState> | 'id' | 'children' | 'class'
-  >
+export type FormProps<TState extends FormState = FormState> = FormBaseProps<TState>
 
 function matchesValidationTarget(
   error: FormValidationError,
@@ -72,21 +68,13 @@ function matchesValidationTarget(
 
 const DEFAULT_VALUDATE_ON: FormInputEventType[] = ['input', 'blur', 'change']
 export function Form<TState extends FormState = FormState>(props: FormProps<TState>): JSX.Element {
-  const [local, rest] = splitProps(props as FormProps<TState>, [
-    'id',
-    'state',
-    'validate',
-    'validateOn',
-    'validateOnInputDelay',
-    'disabled',
-    'loadingAuto',
-    'onSubmit',
-    'onError',
-    'classes',
-    'children',
-  ])
+  const [stateValidationProps, eventProps, renderProps] = splitProps(
+    props as FormProps<TState>,
+    ['id', 'state', 'validate', 'validateOn', 'validateOnInputDelay', 'disabled'],
+    ['loadingAuto', 'onSubmit', 'onError'],
+  )
 
-  const formId = useId(() => local.id, 'form')
+  const formId = useId(() => stateValidationProps.id, 'form')
   const [loading, setLoading] = createSignal(false)
   const [errors, setErrors] = createSignal<FormValidationError[]>([])
   const [inputs, setInputs] = createSignal<Record<string, FormInputMeta>>({})
@@ -98,7 +86,10 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
   const listeners = new Set<(event: FormInputEvent) => void>()
 
   async function handleInputEvent(event: FormInputEvent): Promise<void> {
-    if ((local.validateOn ?? DEFAULT_VALUDATE_ON).includes(event.type) && !loading()) {
+    if (
+      (stateValidationProps.validateOn ?? DEFAULT_VALUDATE_ON).includes(event.type) &&
+      !loading()
+    ) {
       if (event.type !== 'input') {
         if (event.name) {
           await runValidation(event.name)
@@ -176,7 +167,7 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
   }
 
   async function getErrors(): Promise<FormValidationError[]> {
-    const validationErrors = await local.validate?.(local.state)
+    const validationErrors = await stateValidationProps.validate?.(stateValidationProps.state)
     if (!validationErrors) {
       return []
     }
@@ -202,11 +193,13 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
     return nextErrors
   }
 
-  const stateAccessor = createMemo(() => local.state as Record<string, unknown> | undefined)
+  const stateAccessor = createMemo(
+    () => stateValidationProps.state as Record<string, unknown> | undefined,
+  )
 
   const contextValue: FormContextValue = {
     get disabled() {
-      return local.disabled ?? false
+      return stateValidationProps.disabled ?? false
     },
     get loading() {
       return loading()
@@ -218,10 +211,10 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
       return stateAccessor()
     },
     get validateOn() {
-      return local.validateOn ?? DEFAULT_VALUDATE_ON
+      return stateValidationProps.validateOn ?? DEFAULT_VALUDATE_ON
     },
     get validateOnInputDelay() {
-      return local.validateOnInputDelay ?? 300
+      return stateValidationProps.validateOnInputDelay ?? 300
     },
     registerInput,
     unregisterInput,
@@ -234,25 +227,25 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
   }
 
   function renderChildren(): JSX.Element {
-    if (typeof local.children !== 'function') {
-      return local.children as JSX.Element
+    if (typeof renderProps.children !== 'function') {
+      return renderProps.children as JSX.Element
     }
 
-    if (local.children.length > 0) {
-      return (local.children as (props: FormRenderProps) => JSX.Element)({
+    if (renderProps.children.length > 0) {
+      return (renderProps.children as (props: FormRenderProps) => JSX.Element)({
         errors: errors(),
         loading: loading(),
       })
     }
 
-    return (local.children as () => JSX.Element)()
+    return (renderProps.children as () => JSX.Element)()
   }
 
   const onSubmit: JSX.EventHandlerUnion<HTMLFormElement, SubmitEvent> = async (event) => {
     event.preventDefault()
 
     const submitEvent = event as FormSubmitEvent<TState>
-    setLoading(Boolean(local.loadingAuto ?? true))
+    setLoading(Boolean(eventProps.loadingAuto ?? true))
 
     try {
       const currentErrors = await runValidation()
@@ -261,12 +254,12 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
         const errorEvent = Object.assign(event, {
           errors: currentErrors,
         }) as FormErrorEvent
-        local.onError?.(errorEvent)
+        eventProps.onError?.(errorEvent)
         return
       }
 
-      submitEvent.data = local.state
-      await local.onSubmit?.(submitEvent)
+      submitEvent.data = stateValidationProps.state
+      await eventProps.onSubmit?.(submitEvent)
       dirtyFields.clear()
     } finally {
       setLoading(false)
@@ -277,10 +270,9 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
     <FormProvider value={contextValue}>
       <form
         id={formId()}
-        class={cn('w-full data-loading:opacity-80', local.classes?.root)}
+        class={cn('w-full data-loading:opacity-80', renderProps.classes?.root)}
         data-loading={loading() ? '' : undefined}
         onSubmit={onSubmit}
-        {...rest}
       >
         {renderChildren()}
       </form>

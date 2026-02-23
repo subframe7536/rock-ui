@@ -15,7 +15,6 @@ function createForm(
 
   const screen = render(() => (
     <Form
-      data-testid="form"
       state={state}
       validateOn={validateOn}
       validateOnInputDelay={0}
@@ -247,7 +246,7 @@ describe('Input', () => {
   test('integrates with form validation aria attrs and validate on blur', async () => {
     const { screen, input } = createForm(['blur'])
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('Error message')).not.toBeNull()
     })

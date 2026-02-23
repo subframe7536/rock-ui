@@ -56,7 +56,6 @@ export const DropdownMenuDemos = () => {
       >
         <div class="flex flex-wrap gap-3 items-center">
           <DropdownMenu
-            arrow
             contentTop={({ sub }) => (
               <div class="text-xs text-muted-foreground">{sub ? 'Submenu' : 'Main menu'}</div>
             )}

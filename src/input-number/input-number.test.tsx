@@ -70,7 +70,6 @@ describe('InputNumber', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOnInputDelay={0}
         validate={(currentState) => {
@@ -92,7 +91,7 @@ describe('InputNumber', () => {
       </Form>
     ))
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
 
     await waitFor(() => {
       expect(screen.getByText('Count must be greater than zero')).not.toBeNull()
@@ -171,7 +170,6 @@ describe('InputNumber', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOn={['change']}
         validateOnInputDelay={0}
@@ -197,7 +195,7 @@ describe('InputNumber', () => {
     const increment = screen.getByRole('button', { name: 'Increment' })
     const decrement = screen.getByRole('button', { name: 'Decrement' })
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('Count must equal one')).not.toBeNull()
     })
@@ -218,7 +216,6 @@ describe('InputNumber', () => {
 
     const screen = render(() => (
       <Form
-        data-testid="form"
         state={state}
         validateOn={['input']}
         validateOnInputDelay={0}
@@ -244,7 +241,7 @@ describe('InputNumber', () => {
     const increment = screen.getByRole('button', { name: 'Increment' })
     const decrement = screen.getByRole('button', { name: 'Decrement' })
 
-    await fireEvent.submit(screen.getByTestId('form'))
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
     await waitFor(() => {
       expect(screen.getByText('Count must equal one')).not.toBeNull()
     })
