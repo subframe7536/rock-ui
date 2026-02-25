@@ -284,94 +284,86 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <Show when={_comboKey()} keyed>
-      {(_key) => (
-        <Combobox<NormalizedItem, NormalizedGroup>
-          options={normalizedGroups()}
-          optionValue="_id"
-          optionLabel="label"
-          optionTextValue="label"
-          optionDisabled="disabled"
-          optionGroupChildren="items"
-          defaultFilter="contains"
-          triggerMode="manual"
-          open={true}
-          onOpenChange={() => {}}
-          value={null}
-          onChange={handleChange}
-          onInputChange={_updateSearch}
-          allowsEmptyCollection={true}
-          closeOnSelection={false}
-          shouldFocusWrap={true}
-          itemComponent={ItemComponent}
-          sectionComponent={SectionComponent}
-          data-slot="root"
-          class={cn('flex flex-col min-h-0 divide-y divide-border', local.class)}
-        >
-          {/* ── Input area ─────────────────────────────────────────────────── */}
-          <Combobox.Control<NormalizedItem>
-            data-slot="input-wrapper"
-            class={commandPaletteInputWrapperVariants({ size: local.size })}
+    <Combobox<NormalizedItem, NormalizedGroup>
+      options={normalizedGroups()}
+      optionValue="_id"
+      optionLabel="label"
+      optionTextValue="label"
+      optionDisabled="disabled"
+      optionGroupChildren="items"
+      defaultFilter="contains"
+      triggerMode="manual"
+      open={true}
+      onOpenChange={() => {}}
+      value={null}
+      onChange={handleChange}
+      onInputChange={_updateSearch}
+      allowsEmptyCollection={true}
+      closeOnSelection={false}
+      shouldFocusWrap={true}
+      itemComponent={ItemComponent}
+      sectionComponent={SectionComponent}
+      data-slot="root"
+      class={cn('flex flex-col min-h-0 divide-y divide-border', local.class)}
+    >
+      {/* ── Input area ─────────────────────────────────────────────────── */}
+      <Combobox.Control<NormalizedItem>
+        data-slot="input-wrapper"
+        class={commandPaletteInputWrapperVariants({ size: local.size })}
+      >
+        <Show when={history().length > 0}>
+          <button
+            type="button"
+            data-slot="back"
+            class="text-muted-foreground outline-none shrink-0 cursor-pointer hover:text-foreground"
+            onClick={navigateBack}
+            aria-label="Go back"
           >
-            {() => (
-              <>
-                <Show when={history().length > 0}>
-                  <button
-                    type="button"
-                    data-slot="back"
-                    class="text-muted-foreground outline-none shrink-0 cursor-pointer hover:text-foreground"
-                    onClick={navigateBack}
-                    aria-label="Go back"
-                  >
-                    <Icon name="i-lucide-arrow-left" />
-                  </button>
-                </Show>
+            <Icon name="i-lucide-arrow-left" />
+          </button>
+        </Show>
 
-                <Icon
-                  name="i-lucide-search"
-                  data-slot="search-icon"
-                  classes={{ root: 'shrink-0 text-muted-foreground' }}
-                />
+        <Icon
+          name="i-lucide-search"
+          data-slot="search-icon"
+          classes={{ root: 'shrink-0 text-muted-foreground' }}
+        />
 
-                <Combobox.Input
-                  data-slot="input"
-                  class={commandPaletteInputVariants({ size: local.size })}
-                  placeholder={local.placeholder}
-                  autofocus={local.autofocus}
-                  onKeyDown={handleKeyDown}
-                />
+        <Combobox.Input
+          data-slot="input"
+          class={commandPaletteInputVariants({ size: local.size })}
+          placeholder={local.placeholder}
+          autofocus={local.autofocus}
+          onKeyDown={handleKeyDown}
+        />
 
-                <Show when={local.close}>
-                  <button
-                    type="button"
-                    data-slot="close"
-                    class="text-muted-foreground outline-none shrink-0 cursor-pointer hover:text-foreground"
-                    onClick={local.onClose}
-                    aria-label="Close"
-                  >
-                    <Icon name="i-lucide-x" />
-                  </button>
-                </Show>
-              </>
-            )}
-          </Combobox.Control>
-
-          {/* ── List ───────────────────────────────────────────────────────── */}
-          <Show
-            when={hasItems()}
-            fallback={
-              <div data-slot="empty" class={commandPaletteEmptyVariants({ size: local.size })}>
-                No results.
-              </div>
-            }
+        <Show when={local.close}>
+          <button
+            type="button"
+            data-slot="close"
+            class="text-muted-foreground outline-none shrink-0 cursor-pointer hover:text-foreground"
+            onClick={() => local.onClose?.()}
+            aria-label="Close"
           >
-            <Combobox.Listbox
-              data-slot="listbox"
-              class="p-1 overflow-x-hidden overflow-y-auto focus:outline-none"
-            />
-          </Show>
-        </Combobox>
-      )}
-    </Show>
+            <Icon name="i-lucide-x" />
+          </button>
+        </Show>
+      </Combobox.Control>
+
+      {/* ── List ───────────────────────────────────────────────────────── */}
+      <Show
+        when={hasItems()}
+        fallback={
+          <div data-slot="empty" class={commandPaletteEmptyVariants({ size: local.size })}>
+            No results.
+          </div>
+        }
+      >
+        <Combobox.Listbox
+          data-slot="listbox"
+          class="p-1 overflow-x-hidden overflow-y-auto focus:outline-none"
+        />
+      </Show>
+    </Combobox>
   )
 }

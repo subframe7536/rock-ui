@@ -5,17 +5,10 @@ export const selectControlVariants = cva(
   'flex w-full cursor-pointer items-center rounded-md border border-input bg-transparent text-foreground outline-none transition-[color,box-shadow] dark:bg-input/30 focus-within:(border-ring ring-3 ring-ring/50)',
   {
     defaultVariants: {
-      color: 'primary',
       size: 'md',
       variant: 'outline',
     },
     variants: {
-      color: {
-        primary: '',
-        secondary: '',
-        neutral: '',
-        error: '',
-      },
       size: {
         sm: 'min-h-8 text-xs',
         md: 'min-h-9 text-sm',
@@ -32,60 +25,71 @@ export const selectControlVariants = cva(
         true: 'ring-1 ring-border/50',
       },
       disabled: {
-        true: 'cursor-not-allowed opacity-75',
+        true: 'cursor-not-allowed opacity-50',
       },
       invalid: {
         true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
       },
     },
-    compoundVariants: [],
   },
 )
 
 export const selectInputVariants = cva(
-  'flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed',
+  'flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:(cursor-not-allowed opacity-50)',
   {
     defaultVariants: {
       mode: 'single',
+      size: 'md',
     },
     variants: {
       mode: {
-        single: 'min-w-0',
+        single: '',
         multiSearch: 'min-w-12 h-6 py-0.5',
-        multiHidden: 'absolute h-0 w-0 overflow-hidden border-0 p-0 opacity-0',
+        multiHidden: 'sr-only',
+      },
+      size: {
+        sm: '',
+        md: '',
+        lg: '',
       },
       readOnly: {
         true: 'cursor-pointer',
       },
     },
+    compoundVariants: [
+      {
+        mode: 'single',
+        size: 'sm',
+        class: 'h-7 px-2.5 text-xs',
+      },
+      {
+        mode: 'single',
+        size: 'md',
+        class: 'h-8 px-2.5 text-sm',
+      },
+      {
+        mode: 'single',
+        size: 'lg',
+        class: 'h-9 px-3 text-sm',
+      },
+      {
+        mode: 'multiSearch',
+        size: 'sm',
+        class: 'ps-1 text-xs',
+      },
+      {
+        mode: 'multiSearch',
+        size: 'md',
+        class: 'ps-1 text-sm',
+      },
+      {
+        mode: 'multiSearch',
+        size: 'lg',
+        class: 'ps-1.5 text-sm',
+      },
+    ],
   },
 )
-
-export const selectInputSingleSizeVariants = cva('h-8 px-2.5 text-sm', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
-      sm: 'h-7 px-2.5 text-xs',
-      md: 'h-8 px-2.5 text-sm',
-      lg: 'h-9 px-3 text-sm',
-    },
-  },
-})
-
-export const selectInputMultiSearchSizeVariants = cva('ps-1 text-sm', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
-      sm: 'ps-1 text-xs',
-      md: 'ps-1 text-sm',
-      lg: 'ps-1.5 text-sm',
-    },
-  },
-})
 
 export const selectTriggerIconVariants = cva('shrink-0 text-muted-foreground opacity-80', {
   defaultVariants: {

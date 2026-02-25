@@ -19,8 +19,8 @@ import type { IconName } from '../../icon'
 import { Kbd } from '../../kbd'
 import { cn } from '../utils'
 
-import { overlayMenuContentVariants, overlayMenuItemVariants } from './base.class'
-import type { OverlayMenuItemVariantProps } from './base.class'
+import { overlayMenuContentVariants, overlayMenuItemVariants } from './menu.class'
+import type { OverlayMenuItemVariantProps } from './menu.class'
 import type {
   OverlayMenuSharedClasses,
   OverlayMenuSharedItem,

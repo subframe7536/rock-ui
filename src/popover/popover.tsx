@@ -15,20 +15,11 @@ export interface PopoverClasses {
   trigger?: string
   content?: string
   body?: string
-  arrow?: string
 }
 
 export interface PopoverBaseProps {
-  id?: string
-  open?: boolean
-  defaultOpen?: boolean
-  onOpenChange?: (open: boolean) => void
   mode?: PopoverMode
-  gutter?: number
-  openDelay?: number
-  closeDelay?: number
   content?: JSX.Element
-  arrow?: boolean
   dismissible?: boolean
   classes?: PopoverClasses
   onClosePrevent?: () => void
@@ -38,17 +29,16 @@ export interface PopoverBaseProps {
 type PopoverRootProps = Omit<KobaltePopover.PopoverRootProps, 'children' | 'class'> &
   Omit<KobalteHoverCard.HoverCardRootProps, 'children' | 'class'>
 
-export type PopoverProps = PopoverBaseProps & Omit<PopoverRootProps, keyof PopoverBaseProps>
+export type PopoverProps = PopoverBaseProps &
+  Omit<PopoverRootProps, keyof PopoverBaseProps | 'arrow'>
 
 export function Popover(props: PopoverProps): JSX.Element {
   const merged = mergeProps(
     {
       mode: 'click' as const,
       placement: 'bottom' as const,
-      gutter: 8,
-      openDelay: 0,
-      closeDelay: 0,
-      arrow: true,
+      openDelay: 100,
+      closeDelay: 100,
       dismissible: true,
     },
     props,
@@ -56,7 +46,7 @@ export function Popover(props: PopoverProps): JSX.Element {
   const [behaviorProps, contentProps, rootProps] = splitProps(
     merged,
     ['mode', 'placement', 'dismissible', 'onClosePrevent'],
-    ['content', 'arrow', 'classes', 'children'],
+    ['content', 'classes', 'children'],
   )
 
   const side = createMemo<PopoverContentVariantProps['side']>(
@@ -109,33 +99,24 @@ export function Popover(props: PopoverProps): JSX.Element {
   const contentClass = () => popoverContentVariants({ side: side() }, contentProps.classes?.content)
 
   const innerContent = () => (
-    <>
-      <Show when={contentProps.arrow}>
-        <KobaltePopover.Arrow size={20} class={contentProps.classes?.arrow} />
-      </Show>
-      <Show when={contentProps.content !== undefined && contentProps.content !== null}>
-        <div
-          data-slot="body"
-          class={cn(
-            'max-h-$kb-popper-content-available-height overflow-auto',
-            contentProps.classes?.body,
-          )}
-        >
-          {contentProps.content}
-        </div>
-      </Show>
-    </>
+    <Show when={contentProps.content !== undefined && contentProps.content !== null}>
+      <div
+        data-slot="body"
+        class={cn(
+          'max-h-$kb-popper-content-available-height overflow-auto',
+          contentProps.classes?.body,
+        )}
+      >
+        {contentProps.content}
+      </div>
+    </Show>
   )
 
   return (
     <Show
       when={behaviorProps.mode === 'hover'}
       fallback={
-        <KobaltePopover.Root
-          placement={behaviorProps.placement}
-          overflowPadding={-6}
-          {...rootProps}
-        >
+        <KobaltePopover.Root placement={behaviorProps.placement} overflowPadding={4} {...rootProps}>
           <KobaltePopover.Trigger
             as="span"
             data-slot="trigger"
@@ -157,11 +138,7 @@ export function Popover(props: PopoverProps): JSX.Element {
         </KobaltePopover.Root>
       }
     >
-      <KobalteHoverCard.Root
-        placement={behaviorProps.placement}
-        overflowPadding={-6}
-        {...rootProps}
-      >
+      <KobalteHoverCard.Root placement={behaviorProps.placement} overflowPadding={4} {...rootProps}>
         <KobalteHoverCard.Trigger
           as="span"
           data-slot="trigger"

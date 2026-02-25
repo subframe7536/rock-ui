@@ -3,8 +3,8 @@ import type { JSX } from 'solid-js'
 import { mergeProps, splitProps } from 'solid-js'
 
 import type { IconName } from '../icon'
-import { OverlayMenuBaseContent } from '../shared/overlay-menu/base'
-import type { OverlayMenuItemVariantProps } from '../shared/overlay-menu/base.class'
+import { OverlayMenuBaseContent } from '../shared/overlay-menu/menu'
+import type { OverlayMenuItemVariantProps } from '../shared/overlay-menu/menu.class'
 import type {
   OverlayMenuSharedClasses,
   OverlayMenuSharedItem,
@@ -54,8 +54,6 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
   const merged = mergeProps(
     {
       size: 'md' as const,
-      placement: 'bottom-start' as const,
-      gutter: 8,
       checkedIcon: 'icon-check' as IconName,
       submenuIcon: 'icon-chevron-right' as IconName,
     },
@@ -68,7 +66,7 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
   )
 
   return (
-    <KobalteDropdownMenu.Root overflowPadding={-4} {...rootProps}>
+    <KobalteDropdownMenu.Root overflowPadding={4} {...rootProps}>
       <KobalteDropdownMenu.Trigger
         as="span"
         data-slot="trigger"

@@ -3,8 +3,8 @@ import type { JSX } from 'solid-js'
 import { mergeProps, splitProps } from 'solid-js'
 
 import type { IconName } from '../icon'
-import { OverlayMenuBaseContent } from '../shared/overlay-menu/base'
-import type { OverlayMenuItemVariantProps } from '../shared/overlay-menu/base.class'
+import { OverlayMenuBaseContent } from '../shared/overlay-menu/menu'
+import type { OverlayMenuItemVariantProps } from '../shared/overlay-menu/menu.class'
 import type {
   OverlayMenuSharedClasses,
   OverlayMenuSharedItem,

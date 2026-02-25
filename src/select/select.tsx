@@ -21,6 +21,7 @@ import {
 import { useFormField } from '../form-field/form-field-context'
 import { Icon } from '../icon'
 import type { IconName } from '../icon'
+import { overlayMenuContentVariants } from '../shared/overlay-menu/menu.class'
 import { cn, useId } from '../shared/utils'
 
 import type { SelectControlVariantProps } from './select.class'
@@ -29,8 +30,6 @@ import {
   selectClearVariants,
   selectControlVariants,
   selectInputVariants,
-  selectInputSingleSizeVariants,
-  selectInputMultiSearchSizeVariants,
   selectItemVariants,
   selectLeadingIconVariants,
   selectTriggerIconVariants,
@@ -118,7 +117,6 @@ export interface SelectClasses {
 }
 
 type SelectSize = NonNullable<SelectControlVariantProps['size']>
-type SelectColor = NonNullable<SelectControlVariantProps['color']>
 type SelectVariant = NonNullable<SelectControlVariantProps['variant']>
 
 export interface SelectBaseProps {
@@ -182,7 +180,6 @@ export interface SelectBaseProps {
   emptyRender?: SelectEmptyRender
 
   size?: SelectSize
-  color?: SelectColor
   variant?: SelectVariant
   highlight?: boolean
   disabled?: boolean
@@ -374,7 +371,7 @@ export function Select(props: SelectProps): JSX.Element {
       'leadingIcon',
       'triggerIcon',
     ],
-    ['size', 'color', 'variant', 'highlight', 'classes'],
+    ['size', 'variant', 'highlight', 'classes'],
   )
 
   // ---- Form field integration ----
@@ -383,7 +380,6 @@ export function Select(props: SelectProps): JSX.Element {
       id: formProps.id,
       name: formProps.name,
       size: styleProps.size,
-      color: styleProps.color,
       highlight: styleProps.highlight,
       disabled: formProps.disabled,
     }),
@@ -394,9 +390,6 @@ export function Select(props: SelectProps): JSX.Element {
 
   // ---- Resolved visual props ----
   const resolvedSize = createMemo<SelectSize>(() => (field.size() ?? styleProps.size) as SelectSize)
-  const resolvedColor = createMemo<SelectColor>(
-    () => (field.color() ?? styleProps.color) as SelectColor,
-  )
 
   const isInvalid = createMemo(() => field.ariaAttrs()?.['aria-invalid'] === true)
 
@@ -974,11 +967,8 @@ export function Select(props: SelectProps): JSX.Element {
           {
             mode: isMultiple() ? (isSearchable() ? 'multiSearch' : 'multiHidden') : 'single',
             readOnly: !isSearchable() && !isMultiple(),
+            size: resolvedSize(),
           },
-          !isMultiple() && selectInputSingleSizeVariants({ size: resolvedSize() }),
-          isMultiple() &&
-            isSearchable() &&
-            selectInputMultiSearchSizeVariants({ size: resolvedSize() }),
           styleProps.classes?.input,
         )}
         readOnly={!isSearchable()}
@@ -1180,10 +1170,7 @@ export function Select(props: SelectProps): JSX.Element {
       <Combobox.Portal>
         <Combobox.Content
           data-slot="content"
-          class={cn(
-            'z-50 rounded-lg border bg-popover text-popover-foreground shadow-lg overflow-hidden max-h-$kb-popper-available-height min-w-32 origin-$kb-combobox-content-transform-origin overflow-y-auto overflow-x-hidden data-expanded:(animate-in fade-in-0 zoom-in-95) data-closed:(animate-out fade-out-0 zoom-out-95) data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 mt-$kb-popper-content-overflow-padding',
-            styleProps.classes?.content,
-          )}
+          class={overlayMenuContentVariants({}, styleProps.classes?.content)}
           onInteractOutside={() => {
             closedByInteractOutside = true
             // Prevent hasMatches flash: Kobalte will resetInputValue on close,
@@ -1322,7 +1309,7 @@ export function Select(props: SelectProps): JSX.Element {
       class={cn('relative inline-flex w-full h-fit', styleProps.classes?.root)}
       {...field.ariaAttrs()}
       {...rootProps}
-      overflowPadding={-6}
+      overflowPadding={-2}
     >
       <ContextBridge />
       <Combobox.Control<NormalizedOption>
@@ -1330,7 +1317,6 @@ export function Select(props: SelectProps): JSX.Element {
         class={selectControlVariants(
           {
             size: resolvedSize(),
-            color: resolvedColor(),
             variant: styleProps.variant,
             highlight: field.highlight(),
             disabled: field.disabled(),
