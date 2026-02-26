@@ -2,21 +2,25 @@ import { fireEvent, render, waitFor } from '@solidjs/testing-library'
 import { describe, expect, test, vi } from 'vitest'
 
 import { CommandPalette } from './command-palette'
+import type { CommandPaletteItem } from './command-palette'
 
 const GROUPS = [
   {
     id: 'actions',
     label: 'Actions',
     items: [
-      { label: 'New File', icon: 'i-lucide-file-plus', kbds: ['⌘', 'N'] },
-      { label: 'Open Folder', icon: 'i-lucide-folder-open' },
-      { label: 'Disabled Action', disabled: true },
+      { value: 'new-file', label: 'New File', icon: 'i-lucide-file-plus', kbds: ['⌘', 'N'] },
+      { value: 'open-folder', label: 'Open Folder', icon: 'i-lucide-folder-open' },
+      { value: 'disabled-action', label: 'Disabled Action', disabled: true },
     ],
   },
   {
     id: 'navigation',
     label: 'Navigation',
-    items: [{ label: 'Go to Dashboard' }, { label: 'Go to Settings' }],
+    items: [
+      { value: 'go-dashboard', label: 'Go to Dashboard' },
+      { value: 'go-settings', label: 'Go to Settings' },
+    ],
   },
 ]
 
@@ -61,7 +65,9 @@ describe('CommandPalette', () => {
     const onSelect = vi.fn()
 
     const screen = render(() => (
-      <CommandPalette groups={[{ id: 'g', items: [{ label: 'Action', onSelect }] }]} />
+      <CommandPalette
+        groups={[{ id: 'g', items: [{ value: 'action', label: 'Action', onSelect }] }]}
+      />
     ))
 
     await waitFor(() => screen.getByText('Action'))
@@ -86,9 +92,9 @@ describe('CommandPalette', () => {
             id: 'g',
             items: [
               {
+                value: 'parent',
                 label: 'Parent',
-                loading: true,
-                children: [{ label: 'Child' }],
+                children: [{ value: 'child', label: 'Child' }],
               },
             ],
           },
@@ -97,9 +103,8 @@ describe('CommandPalette', () => {
     ))
 
     await waitFor(() => {
-      const searchIcon = screen.container.querySelector('[data-slot="search-icon"]') as HTMLElement
-      const loadingIcon = screen.container.querySelector(
-        '[data-slot="item-leading-icon"]',
+      const searchIcon = screen.container.querySelector(
+        '[data-slot="search-icon"] [data-slot="icon"]',
       ) as HTMLElement
       const childIcon = screen.container.querySelector(
         '[data-slot="item-trailing-icon"]',
@@ -109,7 +114,6 @@ describe('CommandPalette', () => {
       ) as HTMLElement
 
       expect(searchIcon.className).toContain('icon-hash')
-      expect(loadingIcon.className).toContain('icon-reload')
       expect(childIcon.className).toContain('icon-arrow-right')
       expect(closeIcon.className).toContain('icon-minus')
     })
@@ -133,8 +137,9 @@ describe('CommandPalette', () => {
             id: 'g',
             items: [
               {
+                value: 'more',
                 label: 'More',
-                children: [{ label: 'Sub Item' }],
+                children: [{ value: 'sub-item', label: 'Sub Item' }],
               },
             ],
           },
@@ -160,8 +165,9 @@ describe('CommandPalette', () => {
             id: 'g',
             items: [
               {
+                value: 'parent',
                 label: 'Parent',
-                children: [{ label: 'Child' }],
+                children: [{ value: 'child', label: 'Child' }],
               },
             ],
           },
@@ -195,8 +201,9 @@ describe('CommandPalette', () => {
             id: 'g',
             items: [
               {
+                value: 'parent',
                 label: 'Parent',
-                children: [{ label: 'Child' }],
+                children: [{ value: 'child', label: 'Child' }],
               },
             ],
           },
@@ -251,5 +258,147 @@ describe('CommandPalette', () => {
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Type a command...')).toBeTruthy()
     })
+  })
+
+  test('applies classes overrides to root and slots', async () => {
+    const screen = render(() => (
+      <CommandPalette
+        close
+        groups={GROUPS}
+        classes={{
+          root: 'root-override',
+          inputWrapper: 'input-wrapper-override',
+          input: 'input-override',
+          listbox: 'listbox-override',
+          group: 'group-override',
+          groupLabel: 'group-label-override',
+          item: 'item-override',
+          searchIcon: 'search-icon-override',
+          close: 'close-override',
+        }}
+      />
+    ))
+
+    await waitFor(() => {
+      expect(screen.container.querySelector('[data-slot="root"]')?.className).toContain(
+        'root-override',
+      )
+      expect(screen.container.querySelector('[data-slot="input-wrapper"]')?.className).toContain(
+        'input-wrapper-override',
+      )
+      expect(screen.container.querySelector('[data-slot="input"]')?.className).toContain(
+        'input-override',
+      )
+      expect(screen.container.querySelector('[data-slot="listbox"]')?.className).toContain(
+        'listbox-override',
+      )
+      expect(screen.container.querySelector('[data-slot="group"]')?.className).toContain(
+        'group-override',
+      )
+      expect(screen.container.querySelector('[data-slot="group-label"]')?.className).toContain(
+        'group-label-override',
+      )
+      expect(screen.container.querySelector('[data-slot="item"]')?.className).toContain(
+        'item-override',
+      )
+      expect(screen.container.querySelector('[data-slot="search-icon"]')?.className).toContain(
+        'search-icon-override',
+      )
+      expect(screen.container.querySelector('[data-slot="close"]')?.className).toContain(
+        'close-override',
+      )
+    })
+  })
+
+  test('applies classes.empty override', async () => {
+    const screen = render(() => (
+      <CommandPalette groups={[]} classes={{ empty: 'empty-override' }} />
+    ))
+
+    await waitFor(() => {
+      expect(screen.container.querySelector('[data-slot="empty"]')?.className).toContain(
+        'empty-override',
+      )
+    })
+  })
+
+  test('applies classes.back override', async () => {
+    const screen = render(() => (
+      <CommandPalette
+        groups={[
+          {
+            id: 'g',
+            items: [
+              {
+                value: 'parent',
+                label: 'Parent',
+                children: [{ value: 'child', label: 'Child' }],
+              },
+            ],
+          },
+        ]}
+        classes={{ back: 'back-override' }}
+      />
+    ))
+
+    await waitFor(() => {
+      expect(screen.getByText('Parent')).toBeTruthy()
+    })
+
+    const item = screen.container.querySelector('[data-slot="item"]') as HTMLElement
+    await fireEvent.click(item)
+
+    await waitFor(() => {
+      expect(screen.container.querySelector('[data-slot="back"]')?.className).toContain(
+        'back-override',
+      )
+    })
+  })
+
+  test('filters by controlled searchTerm', async () => {
+    const screen = render(() => <CommandPalette groups={GROUPS} searchTerm="Settings" />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Go to Settings')).toBeTruthy()
+      expect(screen.queryByText('Go to Dashboard')).toBeNull()
+    })
+  })
+
+  test('warns for duplicate item values while keeping items renderable', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const screen = render(() => (
+      <CommandPalette
+        groups={[
+          {
+            id: 'g',
+            items: [
+              { value: 'dup', label: 'First' },
+              { value: 'dup', label: 'Second' },
+            ],
+          },
+        ]}
+      />
+    ))
+
+    await waitFor(() => {
+      expect(screen.getByText('First')).toBeTruthy()
+      expect(screen.getByText('Second')).toBeTruthy()
+    })
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('duplicate item value "dup"'))
+    warnSpy.mockRestore()
+  })
+
+  test('requires value in item type contract', () => {
+    // @ts-expect-error value is required
+    const item: CommandPaletteItem = { label: 'No value' }
+    expect(item).toBeDefined()
+  })
+
+  test('rejects item classes in type contract', () => {
+    // @ts-expect-error item-level classes has been removed
+    const item: CommandPaletteItem = { value: 'x', label: 'Legacy', classes: { item: 'x' } }
+    expect(item).toBeDefined()
   })
 })

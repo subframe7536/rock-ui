@@ -74,7 +74,7 @@ export const SliderDemos = () => {
             }}
           />
           <p class="text-xs text-zinc-600">
-            Range: {rangeValue()[0]} - {rangeValue()[1]}
+            Range: {rangeValue()[0]} - {rangeValue()[1]} ; Min steps between: 10
           </p>
         </div>
       </DemoSection>

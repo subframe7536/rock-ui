@@ -32,15 +32,16 @@ describe('Icon', () => {
     expect(screen.getByTestId('fn-icon').textContent).toBe('R')
   })
 
-  test('applies customize callback for string icons', () => {
+  test('passes through HTML attributes to the span element', () => {
     const screen = render(() => (
-      <Icon name="i-lucide-search" customize={(content) => `${content} custom-icon`} />
+      <Icon name="i-lucide-search" id="my-icon" data-testid="icon-el" title="Search icon" />
     ))
     const icon = screen.container.querySelector('[data-slot="icon"]') as HTMLSpanElement | null
 
     expect(icon).not.toBeNull()
-    expect(icon?.className).toContain('custom-icon')
-    expect(icon?.className).toContain('lucide-search')
+    expect(icon?.id).toBe('my-icon')
+    expect(icon?.getAttribute('data-testid')).toBe('icon-el')
+    expect(icon?.title).toBe('Search icon')
   })
 
   test('sets aria-hidden by default and respects aria-label', () => {

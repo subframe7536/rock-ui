@@ -113,6 +113,7 @@ export const SelectDemos = () => {
           <Select
             multiple
             showSearch
+            loading
             options={FRUIT_OPTIONS}
             value={createTagValues()}
             onChange={(v) => setCreateTagValues(v as string[])}

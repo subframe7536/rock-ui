@@ -10,10 +10,11 @@ const BASIC_GROUPS: CommandPaletteGroup[] = [
     id: 'actions',
     label: 'Actions',
     items: [
-      { label: 'New File', icon: 'i-lucide-file-plus', kbds: ['⌘', 'N'] },
-      { label: 'Open File', icon: 'i-lucide-folder-open', kbds: ['⌘', 'O'] },
-      { label: 'Save', icon: 'i-lucide-save', kbds: ['⌘', 'S'] },
+      { value: 'new-file', label: 'New File', icon: 'i-lucide-file-plus', kbds: ['⌘', 'N'] },
+      { value: 'open-file', label: 'Open File', icon: 'i-lucide-folder-open', kbds: ['⌘', 'O'] },
+      { value: 'save', label: 'Save', icon: 'i-lucide-save', kbds: ['⌘', 'S'] },
       {
+        value: 'export-pdf',
         label: 'Export as PDF',
         icon: 'i-lucide-file-text',
         description: 'Export current document to PDF',
@@ -24,9 +25,9 @@ const BASIC_GROUPS: CommandPaletteGroup[] = [
     id: 'navigation',
     label: 'Navigation',
     items: [
-      { label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
-      { label: 'Settings', icon: 'i-lucide-settings', suffix: 'Preferences' },
-      { label: 'Profile', icon: 'i-lucide-user', disabled: true },
+      { value: 'dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
+      { value: 'settings', label: 'Settings', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'profile', label: 'Profile', icon: 'i-lucide-user', disabled: true },
     ],
   },
 ]
@@ -37,25 +38,27 @@ const SUB_NAV_GROUPS: CommandPaletteGroup[] = [
     label: 'Commands',
     items: [
       {
+        value: 'create',
         label: 'Create',
         icon: 'i-lucide-plus-circle',
         description: 'Create new resources',
         children: [
-          { label: 'New File', icon: 'i-lucide-file-plus' },
-          { label: 'New Folder', icon: 'i-lucide-folder-plus' },
-          { label: 'New Project', icon: 'i-lucide-git-branch' },
+          { value: 'create-new-file', label: 'New File', icon: 'i-lucide-file-plus' },
+          { value: 'create-new-folder', label: 'New Folder', icon: 'i-lucide-folder-plus' },
+          { value: 'create-new-project', label: 'New Project', icon: 'i-lucide-git-branch' },
         ],
       },
       {
+        value: 'share',
         label: 'Share',
         icon: 'i-lucide-share-2',
         description: 'Share with others',
         children: [
-          { label: 'Copy Link', icon: 'i-lucide-link', kbds: ['⌘', 'L'] },
-          { label: 'Send via Email', icon: 'i-lucide-mail' },
+          { value: 'share-copy-link', label: 'Copy Link', icon: 'i-lucide-link', kbds: ['⌘', 'L'] },
+          { value: 'share-send-email', label: 'Send via Email', icon: 'i-lucide-mail' },
         ],
       },
-      { label: 'Delete', icon: 'i-lucide-trash-2' },
+      { value: 'delete', label: 'Delete', icon: 'i-lucide-trash-2' },
     ],
   },
 ]
@@ -92,7 +95,7 @@ export function CommandPaletteDemos() {
           body={
             <CommandPalette groups={BASIC_GROUPS} close onClose={() => setPaletteOpen(false)} />
           }
-          classes={{ body: 'p-0' }}
+          classes={{ content: 'top-1/4 translate-y-0' }}
         >
           <Button variant="outline">
             Search... <Kbd>⌘</Kbd>

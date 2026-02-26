@@ -25,10 +25,10 @@ export const CollapsibleDemos = () => {
               'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-zinc-50',
             content: 'px-4 pb-4 text-sm text-zinc-700',
           }}
-          renderTrigger={({ open: isOpen }) => (
+          trigger={(props) => (
             <>
               <span>Release notes</span>
-              <span class={`text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+              <span class={`text-zinc-500 transition-transform ${props.open ? 'rotate-180' : ''}`}>
                 <span class="i-lucide-chevron-down" />
               </span>
             </>
@@ -61,7 +61,7 @@ export const CollapsibleDemos = () => {
                 'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-zinc-50',
               content: 'px-4 pb-4 text-sm text-zinc-700',
             }}
-            renderTrigger={({ open: isOpen }) => (
+            trigger={({ open: isOpen }) => (
               <>
                 <span>Controlled state panel</span>
                 <span class={`text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>

@@ -232,10 +232,7 @@ export function Modal(props: ModalProps): JSX.Element {
       </Show>
 
       <Show when={contentProps.body}>
-        <div
-          data-slot="body"
-          class={cn(hasHeader() ? 'px-4 py-4' : 'p-4', contentProps.classes?.body)}
-        >
+        <div data-slot="body" class={cn(hasHeader() ? 'p-3' : 'p-1', contentProps.classes?.body)}>
           {contentProps.body}
         </div>
       </Show>

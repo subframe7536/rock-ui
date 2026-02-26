@@ -44,7 +44,7 @@ export const commandPaletteGroupLabelVariants = cva('font-semibold text-muted-fo
 })
 
 export const commandPaletteItemVariants = cva(
-  'group relative w-full flex items-center cursor-default select-none outline-none rounded-md data-disabled:(pointer-events-none opacity-75) data-highlighted:(bg-accent text-accent-foreground)',
+  'group relative w-full flex items-center cursor-default select-none outline-none rounded-md data-disabled:(pointer-events-none opacity-50) data-highlighted:(bg-accent text-accent-foreground)',
   {
     defaultVariants: { size: 'md', hasIcon: false },
     variants: {
@@ -72,7 +72,7 @@ export const commandPaletteItemVariants = cva(
   },
 )
 
-export const commandPaletteItemTrailingIconVariants = cva('shrink-0 text-muted-foreground', {
+export const commandPaletteItemIconVariants = cva('shrink-0 text-muted-foreground', {
   defaultVariants: { size: 'md' },
   variants: {
     size: {

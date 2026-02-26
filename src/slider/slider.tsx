@@ -28,7 +28,6 @@ export interface SliderClasses {
 }
 
 export interface SliderBaseProps extends Pick<SliderVariantProps, 'color' | 'size' | 'highlight'> {
-  as?: ValidComponent
   id?: string
   name?: string
   value?: SliderValue
@@ -91,7 +90,6 @@ export function Slider(props: SliderProps): JSX.Element {
   const [formProps, rangeProps, styleProps, rootProps] = splitProps(
     merged as SliderProps,
     [
-      'as',
       'id',
       'name',
       'value',
@@ -211,7 +209,6 @@ export function Slider(props: SliderProps): JSX.Element {
 
   return (
     <KobalteSlider.Root
-      as={formProps.as}
       id={`${inputId()}-root`}
       name={field.name()}
       minValue={rangeProps.min}

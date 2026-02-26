@@ -44,7 +44,7 @@ export const selectInputVariants = cva(
     variants: {
       mode: {
         single: '',
-        multiSearch: 'min-w-12 h-6 py-0.5',
+        multiSearch: 'min-w-12',
         multiHidden: 'sr-only',
       },
       size: {
@@ -91,15 +91,15 @@ export const selectInputVariants = cva(
   },
 )
 
-export const selectTriggerIconVariants = cva('shrink-0 text-muted-foreground opacity-80', {
+export const selectTriggerIconVariants = cva('text-muted-foreground opacity-80 cursor-pointer', {
   defaultVariants: {
     size: 'md',
   },
   variants: {
     size: {
-      sm: 'me-1.5 text-sm',
-      md: 'me-2 text-base',
-      lg: 'me-2.5 text-base',
+      sm: 'me-1.5 size-4',
+      md: 'me-2 size-5',
+      lg: 'me-2.5 size-6',
     },
   },
 })
@@ -118,7 +118,7 @@ export const selectLeadingIconVariants = cva('shrink-0 text-muted-foreground', {
 })
 
 export const selectClearVariants = cva(
-  'shrink-0 cursor-pointer text-muted-foreground opacity-80 transition-opacity hover:opacity-100',
+  'text-muted-foreground opacity-80 transition-opacity hover:opacity-100',
   {
     defaultVariants: {
       size: 'md',
@@ -150,7 +150,7 @@ export const selectItemVariants = cva(
 )
 
 export const selectTagVariants = cva(
-  'flex items-center rounded-md bg-accent px-2 font-medium text-accent-foreground text-sm',
+  'flex items-center rounded-md bg-accent px-2 font-medium text-accent-foreground cursor-default',
   {
     defaultVariants: {
       size: 'md',

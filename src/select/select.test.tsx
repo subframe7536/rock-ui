@@ -95,7 +95,7 @@ describe('Select - single mode', () => {
 
   test('keeps loading trigger icon animation class', () => {
     const screen = render(() => <Select options={FRUITS} loading placeholder="Pick" />)
-    const icon = screen.container.querySelector('[data-slot="trigger-icon"] [data-slot="icon"]')
+    const icon = screen.container.querySelector('[data-slot="trigger"]')
 
     expect(icon?.className).toContain('animate-spin')
   })

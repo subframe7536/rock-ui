@@ -23,9 +23,7 @@ function renderCollapsible(props?: {
       forceMount={props?.forceMount}
       onOpenChange={props?.onOpenChange}
       classes={props?.classes}
-      renderTrigger={({ open }) => (
-        <span data-testid="trigger-state">{open ? 'open' : 'closed'}</span>
-      )}
+      trigger={({ open }) => <span data-testid="trigger-state">{open ? 'open' : 'closed'}</span>}
     >
       <span data-testid="content">Content</span>
     </Collapsible>
@@ -136,7 +134,7 @@ describe('Collapsible', () => {
 
   test('forwards id to root', async () => {
     const screen = render(() => (
-      <Collapsible id="collapsible-root" renderTrigger={() => 'Trigger'}>
+      <Collapsible id="collapsible-root" trigger={() => 'Trigger'}>
         content
       </Collapsible>
     ))

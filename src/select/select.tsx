@@ -19,7 +19,7 @@ import {
 } from 'solid-js'
 
 import { useFormField } from '../form-field/form-field-context'
-import { Icon } from '../icon'
+import { Icon, IconButton } from '../icon'
 import type { IconName } from '../icon'
 import { overlayMenuContentVariants } from '../shared/overlay-menu/menu.class'
 import { cn, useId } from '../shared/utils'
@@ -190,6 +190,7 @@ export interface SelectBaseProps {
   leadingIcon?: IconName
   /** Icon for the dropdown trigger. Default: 'icon-chevron-down'. */
   triggerIcon?: IconName
+  closeIcon?: IconName
 
   id?: string
   name?: string
@@ -332,7 +333,6 @@ export function Select(props: SelectProps): JSX.Element {
       variant: 'outline' as const,
       placeholder: '',
       allowClear: false,
-      loading: false,
     },
     props,
   )
@@ -370,6 +370,7 @@ export function Select(props: SelectProps): JSX.Element {
       'loadingIcon',
       'leadingIcon',
       'triggerIcon',
+      'closeIcon',
     ],
     ['size', 'variant', 'highlight', 'classes'],
   )
@@ -1084,21 +1085,16 @@ export function Select(props: SelectProps): JSX.Element {
                       class={selectTagVariants({ size: resolvedSize() }, styleProps.classes?.tag)}
                     >
                       {option.label}
-                      <button
-                        type="button"
+                      <IconButton
+                        name={renderDisplayProps.closeIcon ?? 'icon-close'}
                         data-slot="tag-remove"
-                        class={cn(
-                          'h-full shrink-0 cursor-pointer ps-1 opacity-80 transition-opacity hover:opacity-100',
-                          styleProps.classes?.tagRemove,
-                        )}
+                        class={cn('size-4', styleProps.classes?.tagRemove)}
                         tabIndex={-1}
                         onClick={(e) => {
                           e.stopPropagation()
                           state.remove(option)
                         }}
-                      >
-                        <Icon name="icon-close" size="0.75em" />
-                      </button>
+                      />
                     </span>
                   }
                 >
@@ -1122,8 +1118,8 @@ export function Select(props: SelectProps): JSX.Element {
 
         {/* Clear button */}
         <Show when={searchInteractionProps.allowClear && state.selectedOptions().length > 0}>
-          <button
-            type="button"
+          <IconButton
+            name="icon-close"
             data-slot="clear"
             class={selectClearVariants({ size: resolvedSize() }, styleProps.classes?.clear)}
             tabIndex={-1}
@@ -1131,33 +1127,26 @@ export function Select(props: SelectProps): JSX.Element {
               e.stopPropagation()
               handleClear(state.clear)
             }}
-          >
-            <Icon name="icon-close" />
-          </button>
+          />
         </Show>
 
         {/* Trigger icon */}
-        <Combobox.Trigger data-slot="trigger" class="outline-none">
-          <Combobox.Icon
-            data-slot="trigger-icon"
-            class={selectTriggerIconVariants(
-              { size: resolvedSize() },
-              styleProps.classes?.triggerIcon,
-            )}
-          >
-            <Show
-              when={!renderDisplayProps.loading}
-              fallback={
-                <Icon
-                  name={renderDisplayProps.loadingIcon ?? 'icon-loading'}
-                  class="animate-spin"
-                />
-              }
-            >
-              <Icon name={renderDisplayProps.triggerIcon ?? 'icon-chevron-down'} />
-            </Show>
-          </Combobox.Icon>
-        </Combobox.Trigger>
+        <Combobox.Trigger
+          as={(props: Record<string, any>) => (
+            <IconButton
+              data-slot="trigger"
+              name={renderDisplayProps.triggerIcon ?? 'icon-chevron-down'}
+              class={selectTriggerIconVariants(
+                { size: resolvedSize() },
+                'outline-none',
+                styleProps.classes?.triggerIcon,
+              )}
+              loading={renderDisplayProps.loading}
+              loadingIcon={renderDisplayProps.loadingIcon}
+              {...props}
+            />
+          )}
+        />
       </>
     )
   }
@@ -1235,7 +1224,7 @@ export function Select(props: SelectProps): JSX.Element {
                   // ref={bindListboxScroll}
                   data-slot="listbox"
                   class={cn(
-                    'max-h-$kb-popper-content-available-height overflow-y-auto p-1 outline-none',
+                    'max-h-$kb-popper-content-available-height overflow-y-auto outline-none',
                     styleProps.classes?.listbox,
                   )}
                   onScrollEnd={handleListboxScroll}
