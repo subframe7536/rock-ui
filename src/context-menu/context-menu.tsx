@@ -16,6 +16,7 @@ import type {
   OverlayMenuPlacement,
 } from '../shared/overlay-menu/utils'
 import { resolveOverlayMenuSide } from '../shared/overlay-menu/utils'
+import { cn } from '../shared/utils'
 
 type ContextMenuColor = NonNullable<OverlayMenuItemVariantProps['color']>
 type ContextMenuSize = NonNullable<OverlayMenuItemVariantProps['size']>
@@ -73,7 +74,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     <KobalteContextMenu.Root overflowPadding={4} {...rootProps}>
       <KobalteContextMenu.Trigger
         data-slot="trigger"
-        class={local.classes?.trigger}
+        class={cn(local.classes?.trigger)}
         disabled={menuProps.disabled}
       >
         {local.children}

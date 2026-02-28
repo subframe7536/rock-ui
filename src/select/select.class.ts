@@ -45,73 +45,21 @@ export const selectInputVariants = cva(
     },
     variants: {
       mode: {
-        single: '',
-        multiSearch: 'min-w-12',
+        single: 'h-$select-input-h px-$select-input-px',
+        multiSearch: 'min-w-12 ps-$select-input-ps',
         multiHidden: 'sr-only',
       },
       size: {
-        xs: '',
-        sm: '',
-        md: '',
-        lg: '',
-        xl: '',
+        xs: 'text-xs [--select-input-h:calc(var(--spacing)*6)] [--select-input-px:calc(var(--spacing)*2)] [--select-input-ps:calc(var(--spacing)*0.5)]',
+        sm: 'text-xs [--select-input-h:calc(var(--spacing)*7)] [--select-input-px:calc(var(--spacing)*2.5)] [--select-input-ps:var(--spacing)]',
+        md: 'text-sm [--select-input-h:calc(var(--spacing)*8)] [--select-input-px:calc(var(--spacing)*2.5)] [--select-input-ps:var(--spacing)]',
+        lg: 'text-sm [--select-input-h:calc(var(--spacing)*9)] [--select-input-px:calc(var(--spacing)*3)] [--select-input-ps:calc(var(--spacing)*1.5)]',
+        xl: 'text-base [--select-input-h:calc(var(--spacing)*10)] [--select-input-px:calc(var(--spacing)*3)] [--select-input-ps:calc(var(--spacing)*1.5)]',
       },
       readOnly: {
         true: 'cursor-pointer',
       },
     },
-    compoundVariants: [
-      {
-        mode: 'single',
-        size: 'xs',
-        class: 'h-6 px-2 text-xs',
-      },
-      {
-        mode: 'single',
-        size: 'sm',
-        class: 'h-7 px-2.5 text-xs',
-      },
-      {
-        mode: 'single',
-        size: 'md',
-        class: 'h-8 px-2.5 text-sm',
-      },
-      {
-        mode: 'single',
-        size: 'lg',
-        class: 'h-9 px-3 text-sm',
-      },
-      {
-        mode: 'single',
-        size: 'xl',
-        class: 'h-10 px-3 text-base',
-      },
-      {
-        mode: 'multiSearch',
-        size: 'xs',
-        class: 'ps-0.5 text-xs',
-      },
-      {
-        mode: 'multiSearch',
-        size: 'sm',
-        class: 'ps-1 text-xs',
-      },
-      {
-        mode: 'multiSearch',
-        size: 'md',
-        class: 'ps-1 text-sm',
-      },
-      {
-        mode: 'multiSearch',
-        size: 'lg',
-        class: 'ps-1.5 text-sm',
-      },
-      {
-        mode: 'multiSearch',
-        size: 'xl',
-        class: 'ps-1.5 text-base',
-      },
-    ],
   },
 )
 

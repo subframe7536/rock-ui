@@ -32,7 +32,6 @@ export const inputNumberBaseVariants = cva(
         true: 'ring-1 ring-border/50',
       },
     },
-    compoundVariants: [],
   },
 )
 

@@ -11,6 +11,7 @@ import type {
   FormValueOptions,
 } from '../form-field/form-options'
 import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-options'
+import type { SlotClasses } from '../shared/slot-class'
 import { useId } from '../shared/utils'
 
 import type { SliderVariantProps } from './slider.class'
@@ -24,13 +25,9 @@ import {
 
 export type SliderValue = number | number[]
 
-export interface SliderClasses {
-  root?: string
-  track?: string
-  range?: string
-  thumb?: string
-  input?: string
-}
+type SliderSlots = 'root' | 'track' | 'range' | 'thumb' | 'input'
+
+export type SliderClasses = SlotClasses<SliderSlots>
 
 export interface SliderBaseProps
   extends

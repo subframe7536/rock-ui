@@ -1,6 +1,8 @@
 import * as KobalteSeparator from '@kobalte/core/separator'
 import type { JSX } from 'solid-js'
-import { Show, mergeProps, splitProps } from 'solid-js'
+import { Show, mergeProps } from 'solid-js'
+
+import type { SlotClasses } from '../shared/slot-class'
 
 import type { SeparatorVariantProps } from './separator.class'
 import {
@@ -9,15 +11,13 @@ import {
   separatorRootVariants,
 } from './separator.class'
 
-export interface SeparatorClasses {
-  root?: string
-  border?: string
-  container?: string
-}
+type SeparatorSlots = 'root' | 'border' | 'container'
+
+export type SeparatorClasses = SlotClasses<SeparatorSlots>
 
 export interface SeparatorBaseProps extends Pick<
   SeparatorVariantProps,
-  'color' | 'orientation' | 'size' | 'type'
+  'orientation' | 'size' | 'type'
 > {
   decorative?: boolean
   classes?: SeparatorClasses
@@ -25,80 +25,66 @@ export interface SeparatorBaseProps extends Pick<
 }
 
 export type SeparatorProps = SeparatorBaseProps &
-  Omit<
-    KobalteSeparator.SeparatorRootProps<HTMLDivElement>,
-    keyof SeparatorBaseProps | 'children' | 'class'
-  >
+  Omit<KobalteSeparator.SeparatorRootProps<HTMLDivElement>, keyof SeparatorBaseProps | 'class'>
 
 export function Separator(props: SeparatorProps): JSX.Element {
   const merged = mergeProps(
     {
       decorative: false,
       orientation: 'horizontal' as const,
-      color: 'neutral' as const,
       size: 'xs' as const,
       type: 'solid' as const,
     },
     props,
   )
 
-  const [semanticProps, visualProps, rootProps] = splitProps(
-    merged as SeparatorProps,
-    ['decorative', 'orientation'],
-    ['color', 'size', 'type', 'classes', 'children'],
-  )
-
   return (
     <KobalteSeparator.Root
       as="div"
-      orientation={semanticProps.orientation}
-      aria-hidden={semanticProps.decorative ? true : undefined}
+      orientation={merged.orientation}
+      aria-hidden={merged.decorative ? true : undefined}
       data-slot="root"
       class={separatorRootVariants(
         {
-          orientation: semanticProps.orientation,
+          orientation: merged.orientation,
         },
-        visualProps.classes?.root,
+        merged.classes?.root,
       )}
-      {...rootProps}
     >
       <div
         data-slot="border"
         class={separatorBorderVariants(
           {
-            orientation: semanticProps.orientation,
-            color: visualProps.color,
-            size: visualProps.size,
-            type: visualProps.type,
+            orientation: merged.orientation,
+            size: merged.size,
+            type: merged.type,
           },
-          visualProps.classes?.border,
+          merged.classes?.border,
         )}
       />
 
-      <Show when={visualProps.children}>
+      <Show when={merged.children}>
         <>
           <div
             data-slot="container"
             class={separatorContainerVariants(
               {
-                orientation: semanticProps.orientation,
-                color: visualProps.color,
+                orientation: merged.orientation,
               },
-              visualProps.classes?.container,
+              merged.classes?.container,
             )}
           >
-            {visualProps.children}
+            {merged.children}
           </div>
           <div
             data-slot="border"
             class={separatorBorderVariants(
               {
-                orientation: semanticProps.orientation,
-                color: visualProps.color,
-                size: visualProps.size,
-                type: visualProps.type,
+                orientation: merged.orientation,
+                size: merged.size,
+                type: merged.type,
               },
-              visualProps.classes?.border,
+              merged.classes?.border,
             )}
           />
         </>

@@ -64,7 +64,6 @@ export const radioGroupItemVariants = cva('flex items-start', {
       true: 'opacity-75 cursor-not-allowed',
     },
   },
-  compoundVariants: [],
 })
 
 export const radioGroupCardPaddingVariants = cva('p-3.5', {

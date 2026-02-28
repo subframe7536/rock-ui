@@ -4,6 +4,7 @@ import type { JSX, ValidComponent } from 'solid-js'
 import { Show, createMemo, createSignal, splitProps } from 'solid-js'
 
 import { useFieldGroupContext } from '../field-group/field-group-context'
+import type { SlotClasses } from '../shared/slot-class'
 import { callHandler, cn } from '../shared/utils'
 
 import type { ButtonVariantProps } from './button.class'
@@ -12,32 +13,9 @@ import { buttonIconSizeVariants, buttonVariants } from './button.class'
 /**
  * Class overrides for Button slots.
  */
-export interface ButtonClasses {
-  /**
-   * Root slot classes.
-   */
-  root?: string
+type ButtonSlots = 'root' | 'leading' | 'label' | 'trailing' | 'loading'
 
-  /**
-   * Leading slot classes.
-   */
-  leading?: string
-
-  /**
-   * Label slot classes.
-   */
-  label?: string
-
-  /**
-   * Trailing slot classes.
-   */
-  trailing?: string
-
-  /**
-   * Loading icon wrapper classes.
-   */
-  loading?: string
-}
+export type ButtonClasses = SlotClasses<ButtonSlots>
 
 /**
  * Additional Rock UI button options on top of Kobalte's polymorphic button props.

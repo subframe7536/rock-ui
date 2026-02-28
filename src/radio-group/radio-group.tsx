@@ -11,6 +11,7 @@ import type {
   FormValueOptions,
 } from '../form-field/form-options'
 import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
 import type { RadioGroupVariantProps } from './radio-group.class'
@@ -31,30 +32,32 @@ import {
 
 export type RadioGroupValue = string
 
-export interface RadioGroupClasses {
-  root?: string
-  fieldset?: string
-  legend?: string
-  item?: string
-  container?: string
-  base?: string
-  indicator?: string
-  dot?: string
-  wrapper?: string
-  label?: string
-  description?: string
-}
+type RadioGroupSlots =
+  | 'root'
+  | 'fieldset'
+  | 'legend'
+  | 'item'
+  | 'container'
+  | 'base'
+  | 'indicator'
+  | 'dot'
+  | 'wrapper'
+  | 'label'
+  | 'description'
 
-export interface RadioGroupItemClasses {
-  root?: string
-  container?: string
-  base?: string
-  indicator?: string
-  dot?: string
-  wrapper?: string
-  label?: string
-  description?: string
-}
+export type RadioGroupClasses = SlotClasses<RadioGroupSlots>
+
+type RadioGroupItemSlots =
+  | 'root'
+  | 'container'
+  | 'base'
+  | 'indicator'
+  | 'dot'
+  | 'wrapper'
+  | 'label'
+  | 'description'
+
+export type RadioGroupItemClasses = SlotClasses<RadioGroupItemSlots>
 
 export interface RadioGroupItemObject {
   value?: unknown

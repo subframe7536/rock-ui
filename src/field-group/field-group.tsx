@@ -1,15 +1,17 @@
 import type { JSX } from 'solid-js'
 import { mergeProps, splitProps } from 'solid-js'
 
+import type { SlotClasses } from '../shared/slot-class'
+
 import { FieldGroupProvider } from './field-group-context'
 import type { FieldGroupOrientation, FieldGroupSize } from './field-group-context'
 import { fieldGroupVariants } from './field-group.class'
 
 export type { FieldGroupOrientation, FieldGroupSize } from './field-group-context'
 
-export interface FieldGroupClasses {
-  root?: string
-}
+type FieldGroupSlots = 'root'
+
+export type FieldGroupClasses = SlotClasses<FieldGroupSlots>
 
 export interface FieldGroupBaseProps {
   size?: FieldGroupSize

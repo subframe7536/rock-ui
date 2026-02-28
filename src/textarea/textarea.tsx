@@ -13,6 +13,7 @@ import type {
 import { FORM_ID_NAME_DISABLED_KEYS, FORM_INPUT_INTERACTION_KEYS } from '../form-field/form-options'
 import type { ModelModifiers } from '../shared/input-modifiers'
 import { applyInputModifiers } from '../shared/input-modifiers'
+import type { SlotClasses } from '../shared/slot-class'
 import { callHandler, useId } from '../shared/utils'
 
 import type { TextareaVariantProps } from './textarea.class'
@@ -30,10 +31,9 @@ type TextareaVariant = NonNullable<TextareaBaseProps['variant']>
 
 export type TextareaValue = string | number | null | undefined
 
-export interface TextareaClasses {
-  root?: string
-  base?: string
-}
+type TextareaSlots = 'root' | 'base'
+
+export type TextareaClasses = SlotClasses<TextareaSlots>
 
 export interface TextareaBaseProps
   extends

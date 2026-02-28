@@ -30,6 +30,7 @@ import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-op
 import { Icon, IconButton } from '../icon'
 import type { IconName } from '../icon'
 import { overlayMenuContentVariants } from '../shared/overlay-menu/menu.class'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
 import type { SelectControlVariantProps } from './select.class'
@@ -103,26 +104,27 @@ export interface SelectEmptyRenderContext {
   close: () => void
 }
 
-export interface SelectClasses {
-  root?: string
-  control?: string
-  input?: string
-  leadingIcon?: string
-  triggerIcon?: string
-  clear?: string
-  content?: string
-  listbox?: string
-  item?: string
-  itemIndicator?: string
-  itemLabel?: string
-  itemDescription?: string
-  section?: string
-  sectionLabel?: string
-  tagsContainer?: string
-  tag?: string
-  tagRemove?: string
-  empty?: string
-}
+type SelectSlots =
+  | 'root'
+  | 'control'
+  | 'input'
+  | 'leadingIcon'
+  | 'triggerIcon'
+  | 'clear'
+  | 'content'
+  | 'listbox'
+  | 'item'
+  | 'itemIndicator'
+  | 'itemLabel'
+  | 'itemDescription'
+  | 'section'
+  | 'sectionLabel'
+  | 'tagsContainer'
+  | 'tag'
+  | 'tagRemove'
+  | 'empty'
+
+export type SelectClasses = SlotClasses<SelectSlots>
 
 type SelectSize = NonNullable<SelectControlVariantProps['size']>
 type SelectVariant = NonNullable<SelectControlVariantProps['variant']>

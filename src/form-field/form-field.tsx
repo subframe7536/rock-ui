@@ -12,6 +12,7 @@ import {
 import { Dynamic } from 'solid-js/web'
 
 import { useFormContext } from '../form/form-context'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
 import type { FormFieldInjectedOptions } from './form-field-context'
@@ -23,17 +24,18 @@ import {
   formFieldSizeVariants,
 } from './form-field.class'
 
-export interface FormFieldClasses {
-  root?: string
-  wrapper?: string
-  labelWrapper?: string
-  label?: string
-  container?: string
-  description?: string
-  error?: string
-  hint?: string
-  help?: string
-}
+type FormFieldSlots =
+  | 'root'
+  | 'wrapper'
+  | 'labelWrapper'
+  | 'label'
+  | 'container'
+  | 'description'
+  | 'error'
+  | 'hint'
+  | 'help'
+
+export type FormFieldClasses = SlotClasses<FormFieldSlots>
 
 export interface FormFieldRenderProps {
   error?: boolean | string | JSX.Element
@@ -323,7 +325,7 @@ export function FormField(props: FormFieldProps): JSX.Element {
                   },
                   layoutStyleProps.classes?.container,
                 )
-              : layoutStyleProps.classes?.container
+              : cn(layoutStyleProps.classes?.container)
           }
         >
           <NormalizedChildren />

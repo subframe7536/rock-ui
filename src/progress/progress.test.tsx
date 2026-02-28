@@ -5,6 +5,19 @@ import { Progress } from './progress'
 import type { ProgressProps } from './progress'
 
 describe('Progress', () => {
+  test('uses css variable classes for base thickness', () => {
+    const horizontal = render(() => <Progress value={20} size="xs" />)
+    const vertical = render(() => <Progress value={20} size="xl" orientation="vertical" />)
+
+    const horizontalBase = horizontal.container.querySelector('[data-slot="base"]')
+    const verticalBase = vertical.container.querySelector('[data-slot="base"]')
+
+    expect(horizontalBase?.className).toContain('h-$progress-base-size')
+    expect(horizontalBase?.className).toContain('[--progress-base-size:calc(var(--spacing)*0.5)]')
+    expect(verticalBase?.className).toContain('w-$progress-base-size')
+    expect(verticalBase?.className).toContain('[--progress-base-size:calc(var(--spacing)*4)]')
+  })
+
   test('renders determinate progress with default aria values', () => {
     const screen = render(() => <Progress value={50} />)
     const progress = screen.getByRole('progressbar')

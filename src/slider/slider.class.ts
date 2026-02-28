@@ -40,15 +40,15 @@ export const sliderTrackVariants = cva(
     },
     variants: {
       size: {
-        xs: '',
-        sm: '',
-        md: '',
-        lg: '',
-        xl: '',
+        xs: '[--slider-track-size:3px]',
+        sm: '[--slider-track-size:4px]',
+        md: '[--slider-track-size:4px]',
+        lg: '[--slider-track-size:5px]',
+        xl: '[--slider-track-size:6px]',
       },
       orientation: {
-        horizontal: 'w-full before:(inset-x-0.5 inset-y-0)',
-        vertical: 'h-full before:(inset-x-0 inset-y-0.5)',
+        horizontal: 'w-full h-$slider-track-size before:(inset-x-0.5 inset-y-0)',
+        vertical: 'h-full w-$slider-track-size before:(inset-x-0 inset-y-0.5)',
       },
       highlight: {
         true: 'ring-1 ring-border/50',
@@ -57,18 +57,6 @@ export const sliderTrackVariants = cva(
         true: 'opacity-64',
       },
     },
-    compoundVariants: [
-      { orientation: 'horizontal', size: 'xs', class: 'h-[3px]' },
-      { orientation: 'horizontal', size: 'sm', class: 'h-[4px]' },
-      { orientation: 'horizontal', size: 'md', class: 'h-1' },
-      { orientation: 'horizontal', size: 'lg', class: 'h-[5px]' },
-      { orientation: 'horizontal', size: 'xl', class: 'h-[6px]' },
-      { orientation: 'vertical', size: 'xs', class: 'w-[3px]' },
-      { orientation: 'vertical', size: 'sm', class: 'w-[4px]' },
-      { orientation: 'vertical', size: 'md', class: 'w-1' },
-      { orientation: 'vertical', size: 'lg', class: 'w-[5px]' },
-      { orientation: 'vertical', size: 'xl', class: 'w-[6px]' },
-    ],
   },
 )
 

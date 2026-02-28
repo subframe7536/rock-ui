@@ -3,19 +3,16 @@ import type { JSX } from 'solid-js'
 import { Show, mergeProps, splitProps } from 'solid-js'
 
 import { Kbd } from '../kbd'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import { tooltipContentVariants } from './tooltip.class'
 
 type TooltipSide = 'top' | 'right' | 'bottom' | 'left'
 
-export interface TooltipClasses {
-  root?: string
-  trigger?: string
-  text?: string
-  kbds?: string
-  kbd?: string
-}
+type TooltipSlots = 'root' | 'trigger' | 'text' | 'kbds' | 'kbd'
+
+export type TooltipClasses = SlotClasses<TooltipSlots>
 
 export interface TooltipBaseProps {
   open?: boolean
@@ -49,7 +46,11 @@ export function Tooltip(props: TooltipProps): JSX.Element {
 
   return (
     <KobalteTooltip.Root disabled={isDisabled()} overflowPadding={4} {...rootProps}>
-      <KobalteTooltip.Trigger as="span" data-slot="trigger" class={contentProps.classes?.trigger}>
+      <KobalteTooltip.Trigger
+        as="span"
+        data-slot="trigger"
+        class={cn(contentProps.classes?.trigger)}
+      >
         {contentProps.children}
       </KobalteTooltip.Trigger>
 

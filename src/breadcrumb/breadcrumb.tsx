@@ -4,6 +4,7 @@ import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
 
 import { Icon } from '../icon'
 import type { IconName } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import { breadcrumbLinkVariants, breadcrumbListVariants } from './breadcrumb.class'
@@ -22,16 +23,17 @@ export interface BreadcrumbItem {
   onClick?: JSX.EventHandlerUnion<HTMLAnchorElement, MouseEvent>
 }
 
-export interface BreadcrumbClasses {
-  root?: string
-  list?: string
-  item?: string
-  link?: string
-  leading?: string
-  label?: string
-  separator?: string
-  separatorIcon?: string
-}
+type BreadcrumbSlots =
+  | 'root'
+  | 'list'
+  | 'item'
+  | 'link'
+  | 'leading'
+  | 'label'
+  | 'separator'
+  | 'separatorIcon'
+
+export type BreadcrumbClasses = SlotClasses<BreadcrumbSlots>
 
 export interface BreadcrumbBaseProps extends Pick<BreadcrumbVariantProps, 'wrap'> {
   items?: BreadcrumbItem[]

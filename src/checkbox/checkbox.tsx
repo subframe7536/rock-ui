@@ -7,6 +7,7 @@ import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-
 import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options'
 import type { IconName } from '../icon'
 import { Icon } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
 import type { CheckboxVariantProps } from './checkbox.class'
@@ -21,16 +22,17 @@ import {
   checkboxWrapperVariants,
 } from './checkbox.class'
 
-export interface CheckboxClasses {
-  root?: string
-  container?: string
-  base?: string
-  indicator?: string
-  icon?: string
-  wrapper?: string
-  label?: string
-  description?: string
-}
+type CheckboxSlots =
+  | 'root'
+  | 'container'
+  | 'base'
+  | 'indicator'
+  | 'icon'
+  | 'wrapper'
+  | 'label'
+  | 'description'
+
+export type CheckboxClasses = SlotClasses<CheckboxSlots>
 
 export interface CheckboxBaseProps
   extends CheckboxVariantProps, FormIdentityOptions, FormDisableOption {

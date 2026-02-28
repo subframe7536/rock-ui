@@ -21,6 +21,7 @@ import type {
 import { FORM_ID_NAME_DISABLED_KEYS } from '../form-field/form-options'
 import type { IconName } from '../icon'
 import { Icon } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { useId } from '../shared/utils'
 
 import type { FileUploadVariantProps } from './file-upload.class'
@@ -42,21 +43,22 @@ import {
 
 export type FileUploadValue = File | File[] | null
 
-export interface FileUploadClasses {
-  root?: string
-  base?: string
-  wrapper?: string
-  icon?: string
-  label?: string
-  description?: string
-  files?: string
-  file?: string
-  filePreview?: string
-  fileMeta?: string
-  fileName?: string
-  fileSize?: string
-  fileRemove?: string
-}
+type FileUploadSlots =
+  | 'root'
+  | 'base'
+  | 'wrapper'
+  | 'icon'
+  | 'label'
+  | 'description'
+  | 'files'
+  | 'file'
+  | 'filePreview'
+  | 'fileMeta'
+  | 'fileName'
+  | 'fileSize'
+  | 'fileRemove'
+
+export type FileUploadClasses = SlotClasses<FileUploadSlots>
 
 export interface FileUploadBaseProps
   extends

@@ -2,6 +2,8 @@ import * as KobalteProgress from '@kobalte/core/progress'
 import type { JSX } from 'solid-js'
 import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
 
+import type { SlotClasses } from '../shared/slot-class'
+
 import type { ProgressVariantProps } from './progress.class'
 import {
   progressBaseVariants,
@@ -14,14 +16,9 @@ import {
 
 type ProgressStepState = ProgressStepRenderContext['state']
 
-export interface ProgressClasses {
-  root?: string
-  status?: string
-  base?: string
-  indicator?: string
-  steps?: string
-  step?: string
-}
+type ProgressSlots = 'root' | 'status' | 'base' | 'indicator' | 'steps' | 'step'
+
+export type ProgressClasses = SlotClasses<ProgressSlots>
 
 export interface ProgressStatusRenderContext {
   percent?: number

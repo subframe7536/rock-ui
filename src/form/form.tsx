@@ -1,6 +1,7 @@
 import type { JSX } from 'solid-js'
 import { createMemo, createSignal, splitProps } from 'solid-js'
 
+import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
 import type {
@@ -28,9 +29,9 @@ export interface FormRenderProps {
   loading: boolean
 }
 
-export interface FormClasses {
-  root?: string
-}
+type FormSlots = 'root'
+
+export type FormClasses = SlotClasses<FormSlots>
 
 export interface FormBaseProps<TState extends FormState = FormState> {
   id?: string

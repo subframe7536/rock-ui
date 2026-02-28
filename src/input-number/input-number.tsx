@@ -10,6 +10,7 @@ import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-
 import { FORM_ID_NAME_DISABLED_KEYS, FORM_INPUT_INTERACTION_KEYS } from '../form-field/form-options'
 import type { IconName } from '../icon'
 import { Icon } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { callHandler, cn, useId } from '../shared/utils'
 
 import type { InputNumberVariantProps } from './input-number.class'
@@ -31,12 +32,9 @@ type InputNumberControlButtonProps = Partial<
   Omit<ButtonProps<'button'>, 'children' | 'label' | 'onClick' | 'type'>
 >
 
-export interface InputNumberClasses {
-  root?: string
-  base?: string
-  increment?: string
-  decrement?: string
-}
+type InputNumberSlots = 'root' | 'base' | 'increment' | 'decrement'
+
+export type InputNumberClasses = SlotClasses<InputNumberSlots>
 
 export interface InputNumberBaseProps
   extends

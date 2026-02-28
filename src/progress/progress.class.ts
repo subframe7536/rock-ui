@@ -44,7 +44,7 @@ export const progressStatusVariants = cva(
 )
 
 export const progressBaseVariants = cva(
-  'relative overflow-hidden rounded-full bg-input [transform:translateZ(0)]',
+  'relative overflow-hidden rounded-full bg-input translate-z-0',
   {
     defaultVariants: {
       orientation: 'horizontal',
@@ -52,34 +52,22 @@ export const progressBaseVariants = cva(
     },
     variants: {
       orientation: {
-        horizontal: 'w-full',
-        vertical: 'h-full min-h-36',
+        horizontal: 'w-full h-$progress-base-size',
+        vertical: 'h-full min-h-36 w-$progress-base-size',
       },
       size: {
-        xs: '',
-        sm: '',
-        md: '',
-        lg: '',
-        xl: '',
+        xs: '[--progress-base-size:calc(var(--spacing)*0.5)]',
+        sm: '[--progress-base-size:var(--spacing)]',
+        md: '[--progress-base-size:calc(var(--spacing)*2)]',
+        lg: '[--progress-base-size:calc(var(--spacing)*3)]',
+        xl: '[--progress-base-size:calc(var(--spacing)*4)]',
       },
     },
-    compoundVariants: [
-      { orientation: 'horizontal', size: 'xs', class: 'h-0.5' },
-      { orientation: 'horizontal', size: 'sm', class: 'h-1' },
-      { orientation: 'horizontal', size: 'md', class: 'h-2' },
-      { orientation: 'horizontal', size: 'lg', class: 'h-3' },
-      { orientation: 'horizontal', size: 'xl', class: 'h-4' },
-      { orientation: 'vertical', size: 'xs', class: 'w-0.5' },
-      { orientation: 'vertical', size: 'sm', class: 'w-1' },
-      { orientation: 'vertical', size: 'md', class: 'w-2' },
-      { orientation: 'vertical', size: 'lg', class: 'w-3' },
-      { orientation: 'vertical', size: 'xl', class: 'w-4' },
-    ],
   },
 )
 
 export const progressIndicatorVariants = cva(
-  'absolute inset-0 size-full rounded-full transition-transform duration-200 ease-out will-change-transform',
+  'absolute inset-0 size-full rounded-full transition-transform duration-200 ease-out will-change-transform data-indeterminate:animate-(duration-2s ease-in-out iteration-infinite)',
   {
     defaultVariants: {
       color: 'primary',
@@ -109,43 +97,43 @@ export const progressIndicatorVariants = cva(
         orientation: 'horizontal',
         animation: 'carousel',
         class:
-          'data-indeterminate:animate-[carousel_2s_ease-in-out_infinite] data-indeterminate:rtl:animate-[carousel-rtl_2s_ease-in-out_infinite]',
+          'data-indeterminate:animate-[carousel] data-indeterminate:rtl:animate-[carousel-rtl]',
       },
       {
         orientation: 'vertical',
         animation: 'carousel',
-        class: 'data-indeterminate:animate-[carousel-vertical_2s_ease-in-out_infinite]',
+        class: 'data-indeterminate:animate-[carousel-vertical]',
       },
       {
         orientation: 'horizontal',
         animation: 'carousel-inverse',
         class:
-          'data-indeterminate:animate-[carousel-inverse_2s_ease-in-out_infinite] data-indeterminate:rtl:animate-[carousel-inverse-rtl_2s_ease-in-out_infinite]',
+          'data-indeterminate:animate-[carousel-inverse] data-indeterminate:rtl:animate-[carousel-inverse-rtl]',
       },
       {
         orientation: 'vertical',
         animation: 'carousel-inverse',
-        class: 'data-indeterminate:animate-[carousel-inverse-vertical_2s_ease-in-out_infinite]',
+        class: 'data-indeterminate:animate-[carousel-inverse-vertical]',
       },
       {
         orientation: 'horizontal',
         animation: 'swing',
-        class: 'data-indeterminate:animate-[swing_2s_ease-in-out_infinite]',
+        class: 'data-indeterminate:animate-[swing]',
       },
       {
         orientation: 'vertical',
         animation: 'swing',
-        class: 'data-indeterminate:animate-[swing-vertical_2s_ease-in-out_infinite]',
+        class: 'data-indeterminate:animate-[swing-vertical]',
       },
       {
         orientation: 'horizontal',
         animation: 'elastic',
-        class: 'data-indeterminate:animate-[elastic_2s_ease-in-out_infinite]',
+        class: 'data-indeterminate:animate-[elastic]',
       },
       {
         orientation: 'vertical',
         animation: 'elastic',
-        class: 'data-indeterminate:animate-[elastic-vertical_2s_ease-in-out_infinite]',
+        class: 'data-indeterminate:animate-[elastic-vertical]',
       },
     ],
   },

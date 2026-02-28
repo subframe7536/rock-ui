@@ -7,6 +7,7 @@ import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-
 import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options'
 import type { IconName } from '../icon'
 import { Icon } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { useId } from '../shared/utils'
 
 import type { SwitchVariantProps } from './switch.class'
@@ -21,16 +22,17 @@ import {
   switchWrapperVariants,
 } from './switch.class'
 
-export interface SwitchClasses {
-  root?: string
-  container?: string
-  base?: string
-  thumb?: string
-  icon?: string
-  wrapper?: string
-  label?: string
-  description?: string
-}
+type SwitchSlots =
+  | 'root'
+  | 'container'
+  | 'base'
+  | 'thumb'
+  | 'icon'
+  | 'wrapper'
+  | 'label'
+  | 'description'
+
+export type SwitchClasses = SlotClasses<SwitchSlots>
 
 export interface SwitchBaseProps
   extends SwitchVariantProps, FormIdentityOptions, FormDisableOption {

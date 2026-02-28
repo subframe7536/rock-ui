@@ -5,6 +5,7 @@ import { Show, createEffect, createMemo, createSignal, mergeProps } from 'solid-
 import { Icon, IconButton } from '../icon'
 import type { IconName } from '../icon'
 import { Kbd } from '../kbd'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import type { CommandPaletteSize } from './command-palette.class'
@@ -42,30 +43,31 @@ export interface CommandPaletteGroup {
   items?: CommandPaletteItem[]
 }
 
-export interface CommandPaletteClasses {
-  root?: string
-  inputWrapper?: string
-  input?: string
-  listbox?: string
-  group?: string
-  groupLabel?: string
-  item?: string
-  itemLeadingIcon?: string
-  itemWrapper?: string
-  itemLabel?: string
-  itemLabelBase?: string
-  itemPrefix?: string
-  itemSuffix?: string
-  itemDescription?: string
-  itemTrailing?: string
-  itemTrailingIcon?: string
-  itemKbds?: string
-  itemKbd?: string
-  searchIcon?: string
-  back?: string
-  close?: string
-  empty?: string
-}
+type CommandPaletteSlots =
+  | 'root'
+  | 'inputWrapper'
+  | 'input'
+  | 'listbox'
+  | 'group'
+  | 'groupLabel'
+  | 'item'
+  | 'itemLeadingIcon'
+  | 'itemWrapper'
+  | 'itemLabel'
+  | 'itemLabelBase'
+  | 'itemPrefix'
+  | 'itemSuffix'
+  | 'itemDescription'
+  | 'itemTrailing'
+  | 'itemTrailingIcon'
+  | 'itemTrailingKbds'
+  | 'itemTrailingKbd'
+  | 'searchIcon'
+  | 'back'
+  | 'close'
+  | 'empty'
+
+export type CommandPaletteClasses = SlotClasses<CommandPaletteSlots>
 
 export interface CommandPaletteProps {
   groups?: CommandPaletteGroup[]
@@ -426,8 +428,8 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
                   slotPrefix="item"
                   value={option().kbds}
                   classes={{
-                    root: merged.classes?.itemKbds,
-                    item: merged.classes?.itemKbd,
+                    root: merged.classes?.itemTrailingKbds,
+                    item: merged.classes?.itemTrailingKbd,
                   }}
                 />
               </Show>

@@ -39,6 +39,26 @@ function queryAllBody(selector: string): NodeListOf<Element> {
   return document.body.querySelectorAll(selector)
 }
 
+test('uses css variable classes for input sizing across modes', () => {
+  const single = render(() => <Select options={FRUITS} size="xs" placeholder="XS" />)
+  const singleInput = single.container.querySelector('[data-slot="input"]')
+
+  expect(singleInput?.className).toContain('h-$select-input-h')
+  expect(singleInput?.className).toContain('px-$select-input-px')
+  expect(singleInput?.className).toContain('[--select-input-h:calc(var(--spacing)*6)]')
+  expect(singleInput?.className).toContain('[--select-input-px:calc(var(--spacing)*2)]')
+
+  const multiSearch = render(() => (
+    <Select multiple showSearch options={FRUITS} size="lg" placeholder="LG" />
+  ))
+  const multiInput = multiSearch.container.querySelector('[data-slot="input"]')
+
+  expect(multiInput?.className).toContain('min-w-12')
+  expect(multiInput?.className).toContain('ps-$select-input-ps')
+  expect(multiInput?.className).toContain('[--select-input-ps:calc(var(--spacing)*1.5)]')
+  expect(multiInput?.className).toContain('text-sm')
+})
+
 describe('Select - single mode', () => {
   test('supports xs and xl size classes', () => {
     const screen = render(() => (

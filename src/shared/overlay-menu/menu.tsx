@@ -250,7 +250,7 @@ export function OverlayMenuBaseContent<
     return (
       <For each={source}>
         {(group) => (
-          <Group data-slot="group" class={props.classes?.group}>
+          <Group data-slot="group" class={cn(props.classes?.group)}>
             <For each={group}>{(item) => renderItemNode(item, depth)}</For>
           </Group>
         )}

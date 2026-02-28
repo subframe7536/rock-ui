@@ -49,26 +49,17 @@ export const commandPaletteItemVariants = cva(
     defaultVariants: { size: 'md', hasIcon: false },
     variants: {
       size: {
-        xs: 'p-1 text-3',
-        sm: 'p-1 text-3.5',
-        md: 'p-1.5 text-3.5',
-        lg: 'p-2 text-4',
-        xl: 'p-2 text-base',
+        xs: 'p-1 text-3 [--cmd-item-gap-no-icon:var(--spacing)] [--cmd-item-gap-icon:calc(var(--spacing)*2)]',
+        sm: 'p-1 text-3.5 [--cmd-item-gap-no-icon:calc(var(--spacing)*1.5)] [--cmd-item-gap-icon:calc(var(--spacing)*2.5)]',
+        md: 'p-1.5 text-3.5 [--cmd-item-gap-no-icon:calc(var(--spacing)*1.5)] [--cmd-item-gap-icon:calc(var(--spacing)*2.5)]',
+        lg: 'p-2 text-4 [--cmd-item-gap-no-icon:calc(var(--spacing)*2)] [--cmd-item-gap-icon:calc(var(--spacing)*3)]',
+        xl: 'p-2 text-base [--cmd-item-gap-no-icon:calc(var(--spacing)*2)] [--cmd-item-gap-icon:calc(var(--spacing)*3)]',
       },
-      hasIcon: { true: '', false: '' },
+      hasIcon: {
+        true: 'gap-$cmd-item-gap-icon',
+        false: 'gap-$cmd-item-gap-no-icon',
+      },
     },
-    compoundVariants: [
-      { size: 'xs', hasIcon: false, class: 'gap-1' },
-      { size: 'sm', hasIcon: false, class: 'gap-1.5' },
-      { size: 'md', hasIcon: false, class: 'gap-1.5' },
-      { size: 'lg', hasIcon: false, class: 'gap-2' },
-      { size: 'xl', hasIcon: false, class: 'gap-2' },
-      { size: 'xs', hasIcon: true, class: 'gap-2' },
-      { size: 'sm', hasIcon: true, class: 'gap-2.5' },
-      { size: 'md', hasIcon: true, class: 'gap-2.5' },
-      { size: 'lg', hasIcon: true, class: 'gap-3' },
-      { size: 'xl', hasIcon: true, class: 'gap-3' },
-    ],
   },
 )
 

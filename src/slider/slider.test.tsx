@@ -63,6 +63,19 @@ function createForm(validateOn: Array<'blur' | 'change' | 'input'>) {
 }
 
 describe('Slider', () => {
+  test('uses css variable classes for track thickness', () => {
+    const horizontal = render(() => <Slider orientation="horizontal" size="xs" />)
+    const vertical = render(() => <Slider orientation="vertical" size="xl" />)
+
+    const horizontalTrack = horizontal.container.querySelector('[data-slot="track"]')
+    const verticalTrack = vertical.container.querySelector('[data-slot="track"]')
+
+    expect(horizontalTrack?.className).toContain('h-$slider-track-size')
+    expect(horizontalTrack?.className).toContain('[--slider-track-size:3px]')
+    expect(verticalTrack?.className).toContain('w-$slider-track-size')
+    expect(verticalTrack?.className).toContain('[--slider-track-size:6px]')
+  })
+
   test('renders base attributes and orientation without tooltip', () => {
     const screen = render(() => (
       <Slider

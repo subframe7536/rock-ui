@@ -15,6 +15,7 @@ describe('Separator', () => {
     expect(root?.getAttribute('data-orientation')).toBe('horizontal')
     expect(root?.getAttribute('role')).toBe('separator')
     expect(root?.className).toContain('flex-row')
+    expect(root?.className).toContain('text-muted')
     expect(borders.length).toBe(1)
     expect(borders[0]?.className).toContain('border-t')
   })
@@ -53,23 +54,46 @@ describe('Separator', () => {
     const lg = render(() => <Separator size="lg" />)
     const xl = render(() => <Separator size="xl" />)
 
-    expect(xs.container.querySelector('[data-slot="border"]')?.className).toContain('border-t-1')
-    expect(sm.container.querySelector('[data-slot="border"]')?.className).toContain('border-t-2')
-    expect(md.container.querySelector('[data-slot="border"]')?.className).toContain('border-t-3')
-    expect(lg.container.querySelector('[data-slot="border"]')?.className).toContain('border-t-4')
-    expect(xl.container.querySelector('[data-slot="border"]')?.className).toContain('border-t-5')
+    expect(xs.container.querySelector('[data-slot="border"]')?.className).toContain(
+      'border-t-$sep-size',
+    )
+    expect(sm.container.querySelector('[data-slot="border"]')?.className).toContain(
+      'border-t-$sep-size',
+    )
+    expect(md.container.querySelector('[data-slot="border"]')?.className).toContain(
+      'border-t-$sep-size',
+    )
+    expect(lg.container.querySelector('[data-slot="border"]')?.className).toContain(
+      'border-t-$sep-size',
+    )
+    expect(xl.container.querySelector('[data-slot="border"]')?.className).toContain(
+      'border-t-$sep-size',
+    )
+    expect(xs.container.querySelector('[data-slot="border"]')?.className).toContain(
+      '[--sep-size:1px]',
+    )
+    expect(sm.container.querySelector('[data-slot="border"]')?.className).toContain(
+      '[--sep-size:2px]',
+    )
+    expect(md.container.querySelector('[data-slot="border"]')?.className).toContain(
+      '[--sep-size:3px]',
+    )
+    expect(lg.container.querySelector('[data-slot="border"]')?.className).toContain(
+      '[--sep-size:4px]',
+    )
+    expect(xl.container.querySelector('[data-slot="border"]')?.className).toContain(
+      '[--sep-size:5px]',
+    )
   })
 
-  test('applies color variants for border', () => {
-    const neutral = render(() => <Separator color="neutral" />)
-    const primary = render(() => <Separator color="primary" />)
+  test('uses root color inheritance for border color', () => {
+    const screen = render(() => <Separator classes={{ root: 'text-primary' }} />)
+    const root = screen.container.querySelector('[data-slot="root"]')
+    const border = screen.container.querySelector('[data-slot="border"]')
 
-    expect(neutral.container.querySelector('[data-slot="border"]')?.className).toContain(
-      'border-border',
-    )
-    expect(primary.container.querySelector('[data-slot="border"]')?.className).toContain(
-      'border-primary',
-    )
+    expect(root?.className).toContain('text-primary')
+    expect(border?.className).toContain('border-current')
+    expect(border?.className).not.toContain('border-primary')
   })
 
   test('renders middle content through children', () => {

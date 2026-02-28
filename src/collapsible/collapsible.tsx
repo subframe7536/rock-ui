@@ -2,13 +2,12 @@ import * as KobalteCollapsible from '@kobalte/core/collapsible'
 import type { JSX } from 'solid-js'
 import { Show, splitProps } from 'solid-js'
 
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
-export interface CollapsibleClasses {
-  root?: string
-  trigger?: string
-  content?: string
-}
+type CollapsibleSlots = 'root' | 'trigger' | 'content'
+
+export type CollapsibleClasses = SlotClasses<CollapsibleSlots>
 
 export interface CollapsibleTriggerSlotProps {
   open: boolean
@@ -36,7 +35,7 @@ export function Collapsible(props: CollapsibleProps): JSX.Element {
   ])
 
   return (
-    <KobalteCollapsible.Root data-slot="root" class={contentProps.classes?.root} {...rootProps}>
+    <KobalteCollapsible.Root data-slot="root" class={cn(contentProps.classes?.root)} {...rootProps}>
       <Show when={contentProps.trigger}>
         {(render) => {
           const context = KobalteCollapsible.useCollapsibleContext()

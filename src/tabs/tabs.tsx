@@ -4,6 +4,7 @@ import { For, Show, mergeProps, splitProps } from 'solid-js'
 
 import { Icon } from '../icon'
 import type { IconName } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import {
@@ -26,16 +27,17 @@ export interface TabsItem {
   class?: string
 }
 
-export interface TabsClasses {
-  root?: string
-  list?: string
-  indicator?: string
-  trigger?: string
-  leading?: string
-  label?: string
-  trailing?: string
-  content?: string
-}
+type TabsSlots =
+  | 'root'
+  | 'list'
+  | 'indicator'
+  | 'trigger'
+  | 'leading'
+  | 'label'
+  | 'trailing'
+  | 'content'
+
+export type TabsClasses = SlotClasses<TabsSlots>
 
 export interface TabsBaseProps extends Pick<
   TabsVariantProps,

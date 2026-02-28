@@ -16,6 +16,7 @@ import type {
   OverlayMenuPlacement,
 } from '../shared/overlay-menu/utils'
 import { resolveOverlayMenuSide } from '../shared/overlay-menu/utils'
+import { cn } from '../shared/utils'
 
 type DropdownMenuColor = NonNullable<OverlayMenuItemVariantProps['color']>
 type DropdownMenuSize = NonNullable<OverlayMenuItemVariantProps['size']>
@@ -70,7 +71,7 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
       <KobalteDropdownMenu.Trigger
         as="span"
         data-slot="trigger"
-        class={local.classes?.trigger}
+        class={cn(local.classes?.trigger)}
         disabled={rootProps.disabled}
       >
         {local.children}

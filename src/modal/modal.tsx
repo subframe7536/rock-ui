@@ -4,23 +4,25 @@ import type { JSX } from 'solid-js'
 import { Show, mergeProps, onCleanup, splitProps } from 'solid-js'
 
 import { Icon } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import { modalContentVariants, modalOverlayVariants } from './modal.class'
 
-export interface ModalClasses {
-  trigger?: string
-  overlay?: string
-  content?: string
-  header?: string
-  wrapper?: string
-  title?: string
-  description?: string
-  actions?: string
-  close?: string
-  body?: string
-  footer?: string
-}
+type ModalSlots =
+  | 'trigger'
+  | 'overlay'
+  | 'content'
+  | 'header'
+  | 'wrapper'
+  | 'title'
+  | 'description'
+  | 'actions'
+  | 'close'
+  | 'body'
+  | 'footer'
+
+export type ModalClasses = SlotClasses<ModalSlots>
 
 export interface ModalBaseProps {
   id?: string
@@ -290,7 +292,11 @@ export function Modal(props: ModalProps): JSX.Element {
 
   return (
     <KobalteDialog.Root {...rootStateProps} modal {...rootProps}>
-      <KobalteDialog.Trigger as="span" data-slot="trigger" class={contentProps.classes?.trigger}>
+      <KobalteDialog.Trigger
+        as="span"
+        data-slot="trigger"
+        class={cn(contentProps.classes?.trigger)}
+      >
         {contentProps.children}
       </KobalteDialog.Trigger>
 

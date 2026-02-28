@@ -1,14 +1,12 @@
 import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
-export interface CardClasses {
-  root?: string
-  header?: string
-  body?: string
-  footer?: string
-}
+type CardSlots = 'root' | 'header' | 'body' | 'footer'
+
+export type CardClasses = SlotClasses<CardSlots>
 
 export interface CardBaseProps {
   header?: JSX.Element

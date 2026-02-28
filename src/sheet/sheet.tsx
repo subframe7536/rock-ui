@@ -4,25 +4,27 @@ import type { JSX } from 'solid-js'
 import { Show, mergeProps, onCleanup, splitProps } from 'solid-js'
 
 import { Icon } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import { sheetContentVariants } from './sheet.class'
 
 type SheetSide = 'left' | 'right' | 'top' | 'bottom'
 
-export interface SheetClasses {
-  trigger?: string
-  overlay?: string
-  content?: string
-  header?: string
-  wrapper?: string
-  title?: string
-  description?: string
-  actions?: string
-  close?: string
-  body?: string
-  footer?: string
-}
+type SheetSlots =
+  | 'trigger'
+  | 'overlay'
+  | 'content'
+  | 'header'
+  | 'wrapper'
+  | 'title'
+  | 'description'
+  | 'actions'
+  | 'close'
+  | 'body'
+  | 'footer'
+
+export type SheetClasses = SlotClasses<SheetSlots>
 
 export interface SheetBaseProps {
   id?: string
@@ -271,7 +273,11 @@ export function Sheet(props: SheetProps): JSX.Element {
 
   return (
     <KobalteDialog.Root modal {...rootProps}>
-      <KobalteDialog.Trigger as="span" data-slot="trigger" class={contentProps.classes?.trigger}>
+      <KobalteDialog.Trigger
+        as="span"
+        data-slot="trigger"
+        class={cn(contentProps.classes?.trigger)}
+      >
         {contentProps.children}
       </KobalteDialog.Trigger>
 

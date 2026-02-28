@@ -1,15 +1,15 @@
 import type { JSX } from 'solid-js'
 import { For, Match, Show, Switch } from 'solid-js'
 
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import type { KbdVariantProps } from './kbd.class'
 import { kbdItemVariants } from './kbd.class'
 
-export interface KbdClasses {
-  root?: string
-  item?: string
-}
+type KbdSlots = 'root' | 'item'
+
+export type KbdClasses = SlotClasses<KbdSlots>
 
 export interface KbdBaseProps extends KbdVariantProps {
   classes?: KbdClasses

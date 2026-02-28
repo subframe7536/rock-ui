@@ -1,6 +1,7 @@
 import type { JSX } from 'solid-js'
 
 import type { IconName } from '../../icon'
+import type { SlotClasses } from '../slot-class'
 
 import type { OverlayMenuItems } from './utils'
 
@@ -23,22 +24,23 @@ export interface OverlayMenuSharedItem<TColor extends string, TItem> {
   onCheckedChange?: (checked: boolean) => void
 }
 
-export interface OverlayMenuSharedClasses {
-  trigger?: string
-  content?: string
-  group?: string
-  label?: string
-  separator?: string
-  item?: string
-  itemLeading?: string
-  itemWrapper?: string
-  itemLabel?: string
-  itemDescription?: string
-  itemTrailing?: string
-  itemKbds?: string
-  itemIndicator?: string
-  itemSubIcon?: string
-}
+type OverlayMenuSharedSlots =
+  | 'trigger'
+  | 'content'
+  | 'group'
+  | 'label'
+  | 'separator'
+  | 'item'
+  | 'itemLeading'
+  | 'itemWrapper'
+  | 'itemLabel'
+  | 'itemDescription'
+  | 'itemTrailing'
+  | 'itemKbds'
+  | 'itemIndicator'
+  | 'itemSubIcon'
+
+export type OverlayMenuSharedClasses = SlotClasses<OverlayMenuSharedSlots>
 
 export interface OverlayMenuSharedItemRenderContext<TItem> {
   item: TItem

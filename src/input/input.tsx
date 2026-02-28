@@ -15,6 +15,7 @@ import type { IconName } from '../icon'
 import { Icon } from '../icon'
 import type { ModelModifiers } from '../shared/input-modifiers'
 import { applyInputModifiers } from '../shared/input-modifiers'
+import type { SlotClasses } from '../shared/slot-class'
 import { callHandler, useId } from '../shared/utils'
 
 import type { InputVariantProps } from './input.class'
@@ -36,14 +37,9 @@ type InputVariant = NonNullable<InputBaseProps['variant']>
 
 export type InputValue = string | number | boolean | null | undefined
 
-export interface InputClasses {
-  root?: string
-  input?: string
-  leading?: string
-  leadingIcon?: string
-  trailing?: string
-  trailingIcon?: string
-}
+type InputSlots = 'root' | 'input' | 'leading' | 'leadingIcon' | 'trailing' | 'trailingIcon'
+
+export type InputClasses = SlotClasses<InputSlots>
 
 export interface InputBaseProps
   extends

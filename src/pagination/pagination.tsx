@@ -4,6 +4,7 @@ import { For, Show, createMemo, createSignal, mergeProps, splitProps } from 'sol
 import { Button } from '../button'
 import { Icon } from '../icon'
 import type { IconName } from '../icon'
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import { paginationControlVariants } from './pagination.class'
@@ -13,15 +14,9 @@ type PaginationColor = NonNullable<PaginationVariantProps['color']>
 type PaginationSize = NonNullable<PaginationVariantProps['size']>
 type PaginationVariant = NonNullable<PaginationVariantProps['variant']>
 
-export interface PaginationClasses {
-  root?: string
-  list?: string
-  item?: string
-  control?: string
-  prev?: string
-  next?: string
-  ellipsis?: string
-}
+type PaginationSlots = 'root' | 'list' | 'item' | 'control' | 'prev' | 'next' | 'ellipsis'
+
+export type PaginationClasses = SlotClasses<PaginationSlots>
 
 export interface PaginationBaseProps {
   page?: number

@@ -2,17 +2,16 @@ import * as KobaltePopover from '@kobalte/core/popover'
 import type { JSX } from 'solid-js'
 import { Show, createSignal, mergeProps, onCleanup, splitProps } from 'solid-js'
 
+import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
 import { popoverContentVariants } from './popover.class'
 
 type PopoverMode = 'click' | 'hover'
 
-export interface PopoverClasses {
-  trigger?: string
-  content?: string
-  body?: string
-}
+type PopoverSlots = 'trigger' | 'content' | 'body'
+
+export type PopoverClasses = SlotClasses<PopoverSlots>
 
 export interface PopoverBaseProps {
   mode?: PopoverMode
@@ -76,7 +75,7 @@ export function Popover(props: PopoverProps): JSX.Element {
       <KobaltePopover.Trigger
         as="span"
         data-slot="trigger"
-        class={contentProps.classes?.trigger}
+        class={cn(contentProps.classes?.trigger)}
         onMouseEnter={
           behaviorProps.mode === 'hover'
             ? () => {

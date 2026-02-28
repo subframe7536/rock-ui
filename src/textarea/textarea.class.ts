@@ -30,7 +30,6 @@ export const textareaRootVariants = cva(
         true: 'cursor-not-allowed opacity-75',
       },
     },
-    compoundVariants: [],
   },
 )
 

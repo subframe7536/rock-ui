@@ -25,6 +25,20 @@ const GROUPS = [
 ]
 
 describe('CommandPalette', () => {
+  test('uses css variable classes for item gap by icon presence', async () => {
+    const screen = render(() => <CommandPalette groups={GROUPS} />)
+
+    await waitFor(() => {
+      const withIcon = screen.getByText('New File').closest('[data-slot="item"]')
+      const withoutIcon = screen.getByText('Go to Dashboard').closest('[data-slot="item"]')
+
+      expect(withIcon?.className).toContain('gap-$cmd-item-gap-icon')
+      expect(withIcon?.className).toContain('[--cmd-item-gap-icon:calc(var(--spacing)*2.5)]')
+      expect(withoutIcon?.className).toContain('gap-$cmd-item-gap-no-icon')
+      expect(withoutIcon?.className).toContain('[--cmd-item-gap-no-icon:calc(var(--spacing)*1.5)]')
+    })
+  })
+
   test('renders input and item labels', async () => {
     const screen = render(() => <CommandPalette groups={GROUPS} />)
 
