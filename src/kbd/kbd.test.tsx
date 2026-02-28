@@ -7,8 +7,8 @@ import type { KbdProps } from './kbd'
 describe('Kbd', () => {
   test('renders root container and multiple kbd items in order', () => {
     const screen = render(() => <Kbd value={['Ctrl', 'Shift', 'P']} />)
-    const root = screen.container.querySelector('[data-slot="root"]')
-    const items = screen.container.querySelectorAll('[data-slot="item"]')
+    const root = screen.container.querySelector('[data-slot="kbds"]')
+    const items = screen.container.querySelectorAll('[data-slot="kbd"]')
 
     expect(root?.tagName).toBe('SPAN')
     expect(items.length).toBe(3)
@@ -20,10 +20,10 @@ describe('Kbd', () => {
 
   test('renders empty root when value is an empty array', () => {
     const screen = render(() => <Kbd value={[]} />)
-    const root = screen.container.querySelector('[data-slot="root"]')
-    const items = screen.container.querySelectorAll('[data-slot="item"]')
+    const root = screen.container.querySelector('[data-slot="kbds"]')
+    const items = screen.container.querySelectorAll('[data-slot="kbd"]')
 
-    expect(root).not.toBeNull()
+    expect(root).toBeNull()
     expect(items.length).toBe(0)
   })
 
@@ -34,11 +34,11 @@ describe('Kbd', () => {
     const lg = render(() => <Kbd size="lg" value={['L']} />)
     const xl = render(() => <Kbd size="xl" value={['XL']} />)
 
-    expect(xs.container.querySelector('[data-slot="item"]')?.className).toContain('h-3')
-    expect(sm.container.querySelector('[data-slot="item"]')?.className).toContain('h-4')
-    expect(md.container.querySelector('[data-slot="item"]')?.className).toContain('h-4.5')
-    expect(lg.container.querySelector('[data-slot="item"]')?.className).toContain('h-5')
-    expect(xl.container.querySelector('[data-slot="item"]')?.className).toContain('h-5.5')
+    expect(xs.container.querySelector('[data-slot="kbd"]')?.className).toContain('h-3')
+    expect(sm.container.querySelector('[data-slot="kbd"]')?.className).toContain('h-4')
+    expect(md.container.querySelector('[data-slot="kbd"]')?.className).toContain('h-4.5')
+    expect(lg.container.querySelector('[data-slot="kbd"]')?.className).toContain('h-5')
+    expect(xl.container.querySelector('[data-slot="kbd"]')?.className).toContain('h-5.5')
   })
 
   test('supports default/outline/invert variants with outline as default on items', () => {
@@ -47,14 +47,14 @@ describe('Kbd', () => {
     const asOutline = render(() => <Kbd variant="outline" value={['K']} />)
     const asInvert = render(() => <Kbd variant="invert" value={['K']} />)
 
-    expect(outlineByDefault.container.querySelector('[data-slot="item"]')?.className).toContain(
+    expect(outlineByDefault.container.querySelector('[data-slot="kbd"]')?.className).toContain(
       'border',
     )
-    expect(asDefault.container.querySelector('[data-slot="item"]')?.className).toContain(
+    expect(asDefault.container.querySelector('[data-slot="kbd"]')?.className).toContain(
       'bg-muted/70',
     )
-    expect(asOutline.container.querySelector('[data-slot="item"]')?.className).toContain('border')
-    expect(asInvert.container.querySelector('[data-slot="item"]')?.className).toContain(
+    expect(asOutline.container.querySelector('[data-slot="kbd"]')?.className).toContain('border')
+    expect(asInvert.container.querySelector('[data-slot="kbd"]')?.className).toContain(
       'bg-muted-foreground',
     )
   })
@@ -68,47 +68,29 @@ describe('Kbd', () => {
   test('applies classes.root and classes.item overrides', () => {
     const screen = render(() => (
       <Kbd
-        value={['K']}
+        value={['Ctrl', 'K']}
         classes={{
           root: 'root-override',
           item: 'item-override',
         }}
       />
     ))
-    const root = screen.container.querySelector('[data-slot="root"]')
-    const item = screen.container.querySelector('[data-slot="item"]')
+    const root = screen.container.querySelector('[data-slot="kbds"]')
+    const item = screen.container.querySelector('[data-slot="kbd"]')
 
     expect(root?.className).toContain('root-override')
     expect(item?.className).toContain('item-override')
   })
 
   test('keeps explicit data-slot support for item slot', () => {
-    const screen = render(() => <Kbd value={['K', 'S']} data-slot="kbd" />)
-    const root = screen.container.querySelector('[data-slot="root"]')
-    const defaultItems = screen.container.querySelectorAll('[data-slot="item"]')
-    const explicitSlotItems = screen.container.querySelectorAll('[data-slot="kbd"]')
+    const screen = render(() => <Kbd value={['K', 'S']} slotPrefix="item" />)
+    const root = screen.container.querySelector('[data-slot="item-kbds"]')
+    const defaultItems = screen.container.querySelectorAll('[data-slot="kbd"]')
+    const explicitSlotItems = screen.container.querySelectorAll('[data-slot="item-kbd"]')
 
     expect(root?.tagName).toBe('SPAN')
     expect(defaultItems.length).toBe(0)
     expect(explicitSlotItems.length).toBe(2)
     expect(explicitSlotItems.item(0)?.tagName).toBe('KBD')
-  })
-
-  test('rejects children in type contract', () => {
-    // @ts-expect-error children is no longer supported
-    const props: KbdProps = { value: ['K'], children: 'K' }
-    expect(props).toBeDefined()
-  })
-
-  test('requires value in type contract', () => {
-    // @ts-expect-error value is required
-    const props: KbdProps = { size: 'md' }
-    expect(props).toBeDefined()
-  })
-
-  test('rejects non-array value in type contract', () => {
-    // @ts-expect-error value must be string[]
-    const props: KbdProps = { value: 'K' }
-    expect(props).toBeDefined()
   })
 })

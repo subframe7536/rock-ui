@@ -15,7 +15,7 @@ export default defineConfig({
     globals: true,
     server: {
       deps: {
-        inline: ['@solidjs/testing-library', 'solid-js', '@solidjs/router'],
+        inline: ['@solidjs/router'],
       },
     },
   },

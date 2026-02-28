@@ -64,22 +64,16 @@ export function Tooltip(props: TooltipProps): JSX.Element {
             </span>
           </Show>
 
-          <Show when={(contentProps.kbds?.length || 0) > 0}>
-            <span
-              data-slot="kbds"
-              class={cn('ms-1 inline-flex items-center gap-1', contentProps.classes?.kbds)}
-            >
-              <Kbd
-                data-slot="kbd"
-                variant="invert"
-                size="sm"
-                value={contentProps.kbds ?? []}
-                classes={{
-                  item: contentProps.classes?.kbd,
-                }}
-              />
-            </span>
-          </Show>
+          <Kbd
+            data-slot="kbd"
+            variant="invert"
+            size="sm"
+            value={contentProps.kbds}
+            classes={{
+              root: cn('ms-1', contentProps.classes?.kbds),
+              item: contentProps.classes?.kbd,
+            }}
+          />
         </KobalteTooltip.Content>
       </KobalteTooltip.Portal>
     </KobalteTooltip.Root>

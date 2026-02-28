@@ -1,8 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-export const kbdRootVariants = cva('inline-flex items-center gap-1')
-
 export const kbdItemVariants = cva(
   'inline-flex items-center justify-center rounded font-mono font-medium leading-none uppercase select-none',
   {
@@ -20,7 +18,7 @@ export const kbdItemVariants = cva(
       },
       variant: {
         default: 'bg-muted/70 text-foreground',
-        outline: 'border text-muted-foreground',
+        outline: 'b-(1 b-2 border) text-muted-foreground',
         invert: 'bg-muted-foreground text-muted',
       },
     },

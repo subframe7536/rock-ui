@@ -52,12 +52,13 @@ describe('CommandPalette', () => {
     })
   })
 
-  test('kbds render in item trailing', async () => {
+  test('kbds render in item', async () => {
     const screen = render(() => <CommandPalette groups={GROUPS} />)
 
     await waitFor(() => {
       const kbds = screen.container.querySelectorAll('[data-slot="item-kbd"]')
       expect(kbds.length).toBeGreaterThan(0)
+      expect(screen.container.querySelector('[data-slot="item-trailing-kbds"]')).toBeNull()
     })
   })
 

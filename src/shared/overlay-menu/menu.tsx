@@ -121,16 +121,15 @@ export function OverlayMenuBaseContent<
               />
             </Show>
 
-            <Show when={!hasChildren && (item.kbds?.length ?? 0) > 0}>
-              <span
-                data-slot="item-kbds"
-                class={cn(
-                  'inline-flex items-center gap-1 text-muted-foreground',
-                  props.classes?.itemKbds,
-                )}
-              >
-                <Kbd size="sm" data-slot="item-kbd" value={item.kbds ?? []} />
-              </span>
+            <Show when={!hasChildren}>
+              <Kbd
+                size="sm"
+                slotPrefix="item"
+                value={item.kbds}
+                classes={{
+                  root: props.classes?.itemKbds,
+                }}
+              />
             </Show>
 
             <Show when={isCheckbox}>

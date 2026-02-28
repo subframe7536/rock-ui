@@ -59,7 +59,7 @@ export interface CommandPaletteClasses {
   itemDescription?: string
   itemTrailing?: string
   itemTrailingIcon?: string
-  itemTrailingKbds?: string
+  itemKbds?: string
   itemKbd?: string
   searchIcon?: string
   back?: string
@@ -420,23 +420,16 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
                   )}
                 />
               </Show>
-              <Show when={!hasChildren() && (option().kbds?.length ?? 0) > 0}>
-                <span
-                  data-slot="item-trailing-kbds"
-                  class={cn(
-                    'gap-0.5 hidden items-center lg:inline-flex',
-                    merged.classes?.itemTrailingKbds,
-                  )}
-                >
-                  <Kbd
-                    size="sm"
-                    data-slot="item-kbd"
-                    value={option().kbds ?? []}
-                    classes={{
-                      item: merged.classes?.itemKbd,
-                    }}
-                  />
-                </span>
+              <Show when={!hasChildren()}>
+                <Kbd
+                  size="sm"
+                  slotPrefix="item"
+                  value={option().kbds}
+                  classes={{
+                    root: merged.classes?.itemKbds,
+                    item: merged.classes?.itemKbd,
+                  }}
+                />
               </Show>
             </span>
           </Combobox.Item>

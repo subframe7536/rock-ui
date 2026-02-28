@@ -29,9 +29,9 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "play": "vite serve playground",
-    "play:build": "vite build playground",
-    "test": "vitest",
+    "play": "bun vite serve playground",
+    "play:build": "bun vite build playground",
+    "test": "bun vitest",
     "lint": "oxlint",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
