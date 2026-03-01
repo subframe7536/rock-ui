@@ -343,6 +343,8 @@ describe('Input', () => {
     const screen = render(() => <Input classes={{ root: 'root-override' }} />)
     const root = screen.container.querySelector('[data-slot="root"]')
 
+    expect(root?.className).toContain('focus-within:effect-fv-border')
+    expect(root?.className).toContain('effect-invalid')
     expect(root?.className).toContain('root-override')
   })
 

@@ -122,11 +122,15 @@ describe('Checkbox', () => {
     ))
 
     const root = screen.container.querySelector('[data-slot="root"]')
+    const input = screen.container.querySelector('[data-slot="input"]')
     const base = screen.container.querySelector('[data-slot="base"]')
 
     expect(root?.className).toContain('rounded-lg')
+    expect(root?.className).toContain('data-checked:border-primary')
     expect(root?.className).toContain('flex-row-reverse')
     expect(root?.className).toContain('root-override')
+    expect(input?.className).toContain('peer')
+    expect(base?.className).toContain('peer-focus-visible:effect-fv-border')
     expect(base?.className).toContain('size-5')
   })
 

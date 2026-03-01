@@ -12,11 +12,10 @@ import type {
 } from '../form-field/form-options'
 import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-options'
 import type { SlotClasses } from '../shared/slot-class'
-import { useId } from '../shared/utils'
+import { cn, useId } from '../shared/utils'
 
 import type { SliderVariantProps } from './slider.class'
 import {
-  sliderInputVariants,
   sliderRangeVariants,
   sliderRootVariants,
   sliderThumbVariants,
@@ -274,15 +273,7 @@ export function Slider(props: SliderProps): JSX.Element {
             <KobalteSlider.Input
               id={inputIdForIndex(thumbIndex)}
               data-slot="input"
-              class={sliderInputVariants(
-                {
-                  size: field.size(),
-                  orientation: rangeProps.orientation,
-                  highlight: field.highlight(),
-                  disabled: field.disabled(),
-                },
-                styleProps.classes?.input,
-              )}
+              class={cn(styleProps.classes?.input)}
               {...field.ariaAttrs()}
             />
           </KobalteSlider.Thumb>

@@ -241,6 +241,7 @@ export function Input(props: InputProps): JSX.Element {
   return (
     <div
       data-slot="root"
+      data-invalid={field.invalid() ? '' : undefined}
       class={inputRootVariants(
         {
           size: field.size(),

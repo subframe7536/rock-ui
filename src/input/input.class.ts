@@ -2,7 +2,7 @@ import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
 export const inputRootVariants = cva(
-  'inline-flex w-full items-center overflow-hidden rounded-md border border-input bg-transparent transition-[color,box-shadow] dark:bg-input/30 focus-within:(border-ring ring-3 ring-ring/50) has-[[data-slot=base][aria-invalid=true]]:(border-destructive ring-3 ring-destructive/20) dark:has-[[data-slot=base][aria-invalid=true]]:(border-destructive/50 ring-destructive/40)',
+  'inline-flex w-full items-center overflow-hidden rounded-md border border-input bg-transparent transition dark:bg-input/30 focus-within:effect-fv-border data-invalid:effect-invalid',
   {
     defaultVariants: {
       size: 'md',
@@ -19,7 +19,7 @@ export const inputRootVariants = cva(
       variant: {
         outline: 'bg-transparent',
         soft: 'border-transparent bg-muted/50 hover:bg-muted',
-        subtle: 'border border-border bg-muted',
+        subtle: 'border bg-muted',
         ghost: 'border-transparent bg-transparent hover:bg-muted',
         none: 'border-transparent bg-transparent',
       },
@@ -27,14 +27,14 @@ export const inputRootVariants = cva(
         true: 'ring-1 ring-border/50',
       },
       disabled: {
-        true: 'cursor-not-allowed opacity-75',
+        true: 'effect-dis',
       },
     },
   },
 )
 
 export const inputBaseVariants = cva(
-  'flex-1 min-w-0 h-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed',
+  'flex-1 min-w-0 h-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground disabled:effect-dis',
   {
     variants: {
       type: {

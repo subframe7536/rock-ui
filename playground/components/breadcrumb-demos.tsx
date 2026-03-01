@@ -5,9 +5,9 @@ import { Breadcrumb } from '../../src'
 import { DemoPage, DemoSection } from './common/demo-page'
 
 const DEFAULT_ITEMS = [
-  { label: 'Home', href: '#', icon: 'icon-home' },
-  { label: 'Library', href: '#', icon: 'icon-folder' },
-  { label: 'Components', href: '#', icon: 'icon-box' },
+  { label: 'Home', href: '#', icon: 'i-lucide:house' },
+  { label: 'Library', href: '#', icon: 'i-lucide:folder' },
+  { label: 'Components', href: '#', icon: 'i-lucide:box' },
   { label: 'Breadcrumb', href: '#', icon: 'icon-chevron-right', active: true },
 ]
 
@@ -30,10 +30,11 @@ export const BreadcrumbDemos = () => {
       >
         <Breadcrumb
           separatorIcon="icon-dot"
+          separator=">"
           items={[
-            { label: 'Workspace', href: '#', icon: 'icon-briefcase' },
-            { label: 'Settings', href: '#', icon: 'icon-settings' },
-            { label: 'Danger Zone', href: '#', disabled: true, icon: 'icon-alert-triangle' },
+            { label: 'Workspace', href: '#', icon: 'i-lucide:briefcase' },
+            { label: 'Settings', href: '#', icon: 'i-lucide:settings' },
+            { label: 'Danger Zone', href: '#', disabled: true, icon: 'i-lucide:triangle-alert' },
           ]}
         />
       </DemoSection>

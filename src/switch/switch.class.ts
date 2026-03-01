@@ -4,7 +4,7 @@ import { cva } from 'cls-variant/cva'
 export const switchRootVariants = cva('relative flex items-start', {
   variants: {
     disabled: {
-      true: 'opacity-75',
+      true: 'effect-dis',
     },
   },
 })
@@ -25,7 +25,7 @@ export const switchContainerVariants = cva('flex items-center', {
 })
 
 export const switchBaseVariants = cva(
-  'inline-flex shrink-0 items-center rounded-full border border-transparent bg-input p-px outline-none transition-[color,box-shadow] dark:bg-input/80 focus-visible:(border-ring ring-3 ring-ring/50) data-checked:bg-primary',
+  'inline-flex shrink-0 items-center rounded-full border border-transparent bg-input p-px outline-none transition-[color,box-shadow] dark:bg-input/80 peer-focus-visible:effect-fv-border data-checked:bg-primary',
   {
     defaultVariants: {
       size: 'md',
@@ -41,7 +41,7 @@ export const switchBaseVariants = cva(
         xl: 'w-11',
       },
       disabled: {
-        true: 'cursor-not-allowed',
+        true: 'effect-dis',
       },
       invalid: {
         true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
@@ -103,7 +103,7 @@ export const switchLabelVariants = cva('block font-medium text-foreground', {
       true: "after:(ms-0.5 text-destructive) after:content-['*']",
     },
     disabled: {
-      true: 'cursor-not-allowed',
+      true: 'effect-dis',
     },
   },
 })
@@ -111,7 +111,7 @@ export const switchLabelVariants = cva('block font-medium text-foreground', {
 export const switchDescriptionVariants = cva('text-muted-foreground', {
   variants: {
     disabled: {
-      true: 'cursor-not-allowed',
+      true: 'effect-dis',
     },
   },
 })

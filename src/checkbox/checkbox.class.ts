@@ -7,14 +7,14 @@ export const checkboxRootVariants = cva('relative flex items-start', {
   },
   variants: {
     variant: {
-      card: 'rounded-lg border border-border',
+      card: 'rounded-lg border data-checked:border-primary',
     },
     indicator: {
       start: 'flex-row',
       end: 'flex-row-reverse',
     },
     disabled: {
-      true: 'opacity-75',
+      true: 'effect-dis',
     },
   },
 })
@@ -50,11 +50,10 @@ export const checkboxContainerVariants = cva('flex items-center', {
 })
 
 export const checkboxBaseVariants = cva(
-  'inline-flex items-center justify-center overflow-hidden rounded-sm border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 focus-visible:(border-ring ring-3 ring-ring/50) data-checked:border-primary',
+  'inline-flex items-center justify-center overflow-hidden rounded-sm border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 peer-focus-visible:effect-fv-border data-checked:border-primary',
   {
     defaultVariants: {
       size: 'md',
-      disabled: false,
       invalid: false,
     },
     variants: {
@@ -64,9 +63,6 @@ export const checkboxBaseVariants = cva(
         md: 'size-4',
         lg: 'size-4.5',
         xl: 'size-5',
-      },
-      disabled: {
-        true: 'cursor-not-allowed',
       },
       invalid: {
         true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
@@ -115,17 +111,6 @@ export const checkboxLabelVariants = cva('block font-medium text-foreground', {
   variants: {
     required: {
       true: "after:(ms-0.5 text-destructive) after:content-['*']",
-    },
-    disabled: {
-      true: 'cursor-not-allowed',
-    },
-  },
-})
-
-export const checkboxDescriptionVariants = cva('text-muted-foreground', {
-  variants: {
-    disabled: {
-      true: 'cursor-not-allowed',
     },
   },
 })

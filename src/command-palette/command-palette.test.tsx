@@ -47,51 +47,56 @@ describe('CommandPalette', () => {
 
     await waitFor(() => {
       expect(screen.container.querySelector('[data-slot="listbox"]')?.className).toContain(
-        'max-h-72',
+        'max-h-36vh',
       )
     })
   })
 
-  test('adjusts item trailing spacing across sizes', async () => {
-    const xs = render(() => <CommandPalette groups={GROUPS} size="xs" />)
+  test('adjusts item trailing spacing via classes.itemTrailingKbds', async () => {
+    const xs = render(() => (
+      <CommandPalette groups={GROUPS} classes={{ itemTrailingKbds: 'gap-1' }} />
+    ))
 
     await waitFor(() => {
       const trailing = xs.container.querySelector(
-        '[data-slot="item-trailing"]',
+        '[data-slot="item-trailing-kbds"]',
       ) as HTMLElement | null
       expect(trailing?.classList.contains('gap-1')).toBe(true)
     })
 
-    const md = render(() => <CommandPalette groups={GROUPS} size="md" />)
+    const md = render(() => (
+      <CommandPalette groups={GROUPS} classes={{ itemTrailingKbds: 'gap-1.5' }} />
+    ))
 
     await waitFor(() => {
       const trailing = md.container.querySelector(
-        '[data-slot="item-trailing"]',
+        '[data-slot="item-trailing-kbds"]',
       ) as HTMLElement | null
       expect(trailing?.classList.contains('gap-1.5')).toBe(true)
     })
 
-    const xl = render(() => <CommandPalette groups={GROUPS} size="xl" />)
+    const xl = render(() => (
+      <CommandPalette groups={GROUPS} classes={{ itemTrailingKbds: 'gap-2' }} />
+    ))
 
     await waitFor(() => {
       const trailing = xl.container.querySelector(
-        '[data-slot="item-trailing"]',
+        '[data-slot="item-trailing-kbds"]',
       ) as HTMLElement | null
       expect(trailing?.classList.contains('gap-2')).toBe(true)
     })
   })
 
-  test('uses css variable classes for item gap by icon presence', async () => {
+  test('keeps item gap classes for icon and non-icon entries', async () => {
     const screen = render(() => <CommandPalette groups={GROUPS} />)
 
     await waitFor(() => {
       const withIcon = screen.getByText('New File').closest('[data-slot="item"]')
       const withoutIcon = screen.getByText('Go to Dashboard').closest('[data-slot="item"]')
 
-      expect(withIcon?.className).toContain('gap-$cmd-item-gap-icon')
-      expect(withIcon?.className).toContain('[--cmd-item-gap-icon:calc(var(--spacing)*2.5)]')
-      expect(withoutIcon?.className).toContain('gap-$cmd-item-gap-no-icon')
-      expect(withoutIcon?.className).toContain('[--cmd-item-gap-no-icon:calc(var(--spacing)*1.5)]')
+      expect(withIcon?.className).toContain('gap-2')
+      expect(withoutIcon?.className).toContain('gap-2')
+      expect(screen.container.querySelector('[data-slot="item-leading-icon"]')).not.toBeNull()
     })
   })
 
@@ -126,9 +131,9 @@ describe('CommandPalette', () => {
     const screen = render(() => <CommandPalette groups={GROUPS} />)
 
     await waitFor(() => {
-      const kbds = screen.container.querySelectorAll('[data-slot="item-kbd"]')
+      const kbds = screen.container.querySelectorAll('[data-slot="item-trailing-kbd"]')
       expect(kbds.length).toBeGreaterThan(0)
-      expect(screen.container.querySelector('[data-slot="item-trailing-kbds"]')).toBeNull()
+      expect(screen.container.querySelector('[data-slot="item-trailing-kbds"]')).not.toBeNull()
     })
   })
 

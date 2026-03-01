@@ -24,7 +24,7 @@ export const sliderRootVariants = cva('relative flex touch-none select-none', {
       true: 'rounded-md ring-1 ring-border/50',
     },
     disabled: {
-      true: 'pointer-events-none opacity-64',
+      true: 'effect-dis',
     },
   },
 })
@@ -54,7 +54,7 @@ export const sliderTrackVariants = cva(
         true: 'ring-1 ring-border/50',
       },
       disabled: {
-        true: 'opacity-64',
+        true: 'effect-dis',
       },
     },
   },
@@ -83,7 +83,7 @@ export const sliderRangeVariants = cva('absolute select-none rounded-full bg-pri
       true: 'ring-1 ring-inset ring-background/40',
     },
     disabled: {
-      true: 'opacity-64',
+      true: 'effect-dis',
     },
   },
 })
@@ -113,7 +113,7 @@ export const sliderThumbVariants = cva(
         true: 'ring-1 ring-border/50',
       },
       disabled: {
-        true: 'cursor-not-allowed opacity-64',
+        true: 'effect-dis',
       },
     },
   },
@@ -150,5 +150,4 @@ export const sliderInputVariants = cva('', {
 export type SliderVariantProps = VariantProps<typeof sliderRootVariants> &
   VariantProps<typeof sliderTrackVariants> &
   VariantProps<typeof sliderRangeVariants> &
-  VariantProps<typeof sliderThumbVariants> &
-  VariantProps<typeof sliderInputVariants>
+  VariantProps<typeof sliderThumbVariants>

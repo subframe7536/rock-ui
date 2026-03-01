@@ -74,6 +74,24 @@ export const FormDemos = () => {
         <div class="gap-4 grid sm:grid-cols-2">
           <div class="p-4 border border-zinc-200 rounded-lg space-y-3">
             <Checkbox
+              label="Default list style"
+              description="No variant prop, focus ring follows keyboard focus"
+              defaultChecked
+            />
+            <Checkbox
+              label="Default list style"
+              description="No variant prop, focus ring follows keyboard focus"
+              defaultChecked
+            />
+            <Checkbox
+              label="Default list style"
+              description="No variant prop, focus ring follows keyboard focus"
+              defaultChecked
+            />
+          </div>
+
+          <div class="p-4 border border-zinc-200 rounded-lg space-y-3">
+            <Checkbox
               label="Accept terms"
               description="Required before creating workspace"
               variant="card"
@@ -132,6 +150,10 @@ export const FormDemos = () => {
         title="Radio Group"
         description="Single-selection options with card/table layouts and controlled value."
       >
+        <div class="mb-4 p-4 border border-zinc-200 rounded-lg">
+          <RadioGroup legend="Default list plan" items={RADIO_ITEMS} defaultValue="pro" />
+        </div>
+
         <div class="gap-4 grid sm:grid-cols-2">
           <div class="p-4 border border-zinc-200 rounded-lg space-y-3">
             <RadioGroup

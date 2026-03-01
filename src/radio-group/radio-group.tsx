@@ -19,11 +19,9 @@ import {
   radioGroupBaseVariants,
   radioGroupCardPaddingVariants,
   radioGroupContainerVariants,
-  radioGroupDescriptionVariants,
   radioGroupDotVariants,
   radioGroupFieldsetVariants,
   radioGroupItemVariants,
-  radioGroupLabelVariants,
   radioGroupLegendVariants,
   radioGroupTableOrientationVariants,
   radioGroupTablePaddingVariants,
@@ -301,7 +299,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                   item.classes?.container,
                 )}
               >
-                <KobalteRadioGroup.ItemInput id={item.inputId} data-slot="input" />
+                <KobalteRadioGroup.ItemInput id={item.inputId} class="peer" data-slot="input" />
 
                 <KobalteRadioGroup.ItemControl
                   data-slot="base"
@@ -355,10 +353,8 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                       fallback={
                         <p
                           data-slot="label"
-                          class={radioGroupLabelVariants(
-                            {
-                              disabled: item.disabled || field.disabled(),
-                            },
+                          class={cn(
+                            'font-medium text-foreground',
                             styleProps.classes?.label,
                             item.classes?.label,
                           )}
@@ -370,10 +366,8 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                       <label
                         for={item.inputId}
                         data-slot="label"
-                        class={radioGroupLabelVariants(
-                          {
-                            disabled: item.disabled || field.disabled(),
-                          },
+                        class={cn(
+                          'font-medium text-foreground',
                           styleProps.classes?.label,
                           item.classes?.label,
                         )}
@@ -386,10 +380,8 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                   <Show when={item.description}>
                     <p
                       data-slot="description"
-                      class={radioGroupDescriptionVariants(
-                        {
-                          disabled: item.disabled || field.disabled(),
-                        },
+                      class={cn(
+                        'text-muted-foreground',
                         styleProps.classes?.description,
                         item.classes?.description,
                       )}

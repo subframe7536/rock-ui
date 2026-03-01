@@ -14,20 +14,18 @@ export const breadcrumbListVariants = cva('flex items-center gap-1.5', {
 })
 
 export const breadcrumbLinkVariants = cva(
-  'group relative inline-flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-sm font-medium focus-visible:(border-ring ring-3 ring-ring/50) disabled:(cursor-not-allowed opacity-75)',
+  'relative inline-flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-sm font-medium transition focus-visible:effect-fv-border disabled:effect-dis',
   {
     variants: {
       active: {
         true: 'text-primary',
-        false: 'text-muted',
+        false: 'text-muted-foreground',
       },
       clickable: {
         true: 'hover:text-foreground',
-        false: '',
       },
       disabled: {
-        true: 'hover:text-muted',
-        false: '',
+        true: 'effect-dis',
       },
     },
     defaultVariants: {

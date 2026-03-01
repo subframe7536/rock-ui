@@ -3,20 +3,15 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { Pagination } from './pagination'
 
-type PaginationProps = Parameters<typeof Pagination>[0]
-
-// @ts-expect-error edge controls are removed
-;({ showEdges: true }) satisfies PaginationProps
-// @ts-expect-error edge icons are removed
-;({ firstIcon: 'icon-chevrons-left' }) satisfies PaginationProps
-// @ts-expect-error edge icons are removed
-;({ lastIcon: 'icon-chevrons-right' }) satisfies PaginationProps
-// @ts-expect-error color API is removed
-;({ color: 'primary' }) satisfies PaginationProps
-// @ts-expect-error color API is removed
-;({ activeColor: 'secondary' }) satisfies PaginationProps
-
 describe('Pagination', () => {
+  test('renders semantic root attributes by default', () => {
+    const screen = render(() => <Pagination total={30} itemsPerPage={10} />)
+    const root = screen.container.querySelector('[data-slot="root"]')
+
+    expect(root?.getAttribute('aria-label')).toBe('Pagination')
+    expect(root?.getAttribute('role')).toBe('navigation')
+  })
+
   test('derives page count from total and itemsPerPage', () => {
     const screen = render(() => (
       <Pagination total={42} itemsPerPage={10} siblingCount={1} showControls={false} />
@@ -43,7 +38,7 @@ describe('Pagination', () => {
 
     expect(onPageChange).toHaveBeenCalledWith(3)
 
-    const current = screen.container.querySelector('[data-current]')
+    const current = screen.container.querySelector('[data-slot="link"][aria-current="page"]')
     expect(current?.textContent).toBe('2')
   })
 
@@ -61,79 +56,86 @@ describe('Pagination', () => {
     expect(withoutControls.container.querySelector('[data-slot="next"]')).toBeNull()
   })
 
-  test('renders page items as links when `to` is provided and controls are enabled', () => {
+  test('renders page items and controls as links when `to` is provided', () => {
     const screen = render(() => (
+      <Pagination page={2} total={30} itemsPerPage={10} to={(page) => `/page/${page}`} />
+    ))
+
+    const prev = screen.container.querySelector('[data-slot="prev"]')
+    const pageLink = screen.getByText('3').closest('[data-slot="link"]')
+    const next = screen.container.querySelector('[data-slot="next"]')
+
+    expect(prev?.tagName).toBe('A')
+    expect(prev?.getAttribute('rel')).toBe('prev')
+    expect(prev?.getAttribute('href')).toBe('/page/1')
+    expect(pageLink?.tagName).toBe('A')
+    expect(pageLink?.getAttribute('href')).toBe('/page/3')
+    expect(next?.tagName).toBe('A')
+    expect(next?.getAttribute('rel')).toBe('next')
+    expect(next?.getAttribute('href')).toBe('/page/3')
+  })
+
+  test('uses disabled buttons when boundary is reached or `to` is absent', () => {
+    const firstPage = render(() => (
       <Pagination
+        page={1}
         total={30}
         itemsPerPage={10}
         to={(page) => `/page/${page}`}
-        classes={{ item: 'item-override', control: 'control-override' }}
+        showControls
       />
     ))
 
-    const pageLink = screen.getByText('2').closest('a')
-    const pageControl = screen.getByText('2').closest('[data-slot="control"]')
+    const prevAtStart = firstPage.container.querySelector('[data-slot="prev"]')
+    const nextAtStart = firstPage.container.querySelector('[data-slot="next"]')
 
-    expect(pageLink?.getAttribute('href')).toBe('/page/2')
-    expect(pageControl?.className).toContain('control-override')
-    expect(pageLink?.className).toContain('item-override')
-  })
+    expect(prevAtStart?.tagName).toBe('BUTTON')
+    expect(prevAtStart?.getAttribute('disabled')).not.toBeNull()
+    expect(nextAtStart?.tagName).toBe('A')
+    expect(nextAtStart?.getAttribute('href')).toBe('/page/2')
 
-  test('does not render first/last slots', () => {
-    const screen = render(() => <Pagination total={30} itemsPerPage={10} showControls />)
-
-    expect(screen.container.querySelector('[data-slot="first"]')).toBeNull()
-    expect(screen.container.querySelector('[data-slot="last"]')).toBeNull()
-  })
-
-  test('disables prev/next buttons at boundaries', () => {
-    const firstPage = render(() => (
-      <Pagination page={1} total={30} itemsPerPage={10} showControls />
+    const withoutTo = render(() => (
+      <Pagination page={2} total={30} itemsPerPage={10} showControls={false} />
     ))
 
-    const prevAtStart = firstPage.container.querySelector(
-      '[data-slot="prev"] [data-slot="control"]',
-    )
-    const nextAtStart = firstPage.container.querySelector(
-      '[data-slot="next"] [data-slot="control"]',
-    )
-
-    expect(prevAtStart?.getAttribute('disabled')).not.toBeNull()
-    expect(nextAtStart?.getAttribute('disabled')).toBeNull()
-
-    const lastPage = render(() => <Pagination page={3} total={30} itemsPerPage={10} showControls />)
-
-    const prevAtEnd = lastPage.container.querySelector('[data-slot="prev"] [data-slot="control"]')
-    const nextAtEnd = lastPage.container.querySelector('[data-slot="next"] [data-slot="control"]')
-
-    expect(prevAtEnd?.getAttribute('disabled')).toBeNull()
-    expect(nextAtEnd?.getAttribute('disabled')).not.toBeNull()
+    const pageControl = withoutTo.getByText('3').closest('[data-slot="link"]')
+    expect(pageControl?.tagName).toBe('BUTTON')
   })
 
-  test('uses nova defaults for spacing, sizing, and control variants', () => {
+  test('applies current-page aria attributes and labels', () => {
     const screen = render(() => (
       <Pagination page={5} total={100} itemsPerPage={10} siblingCount={1} showControls />
     ))
 
-    const list = screen.container.querySelector('[data-slot="list"]')
-    const prev = screen.container.querySelector('[data-slot="prev"] [data-slot="control"]')
-    const next = screen.container.querySelector('[data-slot="next"] [data-slot="control"]')
-    const ellipsis = screen.container.querySelector('[data-slot="ellipsis"] span')
-    const currentPage = screen.getByText('5').closest('[data-slot="control"]')
-    const anotherPage = screen.getByText('4').closest('[data-slot="control"]')
+    const currentPage = screen.getByLabelText('Page 5, current page')
+    const anotherPage = screen.getByLabelText('Go to page 4')
 
-    expect(list?.className).toContain('gap-1')
-    expect(prev?.className).toContain('pl-2')
-    expect(next?.className).toContain('pr-2')
-    expect(ellipsis?.className).toContain('size-9')
-    expect(currentPage?.className).toContain('bg-background')
-    expect(currentPage?.className).toContain('shadow-xs')
-    expect(anotherPage?.className).toContain(
-      'hover:(bg-accent text-accent-foreground hover:bg-accent/50)',
-    )
+    expect(currentPage?.getAttribute('aria-current')).toBe('page')
+    expect(anotherPage?.getAttribute('aria-current')).toBeNull()
   })
 
-  test('applies classes overrides to root, list, controls, and ellipsis', () => {
+  test('renders ellipsis in `li[data-slot=item][aria-hidden]`', () => {
+    const screen = render(() => (
+      <Pagination page={5} total={100} itemsPerPage={10} siblingCount={1} showControls={false} />
+    ))
+
+    const ellipsisNodes = screen.container.querySelectorAll(
+      'li[data-slot="item"][aria-hidden] > [data-slot="ellipsis"]',
+    )
+
+    expect(ellipsisNodes.length).toBe(2)
+  })
+
+  test('does not expose pagination-specific icon/label slots', () => {
+    const screen = render(() => <Pagination total={30} itemsPerPage={10} showControls />)
+
+    expect(screen.container.querySelector('[data-slot="prev-icon"]')).toBeNull()
+    expect(screen.container.querySelector('[data-slot="prev-label"]')).toBeNull()
+    expect(screen.container.querySelector('[data-slot="next-icon"]')).toBeNull()
+    expect(screen.container.querySelector('[data-slot="next-label"]')).toBeNull()
+  })
+
+  test('applies classes overrides to root, list, item, control, link, prev, next and ellipsis', () => {
     const screen = render(() => (
       <Pagination
         page={5}
@@ -143,8 +145,8 @@ describe('Pagination', () => {
         classes={{
           root: 'root-override',
           list: 'list-override',
-          control: 'control-override',
           item: 'item-override',
+          link: 'link-override',
           prev: 'prev-override',
           next: 'next-override',
           ellipsis: 'ellipsis-override',
@@ -154,18 +156,17 @@ describe('Pagination', () => {
 
     const root = screen.container.querySelector('[data-slot="root"]')
     const list = screen.container.querySelector('[data-slot="list"]')
-    const currentPage = screen.getByText('5').closest('[data-slot="control"]')
-    const prev = screen.container.querySelector('[data-slot="prev"] [data-slot="control"]')
-    const next = screen.container.querySelector('[data-slot="next"] [data-slot="control"]')
-    const ellipsis = screen.container.querySelector('[data-slot="ellipsis"] span')
+    const currentPage = screen.getByLabelText('Page 5, current page')
+    const pageItem = currentPage.closest('li[data-slot="item"]')
+    const prev = screen.container.querySelector('[data-slot="prev"]')
+    const next = screen.container.querySelector('[data-slot="next"]')
+    const ellipsis = screen.container.querySelector('[data-slot="ellipsis"]')
 
     expect(root?.className).toContain('root-override')
     expect(list?.className).toContain('list-override')
-    expect(currentPage?.className).toContain('control-override')
-    expect(currentPage?.className).toContain('item-override')
-    expect(prev?.className).toContain('control-override')
+    expect(pageItem?.className).toContain('item-override')
+    expect(currentPage?.className).toContain('link-override')
     expect(prev?.className).toContain('prev-override')
-    expect(next?.className).toContain('control-override')
     expect(next?.className).toContain('next-override')
     expect(ellipsis?.className).toContain('ellipsis-override')
   })

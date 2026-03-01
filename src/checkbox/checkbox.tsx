@@ -15,7 +15,6 @@ import {
   checkboxBaseVariants,
   checkboxCardPaddingVariants,
   checkboxContainerVariants,
-  checkboxDescriptionVariants,
   checkboxIconVariants,
   checkboxLabelVariants,
   checkboxRootVariants,
@@ -129,14 +128,18 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
               styleProps.classes?.container,
             )}
           >
-            <KobalteCheckbox.Input id={field.id()} data-slot="input" {...field.ariaAttrs()} />
+            <KobalteCheckbox.Input
+              id={field.id()}
+              class="peer"
+              data-slot="input"
+              {...field.ariaAttrs()}
+            />
 
             <KobalteCheckbox.Control
               data-slot="base"
               class={checkboxBaseVariants(
                 {
                   size: field.size(),
-                  disabled: field.disabled(),
                   invalid: field.invalid(),
                 },
                 styleProps.indicator === 'hidden' && 'sr-only',
@@ -199,7 +202,6 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
                       class={checkboxLabelVariants(
                         {
                           required: rootProps.required,
-                          disabled: field.disabled(),
                         },
                         styleProps.classes?.label,
                       )}
@@ -213,7 +215,6 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
                     class={checkboxLabelVariants(
                       {
                         required: rootProps.required,
-                        disabled: field.disabled(),
                       },
                       styleProps.classes?.label,
                     )}
@@ -226,12 +227,7 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
               <Show when={styleProps.description}>
                 <p
                   data-slot="description"
-                  class={checkboxDescriptionVariants(
-                    {
-                      disabled: field.disabled(),
-                    },
-                    styleProps.classes?.description,
-                  )}
+                  class={cn('text-muted-foreground', styleProps.classes?.description)}
                 >
                   {styleProps.description}
                 </p>

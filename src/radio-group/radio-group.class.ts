@@ -61,7 +61,7 @@ export const radioGroupItemVariants = cva('flex items-start', {
       end: 'flex-row-reverse',
     },
     disabled: {
-      true: 'opacity-75 cursor-not-allowed',
+      true: 'effect-dis',
     },
   },
 })
@@ -127,7 +127,7 @@ export const radioGroupContainerVariants = cva('flex items-center', {
 })
 
 export const radioGroupBaseVariants = cva(
-  'inline-flex items-center justify-center overflow-hidden rounded-full border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 focus-visible:(border-ring ring-3 ring-ring/50)',
+  'inline-flex items-center justify-center overflow-hidden rounded-full border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 peer-focus-visible:effect-fv-border',
   {
     defaultVariants: {
       size: 'md',
@@ -142,10 +142,10 @@ export const radioGroupBaseVariants = cva(
         xl: 'size-5',
       },
       disabled: {
-        true: 'cursor-not-allowed',
+        true: 'effect-dis',
       },
       invalid: {
-        true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
+        true: 'effect-invalid',
       },
     },
   },
@@ -175,22 +175,6 @@ export const radioGroupWrapperVariants = cva('w-full', {
       start: 'ms-2',
       end: 'me-2',
       hidden: 'text-center',
-    },
-  },
-})
-
-export const radioGroupLabelVariants = cva('block font-medium text-foreground', {
-  variants: {
-    disabled: {
-      true: 'cursor-not-allowed',
-    },
-  },
-})
-
-export const radioGroupDescriptionVariants = cva('text-muted-foreground', {
-  variants: {
-    disabled: {
-      true: 'cursor-not-allowed',
     },
   },
 })

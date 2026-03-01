@@ -9,7 +9,7 @@ import type { IconName } from '../icon'
 import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
 
-type PaginationSlots = 'root' | 'list' | 'item' | 'control' | 'prev' | 'next' | 'ellipsis'
+type PaginationSlots = 'root' | 'list' | 'item' | 'link' | 'prev' | 'next' | 'ellipsis'
 
 export type PaginationClasses = SlotClasses<PaginationSlots>
 
@@ -50,10 +50,15 @@ function createRange(start: number, end: number): number[] {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index)
 }
 
+function getSize(size: string | undefined, text?: string): ButtonProps['size'] {
+  return (text ? size : `icon-${size}`) as ButtonProps['size']
+}
+
 export function Pagination(props: PaginationProps): JSX.Element {
   const merged = mergeProps(
     {
-      'aria-label': 'pagination',
+      'aria-label': 'Pagination',
+      role: 'navigation',
       itemsPerPage: 10,
       total: 0,
       siblingCount: 2,
@@ -89,7 +94,6 @@ export function Pagination(props: PaginationProps): JSX.Element {
 
   const [internalPage, setInternalPage] = createSignal(pagingProps.defaultPage || 1)
 
-  const size = createMemo(() => `icon-${styleProps.size!}` as const)
   const pageCount = createMemo(() => {
     const safeItemsPerPage = Math.max(1, pagingProps.itemsPerPage || 1)
     const safeTotal = Math.max(0, pagingProps.total || 0)
@@ -113,18 +117,19 @@ export function Pagination(props: PaginationProps): JSX.Element {
     const showRight = right < count - 1
 
     if (!showLeft && showRight) {
-      return [...createRange(1, 3 + siblings * 2), 'ellipsis-end', count]
+      return [...createRange(1, 3 + siblings * 2), -1, count]
     }
     if (showLeft && !showRight) {
-      return [1, 'ellipsis-start', ...createRange(count - (2 + siblings * 2), count)]
+      return [1, -1, ...createRange(count - (2 + siblings * 2), count)]
     }
-    return [1, 'ellipsis-start', ...createRange(left, right), 'ellipsis-end', count]
+    return [1, -1, ...createRange(left, right), -1, count]
   })
 
   const selectPage = (targetPage: number): void => {
     if (pagingProps.disabled) {
       return
     }
+
     const next = clampPage(targetPage, pageCount())
     if (next === resolvedPage()) {
       return
@@ -136,10 +141,10 @@ export function Pagination(props: PaginationProps): JSX.Element {
     pagingProps.onPageChange?.(next)
   }
 
-  const getControlProps = (target: number, isEdge: boolean = false) => {
+  const getControlProps = (target: number, isEdge: boolean, rel?: string) => {
     const disabled = Boolean(pagingProps.disabled || isEdge)
     const href = disabled ? undefined : pagingProps.to?.(target)
-    return href ? { as: 'a', href } : { type: 'button', disabled }
+    return href ? { as: 'a', href, rel } : { type: 'button', disabled }
   }
 
   return (
@@ -149,14 +154,15 @@ export function Pagination(props: PaginationProps): JSX.Element {
         class={cn('flex items-center justify-center gap-1', uiProps.classes?.list)}
       >
         <Show when={pagingProps.showControls}>
-          <li data-slot="prev" class="me-2">
+          <li data-slot="item" class={cn(uiProps.classes?.item)}>
             <Button
-              data-slot="control"
+              data-slot="prev"
               variant={styleProps.controlVariant}
-              size={size()}
-              aria-label={uiProps.prevText || 'Previous'}
+              size={getSize(styleProps.size, uiProps.prevText)}
+              aria-label="Go to previous page"
+              classes={{ root: cn(uiProps.classes?.prev) }}
               onClick={() => selectPage(resolvedPage() - 1)}
-              {...getControlProps(resolvedPage() - 1, resolvedPage() <= 1)}
+              {...getControlProps(resolvedPage() - 1, resolvedPage() <= 1, 'prev')}
               leading={<Icon name={uiProps.prevIcon} />}
             >
               {uiProps.prevText}
@@ -166,47 +172,52 @@ export function Pagination(props: PaginationProps): JSX.Element {
 
         <For each={paginationItems()}>
           {(item) => {
-            if (typeof item === 'string') {
-              return (
-                <li
-                  data-slot="ellipsis"
-                  class={cn('flex items-center size-6', uiProps.classes?.ellipsis)}
-                >
-                  <Icon name={uiProps.ellipsisIcon} class="size-full" />
-                  <span class="sr-only">More pages</span>
-                </li>
-              )
-            }
-
             const isActive = () => item === resolvedPage()
-
             return (
-              <li data-slot="item">
-                <Button
-                  data-slot="control"
-                  variant={isActive() ? styleProps.activeVariant : styleProps.variant}
-                  size={size()}
-                  aria-current={isActive() ? 'page' : undefined}
-                  data-current={isActive() ? '' : undefined}
-                  onClick={() => selectPage(item)}
-                  {...getControlProps(item)}
+              <li
+                data-slot="item"
+                aria-hidden={item < 0 ? true : undefined}
+                class={cn(item < 0 && 'flex items-center size-6', uiProps.classes?.item)}
+              >
+                <Show
+                  when={item >= 0}
+                  fallback={
+                    <Icon
+                      data-slot="ellipsis"
+                      name={uiProps.ellipsisIcon}
+                      class={cn(uiProps.classes?.ellipsis)}
+                    />
+                  }
                 >
-                  {item}
-                </Button>
+                  <Button
+                    data-slot="link"
+                    variant={isActive() ? styleProps.activeVariant : styleProps.variant}
+                    size={getSize(styleProps.size)}
+                    aria-current={isActive() ? 'page' : undefined}
+                    aria-label={isActive() ? `Page ${item}, current page` : `Go to page ${item}`}
+                    data-current={isActive() ? '' : undefined}
+                    classes={{ root: cn(uiProps.classes?.link) }}
+                    onClick={() => selectPage(item)}
+                    {...getControlProps(item, false)}
+                  >
+                    {item}
+                  </Button>
+                </Show>
               </li>
             )
           }}
         </For>
 
         <Show when={pagingProps.showControls}>
-          <li data-slot="next" class="ms-2">
+          <li data-slot="item" class={cn(uiProps.classes?.item)}>
             <Button
-              data-slot="control"
+              data-slot="next"
               variant={styleProps.controlVariant}
-              size={size()}
-              aria-label={uiProps.nextText ?? 'Next'}
+              size={getSize(styleProps.size, uiProps.nextText)}
+              aria-label="Go to next page"
+              classes={{ root: cn(uiProps.classes?.next) }}
               onClick={() => selectPage(resolvedPage() + 1)}
-              {...getControlProps(resolvedPage() + 1, resolvedPage() >= pageCount())}
+              {...getControlProps(resolvedPage() + 1, resolvedPage() >= pageCount(), 'next')}
               trailing={<Icon name={uiProps.nextIcon} />}
             >
               {uiProps.nextText}

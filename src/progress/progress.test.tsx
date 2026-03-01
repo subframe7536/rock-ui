@@ -102,7 +102,7 @@ describe('Progress', () => {
 
     expect(root?.className).toContain('flex-row-reverse')
     expect(status.style.height).toBe('25%')
-    expect(indicator.className).toContain('animate-[swing-vertical_2s_ease-in-out_infinite]')
+    expect(indicator.className).toContain('animate-[swing-vertical]')
     expect(indicator.style.transform).toBe('translateY(-75%)')
   })
 

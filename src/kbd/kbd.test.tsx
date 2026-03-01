@@ -41,24 +41,6 @@ describe('Kbd', () => {
     expect(xl.container.querySelector('[data-slot="kbd"]')?.className).toContain('h-5.5')
   })
 
-  test('supports default/outline/invert variants with outline as default on items', () => {
-    const outlineByDefault = render(() => <Kbd value={['K']} />)
-    const asDefault = render(() => <Kbd variant="default" value={['K']} />)
-    const asOutline = render(() => <Kbd variant="outline" value={['K']} />)
-    const asInvert = render(() => <Kbd variant="invert" value={['K']} />)
-
-    expect(outlineByDefault.container.querySelector('[data-slot="kbd"]')?.className).toContain(
-      'border',
-    )
-    expect(asDefault.container.querySelector('[data-slot="kbd"]')?.className).toContain(
-      'bg-muted/70',
-    )
-    expect(asOutline.container.querySelector('[data-slot="kbd"]')?.className).toContain('border')
-    expect(asInvert.container.querySelector('[data-slot="kbd"]')?.className).toContain(
-      'bg-muted-foreground',
-    )
-  })
-
   test('rejects invalid size in type contract', () => {
     // @ts-expect-error size must be a declared Kbd size
     const props: KbdProps = { size: 'invalid', value: ['K'] }

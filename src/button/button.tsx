@@ -96,10 +96,12 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
   )
 
   const resolvedLeading = createMemo(() => {
-    if (isLoading()) {
-      return stateProps.loadingAuto
-        ? (stateProps.loadingIcon ?? 'icon-loading')
-        : contentProps.leading
+    if (!isLoading()) {
+      return contentProps.leading
+    }
+
+    if (stateProps.loadingIcon || stateProps.loadingAuto) {
+      return stateProps.loadingIcon ?? 'icon-loading'
     }
 
     return contentProps.leading

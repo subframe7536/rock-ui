@@ -60,7 +60,7 @@ export const tabsIndicatorVariants = cva('absolute rounded-md transition-all dur
 })
 
 export const tabsTriggerVariants = cva(
-  'group relative inline-flex min-w-0 items-center justify-center gap-1.5 rounded-md font-medium text-muted-foreground outline-none cursor-pointer disabled:(cursor-not-allowed opacity-50) data-selected:(text-foreground) focus-visible:(border-ring ring-3 ring-ring/50)',
+  'group relative inline-flex min-w-0 items-center justify-center gap-1.5 rounded-md font-medium text-muted-foreground outline-none transition cursor-pointer disabled:effect-dis data-selected:(text-foreground) focus-visible:effect-fv-border',
   {
     variants: {
       orientation: {

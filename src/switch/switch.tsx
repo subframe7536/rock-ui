@@ -1,6 +1,6 @@
 import * as KobalteSwitch from '@kobalte/core/switch'
 import type { JSX } from 'solid-js'
-import { Show, createMemo, mergeProps, splitProps } from 'solid-js'
+import { Show, mergeProps, splitProps } from 'solid-js'
 
 import { useFormField } from '../form-field/form-field-context'
 import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-options'
@@ -103,14 +103,13 @@ export function Switch(props: SwitchProps): JSX.Element {
       {...rootProps}
     >
       {(state) => {
-        const checked = createMemo(() => state.checked())
-        const iconName = createMemo<IconName | undefined>(() => {
+        const resolvedIconName = (): IconName | undefined => {
           if (displayProps.loading) {
             return displayProps.loadingIcon
           }
 
-          return checked() ? displayProps.checkedIcon : displayProps.uncheckedIcon
-        })
+          return state.checked() ? displayProps.checkedIcon : displayProps.uncheckedIcon
+        }
 
         return (
           <>
@@ -123,7 +122,12 @@ export function Switch(props: SwitchProps): JSX.Element {
                 styleProps.classes?.container,
               )}
             >
-              <KobalteSwitch.Input id={field.id()} data-slot="input" {...field.ariaAttrs()} />
+              <KobalteSwitch.Input
+                id={field.id()}
+                class="peer"
+                data-slot="input"
+                {...field.ariaAttrs()}
+              />
 
               <KobalteSwitch.Control
                 data-slot="base"
@@ -145,14 +149,14 @@ export function Switch(props: SwitchProps): JSX.Element {
                     styleProps.classes?.thumb,
                   )}
                 >
-                  <Show when={iconName()}>
-                    {(resolvedIconName) => (
+                  <Show when={resolvedIconName()} keyed>
+                    {(iconName) => (
                       <Icon
-                        name={resolvedIconName()}
+                        name={iconName}
                         class={switchIconVariants(
                           {
-                            checked: !displayProps.loading && checked(),
-                            unchecked: !displayProps.loading && !checked(),
+                            checked: !displayProps.loading && state.checked(),
+                            unchecked: !displayProps.loading && !state.checked(),
                             loading: displayProps.loading,
                           },
                           styleProps.classes?.icon,

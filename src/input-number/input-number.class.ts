@@ -2,7 +2,7 @@ import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
 export const inputNumberBaseVariants = cva(
-  'w-full rounded-md border border-input bg-transparent text-foreground outline-none transition-[color,box-shadow] dark:bg-input/30 placeholder:text-muted-foreground focus-visible:(border-ring ring-3 ring-ring/50) aria-invalid:(border-destructive ring-3 ring-destructive/20) dark:aria-invalid:(border-destructive/50 ring-destructive/40) disabled:(cursor-not-allowed opacity-75)',
+  'w-full rounded-md border border-input bg-transparent text-foreground outline-none transition-[color,box-shadow] dark:bg-input/30 placeholder:text-muted-foreground focus-visible:effect-fv-border aria-invalid:effect-invalid disabled:effect-dis',
   {
     defaultVariants: {
       size: 'md',
@@ -20,7 +20,7 @@ export const inputNumberBaseVariants = cva(
       variant: {
         outline: 'bg-transparent',
         soft: 'border-transparent bg-muted/50 hover:bg-muted',
-        subtle: 'border border-border bg-muted',
+        subtle: 'border bg-muted',
         ghost: 'border-transparent bg-transparent hover:bg-muted',
         none: 'border-transparent bg-transparent',
       },
@@ -76,7 +76,7 @@ export const inputNumberIncrementVariants = cva('absolute flex items-center', {
       vertical: 'top-0 end-0 pe-1',
     },
     disabled: {
-      true: 'opacity-75',
+      true: 'effect-dis',
     },
   },
 })
@@ -92,7 +92,7 @@ export const inputNumberDecrementVariants = cva('absolute flex items-center', {
       vertical: 'bottom-0 end-0 pe-1',
     },
     disabled: {
-      true: 'opacity-75',
+      true: 'effect-dis',
     },
   },
 })

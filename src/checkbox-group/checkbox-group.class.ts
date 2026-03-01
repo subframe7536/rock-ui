@@ -51,7 +51,7 @@ export const checkboxGroupItemVariants = cva('', {
       table: 'border',
     },
     disabled: {
-      true: 'cursor-not-allowed',
+      true: 'effect-dis',
     },
   },
 })

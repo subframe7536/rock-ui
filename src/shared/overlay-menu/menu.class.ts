@@ -2,7 +2,7 @@ import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
 export const overlayMenuItemVariants = cva(
-  'relative grid cursor-default select-none grid-cols-[auto_1fr_auto] items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-none data-disabled:(pointer-events-none opacity-50) data-highlighted:(bg-accent text-accent-foreground)',
+  'relative grid cursor-default select-none grid-cols-[auto_1fr_auto] items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-none data-disabled:effect-dis data-highlighted:(bg-accent text-accent-foreground)',
   {
     defaultVariants: {
       color: 'default',

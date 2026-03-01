@@ -341,7 +341,12 @@ export function presetTheme(options?: number | PresetThemeOptions): Preset {
       },
     ],
     shortcuts: [
-      ['effect-fv', 'outline-none ring-2 ring-ring ring-offset-(1 background)'],
+      ['effect-fv', 'outline-none ring-3px ring-ring/50'],
+      ['effect-fv-border', 'outline-none border-ring ring-3px ring-ring/50'],
+      [
+        'effect-invalid',
+        'border-destructive ring-3 ring-destructive/20 dark:(border-destructive/50 ring-destructive/40)',
+      ],
       ['effect-dis', 'pointer-events-none opacity-64 cursor-not-allowed'],
       ['border', 'b-1 b-border'],
       ...createIconShortcuts(appConfig.icons),

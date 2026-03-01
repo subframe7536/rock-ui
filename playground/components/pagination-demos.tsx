@@ -24,6 +24,8 @@ export const PaginationDemos = () => {
             total={120}
             itemsPerPage={10}
             siblingCount={1}
+            prevText="上一页"
+            nextText="下一页"
           />
           <p class="text-xs text-zinc-600">Current page: {page()}</p>
         </div>

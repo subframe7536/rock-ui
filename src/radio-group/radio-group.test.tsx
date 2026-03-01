@@ -114,10 +114,14 @@ describe('RadioGroup', () => {
 
     const fieldset = screen.container.querySelector('[data-slot="fieldset"]')
     const firstItem = screen.container.querySelector('[data-slot="item"]')
+    const firstInput = screen.container.querySelector('[data-slot="input"]')
+    const firstBase = screen.container.querySelector('[data-slot="base"]')
 
     expect(fieldset?.className).toContain('flex-row')
     expect(firstItem?.className).toContain('border')
     expect(firstItem?.className).toContain('p-4.5')
+    expect(firstInput?.className).toContain('peer')
+    expect(firstBase?.className).toContain('peer-focus-visible:effect-fv-border')
   })
 
   test('selects option when clicking table item container', async () => {

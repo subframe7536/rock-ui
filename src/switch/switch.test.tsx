@@ -124,9 +124,12 @@ describe('Switch', () => {
   test('applies xl size classes on base and wrapper', () => {
     const screen = render(() => <Switch label="Classes" size="xl" />)
 
+    const input = screen.container.querySelector('[data-slot="input"]')
     const base = screen.container.querySelector('[data-slot="base"]')
     const wrapper = screen.container.querySelector('[data-slot="wrapper"]')
 
+    expect(input?.className).toContain('peer')
+    expect(base?.className).toContain('peer-focus-visible:effect-fv-border')
     expect(base?.className).toContain('w-11')
     expect(wrapper?.className).toContain('text-base')
   })

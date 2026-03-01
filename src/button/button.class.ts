@@ -2,8 +2,7 @@ import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
 export const buttonVariants = cva(
-  // todo)) fix focus ring / outline
-  'inline-flex items-center justify-center rounded-md bg-clip-padding whitespace-nowrap font-500 transition cursor-pointer select-none text-base transition-shadow focus-visible:(border-ring ring-3 ring-ring/50) aria-invalid:(border-destructive ring-3 ring-destructive/20) dark:aria-invalid:ring-destructive/40 disabled:(effect-dis cursor-not-allowed) active:shadow-none',
+  'inline-flex items-center justify-center rounded-md bg-clip-padding whitespace-nowrap font-500 transition cursor-pointer select-none text-base transition-shadow focus-visible:effect-fv-border aria-invalid:(border-destructive ring-3 ring-destructive/20) dark:aria-invalid:ring-destructive/40 disabled:effect-dis active:shadow-none',
   {
     defaultVariants: {
       size: 'md',

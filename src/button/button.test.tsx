@@ -82,45 +82,48 @@ describe('Button', () => {
     expect(button.className).toContain('h-11')
   })
 
-  test('applies xs icon slot classes for leading and trailing', () => {
+  test('renders leading and trailing icon slots for xs size', () => {
     const screen = render(() => (
-      <Button size="xs" leading={<span>L</span>} trailing={<span>T</span>}>
+      <Button size="xs" leading="i-lucide-arrow-left" trailing="i-lucide-arrow-right">
         Label
       </Button>
     ))
 
-    const button = screen.getByRole('button', { name: 'LLabelT' })
+    const button = screen.getByRole('button', { name: 'Label' })
     const leading = button.querySelector('[data-slot="leading"]')
     const trailing = button.querySelector('[data-slot="trailing"]')
 
-    expect(leading?.className).toContain('text-xs')
-    expect(trailing?.className).toContain('text-xs')
+    expect(leading).not.toBeNull()
+    expect(trailing).not.toBeNull()
+    expect(leading?.className).toContain('i-lucide-arrow-left')
+    expect(trailing?.className).toContain('i-lucide-arrow-right')
   })
 
-  test('applies xl icon slot classes for leading and trailing', () => {
+  test('renders leading and trailing icon slots for xl size', () => {
     const screen = render(() => (
-      <Button size="xl" leading={<span>L</span>} trailing={<span>T</span>}>
+      <Button size="xl" leading="i-lucide-chevron-left" trailing="i-lucide-chevron-right">
         Label
       </Button>
     ))
 
-    const button = screen.getByRole('button', { name: 'LLabelT' })
+    const button = screen.getByRole('button', { name: 'Label' })
     const leading = button.querySelector('[data-slot="leading"]')
     const trailing = button.querySelector('[data-slot="trailing"]')
 
-    expect(leading?.className).toContain('text-base')
-    expect(trailing?.className).toContain('text-base')
+    expect(leading).not.toBeNull()
+    expect(trailing).not.toBeNull()
+    expect(leading?.className).toContain('i-lucide-chevron-left')
+    expect(trailing?.className).toContain('i-lucide-chevron-right')
   })
 
-  test('applies icon-xl icon slot class', () => {
-    const screen = render(() => (
-      <Button size="icon-xl" leading={<span>L</span>} aria-label="Icon XL" />
-    ))
+  test('renders leading icon slot for icon-xl size', () => {
+    const screen = render(() => <Button size="icon-xl" leading="i-lucide-star" aria-label="Icon XL" />)
 
     const button = screen.getByRole('button', { name: 'Icon XL' })
     const leading = button.querySelector('[data-slot="leading"]')
 
-    expect(leading?.className).toContain('text-lg')
+    expect(leading).not.toBeNull()
+    expect(leading?.className).toContain('i-lucide-star')
   })
 
   test('renders leading and trailing content in normal state', () => {
@@ -142,8 +145,8 @@ describe('Button', () => {
   test('merges classes overrides into slots', () => {
     const screen = render(() => (
       <Button
-        leading={<span>L</span>}
-        trailing={<span>T</span>}
+        leading="i-lucide-menu"
+        trailing="i-lucide-x"
         classes={{
           root: 'root-override',
           leading: 'leading-override',
@@ -155,7 +158,7 @@ describe('Button', () => {
       </Button>
     ))
 
-    const button = screen.getByRole('button', { name: 'LLabelT' })
+    const button = screen.getByRole('button', { name: 'Label' })
     const leading = button.querySelector('[data-slot="leading"]')
     const label = button.querySelector('[data-slot="label"]')
     const trailing = button.querySelector('[data-slot="trailing"]')
@@ -170,7 +173,7 @@ describe('Button', () => {
     const screen = render(() => (
       <Button
         loading
-        loadingIcon={<span data-testid="loading-icon">L</span>}
+        loadingIcon="i-lucide-loader-circle"
         classes={{ loading: 'loading-override', leading: 'leading-override' }}
       >
         Loading
@@ -182,7 +185,7 @@ describe('Button', () => {
 
     expect(leading?.className).toContain('loading-override')
     expect(leading?.className).toContain('leading-override')
-    expect(screen.queryByTestId('loading-icon')).not.toBeNull()
+    expect(leading?.className).toContain('i-lucide-loader-circle')
   })
 
   test('does not render built-in loading icon', () => {
@@ -196,7 +199,7 @@ describe('Button', () => {
 
   test('renders loadingIcon when loading', () => {
     const screen = render(() => (
-      <Button loading loadingIcon={<span data-testid="loading-icon">L</span>}>
+      <Button loading loadingIcon="i-lucide-loader-circle">
         Saving
       </Button>
     ))
@@ -204,24 +207,25 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: 'Saving' })
     const leading = button.querySelector('[data-slot="leading"]')
 
-    expect(screen.queryByTestId('loading-icon')).not.toBeNull()
-    expect(leading?.className).toContain('flex items-center')
+    expect(leading).not.toBeNull()
+    expect(leading?.className).toContain('i-lucide-loader-circle')
+    expect(leading?.className).toContain('animate-spin')
   })
 
-  test('hides trailing content when loading', () => {
+  test('keeps trailing content visible when loading', () => {
     const screen = render(() => (
       <Button loading trailing={<span data-testid="trailing-icon">T</span>}>
         Saving
       </Button>
     ))
 
-    const button = screen.getByRole('button', { name: 'Saving' })
+    const button = screen.getByRole('button')
     const leadingSlot = button.querySelector('[data-slot="leading"]')
 
     expect(button.getAttribute('aria-busy')).toBe('true')
     expect(button.hasAttribute('data-loading')).toBe(true)
     expect(button.hasAttribute('disabled')).toBe(true)
-    expect(screen.queryByTestId('trailing-icon')).toBeNull()
+    expect(screen.queryByTestId('trailing-icon')).not.toBeNull()
     expect(leadingSlot).toBeNull()
   })
 

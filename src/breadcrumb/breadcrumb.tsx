@@ -35,7 +35,7 @@ type BreadcrumbSlots =
 
 export type BreadcrumbClasses = SlotClasses<BreadcrumbSlots>
 
-export interface BreadcrumbBaseProps extends Pick<BreadcrumbVariantProps, 'wrap'> {
+export interface BreadcrumbBaseProps extends BreadcrumbVariantProps {
   items?: BreadcrumbItem[]
   separatorIcon?: IconName
   classes?: BreadcrumbClasses
@@ -104,15 +104,14 @@ export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
                     )}
                   >
                     <Show when={item.icon}>
-                      <span
+                      <Icon
                         data-slot="leading"
+                        name={item.icon}
                         class={cn(
                           'inline-flex shrink-0 items-center justify-center',
                           contentProps.classes?.leading,
                         )}
-                      >
-                        <Icon name={item.icon} />
-                      </span>
+                      />
                     </Show>
 
                     <Show when={item.label}>

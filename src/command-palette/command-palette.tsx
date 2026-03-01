@@ -349,7 +349,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             item={itemProps.item}
             data-slot="item"
             class={cn(
-              'relative w-full flex items-center gap-2 cursor-default select-none outline-none rounded-md p-2 data-disabled:(pointer-events-none opacity-50) data-highlighted:(bg-accent text-accent-foreground)',
+              'relative w-full flex items-center gap-2 cursor-default select-none outline-none rounded-md p-2 data-disabled:effect-dis data-highlighted:(bg-accent text-accent-foreground)',
               merged.classes?.item,
             )}
             onPointerDown={(e: PointerEvent) => e.preventDefault()}
@@ -483,7 +483,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           ref={(el: any) => (inputRef = el)}
           data-slot="input"
           class={cn(
-            'flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:(cursor-not-allowed opacity-50)',
+            'flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:effect-dis',
             merged.classes?.input,
           )}
           placeholder={merged.placeholder}

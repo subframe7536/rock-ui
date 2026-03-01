@@ -2,7 +2,7 @@ import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
 export const selectControlVariants = cva(
-  'flex w-full cursor-pointer items-center rounded-md border border-input bg-transparent text-foreground outline-none transition-[color,box-shadow] dark:bg-input/30 focus-within:(border-ring ring-3 ring-ring/50)',
+  'flex w-full cursor-pointer items-center rounded-md border border-input bg-transparent text-foreground outline-none transition-[color,box-shadow] dark:bg-input/30 focus-within:effect-fv-border',
   {
     defaultVariants: {
       size: 'md',
@@ -27,7 +27,7 @@ export const selectControlVariants = cva(
         true: 'ring-1 ring-border/50',
       },
       disabled: {
-        true: 'cursor-not-allowed opacity-50',
+        true: 'effect-dis',
       },
       invalid: {
         true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
@@ -37,7 +37,7 @@ export const selectControlVariants = cva(
 )
 
 export const selectInputVariants = cva(
-  'flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:(cursor-not-allowed opacity-50)',
+  'flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:effect-dis',
   {
     defaultVariants: {
       mode: 'single',
@@ -112,7 +112,7 @@ export const selectClearVariants = cva(
 )
 
 export const selectItemVariants = cva(
-  'flex items-center justify-between gap-2 rounded-sm py-1 ps-3 pe-2 outline-none data-disabled:(pointer-events-none opacity-50) data-highlighted:(bg-accent text-accent-foreground)',
+  'flex items-center justify-between gap-2 rounded-sm py-1 ps-3 pe-2 outline-none data-disabled:effect-dis data-highlighted:(bg-accent text-accent-foreground)',
   {
     defaultVariants: {
       size: 'md',

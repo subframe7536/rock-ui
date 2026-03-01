@@ -17,7 +17,7 @@ export const modalOverlayVariants = cva(
 )
 
 export const modalContentVariants = cva(
-  'z-50 min-w-0 max-h-full min-h-0 border border-border bg-background text-foreground outline-none ring-1 ring-foreground/10',
+  'z-50 min-w-0 max-h-full min-h-0 border bg-background text-foreground outline-none ring-1 ring-foreground/10',
   {
     defaultVariants: {
       layout: 'default',
