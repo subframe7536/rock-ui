@@ -41,50 +41,28 @@ export const checkboxGroupLegendVariants = cva('mb-1 block font-medium text-fore
 
 export const checkboxGroupItemVariants = cva('', {
   defaultVariants: {
-    variant: 'list',
     disabled: false,
   },
   variants: {
     variant: {
-      list: '',
-      card: '',
       table: 'border',
     },
-    disabled: {
-      true: 'effect-dis',
-    },
-  },
-})
-
-export const checkboxGroupTablePaddingVariants = cva('p-3.5', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
+    tableSize: {
       xs: 'p-2.5',
       sm: 'p-3',
       md: 'p-3.5',
       lg: 'p-4',
       xl: 'p-4.5',
     },
+    tableOrientation: {
+      horizontal: 'first-of-type:rounded-s-lg last-of-type:rounded-e-lg -ms-px first:ms-0',
+      vertical: 'first-of-type:rounded-t-lg last-of-type:rounded-b-lg -mt-px first:mt-0',
+    },
+    disabled: {
+      true: 'effect-dis',
+    },
   },
 })
-
-export const checkboxGroupTableOrientationVariants = cva(
-  'first-of-type:rounded-t-lg last-of-type:rounded-b-lg -mt-px first:mt-0',
-  {
-    defaultVariants: {
-      orientation: 'vertical',
-    },
-    variants: {
-      orientation: {
-        horizontal: 'first-of-type:rounded-s-lg last-of-type:rounded-e-lg -ms-px first:ms-0',
-        vertical: 'first-of-type:rounded-t-lg last-of-type:rounded-b-lg -mt-px first:mt-0',
-      },
-    },
-  },
-)
 
 export type CheckboxGroupVariantProps = VariantProps<typeof checkboxGroupFieldsetVariants> &
   VariantProps<typeof checkboxGroupLegendVariants> & {

@@ -141,9 +141,6 @@ export const radioGroupBaseVariants = cva(
         lg: 'size-4.5',
         xl: 'size-5',
       },
-      disabled: {
-        true: 'effect-dis',
-      },
       invalid: {
         true: 'effect-invalid',
       },

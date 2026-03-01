@@ -233,7 +233,6 @@ export function Slider(props: SliderProps): JSX.Element {
             size: field.size(),
             orientation: rangeProps.orientation,
             highlight: field.highlight(),
-            disabled: field.disabled(),
           },
           styleProps.classes?.track,
         )}
@@ -242,10 +241,8 @@ export function Slider(props: SliderProps): JSX.Element {
           data-slot="range"
           class={sliderRangeVariants(
             {
-              size: field.size(),
               orientation: rangeProps.orientation,
               highlight: field.highlight(),
-              disabled: field.disabled(),
             },
             styleProps.classes?.range,
           )}
@@ -261,9 +258,7 @@ export function Slider(props: SliderProps): JSX.Element {
             class={sliderThumbVariants(
               {
                 size: field.size(),
-                orientation: rangeProps.orientation,
                 highlight: field.highlight(),
-                disabled: field.disabled(),
               },
               styleProps.classes?.thumb,
             )}

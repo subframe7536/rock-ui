@@ -35,7 +35,6 @@ export const sliderTrackVariants = cva(
     defaultVariants: {
       size: 'md',
       orientation: 'horizontal',
-      disabled: false,
       highlight: false,
     },
     variants: {
@@ -53,37 +52,22 @@ export const sliderTrackVariants = cva(
       highlight: {
         true: 'ring-1 ring-border/50',
       },
-      disabled: {
-        true: 'effect-dis',
-      },
     },
   },
 )
 
 export const sliderRangeVariants = cva('absolute select-none rounded-full bg-primary', {
   defaultVariants: {
-    size: 'md',
     orientation: 'horizontal',
-    disabled: false,
     highlight: false,
   },
   variants: {
-    size: {
-      xs: '',
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
-    },
     orientation: {
       horizontal: 'h-full ms-0.5',
       vertical: 'w-full mb-0.5',
     },
     highlight: {
       true: 'ring-1 ring-inset ring-background/40',
-    },
-    disabled: {
-      true: 'effect-dis',
     },
   },
 })
@@ -93,8 +77,6 @@ export const sliderThumbVariants = cva(
   {
     defaultVariants: {
       size: 'md',
-      orientation: 'horizontal',
-      disabled: false,
       highlight: false,
     },
     variants: {
@@ -105,47 +87,12 @@ export const sliderThumbVariants = cva(
         lg: 'size-4.5',
         xl: 'size-5',
       },
-      orientation: {
-        horizontal: '',
-        vertical: '',
-      },
       highlight: {
         true: 'ring-1 ring-border/50',
-      },
-      disabled: {
-        true: 'effect-dis',
       },
     },
   },
 )
-
-export const sliderInputVariants = cva('', {
-  defaultVariants: {
-    size: 'md',
-    orientation: 'horizontal',
-    disabled: false,
-    highlight: false,
-  },
-  variants: {
-    size: {
-      xs: '',
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
-    },
-    orientation: {
-      horizontal: '',
-      vertical: '',
-    },
-    highlight: {
-      true: '',
-    },
-    disabled: {
-      true: '',
-    },
-  },
-})
 
 export type SliderVariantProps = VariantProps<typeof sliderRootVariants> &
   VariantProps<typeof sliderTrackVariants> &

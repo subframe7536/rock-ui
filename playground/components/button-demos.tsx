@@ -62,7 +62,7 @@ export const ButtonDemos = () => {
         <div class="flex flex-wrap gap-3 items-center">
           <For each={SIZES}>
             {(size) => (
-              <Button size={size} variant="outline" leading={<div class="i-lucide:rocket" />}>
+              <Button size={size} variant="outline" leading="i-lucide:square">
                 {size}
               </Button>
             )}

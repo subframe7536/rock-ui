@@ -8,16 +8,13 @@ import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options
 import type { IconName } from '../icon'
 import { Icon } from '../icon'
 import type { SlotClasses } from '../shared/slot-class'
-import { useId } from '../shared/utils'
+import { cn, useId } from '../shared/utils'
 
 import type { SwitchVariantProps } from './switch.class'
 import {
   switchBaseVariants,
   switchContainerVariants,
-  switchDescriptionVariants,
   switchIconVariants,
-  switchLabelVariants,
-  switchRootVariants,
   switchThumbVariants,
   switchWrapperVariants,
 } from './switch.class'
@@ -94,10 +91,9 @@ export function Switch(props: SwitchProps): JSX.Element {
       disabled={field.disabled()}
       onChange={onChange}
       data-slot="root"
-      class={switchRootVariants(
-        {
-          disabled: field.disabled(),
-        },
+      class={cn(
+        'relative flex items-start',
+        field.disabled() && 'effect-dis',
         styleProps.classes?.root,
       )}
       {...rootProps}
@@ -134,7 +130,6 @@ export function Switch(props: SwitchProps): JSX.Element {
                 class={switchBaseVariants(
                   {
                     size: field.size(),
-                    disabled: field.disabled(),
                     invalid: field.invalid(),
                   },
                   styleProps.classes?.base,
@@ -182,11 +177,9 @@ export function Switch(props: SwitchProps): JSX.Element {
                   <label
                     for={field.id()}
                     data-slot="label"
-                    class={switchLabelVariants(
-                      {
-                        required: rootStateProps.required,
-                        disabled: field.disabled(),
-                      },
+                    class={cn(
+                      'block font-medium text-foreground',
+                      rootStateProps.required && "after:(ms-0.5 text-destructive content-['*'])",
                       styleProps.classes?.label,
                     )}
                   >
@@ -197,12 +190,7 @@ export function Switch(props: SwitchProps): JSX.Element {
                 <Show when={displayProps.description}>
                   <p
                     data-slot="description"
-                    class={switchDescriptionVariants(
-                      {
-                        disabled: field.disabled(),
-                      },
-                      styleProps.classes?.description,
-                    )}
+                    class={cn('text-muted-foreground', styleProps.classes?.description)}
                   >
                     {displayProps.description}
                   </p>

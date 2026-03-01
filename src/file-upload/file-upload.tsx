@@ -521,11 +521,11 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
               {
                 size: field.size(),
                 highlight: field.highlight(),
-                disabled: field.disabled(),
                 dragging: false,
                 dropzone: false,
                 invalid: field.invalid(),
               },
+              field.disabled() && 'bg-muted/32',
               styleProps.classes?.base,
             )}
             onFocus={() => field.emitFormFocus()}
@@ -541,11 +541,11 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
             {
               size: field.size(),
               highlight: field.highlight(),
-              disabled: field.disabled(),
               dragging: dragging(),
               dropzone: true,
               invalid: field.invalid(),
             },
+            field.disabled() && 'bg-muted/32',
             styleProps.classes?.base,
           )}
           onFocus={() => field.emitFormFocus()}
@@ -647,10 +647,10 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                   class={fileUploadRemoveVariants(
                     {
                       size: field.size(),
-                      disabled: field.disabled(),
                     },
                     styleProps.classes?.fileRemove,
                   )}
+                  disabled={field.disabled()}
                   onClick={() => removeFileAt(index())}
                 >
                   <Icon name="icon-close" />

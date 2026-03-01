@@ -1,14 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-export const switchRootVariants = cva('relative flex items-start', {
-  variants: {
-    disabled: {
-      true: 'effect-dis',
-    },
-  },
-})
-
 export const switchContainerVariants = cva('flex items-center', {
   defaultVariants: {
     size: 'md',
@@ -29,7 +21,6 @@ export const switchBaseVariants = cva(
   {
     defaultVariants: {
       size: 'md',
-      disabled: false,
       invalid: false,
     },
     variants: {
@@ -39,9 +30,6 @@ export const switchBaseVariants = cva(
         md: 'w-9',
         lg: 'w-10',
         xl: 'w-11',
-      },
-      disabled: {
-        true: 'effect-dis',
       },
       invalid: {
         true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
@@ -97,26 +85,4 @@ export const switchWrapperVariants = cva('ms-2', {
   },
 })
 
-export const switchLabelVariants = cva('block font-medium text-foreground', {
-  variants: {
-    required: {
-      true: "after:(ms-0.5 text-destructive) after:content-['*']",
-    },
-    disabled: {
-      true: 'effect-dis',
-    },
-  },
-})
-
-export const switchDescriptionVariants = cva('text-muted-foreground', {
-  variants: {
-    disabled: {
-      true: 'effect-dis',
-    },
-  },
-})
-
-export type SwitchVariantProps = VariantProps<typeof switchContainerVariants> &
-  VariantProps<typeof switchBaseVariants> &
-  VariantProps<typeof switchThumbVariants> &
-  VariantProps<typeof switchIconVariants>
+export type SwitchVariantProps = VariantProps<typeof switchContainerVariants>

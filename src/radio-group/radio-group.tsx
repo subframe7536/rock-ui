@@ -306,7 +306,6 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                   class={radioGroupBaseVariants(
                     {
                       size: field.size(),
-                      disabled: item.disabled || field.disabled(),
                       invalid: field.invalid(),
                     },
                     styleProps.indicator === 'hidden' && 'sr-only',

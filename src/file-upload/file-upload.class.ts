@@ -26,7 +26,6 @@ export const fileUploadBaseVariants = cva(
     defaultVariants: {
       size: 'md',
       dropzone: true,
-      disabled: false,
       dragging: false,
       invalid: false,
     },
@@ -41,9 +40,6 @@ export const fileUploadBaseVariants = cva(
       highlight: {
         true: 'ring-1 ring-border/50',
       },
-      disabled: {
-        true: 'effect-dis',
-      },
       dragging: {
         true: 'border-primary bg-primary/8',
       },
@@ -55,7 +51,6 @@ export const fileUploadBaseVariants = cva(
         true: 'border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40',
       },
     },
-    compoundVariants: [{ disabled: true, class: 'pointer-events-none bg-muted/32' }],
   },
 )
 
@@ -223,7 +218,6 @@ export const fileUploadRemoveVariants = cva(
   {
     defaultVariants: {
       size: 'md',
-      disabled: false,
     },
     variants: {
       size: {
@@ -232,9 +226,6 @@ export const fileUploadRemoveVariants = cva(
         md: 'size-6 text-sm',
         lg: 'size-6.5 text-sm',
         xl: 'size-7 text-base',
-      },
-      disabled: {
-        true: 'effect-dis',
       },
     },
   },

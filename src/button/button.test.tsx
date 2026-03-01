@@ -117,7 +117,9 @@ describe('Button', () => {
   })
 
   test('renders leading icon slot for icon-xl size', () => {
-    const screen = render(() => <Button size="icon-xl" leading="i-lucide-star" aria-label="Icon XL" />)
+    const screen = render(() => (
+      <Button size="icon-xl" leading="i-lucide-star" aria-label="Icon XL" />
+    ))
 
     const button = screen.getByRole('button', { name: 'Icon XL' })
     const leading = button.querySelector('[data-slot="leading"]')

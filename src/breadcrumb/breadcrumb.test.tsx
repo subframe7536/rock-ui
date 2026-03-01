@@ -57,7 +57,9 @@ describe('Breadcrumb', () => {
     ))
 
     const separators = screen.container.querySelectorAll('[data-slot="separator"]')
-    const separatorIcons = screen.container.querySelectorAll('[data-slot="separator"] [data-slot="icon"]')
+    const separatorIcons = screen.container.querySelectorAll(
+      '[data-slot="separator"] [data-slot="icon"]',
+    )
 
     expect(separators.length).toBe(2)
     expect(separatorIcons.length).toBe(2)
@@ -80,7 +82,9 @@ describe('Breadcrumb', () => {
       />
     ))
 
-    const separatorIcons = screen.container.querySelectorAll('[data-slot="separator"] [data-slot="icon"]')
+    const separatorIcons = screen.container.querySelectorAll(
+      '[data-slot="separator"] [data-slot="icon"]',
+    )
     expect(separatorIcons.length).toBe(2)
     expect(separatorIcons[0]?.className).toContain('icon-dot')
   })
@@ -172,7 +176,7 @@ describe('Breadcrumb', () => {
     expect(separator?.className).toContain('separator-override')
   })
 
-  test("supports itemRender with @solidjs/router A component", () => {
+  test('supports itemRender with @solidjs/router A component', () => {
     const itemRender = vi.fn<(context: BreadcrumbItemRenderContext) => typeof A>((_) => A)
 
     const screen = render(() => (

@@ -18,8 +18,6 @@ import {
   checkboxGroupFieldsetVariants,
   checkboxGroupItemVariants,
   checkboxGroupLegendVariants,
-  checkboxGroupTableOrientationVariants,
-  checkboxGroupTablePaddingVariants,
 } from './checkbox-group.class'
 
 export type CheckboxGroupValue = string
@@ -246,50 +244,45 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
         </Show>
 
         <For each={normalizedItems()}>
-          {(item) => (
-            <div
-              data-slot="item"
-              class={cn(
-                checkboxGroupItemVariants({
-                  variant: styleBehaviorProps.variant,
-                  disabled: item.disabled || field.disabled(),
-                }),
-                styleBehaviorProps.variant === 'table' &&
-                  checkboxGroupTablePaddingVariants({
-                    size: field.size(),
-                  }),
-                styleBehaviorProps.variant === 'table' &&
-                  checkboxGroupTableOrientationVariants({
-                    orientation: styleBehaviorProps.orientation,
-                  }),
-                styleBehaviorProps.classes?.item,
-                item.classes?.root,
-              )}
-            >
-              <Checkbox
-                id={item.id}
-                name={field.name()}
-                formFieldBind={false}
-                checked={selectedValues().includes(item.value)}
-                value={item.value}
-                label={item.label}
-                description={item.description}
-                disabled={item.disabled || field.disabled()}
-                required={formProps.required}
-                size={field.size()}
-                variant={
-                  styleBehaviorProps.variant === 'table' || styleBehaviorProps.variant === 'card'
-                    ? 'card'
-                    : 'list'
-                }
-                indicator={styleBehaviorProps.indicator}
-                checkedIcon={item.checkedIcon ?? styleBehaviorProps.checkedIcon}
-                indeterminateIcon={item.indeterminateIcon ?? styleBehaviorProps.indeterminateIcon}
-                classes={{ ...styleBehaviorProps.classes?.checkbox, ...item.classes?.checkbox }}
-                onChange={(checked) => onItemCheckedChange(item.value, checked)}
-              />
-            </div>
-          )}
+          {(item) => {
+            const isTableVariant = styleBehaviorProps.variant === 'table'
+            const isItemDisabled = item.disabled || field.disabled()
+
+            return (
+              <div
+                data-slot="item"
+                class={checkboxGroupItemVariants(
+                  {
+                    variant: isTableVariant ? 'table' : undefined,
+                    tableSize: isTableVariant ? field.size() : undefined,
+                    tableOrientation: isTableVariant ? styleBehaviorProps.orientation : undefined,
+                    disabled: isItemDisabled,
+                  },
+                  styleBehaviorProps.classes?.item,
+                  item.classes?.root,
+                )}
+              >
+                <Checkbox
+                  id={item.id}
+                  name={field.name()}
+                  formFieldBind={false}
+                  checked={selectedValues().includes(item.value)}
+                  value={item.value}
+                  label={item.label}
+                  description={item.description}
+                  disabled={isItemDisabled}
+                  required={formProps.required}
+                  size={field.size()}
+                  variant={styleBehaviorProps.variant === 'list' ? 'list' : 'card'}
+                  indicator={styleBehaviorProps.indicator}
+                  checkedIcon={item.checkedIcon ?? styleBehaviorProps.checkedIcon}
+                  indeterminateIcon={item.indeterminateIcon ?? styleBehaviorProps.indeterminateIcon}
+                  classes={{ ...styleBehaviorProps.classes?.checkbox, ...item.classes?.checkbox }}
+                  onChange={(checked) => onItemCheckedChange(item.value, checked)}
+                />
+              </div>
+            )
+          }}
         </For>
       </fieldset>
     </div>
