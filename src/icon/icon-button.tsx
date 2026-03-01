@@ -23,10 +23,10 @@ export interface IconButtonBaseProps {
    * Optional icon shown when `loading` is active.
    */
   loadingIcon?: IconName
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'close'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
-function getSizeClass(size: IconButtonBaseProps['size']) {
+export function getIconSizeClass(size: IconButtonBaseProps['size']) {
   switch (size) {
     case 'xs':
     case 'sm':
@@ -61,7 +61,7 @@ export function IconButton<T extends ValidComponent = 'button'>(
     <KobalteButton.Root
       data-slot="icon-button"
       class={cn(
-        getSizeClass(local.size),
+        getIconSizeClass(local.size),
         local.loading
           ? 'cursor-wait opacity-80 animate-spin pointer-events-none'
           : 'cursor-pointer',

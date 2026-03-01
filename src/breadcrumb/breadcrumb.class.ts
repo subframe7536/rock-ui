@@ -13,36 +13,36 @@ export const breadcrumbListVariants = cva('flex items-center gap-1.5', {
   },
 })
 
-export const breadcrumbLinkVariants = cva(
-  'relative inline-flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-sm font-medium transition focus-visible:effect-fv-border disabled:effect-dis',
-  {
-    variants: {
-      active: {
-        true: 'text-primary',
-        false: 'text-muted-foreground',
-      },
-      clickable: {
-        true: 'hover:text-foreground',
-      },
-      disabled: {
-        true: 'effect-dis',
-      },
+export const breadcrumbLinkVariants = cva('min-w-0 h-auto sm:h-auto px-1 py-0.5 shadow-none', {
+  variants: {
+    active: {
+      true: 'text-primary',
+      false: 'text-muted-foreground',
     },
-    defaultVariants: {
-      active: false,
-      clickable: false,
-      disabled: false,
+    clickable: {
+      true: 'hover:text-foreground',
     },
-    compoundVariants: [
-      {
-        active: false,
-        clickable: true,
-        disabled: false,
-        class: 'transition-colors',
-      },
-    ],
+    disabled: {
+      true: 'effect-dis',
+    },
   },
-)
+  defaultVariants: {
+    active: false,
+    clickable: false,
+    disabled: false,
+  },
+  compoundVariants: [
+    {
+      active: false,
+      clickable: true,
+      disabled: false,
+      class: 'transition-colors',
+    },
+    {
+      active: true,
+      class: 'hover:text-primary',
+    },
+  ],
+})
 
-export type BreadcrumbVariantProps = VariantProps<typeof breadcrumbListVariants> &
-  VariantProps<typeof breadcrumbLinkVariants>
+export type BreadcrumbVariantProps = VariantProps<typeof breadcrumbListVariants>

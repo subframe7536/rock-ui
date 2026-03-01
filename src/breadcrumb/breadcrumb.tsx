@@ -1,8 +1,8 @@
-import * as KobalteBreadcrumbs from '@kobalte/core/breadcrumbs'
-import type { JSX } from 'solid-js'
-import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
+import type { JSX, ValidComponent } from 'solid-js'
+import { For, Show, createMemo, mergeProps } from 'solid-js'
 
-import { Icon } from '../icon'
+import { Button } from '../button'
+import { getIconSizeClass, Icon } from '../icon'
 import type { IconName } from '../icon'
 import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
@@ -20,126 +20,120 @@ export interface BreadcrumbItem {
   active?: boolean
   disabled?: boolean
   class?: string
-  onClick?: JSX.EventHandlerUnion<HTMLAnchorElement, MouseEvent>
+  onClick?: JSX.EventHandler<HTMLAnchorElement, MouseEvent>
 }
 
-type BreadcrumbSlots =
-  | 'root'
-  | 'list'
-  | 'item'
-  | 'link'
-  | 'leading'
-  | 'label'
-  | 'separator'
-  | 'separatorIcon'
+type BreadcrumbSlots = 'root' | 'list' | 'item' | 'link' | 'leading' | 'label' | 'separator'
 
 export type BreadcrumbClasses = SlotClasses<BreadcrumbSlots>
 
-export interface BreadcrumbBaseProps extends BreadcrumbVariantProps {
-  items?: BreadcrumbItem[]
-  separatorIcon?: IconName
-  classes?: BreadcrumbClasses
+export interface BreadcrumbItemRenderContext {
+  item: BreadcrumbItem
+  index: number
+  current: boolean
+  disabled: boolean
 }
 
-export type BreadcrumbProps = BreadcrumbBaseProps &
-  Omit<KobalteBreadcrumbs.BreadcrumbsRootProps, keyof BreadcrumbBaseProps | 'children' | 'class'>
+export interface BreadcrumbBaseProps extends BreadcrumbVariantProps {
+  items?: BreadcrumbItem[]
+  classes?: BreadcrumbClasses
+  separator?: IconName
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  'aria-label'?: string
+  itemRender?: (context: BreadcrumbItemRenderContext) => ValidComponent
+}
+
+export type BreadcrumbProps = BreadcrumbBaseProps
 
 export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
   const merged = mergeProps(
     {
-      separatorIcon: 'icon-chevron-right' as IconName,
+      separator: 'icon-chevron-right' as IconName,
       wrap: true,
+      size: 'md',
+      'aria-label': 'Breadcrumbs',
     },
     props,
   ) as BreadcrumbProps
 
-  const [contentProps, rootProps] = splitProps(merged, [
-    'items',
-    'separatorIcon',
-    'wrap',
-    'classes',
-  ])
-
-  const items = createMemo(() => contentProps.items ?? [])
+  const items = createMemo(() => merged.items ?? [])
 
   return (
-    <KobalteBreadcrumbs.Root
+    <nav
       data-slot="root"
-      class={cn('relative min-w-0', contentProps.classes?.root)}
-      {...rootProps}
+      aria-label={merged['aria-label']}
+      class={cn('relative min-w-0', merged.classes?.root)}
     >
       <ol
         data-slot="list"
-        class={breadcrumbListVariants({ wrap: contentProps.wrap }, contentProps.classes?.list)}
+        class={breadcrumbListVariants({ wrap: merged.wrap }, merged.classes?.list)}
       >
         <For each={items()}>
           {(item, index) => {
             const isLast = () => index() === items().length - 1
-            const isActive = () => item.active ?? isLast()
+            const isCurrent = () => item.active ?? isLast()
+            const isDisabled = () => Boolean(item.disabled || isCurrent())
             const href = () => item.to ?? item.href
-            const isClickable = () => Boolean(href() || item.onClick)
+            const linkHref = () => (isDisabled() ? undefined : href())
+            const isClickable = () => Boolean(linkHref() || item.onClick)
 
             return (
               <>
-                <li
-                  data-slot="item"
-                  class={cn('flex min-w-0 items-center', contentProps.classes?.item)}
-                >
-                  <KobalteBreadcrumbs.Link
+                <li data-slot="item" class={cn('flex min-w-0 items-center', merged.classes?.item)}>
+                  <Button
+                    as={
+                      merged.itemRender
+                        ? merged.itemRender({
+                            item,
+                            index: index(),
+                            current: isCurrent(),
+                            disabled: isDisabled(),
+                          })
+                        : 'a'
+                    }
                     data-slot="link"
-                    href={href()}
+                    variant="ghost"
+                    size={merged.size}
+                    role="link"
+                    href={merged.itemRender ? href() : linkHref()}
                     target={item.target}
                     rel={item.rel}
-                    current={isActive()}
-                    disabled={Boolean(item.disabled)}
+                    aria-current={isCurrent() ? 'page' : undefined}
+                    data-current={isCurrent() ? '' : undefined}
+                    aria-disabled={isDisabled() ? true : undefined}
+                    data-disabled={isDisabled() ? '' : undefined}
+                    disabled={isDisabled()}
                     onClick={item.onClick}
-                    class={breadcrumbLinkVariants(
-                      {
-                        active: isActive(),
-                        disabled: Boolean(item.disabled),
-                        clickable: isClickable(),
-                      },
-                      contentProps.classes?.link,
-                      item.class,
-                    )}
+                    leading={item.icon}
+                    classes={{
+                      root: breadcrumbLinkVariants(
+                        {
+                          active: isCurrent(),
+                          disabled: isDisabled(),
+                          clickable: isClickable(),
+                        },
+                        merged.classes?.link,
+                        item.class,
+                      ),
+                      leading: merged.classes?.leading,
+                      label: merged.classes?.label,
+                    }}
                   >
-                    <Show when={item.icon}>
-                      <Icon
-                        data-slot="leading"
-                        name={item.icon}
-                        class={cn(
-                          'inline-flex shrink-0 items-center justify-center',
-                          contentProps.classes?.leading,
-                        )}
-                      />
-                    </Show>
-
-                    <Show when={item.label}>
-                      <span data-slot="label" class={cn('truncate', contentProps.classes?.label)}>
-                        {item.label}
-                      </span>
-                    </Show>
-                  </KobalteBreadcrumbs.Link>
+                    {item.label}
+                  </Button>
                 </li>
 
                 <Show when={!isLast()}>
                   <li
                     data-slot="separator"
+                    aria-hidden="true"
                     class={cn(
                       'inline-flex shrink-0 items-center justify-center',
-                      contentProps.classes?.separator,
+                      getIconSizeClass(merged.size),
+                      merged.classes?.separator,
                     )}
                   >
-                    <KobalteBreadcrumbs.Separator>
-                      <Icon
-                        data-slot="separator-icon"
-                        name={contentProps.separatorIcon as IconName}
-                        class={cn(
-                          'size-4 text-muted-foreground',
-                          contentProps.classes?.separatorIcon,
-                        )}
-                      />
-                    </KobalteBreadcrumbs.Separator>
+                    <Icon name={merged.separator} />
                   </li>
                 </Show>
               </>
@@ -147,6 +141,6 @@ export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
           }}
         </For>
       </ol>
-    </KobalteBreadcrumbs.Root>
+    </nav>
   )
 }

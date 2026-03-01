@@ -8,7 +8,7 @@ const DEFAULT_ITEMS = [
   { label: 'Home', href: '#', icon: 'i-lucide:house' },
   { label: 'Library', href: '#', icon: 'i-lucide:folder' },
   { label: 'Components', href: '#', icon: 'i-lucide:box' },
-  { label: 'Breadcrumb', href: '#', icon: 'icon-chevron-right', active: true },
+  { label: 'Breadcrumb', href: '#', icon: 'i-lucide:bell-ring', active: true },
 ]
 
 export const BreadcrumbDemos = () => {
@@ -26,11 +26,31 @@ export const BreadcrumbDemos = () => {
 
       <DemoSection
         title="Custom Separator + Disabled"
-        description="Use an alternative separator icon and mark links as disabled."
+        description="Use an alternative separator and mark links as disabled."
       >
         <Breadcrumb
-          separatorIcon="icon-dot"
-          separator=">"
+          separator={() => '/'}
+          classes={{
+            separator: 'size-unset',
+          }}
+          items={[
+            { label: 'Workspace', href: '#', icon: 'i-lucide:briefcase' },
+            { label: 'Settings', href: '#', icon: 'i-lucide:settings' },
+            { label: 'Danger Zone', href: '#', disabled: true, icon: 'i-lucide:triangle-alert' },
+          ]}
+        />
+      </DemoSection>
+      <DemoSection title="Size" description="Different size.">
+        <Breadcrumb
+          size="sm"
+          items={[
+            { label: 'Workspace', href: '#', icon: 'i-lucide:briefcase' },
+            { label: 'Settings', href: '#', icon: 'i-lucide:settings' },
+            { label: 'Danger Zone', href: '#', disabled: true, icon: 'i-lucide:triangle-alert' },
+          ]}
+        />
+        <Breadcrumb
+          size="lg"
           items={[
             { label: 'Workspace', href: '#', icon: 'i-lucide:briefcase' },
             { label: 'Settings', href: '#', icon: 'i-lucide:settings' },
