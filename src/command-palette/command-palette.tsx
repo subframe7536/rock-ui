@@ -1,22 +1,20 @@
 import { Combobox } from '@kobalte/core/combobox'
 import type { JSX } from 'solid-js'
-import { Show, createEffect, createMemo, createSignal, mergeProps } from 'solid-js'
+import {
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  onMount,
+} from 'solid-js'
 
 import { Icon, IconButton } from '../icon'
 import type { IconName } from '../icon'
 import { Kbd } from '../kbd'
 import type { SlotClasses } from '../shared/slot-class'
 import { cn } from '../shared/utils'
-
-import type { CommandPaletteSize } from './command-palette.class'
-import {
-  commandPaletteEmptyVariants,
-  commandPaletteGroupLabelVariants,
-  commandPaletteInputVariants,
-  commandPaletteInputWrapperVariants,
-  commandPaletteItemIconVariants,
-  commandPaletteItemVariants,
-} from './command-palette.class'
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -71,8 +69,6 @@ export type CommandPaletteClasses = SlotClasses<CommandPaletteSlots>
 
 export interface CommandPaletteProps {
   groups?: CommandPaletteGroup[]
-  /** @default 'md' */
-  size?: CommandPaletteSize
   /** @default 'Search...' */
   placeholder?: string
   /** Controlled search term */
@@ -189,7 +185,6 @@ function createNormalizedGroups(
 export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   const merged = mergeProps(
     {
-      size: 'md' as CommandPaletteSize,
       placeholder: 'Search...',
       autofocus: true,
       close: false,
@@ -198,6 +193,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
       childIcon: 'icon-chevron-right' as IconName,
       backIcon: 'icon-arrow-left' as IconName,
       closeIcon: 'icon-close' as IconName,
+      empty: 'No results.',
     },
     props,
   )
@@ -245,6 +241,23 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     if (merged.searchTerm !== undefined && inputRef && inputRef.value !== merged.searchTerm) {
       inputRef.value = merged.searchTerm
     }
+  })
+
+  onMount(() => {
+    let dialogAutofocusTimer: ReturnType<typeof setTimeout> | undefined
+    if (!merged.autofocus || !inputRef || !inputRef.closest('[role="dialog"]')) {
+      return
+    }
+
+    dialogAutofocusTimer = setTimeout(() => {
+      inputRef?.focus()
+    }, 0)
+
+    onCleanup(() => {
+      if (dialogAutofocusTimer !== undefined) {
+        clearTimeout(dialogAutofocusTimer)
+      }
+    })
   })
 
   // ── Custom filter: reads the effective search term ──────────────────────────
@@ -336,10 +349,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             item={itemProps.item}
             data-slot="item"
             class={cn(
-              commandPaletteItemVariants({
-                size: merged.size,
-                hasIcon: !!option().icon,
-              }),
+              'relative w-full flex items-center gap-2 cursor-default select-none outline-none rounded-md p-2 data-disabled:(pointer-events-none opacity-50) data-highlighted:(bg-accent text-accent-foreground)',
               merged.classes?.item,
             )}
             onPointerDown={(e: PointerEvent) => e.preventDefault()}
@@ -349,10 +359,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
               <Icon
                 name={option().icon}
                 data-slot="item-leading-icon"
-                class={cn(
-                  commandPaletteItemIconVariants({ size: merged.size }),
-                  merged.classes?.itemLeadingIcon,
-                )}
+                class={cn('shrink-0 text-muted-foreground', merged.classes?.itemLeadingIcon)}
               />
             </Show>
 
@@ -364,7 +371,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
               <Show when={option().prefix || option().itemLabel || option().suffix}>
                 <span
                   data-slot="item-label"
-                  class={cn('inline-flex gap-1 truncate items-baseline', merged.classes?.itemLabel)}
+                  class={cn('inline-flex gap-2 truncate items-baseline', merged.classes?.itemLabel)}
                 >
                   <Show when={option().prefix}>
                     <span
@@ -374,10 +381,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
                       {option().prefix}
                     </span>
                   </Show>
-                  <span
-                    data-slot="item-label-base"
-                    class={cn('truncate', merged.classes?.itemLabelBase)}
-                  >
+                  <span data-slot="item-label-base" class={cn(merged.classes?.itemLabelBase)}>
                     {option().itemLabel}
                   </span>
                   <Show when={option().suffix}>
@@ -404,46 +408,35 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             </span>
 
             {/* Trailing: children indicator or kbds */}
-            <span
-              data-slot="item-trailing"
-              class={cn(
-                'ms-auto inline-flex shrink-0 gap-1.5 items-center',
-                merged.classes?.itemTrailing,
-              )}
-            >
-              <Show when={hasChildren()}>
-                <Icon
-                  name={merged.childIcon}
-                  size={merged.size}
-                  data-slot="item-trailing-icon"
-                  class={commandPaletteItemIconVariants(
-                    { size: merged.size },
-                    merged.classes?.itemTrailingIcon,
-                  )}
-                />
-              </Show>
-              <Show when={!hasChildren()}>
+            <Show
+              when={hasChildren()}
+              fallback={
                 <Kbd
-                  size="sm"
-                  slotPrefix="item"
+                  slotPrefix="item-trailing"
                   value={option().kbds}
                   classes={{
                     root: merged.classes?.itemTrailingKbds,
                     item: merged.classes?.itemTrailingKbd,
                   }}
                 />
-              </Show>
-            </span>
+              }
+            >
+              <Icon
+                name={merged.childIcon}
+                data-slot="item-trailing-icon"
+                class={cn('shrink-0 text-muted-foreground', merged.classes?.itemTrailingIcon)}
+              />
+            </Show>
           </Combobox.Item>
         )
       }}
       sectionComponent={(sectionProps) => (
-        <Combobox.Section data-slot="group" class={cn('p-1', merged.classes?.group)}>
+        <Combobox.Section data-slot="group" class={cn('p-1 mt-2', merged.classes?.group)}>
           <Show when={sectionProps.section.rawValue.label}>
             <span
               data-slot="group-label"
-              class={commandPaletteGroupLabelVariants(
-                { size: merged.size },
+              class={cn(
+                'font-semibold text-muted-foreground px-1.5 text-sm',
                 merged.classes?.groupLabel,
               )}
             >
@@ -458,10 +451,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
       {/* ── Input area ─────────────────────────────────────────────────── */}
       <Combobox.Control<NormalizedItem>
         data-slot="input-wrapper"
-        class={commandPaletteInputWrapperVariants(
-          { size: merged.size },
-          merged.classes?.inputWrapper,
-        )}
+        class={cn('flex items-center gap-2 px-3 h-12', merged.classes?.inputWrapper)}
       >
         <Show
           when={history().length > 0}
@@ -469,16 +459,14 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             <IconButton
               name={merged.searchIcon}
               data-slot="search-icon"
-              size={merged.size}
               loading={merged.loading}
               loadingIcon={merged.loadingIcon}
-              class={cn('text-muted-foreground', merged.classes?.searchIcon)}
+              class={cn('text-muted-foreground pointer-events-none', merged.classes?.searchIcon)}
             />
           }
         >
           <IconButton
             name={merged.backIcon}
-            size={merged.size}
             loading={merged.loading}
             loadingIcon={merged.loadingIcon}
             data-slot="back"
@@ -494,7 +482,10 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
         <Combobox.Input
           ref={(el: any) => (inputRef = el)}
           data-slot="input"
-          class={commandPaletteInputVariants({ size: merged.size }, merged.classes?.input)}
+          class={cn(
+            'flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:(cursor-not-allowed opacity-50)',
+            merged.classes?.input,
+          )}
           placeholder={merged.placeholder}
           autofocus={merged.autofocus}
           onKeyDown={handleKeyDown}
@@ -520,16 +511,16 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
         fallback={
           <div
             data-slot="empty"
-            class={commandPaletteEmptyVariants({ size: merged.size }, merged.classes?.empty)}
+            class={cn('text-center text-muted-foreground py-6', merged.classes?.empty)}
           >
-            {merged.empty ?? 'No results.'}
+            {merged.empty}
           </div>
         }
       >
         <Combobox.Listbox
           data-slot="listbox"
           class={cn(
-            'p-1 overflow-x-hidden overflow-y-auto focus:outline-none',
+            'p-1 max-h-36vh overflow-x-hidden overflow-y-auto focus:outline-none',
             merged.classes?.listbox,
           )}
         />

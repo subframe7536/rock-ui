@@ -1,6 +1,8 @@
 import { fireEvent, render, waitFor } from '@solidjs/testing-library'
 import { describe, expect, test, vi } from 'vitest'
 
+import { Modal } from '../modal'
+
 import { CommandPalette } from './command-palette'
 import type { CommandPaletteItem } from './command-palette'
 
@@ -25,6 +27,52 @@ const GROUPS = [
 ]
 
 describe('CommandPalette', () => {
+  test('forces input focus in dialog when autofocus is enabled', async () => {
+    render(() => (
+      <Modal open close={false} body={<CommandPalette groups={GROUPS} />}>
+        <button type="button">Open</button>
+      </Modal>
+    ))
+
+    await waitFor(() => {
+      const input = document.body.querySelector('[data-slot="input"]') as HTMLInputElement | null
+
+      expect(input).not.toBeNull()
+      expect(document.activeElement).toBe(input)
+    })
+  })
+
+  test('applies fixed listbox max height', async () => {
+    const screen = render(() => <CommandPalette groups={GROUPS} />)
+
+    await waitFor(() => {
+      expect(screen.container.querySelector('[data-slot="listbox"]')?.className).toContain('max-h-72')
+    })
+  })
+
+  test('adjusts item trailing spacing across sizes', async () => {
+    const xs = render(() => <CommandPalette groups={GROUPS} size="xs" />)
+
+    await waitFor(() => {
+      const trailing = xs.container.querySelector('[data-slot="item-trailing"]') as HTMLElement | null
+      expect(trailing?.classList.contains('gap-1')).toBe(true)
+    })
+
+    const md = render(() => <CommandPalette groups={GROUPS} size="md" />)
+
+    await waitFor(() => {
+      const trailing = md.container.querySelector('[data-slot="item-trailing"]') as HTMLElement | null
+      expect(trailing?.classList.contains('gap-1.5')).toBe(true)
+    })
+
+    const xl = render(() => <CommandPalette groups={GROUPS} size="xl" />)
+
+    await waitFor(() => {
+      const trailing = xl.container.querySelector('[data-slot="item-trailing"]') as HTMLElement | null
+      expect(trailing?.classList.contains('gap-2')).toBe(true)
+    })
+  })
+
   test('uses css variable classes for item gap by icon presence', async () => {
     const screen = render(() => <CommandPalette groups={GROUPS} />)
 

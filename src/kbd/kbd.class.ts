@@ -6,7 +6,7 @@ export const kbdItemVariants = cva(
   {
     defaultVariants: {
       size: 'md',
-      variant: 'outline',
+      variant: 'default',
     },
     variants: {
       size: {

@@ -12,7 +12,7 @@ import { modalContentVariants, modalOverlayVariants } from './modal.class'
 type ModalSlots =
   | 'trigger'
   | 'overlay'
-  | 'content'
+  | 'dialog'
   | 'header'
   | 'wrapper'
   | 'title'
@@ -43,11 +43,10 @@ export interface ModalBaseProps {
   footer?: JSX.Element
   actions?: JSX.Element
   classes?: ModalClasses
-  children: JSX.Element
 }
 
 export type ModalProps = ModalBaseProps &
-  Omit<KobalteDialog.DialogRootProps, keyof ModalBaseProps | 'children' | 'class'>
+  Omit<KobalteDialog.DialogRootProps, keyof ModalBaseProps | 'class'>
 
 export function Modal(props: ModalProps): JSX.Element {
   const merged = mergeProps(
@@ -149,15 +148,15 @@ export function Modal(props: ModalProps): JSX.Element {
     return 'default'
   }
 
-  const content = () => (
+  const dialog = () => (
     <KobalteDialog.Content
-      data-slot="content"
+      data-slot="dialog"
       class={modalContentVariants(
         {
           layout: contentLayout(),
           transition: behaviorProps.transition,
         },
-        contentProps.classes?.content,
+        contentProps.classes?.dialog,
       )}
       onPointerDownOutside={onPointerDownOutside}
       onInteractOutside={onInteractOutside}
@@ -255,52 +254,52 @@ export function Modal(props: ModalProps): JSX.Element {
     </KobalteDialog.Content>
   )
 
-  const layer = () => (
-    <Show
-      when={behaviorProps.scrollable && behaviorProps.overlay}
-      fallback={
-        <>
-          <Show when={behaviorProps.overlay}>
-            <KobalteDialog.Overlay
-              data-slot="overlay"
-              class={modalOverlayVariants(
-                {
-                  scrollable: behaviorProps.scrollable,
-                },
-                contentProps.classes?.overlay,
-              )}
-            />
-          </Show>
-
-          {content()}
-        </>
-      }
-    >
-      <KobalteDialog.Overlay
-        data-slot="overlay"
-        class={modalOverlayVariants(
-          {
-            scrollable: behaviorProps.scrollable,
-          },
-          contentProps.classes?.overlay,
-        )}
-      >
-        {content()}
-      </KobalteDialog.Overlay>
-    </Show>
-  )
-
   return (
     <KobalteDialog.Root {...rootStateProps} modal {...rootProps}>
-      <KobalteDialog.Trigger
-        as="span"
-        data-slot="trigger"
-        class={cn(contentProps.classes?.trigger)}
-      >
-        {contentProps.children}
-      </KobalteDialog.Trigger>
+      <Show when={contentProps.children}>
+        <KobalteDialog.Trigger
+          as="span"
+          data-slot="trigger"
+          class={cn(contentProps.classes?.trigger)}
+        >
+          {contentProps.children}
+        </KobalteDialog.Trigger>
+      </Show>
 
-      <KobalteDialog.Portal>{layer()}</KobalteDialog.Portal>
+      <KobalteDialog.Portal>
+        <Show
+          when={behaviorProps.scrollable && behaviorProps.overlay}
+          fallback={
+            <>
+              <Show when={behaviorProps.overlay}>
+                <KobalteDialog.Overlay
+                  data-slot="overlay"
+                  class={modalOverlayVariants(
+                    {
+                      scrollable: behaviorProps.scrollable,
+                    },
+                    contentProps.classes?.overlay,
+                  )}
+                />
+              </Show>
+
+              {dialog()}
+            </>
+          }
+        >
+          <KobalteDialog.Overlay
+            data-slot="overlay"
+            class={modalOverlayVariants(
+              {
+                scrollable: behaviorProps.scrollable,
+              },
+              contentProps.classes?.overlay,
+            )}
+          >
+            {dialog()}
+          </KobalteDialog.Overlay>
+        </Show>
+      </KobalteDialog.Portal>
     </KobalteDialog.Root>
   )
 }

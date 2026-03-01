@@ -28,6 +28,14 @@ const BASIC_GROUPS: CommandPaletteGroup[] = [
       { value: 'dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
       { value: 'settings', label: 'Settings', icon: 'i-lucide-settings', suffix: 'Preferences' },
       { value: 'profile', label: 'Profile', icon: 'i-lucide-user', disabled: true },
+      { value: 'setting', label: 'Setting1', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'setting', label: 'Setting2', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
+      { value: 'setting', label: 'Setting10', icon: 'i-lucide-settings', suffix: 'Preferences' },
     ],
   },
 ]
@@ -95,7 +103,7 @@ export function CommandPaletteDemos() {
           body={
             <CommandPalette groups={BASIC_GROUPS} close onClose={() => setPaletteOpen(false)} />
           }
-          classes={{ content: 'top-1/4 translate-y-0' }}
+          classes={{ dialog: 'top-1/4 translate-y-0 w-240', body: 'p-0' }}
         >
           <Button variant="outline">
             Search... <Kbd value={['⌘', 'K']} />
@@ -148,18 +156,6 @@ export function CommandPaletteDemos() {
               </span>
             }
           />
-        </div>
-      </DemoSection>
-
-      <DemoSection title="Size: lg" description="Larger input and item sizing.">
-        <div class="border rounded-lg max-w-lg shadow-lg overflow-hidden">
-          <CommandPalette groups={BASIC_GROUPS} size="lg" />
-        </div>
-      </DemoSection>
-
-      <DemoSection title="Size: xs" description="Compact sizing.">
-        <div class="border rounded-lg max-w-lg shadow-lg overflow-hidden">
-          <CommandPalette groups={BASIC_GROUPS} size="xs" />
         </div>
       </DemoSection>
     </DemoPage>
