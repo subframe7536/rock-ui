@@ -1,4 +1,12 @@
-1. checkbox group table clickable area should expand, border overlapped should handle
-2. card style port from zaidan
-3. unify classes.root, prefer to use rest props to simplify splitProps groups
-4. refine demo into doc?
+# Current
+
+- [x] textarea add header and footer slot to match zaidan's InputGroup on textarea Addon (block-start) / Addon (block-end) style
+- [ ] add Image, inline kobalte's image to reduce context and jsx props pass
+- [ ] add Avatar based on Image, support group.
+
+# Future
+
+- [ ] checkbox group table clickable area should expand, border overlapped should handle
+- [ ] card style port from zaidan
+- [ ] unify classes.root, prefer to use rest props to simplify splitProps groups
+- [ ] refine demo into doc?

@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { createEffect, createMemo, mergeProps, on, onMount, splitProps } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps, on, onMount, splitProps } from 'solid-js'
 
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -18,6 +18,8 @@ import { callHandler, useId } from '../shared/utils'
 import type { TextareaVariantProps } from './textarea.class'
 import {
   textareaBaseVariants,
+  textareaFooterVariants,
+  textareaHeaderVariants,
   textareaPaddingVariants,
   textareaRootVariants,
 } from './textarea.class'
@@ -29,7 +31,7 @@ type TextareaStyleVariantProps = Pick<
 
 export type TextareaValue = string | number | null | undefined
 
-type TextareaSlots = 'root' | 'base'
+type TextareaSlots = 'root' | 'header' | 'base' | 'footer'
 
 export type TextareaClasses = SlotClasses<TextareaSlots>
 
@@ -47,6 +49,8 @@ export interface TextareaBaseProps
   autoresizeDelay?: number
   rows?: number
   maxrows?: number
+  header?: JSX.Element
+  footer?: JSX.Element
   modelModifiers?: ModelModifiers<TextareaValue>
   onValueChange?: (value: TextareaValue) => void
   onInput?: JSX.EventHandlerUnion<HTMLTextAreaElement, InputEvent>
@@ -93,6 +97,8 @@ export function Textarea(props: TextareaProps): JSX.Element {
       'autoresizeDelay',
       'autofocus',
       'autofocusDelay',
+      'header',
+      'footer',
       'children',
     ],
   )
@@ -188,7 +194,12 @@ export function Textarea(props: TextareaProps): JSX.Element {
   }
 
   const onRootPointerDown: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (event) => {
-    if (event.button !== 0 || event.defaultPrevented || event.target === textareaEl) {
+    if (
+      event.button !== 0 ||
+      event.defaultPrevented ||
+      event.target === textareaEl ||
+      isInteractiveTarget(event.target)
+    ) {
       return
     }
 
@@ -233,6 +244,20 @@ export function Textarea(props: TextareaProps): JSX.Element {
       )}
       onPointerDown={onRootPointerDown}
     >
+      <Show when={layoutProps.header}>
+        <div
+          data-slot="header"
+          class={textareaHeaderVariants(
+            {
+              size: field.size(),
+            },
+            styleProps.classes?.header,
+          )}
+        >
+          {layoutProps.header}
+        </div>
+      </Show>
+
       <textarea
         id={field.id()}
         ref={(element) => (textareaEl = element)}
@@ -262,6 +287,32 @@ export function Textarea(props: TextareaProps): JSX.Element {
       />
 
       {layoutProps.children}
+
+      <Show when={layoutProps.footer}>
+        <div
+          data-slot="footer"
+          class={textareaFooterVariants(
+            {
+              size: field.size(),
+            },
+            styleProps.classes?.footer,
+          )}
+        >
+          {layoutProps.footer}
+        </div>
+      </Show>
     </div>
+  )
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) {
+    return false
+  }
+
+  return Boolean(
+    target.closest(
+      'button, a, input, textarea, select, [role="button"], [tabindex]:not([tabindex="-1"])',
+    ),
   )
 }

@@ -69,13 +69,74 @@ describe('Textarea', () => {
     expect(textarea.disabled).toBe(true)
   })
 
-  test('does not render leading or trailing slots', () => {
+  test('keeps header and footer slots absent by default', () => {
     const screen = render(() => <Textarea />)
 
-    expect(screen.container.querySelector('[data-slot="leading"]')).toBeNull()
-    expect(screen.container.querySelector('[data-slot="trailing"]')).toBeNull()
-    expect(screen.container.querySelector('[data-slot="leadingIcon"]')).toBeNull()
-    expect(screen.container.querySelector('[data-slot="trailingIcon"]')).toBeNull()
+    expect(screen.container.querySelector('[data-slot="header"]')).toBeNull()
+    expect(screen.container.querySelector('[data-slot="footer"]')).toBeNull()
+  })
+
+  test('renders header and footer slots in expected order', () => {
+    const screen = render(() => (
+      <Textarea
+        header={<span data-testid="header-content">Header</span>}
+        footer={<span data-testid="footer-content">Footer</span>}
+      >
+        <span data-testid="child-content">Child</span>
+      </Textarea>
+    ))
+
+    const root = screen.container.querySelector('[data-slot="root"]') as HTMLElement | null
+    const header = screen.container.querySelector('[data-slot="header"]') as HTMLElement | null
+    const base = screen.container.querySelector('textarea[data-slot="base"]') as HTMLElement | null
+    const child = screen.getByTestId('child-content')
+    const footer = screen.container.querySelector('[data-slot="footer"]') as HTMLElement | null
+
+    expect(root?.children[0]).toBe(header)
+    expect(root?.children[1]).toBe(base)
+    expect(root?.children[2]).toBe(child)
+    expect(root?.children[3]).toBe(footer)
+    expect(screen.getByTestId('header-content').textContent).toBe('Header')
+    expect(screen.getByTestId('footer-content').textContent).toBe('Footer')
+  })
+
+  test('focuses textarea when clicking non-interactive header or footer area', async () => {
+    const screen = render(() => (
+      <Textarea header={<span>Header content</span>} footer={<span>Footer content</span>} />
+    ))
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    const focusSpy = vi.spyOn(textarea, 'focus')
+
+    await fireEvent.pointerDown(screen.getByText('Header content'), { button: 0 })
+    await fireEvent.pointerDown(screen.getByText('Footer content'), { button: 0 })
+
+    expect(focusSpy).toHaveBeenCalledTimes(2)
+  })
+
+  test('does not steal focus from interactive header and footer controls', async () => {
+    const screen = render(() => (
+      <Textarea
+        header={
+          <button type="button" data-testid="header-button">
+            Header Action
+          </button>
+        }
+        footer={
+          <button type="button" data-testid="footer-button">
+            Footer Action
+          </button>
+        }
+      />
+    ))
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    const focusSpy = vi.spyOn(textarea, 'focus')
+
+    await fireEvent.pointerDown(screen.getByTestId('header-button'), { button: 0 })
+    await fireEvent.pointerDown(screen.getByTestId('footer-button'), { button: 0 })
+
+    expect(focusSpy).toHaveBeenCalledTimes(0)
   })
 
   test('applies trim, number, lazy, nullable and optional modifiers', async () => {
@@ -286,6 +347,21 @@ describe('Textarea', () => {
     expect(root?.className).toContain('focus-within:effect-fv-border')
     expect(root?.className).toContain('effect-invalid')
     expect(root?.className).toContain('root-override')
+  })
+
+  test('applies classes.header and classes.footer overrides', () => {
+    const screen = render(() => (
+      <Textarea
+        header={<span>Header</span>}
+        footer={<span>Footer</span>}
+        classes={{ header: 'header-override', footer: 'footer-override' }}
+      />
+    ))
+    const header = screen.container.querySelector('[data-slot="header"]')
+    const footer = screen.container.querySelector('[data-slot="footer"]')
+
+    expect(header?.className).toContain('header-override')
+    expect(footer?.className).toContain('footer-override')
   })
 
   test('rejects as in type contract', () => {
