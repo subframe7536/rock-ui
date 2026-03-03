@@ -133,7 +133,7 @@ describe('DropdownMenu', () => {
       2,
     )
     expect(document.body.querySelector('[data-testid="avatar-node"]')).not.toBeNull()
-    expect(document.body.querySelector('[data-slot="item-indicator"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-slot="itemIndicator"]')).not.toBeNull()
 
     expect(rootContent?.className).toContain('mr-$kb-popper-content-overflow-padding')
     expect(rootContent?.className).toContain('ring-foreground/10')

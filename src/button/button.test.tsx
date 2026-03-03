@@ -137,7 +137,7 @@ describe('Button', () => {
         leading="i-lucide-menu"
         trailing="i-lucide-x"
         classes={{
-          root: 'root-override',
+          base: 'root-override',
           leading: 'leading-override',
           label: 'label-override',
           trailing: 'trailing-override',

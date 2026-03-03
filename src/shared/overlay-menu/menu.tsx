@@ -72,7 +72,7 @@ export function OverlayMenuBaseContent<
         <>
           <Show when={item.icon}>
             <span
-              data-slot="item-leading"
+              data-slot="itemLeading"
               class={cn(
                 'col-start-1 inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground',
                 props.classes?.itemLeading,
@@ -84,18 +84,18 @@ export function OverlayMenuBaseContent<
 
           <Show when={item.label || item.description}>
             <span
-              data-slot="item-wrapper"
+              data-slot="itemWrapper"
               class={cn('col-start-2 grid gap-0.5', props.classes?.itemWrapper)}
             >
               <Show when={item.label}>
-                <span data-slot="item-label" class={cn('truncate', props.classes?.itemLabel)}>
+                <span data-slot="itemLabel" class={cn('truncate', props.classes?.itemLabel)}>
                   {item.label}
                 </span>
               </Show>
 
               <Show when={item.description}>
                 <span
-                  data-slot="item-description"
+                  data-slot="itemDescription"
                   class={cn(
                     'truncate text-muted-foreground text-xs',
                     props.classes?.itemDescription,
@@ -108,7 +108,7 @@ export function OverlayMenuBaseContent<
           </Show>
 
           <span
-            data-slot="item-trailing"
+            data-slot="itemTrailing"
             class={cn(
               'col-start-3 inline-flex items-center justify-end gap-1.5',
               props.classes?.itemTrailing,
@@ -117,7 +117,7 @@ export function OverlayMenuBaseContent<
             <Show when={hasChildren}>
               <Icon
                 name={props.submenuIcon}
-                class={cn('text-muted-foreground text-sm', props.classes?.itemSubIcon)}
+                class={cn('text-muted-foreground text-sm', props.classes?.itemSub)}
               />
             </Show>
 
@@ -134,7 +134,7 @@ export function OverlayMenuBaseContent<
 
             <Show when={isCheckbox}>
               <ItemIndicator
-                data-slot="item-indicator"
+                data-slot="itemIndicator"
                 class={cn(
                   'inline-flex items-center justify-center text-sm',
                   props.classes?.itemIndicator,

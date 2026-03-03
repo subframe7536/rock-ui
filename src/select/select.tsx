@@ -105,22 +105,23 @@ export interface SelectEmptyRenderContext {
 
 type SelectSlots =
   | 'root'
-  | 'control'
+  | 'base'
   | 'input'
-  | 'leadingIcon'
-  | 'triggerIcon'
+  | 'leading'
+  | 'trigger'
   | 'clear'
   | 'content'
   | 'listbox'
   | 'item'
-  | 'itemIndicator'
+  | 'itemTrailing'
   | 'itemLabel'
   | 'itemDescription'
-  | 'section'
-  | 'sectionLabel'
+  | 'group'
+  | 'label'
   | 'tagsContainer'
   | 'tag'
   | 'tagRemove'
+  | 'tagOverflow'
   | 'empty'
 
 export type SelectClasses = SlotClasses<SelectSlots>
@@ -814,7 +815,7 @@ export function Select(props: SelectProps): JSX.Element {
   function renderItemLabel(option: SelectOption, fallbackLabel: JSX.Element): JSX.Element {
     return (
       <Combobox.ItemLabel
-        data-slot="item-label"
+        data-slot="itemLabel"
         class={cn('col-start-1 truncate', styleProps.classes?.itemLabel)}
       >
         <Show when={renderDisplayProps.labelRender} fallback={fallbackLabel}>
@@ -827,7 +828,7 @@ export function Select(props: SelectProps): JSX.Element {
   function renderItemDescription(option: SelectOption): JSX.Element {
     return (
       <Combobox.ItemDescription
-        data-slot="item-description"
+        data-slot="itemDescription"
         class={cn('col-start-1 text-xs text-muted-foreground', styleProps.classes?.itemDescription)}
       >
         {option.description}
@@ -838,10 +839,10 @@ export function Select(props: SelectProps): JSX.Element {
   function renderItemIndicator(indicatorIcon: IconName): JSX.Element {
     return (
       <Combobox.ItemIndicator
-        data-slot="item-indicator"
+        data-slot="itemTrailing"
         class={cn(
           'col-start-2 inline-flex items-center justify-center text-sm',
-          styleProps.classes?.itemIndicator,
+          styleProps.classes?.itemTrailing,
         )}
       >
         <Icon name={indicatorIcon} />
@@ -920,14 +921,14 @@ export function Select(props: SelectProps): JSX.Element {
     sectionProps,
   ) => (
     <Combobox.Section
-      data-slot="section"
-      class={cn('[&:not(:first-child)]:mt-1.5', styleProps.classes?.section)}
+      data-slot="group"
+      class={cn('[&:not(:first-child)]:mt-1.5', styleProps.classes?.group)}
     >
       <span
-        data-slot="section-label"
+        data-slot="label"
         class={cn(
           'block px-2 py-1.5 font-medium text-muted-foreground text-xs',
-          styleProps.classes?.sectionLabel,
+          styleProps.classes?.label,
         )}
       >
         {sectionProps.section.rawValue.label}
@@ -1045,11 +1046,8 @@ export function Select(props: SelectProps): JSX.Element {
           {(icon) => (
             <Icon
               name={icon()}
-              data-slot="leading-icon"
-              class={selectLeadingIconVariants(
-                { size: field.size() },
-                styleProps.classes?.leadingIcon,
-              )}
+              data-slot="leading"
+              class={selectLeadingIconVariants({ size: field.size() }, styleProps.classes?.leading)}
             />
           )}
         </Show>
@@ -1057,7 +1055,7 @@ export function Select(props: SelectProps): JSX.Element {
         {/* Multiple mode: tags + input in one flex-wrap container */}
         <Show when={isMultiple()} fallback={renderInput()}>
           <div
-            data-slot="tags-container"
+            data-slot="tagsContainer"
             class={cn(
               'flex flex-1 cursor-pointer select-none flex-wrap items-center gap-1 p-1.5',
               styleProps.classes?.tagsContainer,
@@ -1089,7 +1087,7 @@ export function Select(props: SelectProps): JSX.Element {
                       {option.label}
                       <IconButton
                         name={renderDisplayProps.closeIcon ?? 'icon-close'}
-                        data-slot="tag-remove"
+                        data-slot="tagRemove"
                         class={cn('size-4', styleProps.classes?.tagRemove)}
                         tabIndex={-1}
                         onClick={(e) => {
@@ -1107,7 +1105,7 @@ export function Select(props: SelectProps): JSX.Element {
 
             <Show when={overflowCount() > 0}>
               <span
-                data-slot="tag-overflow"
+                data-slot="tagOverflow"
                 class="text-xs text-muted-foreground px-1 flex items-center"
               >
                 +{overflowCount()}
@@ -1141,7 +1139,7 @@ export function Select(props: SelectProps): JSX.Element {
               class={selectTriggerIconVariants(
                 { size: field.size() },
                 'outline-none',
-                styleProps.classes?.triggerIcon,
+                styleProps.classes?.trigger,
               )}
               loading={renderDisplayProps.loading}
               loadingIcon={renderDisplayProps.loadingIcon}
@@ -1294,7 +1292,6 @@ export function Select(props: SelectProps): JSX.Element {
       onChange={(isMultiple() ? handleMultipleChange : handleSingleChange) as any}
       closeOnSelection={!isMultiple()}
       removeOnBackspace={isMultiple()}
-      data-slot="root"
       class={cn('relative inline-flex w-full h-fit', styleProps.classes?.root)}
       {...field.ariaAttrs()}
       {...rootProps}
@@ -1302,7 +1299,7 @@ export function Select(props: SelectProps): JSX.Element {
     >
       <ContextBridge />
       <Combobox.Control<NormalizedOption>
-        data-slot="control"
+        data-slot="base"
         class={selectControlVariants(
           {
             size: field.size(),
@@ -1311,7 +1308,7 @@ export function Select(props: SelectProps): JSX.Element {
             disabled: field.disabled(),
             invalid: field.invalid(),
           },
-          styleProps.classes?.control,
+          styleProps.classes?.base,
         )}
       >
         {(state) => renderTrigger(state)}

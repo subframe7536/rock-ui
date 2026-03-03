@@ -10,9 +10,9 @@ describe('Card', () => {
     const screen = render(() => <Card />)
     const root = screen.container.querySelector('[data-slot="root"]')
 
-    expect(root?.className).toContain('divide-y')
-    expect(root?.className).toContain('divide-border')
-    expect(root?.className).toContain('ring-1')
+    expect(root?.className).toContain('border')
+    expect(root?.className).toContain('bg-card')
+    expect(root?.className).toContain('shadow-xs/5')
   })
 
   test('renders body slot only when children exist', () => {

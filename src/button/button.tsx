@@ -14,9 +14,11 @@ import { buttonVariants } from './button.class'
 /**
  * Class overrides for Button slots.
  */
-type ButtonSlots = 'root' | 'leading' | 'label' | 'trailing' | 'loading'
+type ButtonSlots = 'base' | 'leading' | 'label' | 'trailing'
 
-export type ButtonClasses = SlotClasses<ButtonSlots>
+export type ButtonClasses = SlotClasses<ButtonSlots> & {
+  loading?: SlotClasses<'loading'>['loading']
+}
 
 /**
  * Additional Rock UI button options on top of Kobalte's polymorphic button props.
@@ -117,14 +119,14 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
 
   return (
     <KobalteButton.Root
-      data-slot="button"
+      data-slot="base"
       class={buttonVariants(
         {
           variant: styleProps.variant,
           size: styleProps.size,
         },
         isLoading() && 'cursor-wait opacity-80',
-        styleProps.classes?.root,
+        styleProps.classes?.base,
       )}
       aria-busy={isLoading() ? true : undefined}
       data-loading={isLoading() ? '' : undefined}

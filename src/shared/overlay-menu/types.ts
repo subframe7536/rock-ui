@@ -38,7 +38,7 @@ type OverlayMenuSharedSlots =
   | 'itemTrailing'
   | 'itemKbds'
   | 'itemIndicator'
-  | 'itemSubIcon'
+  | 'itemSub'
 
 export type OverlayMenuSharedClasses = SlotClasses<OverlayMenuSharedSlots>
 

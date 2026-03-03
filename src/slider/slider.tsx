@@ -12,7 +12,7 @@ import type {
 } from '../form-field/form-options'
 import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-options'
 import type { SlotClasses } from '../shared/slot-class'
-import { cn, useId } from '../shared/utils'
+import { useId } from '../shared/utils'
 
 import type { SliderVariantProps } from './slider.class'
 import {
@@ -24,7 +24,7 @@ import {
 
 export type SliderValue = number | number[]
 
-type SliderSlots = 'root' | 'track' | 'range' | 'thumb' | 'input'
+type SliderSlots = 'root' | 'track' | 'range' | 'thumb'
 
 export type SliderClasses = SlotClasses<SliderSlots>
 
@@ -265,12 +265,7 @@ export function Slider(props: SliderProps): JSX.Element {
             onFocus={() => field.emitFormFocus()}
             onBlur={() => field.emitFormBlur()}
           >
-            <KobalteSlider.Input
-              id={inputIdForIndex(thumbIndex)}
-              data-slot="input"
-              class={cn(styleProps.classes?.input)}
-              {...field.ariaAttrs()}
-            />
+            <KobalteSlider.Input id={inputIdForIndex(thumbIndex)} {...field.ariaAttrs()} />
           </KobalteSlider.Thumb>
         )}
       </For>

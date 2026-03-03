@@ -120,7 +120,7 @@ export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
                     onClick={item.onClick}
                     leading={item.icon}
                     classes={{
-                      root: ['min-w-0', merged.classes?.link],
+                      base: ['min-w-0', merged.classes?.link],
                       leading: merged.classes?.leading,
                       label: merged.classes?.label,
                     }}

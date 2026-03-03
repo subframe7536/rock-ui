@@ -47,20 +47,19 @@ type CommandPaletteSlots =
   | 'input'
   | 'listbox'
   | 'group'
-  | 'groupLabel'
+  | 'label'
   | 'item'
-  | 'itemLeadingIcon'
+  | 'itemLeading'
   | 'itemWrapper'
   | 'itemLabel'
   | 'itemLabelBase'
-  | 'itemPrefix'
-  | 'itemSuffix'
+  | 'itemLabelPrefix'
+  | 'itemLabelSuffix'
   | 'itemDescription'
   | 'itemTrailing'
-  | 'itemTrailingIcon'
   | 'itemTrailingKbds'
   | 'itemTrailingKbd'
-  | 'searchIcon'
+  | 'search'
   | 'back'
   | 'close'
   | 'empty'
@@ -358,36 +357,36 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             <Show when={option().icon}>
               <Icon
                 name={option().icon}
-                data-slot="item-leading-icon"
-                class={cn('shrink-0 text-muted-foreground', merged.classes?.itemLeadingIcon)}
+                data-slot="itemLeading"
+                class={cn('shrink-0 text-muted-foreground', merged.classes?.itemLeading)}
               />
             </Show>
 
             {/* Content wrapper */}
             <span
-              data-slot="item-wrapper"
+              data-slot="itemWrapper"
               class={cn('text-start flex flex-1 flex-col min-w-0', merged.classes?.itemWrapper)}
             >
               <Show when={option().prefix || option().itemLabel || option().suffix}>
                 <span
-                  data-slot="item-label"
+                  data-slot="itemLabel"
                   class={cn('inline-flex gap-2 truncate items-baseline', merged.classes?.itemLabel)}
                 >
                   <Show when={option().prefix}>
                     <span
-                      data-slot="item-prefix"
-                      class={cn('text-muted-foreground shrink-0', merged.classes?.itemPrefix)}
+                      data-slot="itemLabelPrefix"
+                      class={cn('text-muted-foreground shrink-0', merged.classes?.itemLabelPrefix)}
                     >
                       {option().prefix}
                     </span>
                   </Show>
-                  <span data-slot="item-label-base" class={cn(merged.classes?.itemLabelBase)}>
+                  <span data-slot="itemLabelBase" class={cn(merged.classes?.itemLabelBase)}>
                     {option().itemLabel}
                   </span>
                   <Show when={option().suffix}>
                     <span
-                      data-slot="item-suffix"
-                      class={cn('text-muted-foreground shrink-0', merged.classes?.itemSuffix)}
+                      data-slot="itemLabelSuffix"
+                      class={cn('text-muted-foreground shrink-0', merged.classes?.itemLabelSuffix)}
                     >
                       {option().suffix}
                     </span>
@@ -396,7 +395,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
               </Show>
               <Show when={option().description}>
                 <span
-                  data-slot="item-description"
+                  data-slot="itemDescription"
                   class={cn(
                     'text-xs text-muted-foreground truncate',
                     merged.classes?.itemDescription,
@@ -412,7 +411,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
               when={hasChildren()}
               fallback={
                 <Kbd
-                  slotPrefix="item-trailing"
+                  slotPrefix="itemTrailing"
                   value={option().kbds}
                   classes={{
                     root: merged.classes?.itemTrailingKbds,
@@ -423,8 +422,8 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             >
               <Icon
                 name={merged.childIcon}
-                data-slot="item-trailing-icon"
-                class={cn('shrink-0 text-muted-foreground', merged.classes?.itemTrailingIcon)}
+                data-slot="itemTrailing"
+                class={cn('shrink-0 text-muted-foreground', merged.classes?.itemTrailing)}
               />
             </Show>
           </Combobox.Item>
@@ -434,10 +433,10 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
         <Combobox.Section data-slot="group" class={cn('p-1 mt-2', merged.classes?.group)}>
           <Show when={sectionProps.section.rawValue.label}>
             <span
-              data-slot="group-label"
+              data-slot="label"
               class={cn(
                 'font-semibold text-muted-foreground px-1.5 text-sm',
-                merged.classes?.groupLabel,
+                merged.classes?.label,
               )}
             >
               {sectionProps.section.rawValue.label}
@@ -450,7 +449,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     >
       {/* ── Input area ─────────────────────────────────────────────────── */}
       <Combobox.Control<NormalizedItem>
-        data-slot="input-wrapper"
+        data-slot="inputWrapper"
         class={cn('flex items-center gap-2 px-3 h-12', merged.classes?.inputWrapper)}
       >
         <Show
@@ -458,13 +457,10 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           fallback={
             <IconButton
               name={merged.searchIcon}
-              data-slot="search-icon"
+              data-slot="search"
               loading={merged.loading}
               loadingIcon={merged.loadingIcon}
-              class={cn(
-                'size-5 text-muted-foreground pointer-events-none',
-                merged.classes?.searchIcon,
-              )}
+              class={cn('size-5 text-muted-foreground pointer-events-none', merged.classes?.search)}
             />
           }
         >

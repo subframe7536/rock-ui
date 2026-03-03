@@ -59,7 +59,7 @@ describe('CommandPalette', () => {
 
     await waitFor(() => {
       const trailing = xs.container.querySelector(
-        '[data-slot="item-trailing-kbds"]',
+        '[data-slot="itemTrailing-kbds"]',
       ) as HTMLElement | null
       expect(trailing?.classList.contains('gap-1')).toBe(true)
     })
@@ -70,7 +70,7 @@ describe('CommandPalette', () => {
 
     await waitFor(() => {
       const trailing = md.container.querySelector(
-        '[data-slot="item-trailing-kbds"]',
+        '[data-slot="itemTrailing-kbds"]',
       ) as HTMLElement | null
       expect(trailing?.classList.contains('gap-1.5')).toBe(true)
     })
@@ -81,7 +81,7 @@ describe('CommandPalette', () => {
 
     await waitFor(() => {
       const trailing = xl.container.querySelector(
-        '[data-slot="item-trailing-kbds"]',
+        '[data-slot="itemTrailing-kbds"]',
       ) as HTMLElement | null
       expect(trailing?.classList.contains('gap-2')).toBe(true)
     })
@@ -96,7 +96,7 @@ describe('CommandPalette', () => {
 
       expect(withIcon?.className).toContain('gap-2')
       expect(withoutIcon?.className).toContain('gap-2')
-      expect(screen.container.querySelector('[data-slot="item-leading-icon"]')).not.toBeNull()
+      expect(screen.container.querySelector('[data-slot="itemLeading"]')).not.toBeNull()
     })
   })
 
@@ -131,9 +131,9 @@ describe('CommandPalette', () => {
     const screen = render(() => <CommandPalette groups={GROUPS} />)
 
     await waitFor(() => {
-      const kbds = screen.container.querySelectorAll('[data-slot="item-trailing-kbd"]')
+      const kbds = screen.container.querySelectorAll('[data-slot="itemTrailing-kbd"]')
       expect(kbds.length).toBeGreaterThan(0)
-      expect(screen.container.querySelector('[data-slot="item-trailing-kbds"]')).not.toBeNull()
+      expect(screen.container.querySelector('[data-slot="itemTrailing-kbds"]')).not.toBeNull()
     })
   })
 
@@ -180,11 +180,9 @@ describe('CommandPalette', () => {
 
     await waitFor(() => {
       const searchIcon = screen.container.querySelector(
-        '[data-slot="search-icon"] [data-slot="icon"]',
+        '[data-slot="search"] [data-slot="icon"]',
       ) as HTMLElement
-      const childIcon = screen.container.querySelector(
-        '[data-slot="item-trailing-icon"]',
-      ) as HTMLElement
+      const childIcon = screen.container.querySelector('[data-slot="itemTrailing"]') as HTMLElement
       const closeIcon = screen.container.querySelector(
         '[data-slot="close"] [data-slot="icon"]',
       ) as HTMLElement
@@ -347,9 +345,9 @@ describe('CommandPalette', () => {
           input: 'input-override',
           listbox: 'listbox-override',
           group: 'group-override',
-          groupLabel: 'group-label-override',
+          label: 'label-override',
           item: 'item-override',
-          searchIcon: 'search-icon-override',
+          search: 'search-override',
           close: 'close-override',
         }}
       />
@@ -359,7 +357,7 @@ describe('CommandPalette', () => {
       expect(screen.container.querySelector('[data-slot="root"]')?.className).toContain(
         'root-override',
       )
-      expect(screen.container.querySelector('[data-slot="input-wrapper"]')?.className).toContain(
+      expect(screen.container.querySelector('[data-slot="inputWrapper"]')?.className).toContain(
         'input-wrapper-override',
       )
       expect(screen.container.querySelector('[data-slot="input"]')?.className).toContain(
@@ -371,14 +369,14 @@ describe('CommandPalette', () => {
       expect(screen.container.querySelector('[data-slot="group"]')?.className).toContain(
         'group-override',
       )
-      expect(screen.container.querySelector('[data-slot="group-label"]')?.className).toContain(
-        'group-label-override',
+      expect(screen.container.querySelector('[data-slot="label"]')?.className).toContain(
+        'label-override',
       )
       expect(screen.container.querySelector('[data-slot="item"]')?.className).toContain(
         'item-override',
       )
-      expect(screen.container.querySelector('[data-slot="search-icon"]')?.className).toContain(
-        'search-icon-override',
+      expect(screen.container.querySelector('[data-slot="search"]')?.className).toContain(
+        'search-override',
       )
       expect(screen.container.querySelector('[data-slot="close"]')?.className).toContain(
         'close-override',

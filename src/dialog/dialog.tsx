@@ -13,7 +13,7 @@ import { modalContentVariants, modalOverlayVariants } from './dialog.class'
 type ModalSlots =
   | 'trigger'
   | 'overlay'
-  | 'dialog'
+  | 'content'
   | 'header'
   | 'wrapper'
   | 'title'
@@ -153,13 +153,13 @@ export function Dialog(props: ModalProps): JSX.Element {
 
   const dialog = () => (
     <KobalteDialog.Content
-      data-slot="dialog"
+      data-slot="content"
       class={modalContentVariants(
         {
           layout: contentLayout(),
           transition: behaviorProps.transition,
         },
-        contentProps.classes?.dialog,
+        contentProps.classes?.content,
       )}
       onPointerDownOutside={onPointerDownOutside}
       onInteractOutside={onInteractOutside}

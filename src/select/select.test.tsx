@@ -68,7 +68,7 @@ describe('Select - single mode', () => {
       </>
     ))
 
-    const controls = screen.container.querySelectorAll('[data-slot="control"]')
+    const controls = screen.container.querySelectorAll('[data-slot="base"]')
     expect(controls[0]?.className).toContain('min-h-7')
     expect(controls[1]?.className).toContain('min-h-11')
   })
@@ -78,7 +78,7 @@ describe('Select - single mode', () => {
       <Select options={FRUITS} placeholder="Pick a fruit" classes={{ root: 'root-override' }} />
     ))
 
-    const root = screen.container.querySelector('[data-slot="root"]')
+    const root = screen.container.firstElementChild as HTMLElement | null
     expect(root?.className).toContain('root-override')
   })
 
@@ -169,7 +169,7 @@ describe('Select - multiple mode', () => {
       />
     ))
 
-    const removeButtons = screen.container.querySelectorAll('[data-slot="tag-remove"]')
+    const removeButtons = screen.container.querySelectorAll('[data-slot="tagRemove"]')
     expect(removeButtons.length).toBe(2)
     await fireEvent.click(removeButtons[0])
 
@@ -212,7 +212,7 @@ describe('Select - multiple mode', () => {
     const tags = screen.container.querySelectorAll('[data-slot="tag"]')
     expect(tags.length).toBe(1)
 
-    const overflow = screen.container.querySelector('[data-slot="tag-overflow"]')
+    const overflow = screen.container.querySelector('[data-slot="tagOverflow"]')
     expect(overflow).not.toBeNull()
     expect(overflow?.textContent).toContain('+1')
   })
@@ -404,7 +404,7 @@ describe('Select - groups', () => {
   test('renders group labels when open', () => {
     render(() => <Select options={GROUPED_OPTIONS} defaultOpen placeholder="Pick" />)
 
-    const sectionLabels = queryAllBody('[data-slot="section-label"]')
+    const sectionLabels = queryAllBody('[data-slot="label"]')
     expect(sectionLabels.length).toBe(2)
     expect(sectionLabels[0].textContent).toBe('Fruits')
     expect(sectionLabels[1].textContent).toBe('Vegetables')
@@ -429,7 +429,7 @@ describe('Select - groups', () => {
   test('renders grouped options with virtualized mode when explicitly enabled', () => {
     render(() => <Select options={GROUPED_OPTIONS} virtualized defaultOpen placeholder="Pick" />)
 
-    const sectionLabels = queryAllBody('[data-slot="section-label"]')
+    const sectionLabels = queryAllBody('[data-slot="label"]')
     const items = queryAllBody('[data-slot="item"]')
 
     expect(sectionLabels.length).toBe(2)

@@ -103,7 +103,7 @@ export function CommandPaletteDemos() {
           body={
             <CommandPalette groups={BASIC_GROUPS} close onClose={() => setPaletteOpen(false)} />
           }
-          classes={{ dialog: 'top-1/4 translate-y-0', body: 'p-0' }}
+          classes={{ content: 'top-1/4 translate-y-0', body: 'p-0' }}
         >
           <Button variant="outline">
             Search... <Kbd value={['⌘', 'K']} />

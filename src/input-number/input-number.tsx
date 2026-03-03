@@ -226,7 +226,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
         {...field.ariaAttrs()}
       />
 
-      <KobalteNumberField.HiddenInput data-slot="hidden-input" />
+      <KobalteNumberField.HiddenInput />
 
       <Show when={resolvedIncrement()}>
         {renderControl({

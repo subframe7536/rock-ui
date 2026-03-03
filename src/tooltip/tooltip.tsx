@@ -10,7 +10,7 @@ import { tooltipContentVariants } from './tooltip.class'
 
 type TooltipSide = 'top' | 'right' | 'bottom' | 'left'
 
-type TooltipSlots = 'root' | 'trigger' | 'text' | 'kbds' | 'kbd'
+type TooltipSlots = 'content' | 'trigger' | 'text' | 'kbds' | 'kbd'
 
 export type TooltipClasses = SlotClasses<TooltipSlots>
 
@@ -57,7 +57,10 @@ export function Tooltip(props: TooltipProps): JSX.Element {
       <KobalteTooltip.Portal>
         <KobalteTooltip.Content
           data-slot="content"
-          class={tooltipContentVariants({ side: rootProps.placement }, contentProps.classes?.root)}
+          class={tooltipContentVariants(
+            { side: rootProps.placement },
+            contentProps.classes?.content,
+          )}
         >
           <Show when={typeof contentProps.text === 'string'} fallback={contentProps.text}>
             <span data-slot="text" class={cn('text-pretty leading-4', contentProps.classes?.text)}>

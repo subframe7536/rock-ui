@@ -23,7 +23,7 @@ describe('Modal', () => {
     expect(document.body.textContent).toContain('Modal footer')
     expect(document.body.querySelector('[data-slot="close"]')).not.toBeNull()
 
-    const content = document.body.querySelector('[data-slot="dialog"]')
+    const content = document.body.querySelector('[data-slot="content"]')
     expect(content?.className).toContain('bg-background')
     expect(content?.className).toContain('data-expanded:(animate-in fade-in-0 zoom-in-95)')
   })
@@ -69,12 +69,12 @@ describe('Modal', () => {
       </Dialog>
     ))
 
-    expect(document.body.querySelector('[data-slot="dialog"]')).toBeNull()
+    expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
 
     await fireEvent.click(screen.getByText('Open modal'))
 
     await waitFor(() => {
-      expect(document.body.querySelector('[data-slot="dialog"]')).not.toBeNull()
+      expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
     })
 
     const closeButton = document.body.querySelector('[data-slot="close"]') as HTMLElement
@@ -83,7 +83,7 @@ describe('Modal', () => {
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
 
-      const content = document.body.querySelector('[data-slot="dialog"]')
+      const content = document.body.querySelector('[data-slot="content"]')
       expect(content?.hasAttribute('data-closed')).toBe(true)
     })
   })
@@ -95,8 +95,8 @@ describe('Modal', () => {
       </Dialog>
     ))
 
-    expect(screen.container.querySelector('[data-slot="dialog"]')).toBeNull()
-    expect(document.body.querySelector('[data-slot="dialog"]')).not.toBeNull()
+    expect(screen.container.querySelector('[data-slot="content"]')).toBeNull()
+    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
   })
 
   test('supports overlay=false', () => {
@@ -117,7 +117,7 @@ describe('Modal', () => {
     ))
 
     const overlays = document.body.querySelectorAll('[data-slot="overlay"]')
-    const contents = document.body.querySelectorAll('[data-slot="dialog"]')
+    const contents = document.body.querySelectorAll('[data-slot="content"]')
     const overlay = overlays[overlays.length - 1]
     const content = contents[contents.length - 1]
 
@@ -132,7 +132,7 @@ describe('Modal', () => {
         fullscreen
         transition={false}
         classes={{
-          dialog: 'content-class',
+          content: 'content-class',
         }}
         body="Body"
       >
@@ -140,7 +140,7 @@ describe('Modal', () => {
       </Dialog>
     ))
 
-    const content = document.body.querySelector('[data-slot="dialog"]')
+    const content = document.body.querySelector('[data-slot="content"]')
 
     expect(content?.className).toContain('fixed inset-0 flex max-w-none flex-col rounded-none')
     expect(content?.className).toContain('transition-none')
@@ -176,13 +176,13 @@ describe('Modal', () => {
       </Dialog>
     ))
 
-    const content = document.body.querySelector('[data-slot="dialog"]') as HTMLElement
+    const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
     content.focus()
     await fireEvent.keyDown(content, { key: 'Escape' })
 
     await waitFor(() => {
       expect(onClosePrevent).toHaveBeenCalledTimes(1)
-      expect(document.body.querySelector('[data-slot="dialog"]')).not.toBeNull()
+      expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
     })
   })
 
@@ -205,7 +205,7 @@ describe('Modal', () => {
 
     await waitFor(() => {
       expect(onClosePrevent).toHaveBeenCalledTimes(1)
-      expect(document.body.querySelector('[data-slot="dialog"]')).not.toBeNull()
+      expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
     })
   })
 
@@ -225,7 +225,7 @@ describe('Modal', () => {
       </Dialog>
     ))
 
-    const content = document.body.querySelector('[data-slot="dialog"]') as HTMLElement
+    const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
     content.focus()
     await fireEvent.keyDown(content, { key: 'Escape' })
 
@@ -233,7 +233,7 @@ describe('Modal', () => {
       expect(onClosePrevent).not.toHaveBeenCalled()
       expect(onOpenChange).toHaveBeenCalledWith(false)
 
-      const contentNode = document.body.querySelector('[data-slot="dialog"]')
+      const contentNode = document.body.querySelector('[data-slot="content"]')
       expect(contentNode?.hasAttribute('data-closed')).toBe(true)
     })
   })

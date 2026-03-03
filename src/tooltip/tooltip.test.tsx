@@ -29,15 +29,15 @@ describe('Tooltip', () => {
     expect(document.body.querySelectorAll('[data-slot="kbds"]').length).toBe(1)
   })
 
-  test('maps classes.root to content slot', () => {
+  test('applies classes.content to content slot', () => {
     render(() => (
-      <Tooltip open text="Tooltip content" classes={{ root: 'root-override' }}>
+      <Tooltip open text="Tooltip content" classes={{ content: 'content-override' }}>
         <button type="button">Trigger</button>
       </Tooltip>
     ))
 
     const content = document.body.querySelector('[data-slot="content"]')
-    expect(content?.className).toContain('root-override')
+    expect(content?.className).toContain('content-override')
   })
 
   test('renders tooltip container when no text or kbds are provided', () => {

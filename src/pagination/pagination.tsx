@@ -160,7 +160,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
               variant={styleProps.controlVariant}
               size={getSize(styleProps.size, uiProps.prevText)}
               aria-label="Go to previous page"
-              classes={{ root: uiProps.classes?.prev }}
+              classes={{ base: uiProps.classes?.prev }}
               onClick={() => selectPage(resolvedPage() - 1)}
               {...getControlProps(resolvedPage() - 1, resolvedPage() <= 1, 'prev')}
               leading={<Icon name={uiProps.prevIcon} />}
@@ -196,7 +196,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
                     aria-current={isActive() ? 'page' : undefined}
                     aria-label={isActive() ? `Page ${item}, current page` : `Go to page ${item}`}
                     data-current={isActive() ? '' : undefined}
-                    classes={{ root: ['outline-none', uiProps.classes?.link] }}
+                    classes={{ base: ['outline-none', uiProps.classes?.link] }}
                     onClick={() => selectPage(item)}
                     {...getControlProps(item, false)}
                   >
@@ -215,7 +215,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
               variant={styleProps.controlVariant}
               size={getSize(styleProps.size, uiProps.nextText)}
               aria-label="Go to next page"
-              classes={{ root: uiProps.classes?.next }}
+              classes={{ base: uiProps.classes?.next }}
               onClick={() => selectPage(resolvedPage() + 1)}
               {...getControlProps(resolvedPage() + 1, resolvedPage() >= pageCount(), 'next')}
               trailing={<Icon name={uiProps.nextIcon} />}
