@@ -72,7 +72,7 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
         as="span"
         tabIndex={-1}
         data-slot="trigger"
-        class={cn(localProps.classes?.trigger)}
+        class={cn('outline-none', localProps.classes?.trigger)}
         disabled={restProps.disabled}
       >
         {localProps.children}

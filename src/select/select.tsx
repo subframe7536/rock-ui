@@ -1088,7 +1088,7 @@ export function Select(props: SelectProps): JSX.Element {
                       <IconButton
                         name={renderDisplayProps.closeIcon ?? 'icon-close'}
                         data-slot="tagRemove"
-                        class={cn('size-4', styleProps.classes?.tagRemove)}
+                        class={cn('size-4 outline-none', styleProps.classes?.tagRemove)}
                         tabIndex={-1}
                         onClick={(e) => {
                           e.stopPropagation()
@@ -1136,11 +1136,7 @@ export function Select(props: SelectProps): JSX.Element {
             <IconButton
               data-slot="trigger"
               name={renderDisplayProps.triggerIcon ?? 'icon-chevron-down'}
-              class={selectTriggerIconVariants(
-                { size: field.size() },
-                'outline-none',
-                styleProps.classes?.trigger,
-              )}
+              class={selectTriggerIconVariants({ size: field.size() }, styleProps.classes?.trigger)}
               loading={renderDisplayProps.loading}
               loadingIcon={renderDisplayProps.loadingIcon}
               {...props}

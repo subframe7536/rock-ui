@@ -60,20 +60,23 @@ export const selectInputVariants = cva(
   },
 )
 
-export const selectTriggerIconVariants = cva('text-muted-foreground opacity-80 cursor-pointer', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
-      xs: 'me-1 size-3.5',
-      sm: 'me-1.5 size-4',
-      md: 'me-2 size-5',
-      lg: 'me-2.5 size-6',
-      xl: 'me-3 size-6',
+export const selectTriggerIconVariants = cva(
+  'text-muted-foreground opacity-80 cursor-pointer outline-none',
+  {
+    defaultVariants: {
+      size: 'md',
+    },
+    variants: {
+      size: {
+        xs: 'me-1 size-3.5',
+        sm: 'me-1.5 size-4',
+        md: 'me-2 size-5',
+        lg: 'me-2.5 size-6',
+        xl: 'me-3 size-6',
+      },
     },
   },
-})
+)
 
 export const selectLeadingIconVariants = cva('shrink-0 text-muted-foreground', {
   defaultVariants: {
@@ -91,7 +94,7 @@ export const selectLeadingIconVariants = cva('shrink-0 text-muted-foreground', {
 })
 
 export const selectClearVariants = cva(
-  'text-muted-foreground opacity-80 transition-opacity hover:opacity-100',
+  'text-muted-foreground opacity-80 outline-none transition-opacity hover:opacity-100',
   {
     defaultVariants: {
       size: 'md',

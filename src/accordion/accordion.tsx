@@ -16,7 +16,6 @@ type AccordionSlots =
   | 'label'
   | 'trailing'
   | 'content'
-  | 'contentInner'
 
 export type AccordionClasses = SlotClasses<AccordionSlots>
 
@@ -118,17 +117,14 @@ export function Accordion(props: AccordionProps): JSX.Element {
 
             <KobalteAccordion.Content
               data-slot="content"
-              class={cn(
-                'overflow-hidden text-sm data-expanded:animate-accordion-down data-closed:animate-accordion-up',
-                renderProps.classes?.content,
-              )}
+              class="text-sm overflow-hidden data-closed:animate-accordion-up data-expanded:animate-accordion-down"
             >
               <Show when={item.content}>
                 <div
                   data-slot="content-inner"
                   class={cn(
                     'h-$kb-collapsible-content-height pb-2.5 [&_a]:(underline underline-offset-3 hover:text-foreground) [&_p:not(:last-child)]:mb-4',
-                    renderProps.classes?.contentInner,
+                    renderProps.classes?.content,
                   )}
                 >
                   {item.content}

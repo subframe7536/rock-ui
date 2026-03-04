@@ -115,7 +115,7 @@ export const AccordionDemos = () => {
               label: 'Integrations',
               leading: 'i-lucide-plug',
               content: (
-                <div class="space-y-2">
+                <div class="pt-2 space-y-2">
                   <p>Connect your tools to automate the workflow.</p>
                   <p>
                     Supported: <strong>GitHub</strong>, <strong>Slack</strong>, and{' '}
@@ -128,7 +128,7 @@ export const AccordionDemos = () => {
           classes={{
             root: 'max-w-xl rounded-lg border border-zinc-200 bg-white',
             trigger: 'px-3',
-            content: 'px-4 pt-2 text-zinc-700',
+            content: 'px-4 text-zinc-700',
           }}
         />
       </DemoSection>

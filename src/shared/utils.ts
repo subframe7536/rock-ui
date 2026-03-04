@@ -1,3 +1,5 @@
+import { cls } from 'cls-variant'
+import type { ClassValueArray } from 'cls-variant'
 import type { Accessor, JSX } from 'solid-js'
 import { createMemo, createUniqueId } from 'solid-js'
 
@@ -44,8 +46,9 @@ export function useId(
   return resolvedId
 }
 
-export { combineStyle } from '@solid-primitives/props'
-export { cls as cn } from 'cls-variant'
+export function cn(...classes: ClassValueArray) {
+  return cls(...classes) || undefined
+}
 
 export interface HandlerCallResult<R = unknown> {
   defaultPrevented: boolean

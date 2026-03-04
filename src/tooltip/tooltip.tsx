@@ -50,7 +50,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
         as="span"
         tabIndex={-1}
         data-slot="trigger"
-        class={cn(contentProps.classes?.trigger)}
+        class={cn('outline-none', contentProps.classes?.trigger)}
       >
         {contentProps.children}
       </KobalteTooltip.Trigger>
