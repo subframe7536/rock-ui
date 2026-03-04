@@ -103,10 +103,11 @@ export function Slider(props: SliderProps): JSX.Element {
       highlight: styleProps.highlight,
       disabled: formProps.disabled,
     }),
-    {
-      defaultId: generatedId,
+    () => ({
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue: formProps.defaultValue ?? rangeProps.min,
+    }),
   )
 
   const kobalteValue = createMemo(() => normalizeSliderValues(formProps.value, rangeProps.min!))

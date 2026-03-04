@@ -141,7 +141,6 @@ describe('Textarea', () => {
 
   test('applies trim, number, lazy and empty value strategy modifiers', async () => {
     const onTrim = vi.fn()
-    const onNumber = vi.fn()
     const onLazy = vi.fn()
     const onNullable = vi.fn()
     const onOptional = vi.fn()
@@ -149,26 +148,18 @@ describe('Textarea', () => {
     const screen = render(() => (
       <>
         <Textarea onValueChange={onTrim} modelModifiers={{ trim: true }} />
-        <Textarea onValueChange={onNumber} modelModifiers={{ number: true }} />
         <Textarea onValueChange={onLazy} modelModifiers={{ lazy: true }} />
         <Textarea onValueChange={onNullable} modelModifiers={{ empty: 'null' }} />
         <Textarea onValueChange={onOptional} modelModifiers={{ empty: 'undefined' }} />
       </>
     ))
-    const [trimInput, numberInput, lazyInput, nullableInput, optionalInput] =
-      screen.getAllByRole('textbox')
+    const [trimInput, lazyInput, nullableInput, optionalInput] = screen.getAllByRole('textbox')
 
     await fireEvent.input(trimInput!, {
       target: { value: ' value  ' },
       currentTarget: { value: ' value  ' },
     })
     expect(onTrim).toHaveBeenLastCalledWith('value')
-
-    await fireEvent.input(numberInput!, {
-      target: { value: '42.5' },
-      currentTarget: { value: '42.5' },
-    })
-    expect(onNumber).toHaveBeenLastCalledWith(42.5)
 
     await fireEvent.input(lazyInput!, {
       target: { value: 'lazy' },

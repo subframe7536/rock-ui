@@ -88,11 +88,10 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
     props,
   )
 
-  const [formProps, collectionProps, styleProps, restProps] = splitProps(
+  const [formProps, collectionProps, styleProps] = splitProps(
     merged as CheckboxGroupProps,
     [...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS, 'onChange'],
     ['legend', 'items'],
-    ['orientation', 'variant', 'size', 'indicator', 'checkedIcon', 'indeterminateIcon', 'classes'],
   )
 
   const groupId = useId(() => formProps.id, 'checkbox-group')
@@ -103,11 +102,12 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
       size: styleProps.size,
       disabled: formProps.disabled,
     }),
-    {
+    () => ({
       bind: false,
-      defaultId: groupId,
+      defaultId: groupId(),
       defaultSize: 'md',
-    },
+      initialValue: formProps.defaultValue || [],
+    }),
   )
 
   const [uncontrolledValue, setUncontrolledValue] = createSignal<CheckboxGroupValue[]>(
@@ -162,12 +162,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
   }
 
   return (
-    <div
-      id={`${groupId()}-root`}
-      data-slot="root"
-      class={cn('relative', styleProps.classes?.root)}
-      {...restProps}
-    >
+    <div id={`${groupId()}-root`} data-slot="root" class={cn('relative', styleProps.classes?.root)}>
       <fieldset
         id={groupId()}
         data-slot="fieldset"

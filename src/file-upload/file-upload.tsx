@@ -270,10 +270,11 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       highlight: styleProps.highlight,
       disabled: formProps.disabled,
     }),
-    {
-      defaultId: generatedId,
+    () => ({
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue: null,
+    }),
   )
 
   let hiddenInputEl: HTMLInputElement | undefined

@@ -94,10 +94,11 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       highlight: styleProps.highlight,
       disabled: formProps.disabled,
     }),
-    {
-      defaultId: generatedId,
+    () => ({
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue: restProps.rawValue || restProps.defaultValue || 0,
+    }),
   )
 
   let inputEl: HTMLInputElement | undefined

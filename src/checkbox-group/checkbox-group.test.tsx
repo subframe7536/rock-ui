@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from '@solidjs/testing-library'
+import * as v from 'valibot'
 import { describe, expect, test, vi } from 'vitest'
 
 import { Form } from '../form'
@@ -316,5 +317,33 @@ describe('CheckboxGroup', () => {
 
     const label = screen.getByText('Checkbox group')
     expect(label.getAttribute('for')).toBeNull()
+  })
+
+  test('keeps array shape for schema validation after selecting item', async () => {
+    const schema = v.object({
+      channels: v.pipe(v.array(v.string()), v.nonEmpty('Select at least one release channel.')),
+    })
+
+    const screen = render(() => (
+      <Form schema={schema}>
+        <FormField name="channels" label="Release Channels">
+          <CheckboxGroup items={['A', 'B']} variant="table" />
+        </FormField>
+      </Form>
+    ))
+
+    const form = screen.container.querySelector('form') as HTMLFormElement
+
+    await fireEvent.submit(form)
+    await waitFor(() => {
+      expect(screen.getByText('Select at least one release channel.')).not.toBeNull()
+    })
+
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+    await waitFor(() => {
+      expect(screen.queryByText('Select at least one release channel.')).toBeNull()
+    })
+
+    expect(screen.queryByText('Invalid type: Expected Array but received true')).toBeNull()
   })
 })

@@ -21,7 +21,7 @@ function FieldControl(props: {
     () => ({
       bind: props.bind,
       deferInputValidation: true,
-      defaultId: () => 'field-control-default-id',
+      defaultId: 'field-control-default-id',
       defaultSize: 'md',
     }),
   )
@@ -52,10 +52,10 @@ function FieldMetaProbe(props: { id?: string; size?: 'xs' | 'sm' | 'md' | 'lg' |
       id: props.id,
       size: props.size,
     }),
-    {
-      defaultId: () => 'meta-default-id',
+    () => ({
+      defaultId: 'meta-default-id',
       defaultSize: 'md',
-    },
+    }),
   )
 
   return (

@@ -14,7 +14,7 @@
 - [x] reuse common cva, extract common classes into unocss shortcuts
 - [x] refactor form state with `createStore`
 - [x] add `Accordion`
-- [ ] cleanup form system and test standard schema with `valibot`
+- [x] cleanup form system and test standard schema with `valibot`
 - [ ] remove context bridge in select/file-upload, migrate custom render usage from function to jsx for fine grain update, reuse parent components's props first
 - [ ] bug: uncontrolled switch in demo does not work
 - [ ] bug: input number horizen does not work

@@ -225,7 +225,7 @@ export const FormFieldDemos = () => {
             </FormField>
 
             <FormField name="channels" label="Release Channels" required>
-              <CheckboxGroup items={SCHEMA_CHANNEL_OPTIONS} variant="table" />
+              <CheckboxGroup items={SCHEMA_CHANNEL_OPTIONS} />
             </FormField>
 
             <FormField name="plan" label="Plan" required>

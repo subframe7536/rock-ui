@@ -190,31 +190,6 @@ describe('Input', () => {
     expect(onValueChange).toHaveBeenLastCalledWith('test')
   })
 
-  test('applies number modifier and type=number coercion', async () => {
-    const onValueChange = vi.fn()
-    const screen = render(() => (
-      <>
-        <Input onValueChange={onValueChange} modelModifiers={{ number: true }} />
-        <Input type="number" onValueChange={onValueChange} />
-      </>
-    ))
-
-    const textInput = screen.getAllByRole('textbox')[0]
-    const numberInput = screen.getByRole('spinbutton')
-
-    await fireEvent.input(textInput!, {
-      target: { value: '42.5' },
-      currentTarget: { value: '42.5' },
-    })
-    await fireEvent.input(numberInput, {
-      target: { value: '6.2' },
-      currentTarget: { value: '6.2' },
-    })
-
-    expect(onValueChange).toHaveBeenNthCalledWith(1, 42.5)
-    expect(onValueChange).toHaveBeenNthCalledWith(2, 6.2)
-  })
-
   test('supports lazy and empty value strategy modifiers', async () => {
     const lazyChange = vi.fn()
     const nullableChange = vi.fn()

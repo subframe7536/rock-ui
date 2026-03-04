@@ -390,11 +390,12 @@ export function Select(props: SelectProps): JSX.Element {
       highlight: styleProps.highlight,
       disabled: formProps.disabled,
     }),
-    {
+    () => ({
       bind: false,
-      defaultId: generatedId,
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue: formProps.defaultValue || searchInteractionProps.multiple ? [] : '',
+    }),
   )
 
   // ---- Mode-derived booleans ----
@@ -595,7 +596,7 @@ export function Select(props: SelectProps): JSX.Element {
   function handleSingleChange(option: NormalizedOption | null): void {
     const nextValue = option ? (option.raw.value ?? option.value) : null
 
-    field.setFormValue(nextValue)
+    field.setFormValue(nextValue ?? '')
     formProps.onChange?.(nextValue as SelectValue | null)
     field.emit('change')
     field.emit('input')
@@ -782,7 +783,7 @@ export function Select(props: SelectProps): JSX.Element {
   // ---- Clear handler ----
   function handleClear(clearFn: () => void): void {
     clearFn()
-    field.setFormValue(isMultiple() ? [] : null)
+    field.setFormValue(isMultiple() ? [] : '')
     searchInteractionProps.onClear?.()
     field.emit('change')
     field.emit('input')

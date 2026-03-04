@@ -3,8 +3,13 @@ import { onMount, untrack } from 'solid-js'
 import * as v from 'valibot'
 import { describe, expect, test, vi } from 'vitest'
 
+import { Checkbox } from '../checkbox'
 import { FormField } from '../form-field'
 import { useFormField } from '../form-field/form-field-context'
+import { Input } from '../input'
+import { RadioGroup } from '../radio-group'
+import { Select } from '../select'
+import type { SelectOption } from '../select/select'
 
 import type { FormSubmitEvent } from './form'
 import { Form } from './form'
@@ -15,21 +20,21 @@ interface TestState {
 }
 
 function TestInput(props: { state: TestState; deferInputValidation?: boolean }) {
-  const field = useFormField(undefined, {
+  const field = useFormField(undefined, () => ({
     deferInputValidation: untrack(() => props.deferInputValidation),
-    defaultId: () => 'test-input-default-id',
+    defaultId: 'test-input-default-id',
     defaultSize: 'md',
-  })
+  }))
 
   return (
     <input
       data-testid="input"
       id={field.id()}
       name={field.name()}
-      data-touched={String(field.touched())}
-      data-dirty={String(field.dirty())}
-      data-focused={String(field.focused())}
-      data-validating={String(field.validating())}
+      data-touched={String(field.runtimeState().touched)}
+      data-dirty={String(field.runtimeState().dirty)}
+      data-focused={String(field.runtimeState().focused)}
+      data-validating={String(field.runtimeState().validating)}
       aria-invalid={field.ariaAttrs()['aria-invalid'] ? 'true' : undefined}
       aria-describedby={field.ariaAttrs()['aria-describedby'] as string | undefined}
       onInput={(event) => {
@@ -44,10 +49,11 @@ function TestInput(props: { state: TestState; deferInputValidation?: boolean }) 
 }
 
 function TestInputWithoutExternalState() {
-  const field = useFormField(undefined, {
-    defaultId: () => 'test-input-uncontrolled-default-id',
+  const field = useFormField(undefined, () => ({
+    defaultId: 'test-input-uncontrolled-default-id',
     defaultSize: 'md',
-  })
+    initialValue: '',
+  }))
 
   return (
     <input
@@ -76,6 +82,11 @@ function SetErrorsOnMount() {
 }
 
 describe('Form', () => {
+  const roleOptions: SelectOption[] = [
+    { label: 'Developer', value: 'developer' },
+    { label: 'Designer', value: 'designer' },
+  ]
+
   test('emits error on submit when validation fails', async () => {
     const state: TestState = { value: '' }
     const onSubmit = vi.fn()
@@ -450,6 +461,95 @@ describe('Form', () => {
     await fireEvent.submit(form)
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  test('schema with Input component maps empty value to required message', async () => {
+    const schema = v.object({
+      username: v.pipe(v.string(), v.minLength(1, 'Username is required.')),
+    })
+
+    const screen = render(() => (
+      <Form schema={schema}>
+        <FormField name="username" label="Username">
+          <Input placeholder="johndoe" />
+        </FormField>
+      </Form>
+    ))
+
+    const form = screen.container.querySelector('form') as HTMLFormElement
+    await fireEvent.submit(form)
+
+    await waitFor(() => {
+      expect(screen.getByText('Username is required.')).not.toBeNull()
+    })
+  })
+
+  test('schema with Checkbox component maps unchecked value to required message', async () => {
+    const schema = v.object({
+      agree: v.pipe(v.boolean(), v.value(true, 'You must accept the terms.')),
+    })
+
+    const screen = render(() => (
+      <Form schema={schema}>
+        <FormField name="agree" label="Terms" required>
+          <Checkbox label="I agree to the terms of service" />
+        </FormField>
+      </Form>
+    ))
+
+    const form = screen.container.querySelector('form') as HTMLFormElement
+    await fireEvent.submit(form)
+
+    await waitFor(() => {
+      expect(screen.getByText('You must accept the terms.')).not.toBeNull()
+    })
+  })
+
+  test('schema with RadioGroup component maps unselected value to required message', async () => {
+    const schema = v.object({
+      plan: v.picklist(['starter', 'pro'], 'Select a plan.'),
+    })
+
+    const screen = render(() => (
+      <Form schema={schema}>
+        <FormField name="plan" label="Plan" required>
+          <RadioGroup
+            items={[
+              { value: 'starter', label: 'Starter' },
+              { value: 'pro', label: 'Pro' },
+            ]}
+          />
+        </FormField>
+      </Form>
+    ))
+
+    const form = screen.container.querySelector('form') as HTMLFormElement
+    await fireEvent.submit(form)
+
+    await waitFor(() => {
+      expect(screen.getByText('Select a plan.')).not.toBeNull()
+    })
+  })
+
+  test('schema with Select component maps empty value to required message', async () => {
+    const schema = v.object({
+      role: v.pipe(v.string(), v.minLength(1, 'Please select a role.')),
+    })
+
+    const screen = render(() => (
+      <Form schema={schema}>
+        <FormField name="role" label="Role" required>
+          <Select options={roleOptions} placeholder="Choose a role..." />
+        </FormField>
+      </Form>
+    ))
+
+    const form = screen.container.querySelector('form') as HTMLFormElement
+    await fireEvent.submit(form)
+
+    await waitFor(() => {
+      expect(screen.getByText('Please select a role.')).not.toBeNull()
     })
   })
 

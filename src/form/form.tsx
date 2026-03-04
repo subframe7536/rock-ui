@@ -65,6 +65,7 @@ interface FormFieldEntry {
   path: string[]
   meta: FormInputMeta
   runtime: FormFieldRuntimeEntry
+  value: unknown
 }
 
 interface FormFieldIdentity {
@@ -76,7 +77,6 @@ interface FormRuntimeStore {
   loading: boolean
   errors: FormValidationError[]
   fields: Record<string, FormFieldEntry>
-  state: Record<string, unknown>
 }
 
 const EMPTY_FIELD_RUNTIME_STATE: FormFieldRuntimeState = {
@@ -123,11 +123,12 @@ function toFieldIdentity(name: string | string[] | undefined): FormFieldIdentity
   }
 }
 
-function createFieldEntry(identity: FormFieldIdentity, meta: FormInputMeta = {}): FormFieldEntry {
+function createFieldEntry(identity: FormFieldIdentity, meta: FormInputMeta = {}, value?: unknown): FormFieldEntry {
   return {
     path: [...identity.path],
     meta: { ...meta },
     runtime: createFieldRuntimeEntry(),
+    value,
   }
 }
 
@@ -193,15 +194,18 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
     loading: false,
     errors: [],
     fields: {},
-    state: {},
   })
 
-  function getValidationState(): TState | undefined {
+  function buildValidationState(): TState | undefined {
     if (stateProps.state !== undefined) {
       return stateProps.state
     }
 
-    return formState.state as TState
+    const result: Record<string, unknown> = {}
+    for (const entry of Object.values(formState.fields)) {
+      setValueAtPath(result, entry.path, entry.value)
+    }
+    return result as TState
   }
 
   function upsertField(identity: FormFieldIdentity, meta: FormInputMeta): void {
@@ -384,7 +388,7 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
   }
 
   async function getErrors(): Promise<FormValidationError[]> {
-    const validationState = getValidationState()
+    const validationState = buildValidationState()
     const schemaErrors = stateProps.schema
       ? await validateStandardSchema(validationState, stateProps.schema)
       : []
@@ -460,13 +464,18 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
 
       if (stateProps.state !== undefined) {
         setValueAtPath(stateProps.state, path, value)
-        return
       }
 
+      const key = pathToKey(path)
       setFormState(
-        'state',
-        produce((currentState) => {
-          setValueAtPath(currentState, path, value)
+        'fields',
+        produce((fields) => {
+          const current = fields[key]
+          if (current) {
+            fields[key] = { ...current, value }
+          } else {
+            fields[key] = createFieldEntry({ key, path: [...path] }, {}, value)
+          }
         }),
       )
     },
@@ -508,7 +517,7 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
         return
       }
 
-      submitEvent.data = getValidationState()
+      submitEvent.data = buildValidationState()
       await eventProps.onSubmit?.(submitEvent)
       setFormState(
         'fields',

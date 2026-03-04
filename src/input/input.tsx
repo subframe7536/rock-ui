@@ -32,7 +32,6 @@ import {
 type InputStyleVariantProps = Pick<InputVariantProps, 'size' | 'variant' | 'highlight'>
 
 export type InputValue = string | number | undefined
-export type InputChangeValue = InputValue | null
 
 type InputSlots = 'root' | 'input' | 'leading' | 'trailing'
 
@@ -62,7 +61,7 @@ export interface InputBaseProps
   loading?: boolean
   loadingIcon?: IconName
   modelModifiers?: ModelModifiers
-  onValueChange?: (value: InputChangeValue) => void
+  onValueChange?: (value: InputValue) => void
   onInput?: JSX.EventHandlerUnion<HTMLInputElement, InputEvent>
   onChange?: JSX.EventHandlerUnion<HTMLInputElement, Event>
   onBlur?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
@@ -110,11 +109,12 @@ export function Input(props: InputProps): JSX.Element {
       highlight: styleProps.highlight,
       disabled: formProps.disabled,
     }),
-    {
+    () => ({
       deferInputValidation: true,
-      defaultId: generatedId,
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue: styleProps.defaultValue || '',
+    }),
   )
 
   let inputEl: HTMLInputElement | undefined
@@ -170,7 +170,7 @@ export function Input(props: InputProps): JSX.Element {
   const hasTrailing = createMemo(() => Boolean(resolvedTrailing()))
 
   function updateInputValue(value: string | null | undefined): void {
-    const nextValue = applyInputModifiers<InputChangeValue>(value, formProps.modelModifiers, {
+    const nextValue = applyInputModifiers<InputValue>(value, formProps.modelModifiers, {
       number: baseProps.type === 'number',
     })
 
@@ -268,7 +268,7 @@ export function Input(props: InputProps): JSX.Element {
         id={field.id()}
         ref={(element) => (inputEl = element)}
         type={baseProps.type}
-        value={formProps.value || styleProps.defaultValue}
+        value={formProps.value ?? styleProps.defaultValue}
         name={field.name()}
         placeholder={baseProps.placeholder}
         required={formProps.required}

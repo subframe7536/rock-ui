@@ -75,6 +75,7 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
   )
 
   const generatedId = useId(() => formProps.id, 'checkbox')
+
   const field = useFormField(
     () => ({
       id: formProps.id,
@@ -82,16 +83,21 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
       size: styleProps.size,
       disabled: formProps.disabled,
     }),
-    {
-      get bind() {
-        return formProps.formFieldBind
-      },
-      defaultId: generatedId,
+    () => ({
+      bind: formProps.formFieldBind,
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue:
+        formProps.formFieldBind === false ? undefined : restProps.defaultChecked || false,
+    }),
   )
 
   function onChange(nextChecked: boolean): void {
+    if (formProps.formFieldBind === false) {
+      formProps.onChange?.(nextChecked)
+      return
+    }
+
     field.setFormValue(nextChecked)
     formProps.onChange?.(nextChecked)
     field.emit('change')

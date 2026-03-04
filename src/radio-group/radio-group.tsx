@@ -10,7 +10,7 @@ import type {
   FormRequiredOption,
   FormValueOptions,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options'
+import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-options'
 import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
@@ -103,7 +103,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
 
   const [formProps, collectionProps, styleProps, restProps] = splitProps(
     merged as RadioGroupProps,
-    [...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS],
+    [...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS, 'onChange'],
     ['legend', 'items'],
     ['variant', 'indicator', 'orientation', 'size', 'classes'],
   )
@@ -116,11 +116,12 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
       size: styleProps.size,
       disabled: formProps.disabled,
     }),
-    {
+    () => ({
       bind: false,
-      defaultId: groupId,
+      defaultId: groupId(),
       defaultSize: 'md',
-    },
+      initialValue: formProps.defaultValue || '',
+    }),
   )
 
   const legendId = createMemo(() => `${groupId()}-legend`)
@@ -165,7 +166,10 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
     <KobalteRadioGroup.Root
       id={groupId()}
       name={field.name()}
+      value={formProps.value}
+      defaultValue={formProps.defaultValue}
       disabled={field.disabled()}
+      required={formProps.required}
       orientation={styleProps.orientation}
       onChange={onChange}
       data-slot="root"
@@ -191,7 +195,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
             class={radioGroupLegendVariants(
               {
                 size: field.size(),
-                required: restProps.required,
+                required: formProps.required,
               },
               styleProps.classes?.legend,
             )}

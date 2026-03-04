@@ -113,11 +113,12 @@ export function Textarea(props: TextareaProps): JSX.Element {
       highlight: styleProps.highlight,
       disabled: formProps.disabled,
     }),
-    {
+    () => ({
       deferInputValidation: true,
-      defaultId: generatedId,
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue: styleProps.defaultValue || '',
+    }),
   )
 
   let textareaEl: HTMLTextAreaElement | undefined
@@ -265,7 +266,7 @@ export function Textarea(props: TextareaProps): JSX.Element {
         id={field.id()}
         ref={(element) => (textareaEl = element)}
         name={field.name()}
-        value={formProps.value || styleProps.defaultValue}
+        value={formProps.value ?? styleProps.defaultValue}
         rows={layoutProps.rows ?? 3}
         placeholder={layoutProps.placeholder}
         required={formProps.required}

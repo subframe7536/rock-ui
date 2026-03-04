@@ -70,10 +70,11 @@ export function Switch(props: SwitchProps): JSX.Element {
       size: styleProps.size,
       disabled: formProps.disabled || displayProps.loading,
     }),
-    {
-      defaultId: generatedId,
+    () => ({
+      defaultId: generatedId(),
       defaultSize: 'md',
-    },
+      initialValue: restProps.defaultChecked || false,
+    }),
   )
 
   function onChange(nextChecked: boolean): void {
