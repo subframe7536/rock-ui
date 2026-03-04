@@ -1,11 +1,12 @@
 import { fireEvent, render, waitFor } from '@solidjs/testing-library'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { Form } from '../form'
 import { useFormContext } from '../form/form-context'
 import { RadioGroup } from '../radio-group'
 
 import { FormField } from './form-field'
+import type { FormFieldRenderProps } from './form-field'
 import { useFormField } from './form-field-context'
 
 function FieldControl(props: {
@@ -278,5 +279,41 @@ describe('FormField', () => {
     await waitFor(() => {
       expect(screen.getByText('Email required')).not.toBeNull()
     })
+  })
+
+  test('supports children render prop with error injection', async () => {
+    const state = { value: '' }
+    const renderChildren = vi.fn((props: FormFieldRenderProps) => (
+      <>
+        <output data-testid="field-render-error">{String(props.error ?? '')}</output>
+        <FieldControl state={state} />
+      </>
+    ))
+
+    const screen = render(() => (
+      <Form state={state} validate={() => [{ name: 'value', message: 'Error message' }]}>
+        <FormField name="value" label="Value">
+          {renderChildren}
+        </FormField>
+      </Form>
+    ))
+
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('field-render-error').textContent).toBe('Error message')
+    })
+
+    expect(renderChildren).toHaveBeenCalled()
+    expect(renderChildren.mock.calls.some(([props]) => props?.error === 'Error message')).toBe(true)
+  })
+
+  test('supports children render prop without params', () => {
+    const renderChildren = vi.fn(() => <div data-testid="field-no-arg-children">No args</div>)
+
+    const screen = render(() => <FormField>{renderChildren}</FormField>)
+
+    expect(screen.getByTestId('field-no-arg-children')).not.toBeNull()
+    expect(renderChildren).toHaveBeenCalled()
   })
 })

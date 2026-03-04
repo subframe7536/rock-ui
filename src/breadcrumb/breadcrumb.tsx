@@ -85,11 +85,16 @@ export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
       >
         <For each={items()}>
           {(item, index) => {
-            const isLast = () => index() === items().length - 1
-            const isCurrent = () => item.active ?? isLast()
-            const isDisabled = () => Boolean(item.disabled || isCurrent())
-            const href = () => item.to ?? item.href
-            const linkHref = () => (isDisabled() ? undefined : href())
+            const isLast = createMemo(() => index() === items().length - 1)
+            const isCurrent = createMemo(() => item.active ?? isLast())
+            const isDisabled = createMemo(() => Boolean(item.disabled || isCurrent()))
+            const href = createMemo(() => {
+              const defaultHref = item.to ?? item.href
+              if (merged.itemRender) {
+                return defaultHref
+              }
+              return isDisabled() ? undefined : defaultHref
+            })
 
             return (
               <>
@@ -109,7 +114,7 @@ export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
                     variant="ghost"
                     size={merged.size}
                     role="link"
-                    href={merged.itemRender ? href() : linkHref()}
+                    href={href()}
                     target={item.target}
                     rel={item.rel}
                     aria-current={isCurrent() ? 'page' : undefined}

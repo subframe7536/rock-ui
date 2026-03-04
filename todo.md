@@ -15,7 +15,7 @@
 - [x] refactor form state with `createStore`
 - [x] add `Accordion`
 - [x] cleanup form system and test standard schema with `valibot`
-- [ ] remove context bridge in select/file-upload, migrate custom render usage from function to jsx for fine grain update, reuse parent components's props first
+- [x] remove context bridge in select/file-upload, migrate custom render usage from function to jsx for fine grain update, reuse parent components's props first
 - [ ] bug: uncontrolled switch in demo does not work
 - [ ] bug: input number horizen does not work
 - [ ] bug: slider controlled demo does not trigger hover ring, all button hover should become pointer cursor

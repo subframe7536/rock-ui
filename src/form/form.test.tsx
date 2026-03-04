@@ -11,7 +11,7 @@ import { RadioGroup } from '../radio-group'
 import { Select } from '../select'
 import type { SelectOption } from '../select/select'
 
-import type { FormSubmitEvent } from './form'
+import type { FormRenderProps, FormSubmitEvent } from './form'
 import { Form } from './form'
 import { useFormContext } from './form-context'
 
@@ -275,6 +275,59 @@ describe('Form', () => {
     expect((screen.container.querySelector('form') as HTMLFormElement).className).toContain(
       'root-override',
     )
+  })
+
+  test('supports children render prop with errors/loading props', async () => {
+    const state: TestState = { value: '' }
+    const snapshots: Array<{ loading: boolean; errors: string[] }> = []
+    const validate = async (currentState: TestState | undefined) => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10)
+      })
+
+      if (currentState?.value) {
+        return []
+      }
+
+      return [{ name: 'value', message: 'Required value' }]
+    }
+
+    const screen = render(() => (
+      <Form state={state} validate={validate}>
+        {(props: FormRenderProps) => {
+          snapshots.push({
+            loading: props.loading,
+            errors: props.errors.map((error) => error.message),
+          })
+
+          return <button type="submit">Submit</button>
+        }}
+      </Form>
+    ))
+
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
+
+    await waitFor(() => {
+      expect(snapshots.some((snapshot) => snapshot.loading)).toBe(true)
+    })
+
+    await waitFor(() => {
+      expect(snapshots.some((snapshot) => snapshot.errors.includes('Required value'))).toBe(true)
+    })
+  })
+
+  test('supports children render prop without params', () => {
+    const state: TestState = { value: '' }
+    const noArgChildren = vi.fn(() => <div data-testid="no-arg-children">No args</div>)
+
+    const screen = render(() => (
+      <Form state={state} validate={() => []}>
+        {noArgChildren}
+      </Form>
+    ))
+
+    expect(screen.getByTestId('no-arg-children')).not.toBeNull()
+    expect(noArgChildren).toHaveBeenCalled()
   })
 
   test('exposes touched/dirty/focused/validating field runtime state', async () => {

@@ -47,5 +47,4 @@ export interface OverlayMenuSharedItemRenderContext<TItem> {
   depth: number
   isCheckbox: boolean
   hasChildren: boolean
-  defaultItem: JSX.Element
 }

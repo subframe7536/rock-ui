@@ -170,9 +170,7 @@ export function Input(props: InputProps): JSX.Element {
   const hasTrailing = createMemo(() => Boolean(resolvedTrailing()))
 
   function updateInputValue(value: string | null | undefined): void {
-    const nextValue = applyInputModifiers<InputValue>(value, formProps.modelModifiers, {
-      number: baseProps.type === 'number',
-    })
+    const nextValue = applyInputModifiers<InputValue>(value, formProps.modelModifiers)
 
     field.setFormValue(nextValue)
     formProps.onValueChange?.(nextValue)

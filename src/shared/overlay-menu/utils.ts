@@ -18,7 +18,7 @@ export type OverlayMenuPlacement =
 
 export type OverlayMenuItems<TItem> = TItem[] | TItem[][]
 
-export type OverlayMenuContentSlot = JSX.Element | ((context: { sub: boolean }) => JSX.Element)
+export type OverlayMenuContentSlot = (context: { sub: boolean }) => JSX.Element
 
 export function resolveOverlayMenuSide(placement?: string): OverlayMenuSide {
   if (placement?.startsWith('right')) {
@@ -65,19 +65,4 @@ export function getOverlayMenuTextValue(item: {
   }
 
   return undefined
-}
-
-export function renderOverlayMenuContentSlot(
-  slot: OverlayMenuContentSlot | undefined,
-  sub: boolean,
-): JSX.Element {
-  if (!slot) {
-    return ''
-  }
-
-  if (typeof slot === 'function') {
-    return slot({ sub })
-  }
-
-  return slot
 }

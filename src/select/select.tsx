@@ -4,6 +4,7 @@ import type {
   ComboboxRootItemComponentProps,
   ComboboxRootSectionComponentProps,
 } from '@kobalte/core/combobox'
+import type { ComboboxControlState } from '@kobalte/core/src/combobox/combobox-control.jsx'
 import type { Component, JSX } from 'solid-js'
 import {
   For,
@@ -57,7 +58,6 @@ export interface SelectOption {
   icon?: IconName
   /** Group children. When present, this option acts as a group header. */
   options?: SelectOption[]
-  [key: string]: unknown
 }
 
 export interface SelectFieldNames {
@@ -75,12 +75,9 @@ export interface SelectOptionRenderState {
   isDisabled: boolean
 }
 
-export type SelectOptionRender = (
-  option: SelectOption,
-  state: SelectOptionRenderState,
-) => JSX.Element
+export type SelectOptionRender = (option: SelectOption & SelectOptionRenderState) => JSX.Element
 
-export type SelectTagRender = (option: SelectOption, onClose: () => void) => JSX.Element
+export type SelectTagRender = (option: SelectOption & { onClose: () => void }) => JSX.Element
 
 export type SelectLabelRender = (option: SelectOption) => JSX.Element
 
@@ -513,15 +510,6 @@ export function Select(props: SelectProps): JSX.Element {
     return 'contains'
   })
 
-  // ---- Kobalte context bridge ----
-  // Captured inside the <Combobox> tree via a local component.
-  let kobalteCtx: ReturnType<typeof useComboboxContext> | undefined
-
-  function ContextBridge(): null {
-    kobalteCtx = useComboboxContext()
-    return null
-  }
-
   // ---- Input ref for controlled search ----
   let inputRef: HTMLInputElement | undefined
 
@@ -816,74 +804,61 @@ export function Select(props: SelectProps): JSX.Element {
   // This prevents Tab from retriggering the menu via FocusScope's delayed
   // unmount-auto-focus.
 
-  function renderItemLabel(option: SelectOption, fallbackLabel: JSX.Element): JSX.Element {
-    return (
-      <Combobox.ItemLabel
-        data-slot="itemLabel"
-        class={cn('col-start-1 truncate', styleProps.classes?.itemLabel)}
-      >
-        <Show when={renderDisplayProps.labelRender} fallback={fallbackLabel}>
-          {renderDisplayProps.labelRender!(option)}
-        </Show>
-      </Combobox.ItemLabel>
-    )
-  }
-
-  function renderItemDescription(option: SelectOption): JSX.Element {
-    return (
-      <Combobox.ItemDescription
-        data-slot="itemDescription"
-        class={cn('col-start-1 text-xs text-muted-foreground', styleProps.classes?.itemDescription)}
-      >
-        {option.description}
-      </Combobox.ItemDescription>
-    )
-  }
-
-  function renderItemIndicator(indicatorIcon: IconName): JSX.Element {
-    return (
-      <Combobox.ItemIndicator
-        data-slot="itemTrailing"
-        class={cn(
-          'col-start-2 inline-flex items-center justify-center text-sm',
-          styleProps.classes?.itemTrailing,
-        )}
-      >
-        <Icon name={indicatorIcon} />
-      </Combobox.ItemIndicator>
-    )
-  }
-
-  function renderItemContent(params: {
+  function SelectOptionRenderNode(props: {
     option: SelectOption
     state: SelectOptionRenderState
     indicatorIcon: IconName
     fallbackLabel: JSX.Element
   }): JSX.Element {
+    function ItemLabel(): JSX.Element {
+      return (
+        <Combobox.ItemLabel
+          data-slot="itemLabel"
+          class={cn('col-start-1 truncate', styleProps.classes?.itemLabel)}
+        >
+          <Show when={renderDisplayProps.labelRender} fallback={props.fallbackLabel}>
+            {renderDisplayProps.labelRender!(props.option)}
+          </Show>
+        </Combobox.ItemLabel>
+      )
+    }
     return (
       <Show
-        when={renderDisplayProps.optionRender}
-        fallback={
-          <>
-            <Show
-              when={params.option.icon}
-              fallback={renderItemLabel(params.option, params.fallbackLabel)}
-            >
-              {(icon) => (
-                <span class="flex gap-2 col-start-1 items-center">
-                  <Icon name={icon()} />
-                  {renderItemLabel(params.option, params.fallbackLabel)}
-                </span>
-              )}
-            </Show>
-
-            <Show when={params.option.description}>{renderItemDescription(params.option)}</Show>
-
-            {renderItemIndicator(params.indicatorIcon)}
-          </>
-        }
+        when={!renderDisplayProps.optionRender}
+        fallback={renderDisplayProps.optionRender!({ ...props.option, ...props.state })}
       >
-        {renderDisplayProps.optionRender!(params.option, params.state)}
+        <Show when={props.option.icon} fallback={<ItemLabel />}>
+          {(icon) => (
+            <span class="flex gap-2 col-start-1 items-center">
+              <Icon name={icon()} />
+              {<ItemLabel />}
+            </span>
+          )}
+        </Show>
+
+        <Show when={props.option.description}>
+          {(desc) => (
+            <Combobox.ItemDescription
+              data-slot="itemDescription"
+              class={cn(
+                'col-start-1 text-xs text-muted-foreground',
+                styleProps.classes?.itemDescription,
+              )}
+            >
+              {desc()}
+            </Combobox.ItemDescription>
+          )}
+        </Show>
+
+        <Combobox.ItemIndicator
+          data-slot="itemTrailing"
+          class={cn(
+            'col-start-2 inline-flex items-center justify-center text-sm',
+            styleProps.classes?.itemTrailing,
+          )}
+        >
+          <Icon name={props.indicatorIcon} />
+        </Combobox.ItemIndicator>
       </Show>
     )
   }
@@ -911,12 +886,12 @@ export function Select(props: SelectProps): JSX.Element {
         onPointerDown={(e) => e.preventDefault()}
         class={selectItemVariants({ size: field.size() }, styleProps.classes?.item)}
       >
-        {renderItemContent({
-          option: raw(),
-          state: renderState(),
-          indicatorIcon: 'icon-check',
-          fallbackLabel: itemProps.item.rawValue.label,
-        })}
+        <SelectOptionRenderNode
+          option={raw()}
+          state={renderState()}
+          indicatorIcon="icon-check"
+          fallbackLabel={itemProps.item.rawValue.label}
+        />
       </Combobox.Item>
     )
   }
@@ -940,14 +915,26 @@ export function Select(props: SelectProps): JSX.Element {
     </Combobox.Section>
   )
 
-  // ---- Shared inner render ----
-  function renderTrigger(state: {
-    selectedOptions: () => NormalizedOption[]
-    remove: (option: NormalizedOption) => void
-    clear: () => void
+  function SelectTriggerIcon(props: Record<string, unknown>): JSX.Element {
+    return (
+      <IconButton
+        data-slot="trigger"
+        name={renderDisplayProps.triggerIcon ?? 'icon-chevron-down'}
+        class={selectTriggerIconVariants({ size: field.size() }, styleProps.classes?.trigger)}
+        loading={renderDisplayProps.loading}
+        loadingIcon={renderDisplayProps.loadingIcon}
+        {...props}
+      />
+    )
+  }
+
+  function SelectTriggerContent(props: {
+    state: ComboboxControlState<NormalizedOption>
   }): JSX.Element {
+    const context = useComboboxContext()
+
     const visibleTags = createMemo(() => {
-      const selected = state.selectedOptions()
+      const selected = props.state.selectedOptions()
 
       if (searchInteractionProps.maxTagCount === undefined) {
         return selected
@@ -960,88 +947,94 @@ export function Select(props: SelectProps): JSX.Element {
       if (searchInteractionProps.maxTagCount === undefined) {
         return 0
       }
-      const total = state.selectedOptions().length
+      const total = props.state.selectedOptions().length
 
       return Math.max(0, total - searchInteractionProps.maxTagCount!)
     })
 
-    const renderInput = (): JSX.Element => (
-      <Combobox.Input
-        ref={(el: HTMLInputElement) => {
-          inputRef = el
-        }}
-        data-slot="input"
-        class={selectInputVariants(
-          {
-            mode: isMultiple() ? (isSearchable() ? 'multiSearch' : 'multiHidden') : 'single',
-            readOnly: !isSearchable() && !isMultiple(),
-            size: field.size(),
-          },
-          styleProps.classes?.input,
-        )}
-        readOnly={!isSearchable()}
-        onClick={() => {
-          // With triggerMode="manual", clicks don't auto-open.
-          // Open explicitly so click-to-open works.
-          if (kobalteCtx && !kobalteCtx.isOpen()) {
-            kobalteCtx.open(false, 'manual')
-          }
-        }}
-        onKeyDown={(e: KeyboardEvent) => {
-          // Flag dismiss keys so handleInputChange skips setCurrentInputText
-          // during Kobalte's synchronous resetInputValue call that follows.
-          if (e.key === 'Escape' || e.key === 'Tab') {
-            isDismissing = true
-            queueMicrotask(() => {
-              isDismissing = false
-            })
-          }
+    function openMenu(): void {
+      if (!context.isOpen()) {
+        context.open(false, 'manual')
+      }
+    }
 
-          // Track Tab so onCloseAutoFocus can let focus move naturally
-          // to the next focusable element instead of pulling it back.
-          if (e.key === 'Tab') {
-            closedByTab = true
-          }
-
-          // Prevent page scroll when navigating with arrow keys.
-          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-            e.preventDefault()
-          }
-
-          if (!isMultiple() || e.key !== 'Enter') {
-            return
-          }
-
-          const input = e.target as HTMLInputElement
-          const text = input.value.trim()
-          if (!text) {
-            return
-          }
-
-          const match = findOptionByText(text)
-
-          if (match) {
-            // Toggle: remove if already selected, add if not
-            const current = state.selectedOptions()
-            const isSelected = current.some((o) => o.value === match.value)
-            if (isSelected) {
-              handleMultipleChange(current.filter((o) => o.value !== match.value))
-            } else {
-              handleMultipleChange([...current, match])
+    function Input(): JSX.Element {
+      return (
+        <Combobox.Input
+          ref={(el: HTMLInputElement) => {
+            inputRef = el
+          }}
+          data-slot="input"
+          class={selectInputVariants(
+            {
+              mode: isMultiple() ? (isSearchable() ? 'multiSearch' : 'multiHidden') : 'single',
+              readOnly: !isSearchable() && !isMultiple(),
+              size: field.size(),
+            },
+            styleProps.classes?.input,
+          )}
+          readOnly={!isSearchable()}
+          onClick={() => {
+            // With triggerMode="manual", clicks don't auto-open.
+            // Open explicitly so click-to-open works.
+            openMenu()
+          }}
+          onKeyDown={(e: KeyboardEvent) => {
+            // Flag dismiss keys so handleInputChange skips setCurrentInputText
+            // during Kobalte's synchronous resetInputValue call that follows.
+            if (e.key === 'Escape' || e.key === 'Tab') {
+              isDismissing = true
+              queueMicrotask(() => {
+                isDismissing = false
+              })
             }
-            input.value = ''
-            setCurrentInputText('')
-            handleInputChange('')
-          } else if (searchInteractionProps.allowCreate) {
-            createTag(text)
-          }
 
-          e.preventDefault()
-        }}
-        onFocus={() => field.emit('focus')}
-        onBlur={() => field.emit('blur')}
-      />
-    )
+            // Track Tab so onCloseAutoFocus can let focus move naturally
+            // to the next focusable element instead of pulling it back.
+            if (e.key === 'Tab') {
+              closedByTab = true
+            }
+
+            // Prevent page scroll when navigating with arrow keys.
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              e.preventDefault()
+            }
+
+            if (!isMultiple() || e.key !== 'Enter') {
+              return
+            }
+
+            const input = e.target as HTMLInputElement
+            const text = input.value.trim()
+            if (!text) {
+              return
+            }
+
+            const match = findOptionByText(text)
+
+            if (match) {
+              // Toggle: remove if already selected, add if not
+              const current = props.state.selectedOptions()
+              const isSelected = current.some((o) => o.value === match.value)
+              if (isSelected) {
+                handleMultipleChange(current.filter((o) => o.value !== match.value))
+              } else {
+                handleMultipleChange([...current, match])
+              }
+              input.value = ''
+              setCurrentInputText('')
+              handleInputChange('')
+            } else if (searchInteractionProps.allowCreate) {
+              createTag(text)
+            }
+
+            e.preventDefault()
+          }}
+          onFocus={() => field.emit('focus')}
+          onBlur={() => field.emit('blur')}
+        />
+      )
+    }
 
     return (
       <>
@@ -1057,7 +1050,7 @@ export function Select(props: SelectProps): JSX.Element {
         </Show>
 
         {/* Multiple mode: tags + input in one flex-wrap container */}
-        <Show when={isMultiple()} fallback={renderInput()}>
+        <Show when={isMultiple()} fallback={<Input />}>
           <div
             data-slot="tagsContainer"
             class={cn(
@@ -1069,21 +1062,22 @@ export function Select(props: SelectProps): JSX.Element {
               inputRef?.focus()
               // With triggerMode="manual", focus alone won't open.
               // Open explicitly so clicking the tags area opens the dropdown.
-              if (kobalteCtx && !kobalteCtx.isOpen()) {
-                kobalteCtx.open(false, 'manual')
-              }
+              openMenu()
             }}
           >
-            <Show when={!isSearchable() && state.selectedOptions().length === 0}>
+            <Show when={!isSearchable() && props.state.selectedOptions().length === 0}>
               <span class="text-sm text-muted-foreground px-1">
                 {renderDisplayProps.placeholder}
               </span>
             </Show>
             <For each={visibleTags()}>
-              {(option) => (
-                <Show
-                  when={renderDisplayProps.tagRender}
-                  fallback={
+              {(option) => {
+                const onClose = () => props.state.remove(option)
+                return (
+                  <Show
+                    when={!renderDisplayProps.tagRender}
+                    fallback={renderDisplayProps.tagRender!({ ...option.raw, onClose })}
+                  >
                     <span
                       data-slot="tag"
                       class={selectTagVariants({ size: field.size() }, styleProps.classes?.tag)}
@@ -1096,15 +1090,13 @@ export function Select(props: SelectProps): JSX.Element {
                         tabIndex={-1}
                         onClick={(e) => {
                           e.stopPropagation()
-                          state.remove(option)
+                          onClose()
                         }}
                       />
                     </span>
-                  }
-                >
-                  {renderDisplayProps.tagRender!(option.raw, () => state.remove(option))}
-                </Show>
-              )}
+                  </Show>
+                )
+              }}
             </For>
 
             <Show when={overflowCount() > 0}>
@@ -1116,12 +1108,12 @@ export function Select(props: SelectProps): JSX.Element {
               </span>
             </Show>
 
-            {renderInput()}
+            <Input />
           </div>
         </Show>
 
         {/* Clear button */}
-        <Show when={searchInteractionProps.allowClear && state.selectedOptions().length > 0}>
+        <Show when={searchInteractionProps.allowClear && props.state.selectedOptions().length > 0}>
           <IconButton
             name="icon-close"
             data-slot="clear"
@@ -1129,25 +1121,50 @@ export function Select(props: SelectProps): JSX.Element {
             tabIndex={-1}
             onClick={(e) => {
               e.stopPropagation()
-              handleClear(state.clear)
+              handleClear(props.state.clear)
             }}
           />
         </Show>
 
         {/* Trigger icon */}
-        <Combobox.Trigger
-          as={(props: Record<string, any>) => (
-            <IconButton
-              data-slot="trigger"
-              name={renderDisplayProps.triggerIcon ?? 'icon-chevron-down'}
-              class={selectTriggerIconVariants({ size: field.size() }, styleProps.classes?.trigger)}
-              loading={renderDisplayProps.loading}
-              loadingIcon={renderDisplayProps.loadingIcon}
-              {...props}
-            />
-          )}
-        />
+        <Combobox.Trigger as={SelectTriggerIcon} />
       </>
+    )
+  }
+
+  function SelectEmptyNode(): JSX.Element {
+    const context = useComboboxContext()
+
+    return (
+      <Show
+        when={typeof renderDisplayProps.emptyRender === 'function'}
+        fallback={
+          <div
+            data-slot="empty"
+            class={cn('p-2 text-center text-muted-foreground text-sm', styleProps.classes?.empty)}
+          >
+            {typeof renderDisplayProps.emptyRender === 'string'
+              ? renderDisplayProps.emptyRender
+              : 'No options'}
+          </div>
+        }
+      >
+        {(renderDisplayProps.emptyRender as Exclude<SelectEmptyRender, string>)({
+          inputValue: currentInputText(),
+          multiple: isMultiple(),
+          hasMatches: hasMatches(),
+          selectedValues: [...selectedValueSet()].map((value) => {
+            const option = findOptionByValue(value)
+            return option ? (option.raw.value ?? option.value) : value
+          }) as SelectValue[],
+          isAtMaxCount:
+            isMultiple() && searchInteractionProps.maxCount !== undefined
+              ? selectedValueSet().size >= searchInteractionProps.maxCount
+              : false,
+          create: (value?: string): boolean => createTag(value),
+          close: () => context.close(),
+        })}
+      </Show>
     )
   }
 
@@ -1181,40 +1198,7 @@ export function Select(props: SelectProps): JSX.Element {
             when={hasMatches()}
             fallback={
               /* Empty state */
-              <Show
-                when={typeof renderDisplayProps.emptyRender === 'function'}
-                fallback={
-                  <div
-                    data-slot="empty"
-                    class={cn(
-                      'p-2 text-center text-muted-foreground text-sm',
-                      styleProps.classes?.empty,
-                    )}
-                  >
-                    {typeof renderDisplayProps.emptyRender === 'string'
-                      ? renderDisplayProps.emptyRender
-                      : 'No options'}
-                  </div>
-                }
-              >
-                {(renderDisplayProps.emptyRender as (ctx: SelectEmptyRenderContext) => JSX.Element)(
-                  {
-                    inputValue: currentInputText(),
-                    multiple: isMultiple(),
-                    hasMatches: hasMatches(),
-                    selectedValues: [...selectedValueSet()].map((v) => {
-                      const opt = findOptionByValue(v)
-                      return opt ? (opt.raw.value ?? opt.value) : v
-                    }) as SelectValue[],
-                    isAtMaxCount:
-                      isMultiple() && searchInteractionProps.maxCount !== undefined
-                        ? selectedValueSet().size >= searchInteractionProps.maxCount
-                        : false,
-                    create: (value?: string): boolean => createTag(value),
-                    close: () => kobalteCtx?.close(),
-                  },
-                )}
-              </Show>
+              <SelectEmptyNode />
             }
           >
             <Show
@@ -1297,7 +1281,6 @@ export function Select(props: SelectProps): JSX.Element {
       {...restProps}
       overflowPadding={-2}
     >
-      <ContextBridge />
       <Combobox.Control<NormalizedOption>
         data-slot="base"
         data-invalid={field.invalid() ? '' : undefined}
@@ -1311,7 +1294,7 @@ export function Select(props: SelectProps): JSX.Element {
           styleProps.classes?.base,
         )}
       >
-        {(state) => renderTrigger(state)}
+        {(state) => <SelectTriggerContent state={state} />}
       </Combobox.Control>
 
       {renderContent()}

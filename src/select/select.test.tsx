@@ -5,7 +5,7 @@ import { Form } from '../form'
 import { FormField } from '../form-field'
 
 import { Select } from './select'
-import type { SelectEmptyRenderContext, SelectOption, SelectOptionRenderState } from './select'
+import type { SelectEmptyRenderContext, SelectOptionRender } from './select'
 
 const FRUITS = [
   { label: 'Apple', value: 'apple' },
@@ -88,6 +88,19 @@ describe('Select - single mode', () => {
     const input = screen.getByRole('combobox')
     expect(input).not.toBeNull()
     expect(input.getAttribute('placeholder')).toBe('Pick a fruit')
+  })
+
+  test('opens dropdown when combobox input is clicked', async () => {
+    const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
+    const input = screen.getByRole('combobox')
+
+    expect(queryBody('[data-slot="content"]')).toBeNull()
+
+    await fireEvent.click(input)
+
+    await waitFor(() => {
+      expect(queryBody('[data-slot="content"]')).not.toBeNull()
+    })
   })
 
   test('shows options when opened', () => {
@@ -440,6 +453,22 @@ describe('Select - groups', () => {
 })
 
 describe('Select - render hooks', () => {
+  test('uses labelRender for item label rendering', () => {
+    render(() => (
+      <Select
+        options={FRUITS}
+        defaultOpen
+        labelRender={(option) => (
+          <span data-testid={`custom-label-${String(option.value)}`}>{option.label}</span>
+        )}
+        placeholder="Pick"
+      />
+    ))
+
+    expect(queryBody('[data-testid="custom-label-apple"]')).not.toBeNull()
+    expect(queryBody('[data-testid="custom-label-banana"]')).not.toBeNull()
+  })
+
   test('uses optionRender for custom item rendering', () => {
     render(() => (
       <Select
@@ -455,22 +484,22 @@ describe('Select - render hooks', () => {
   })
 
   test('passes selected state for normal items to optionRender', () => {
-    const renderCalls: Array<{ option: SelectOption; state: SelectOptionRenderState }> = []
+    const renderCalls: Array<Parameters<SelectOptionRender>[0]> = []
 
     render(() => (
       <Select
         options={FRUITS}
         value="apple"
         defaultOpen
-        optionRender={(option, state) => {
-          renderCalls.push({ option, state })
-          return <span data-testid="custom-option">{option.label}</span>
+        optionRender={(props) => {
+          renderCalls.push(props)
+          return <span data-testid="custom-option">{props.label}</span>
         }}
         placeholder="Pick"
       />
     ))
 
-    const appleState = renderCalls.find((call) => call.option.value === 'apple')?.state
+    const appleState = renderCalls.find((call) => call.value === 'apple')
     expect(appleState).toBeDefined()
     expect(appleState?.isSelected).toBe(true)
   })
@@ -588,10 +617,10 @@ describe('Select - render hooks', () => {
         multiple
         options={FRUITS}
         value={['apple']}
-        tagRender={(option, onClose) => (
+        tagRender={(props) => (
           <span data-testid="custom-tag">
-            {option.label}
-            <button onClick={onClose}>x</button>
+            {props.label}
+            <button onClick={props.onClose}>x</button>
           </span>
         )}
         placeholder="Pick"
@@ -793,6 +822,36 @@ describe('Select - enriched emptyRender context', () => {
       expect(capturedContext?.selectedValues).toEqual(['apple'])
       expect(capturedContext?.isAtMaxCount).toBe(false)
       expect(typeof capturedContext?.close).toBe('function')
+    })
+  })
+
+  test('close from emptyRender context closes dropdown content', async () => {
+    const screen = render(() => (
+      <Select
+        showSearch
+        options={FRUITS}
+        defaultOpen
+        emptyRender={(ctx) => (
+          <button data-testid="close-from-empty" onClick={() => ctx.close()}>
+            Close
+          </button>
+        )}
+        placeholder="Search..."
+      />
+    ))
+
+    const input = screen.getByRole('combobox') as HTMLInputElement
+    await fireEvent.input(input, { target: { value: 'zzzzz' } })
+
+    await waitFor(() => {
+      expect(queryBody('[data-testid="close-from-empty"]')).not.toBeNull()
+    })
+
+    await fireEvent.click(queryBody('[data-testid="close-from-empty"]') as HTMLElement)
+
+    await waitFor(() => {
+      expect(input.getAttribute('aria-expanded')).toBe('false')
+      expect(queryBody('[data-slot="content"]')?.hasAttribute('data-closed')).toBe(true)
     })
   })
 })

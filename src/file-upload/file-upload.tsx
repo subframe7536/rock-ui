@@ -278,7 +278,6 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
   )
 
   let hiddenInputEl: HTMLInputElement | undefined
-  let fileFieldContext: ReturnType<typeof KobalteFileField.useFileFieldContext> | undefined
 
   const [selectedFiles, setSelectedFiles] = createSignal<File[]>([])
   const [dragging, setDragging] = createSignal(false)
@@ -291,11 +290,6 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
 
     return formProps.multiple ? Number.POSITIVE_INFINITY : 1
   })
-
-  function FileFieldContextBridge(): null {
-    fileFieldContext = KobalteFileField.useFileFieldContext()
-    return null
-  }
 
   function resolveValue(files: File[]): FileUploadValue {
     if (formProps.multiple) {
@@ -353,17 +347,38 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
 
   function removeFileAt(index: number): void {
     const currentFiles = selectedFiles()
-    const targetFile = currentFiles[index]
-
-    if (!targetFile) {
+    if (!currentFiles[index]) {
       return
     }
-
-    fileFieldContext?.removeFile(targetFile)
 
     const nextFiles = currentFiles.filter((_, fileIndex) => fileIndex !== index)
     setSelectedFiles(nextFiles)
     emitValueChange(nextFiles)
+  }
+
+  function FileRemoveButton(props: { file: File; index: number }): JSX.Element {
+    const fileFieldContext = KobalteFileField.useFileFieldContext()
+
+    return (
+      <button
+        type="button"
+        aria-label={`Remove ${props.file.name}`}
+        data-slot="fileRemove"
+        class={fileUploadRemoveVariants(
+          {
+            size: field.size(),
+          },
+          styleProps.classes?.fileRemove,
+        )}
+        disabled={field.disabled()}
+        onClick={() => {
+          fileFieldContext.removeFile(props.file)
+          removeFileAt(props.index)
+        }}
+      >
+        <Icon name="icon-close" />
+      </button>
+    )
   }
 
   createEffect(() => {
@@ -410,7 +425,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
     }
   })
 
-  function renderBaseContent(): JSX.Element {
+  function Content(): JSX.Element {
     return (
       <div
         data-slot="wrapper"
@@ -463,36 +478,6 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
     )
   }
 
-  function renderFilePreview(file: File): JSX.Element {
-    const previewUrl = previewUrls().get(file)
-
-    return (
-      <span
-        data-slot="filePreview"
-        class={fileUploadPreviewVariants(
-          {
-            size: field.size(),
-          },
-          styleProps.classes?.filePreview,
-        )}
-      >
-        <Show
-          when={previewUrl}
-          fallback={
-            <Icon
-              name={displayProps.fileIcon}
-              class={fileUploadIconVariants({
-                size: field.size(),
-              })}
-            />
-          }
-        >
-          {(url) => <img src={url()} alt={file.name} class="size-full object-cover" />}
-        </Show>
-      </span>
-    )
-  }
-
   return (
     <KobalteFileField.Root
       as={formProps.as}
@@ -514,8 +499,6 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       )}
       {...restProps}
     >
-      <FileFieldContextBridge />
-
       <Show
         when={displayProps.dropzone}
         fallback={
@@ -535,7 +518,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
             onFocus={() => field.emit('focus')}
             onBlur={() => field.emit('blur')}
           >
-            {renderBaseContent()}
+            <Content />
           </KobalteFileField.Trigger>
         }
       >
@@ -571,7 +554,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
             processIncomingFiles(files)
           }}
         >
-          {renderBaseContent()}
+          <Content />
         </KobalteFileField.Dropzone>
       </Show>
 
@@ -609,7 +592,29 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                   styleProps.classes?.file,
                 )}
               >
-                {renderFilePreview(file)}
+                <span
+                  data-slot="filePreview"
+                  class={fileUploadPreviewVariants(
+                    {
+                      size: field.size(),
+                    },
+                    styleProps.classes?.filePreview,
+                  )}
+                >
+                  <Show
+                    when={previewUrls().get(file)}
+                    fallback={
+                      <Icon
+                        name={displayProps.fileIcon}
+                        class={fileUploadIconVariants({
+                          size: field.size(),
+                        })}
+                      />
+                    }
+                  >
+                    {(url) => <img src={url()} alt={file.name} class="size-full object-cover" />}
+                  </Show>
+                </span>
 
                 <div
                   data-slot="fileMeta"
@@ -644,21 +649,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  aria-label={`Remove ${file.name}`}
-                  data-slot="fileRemove"
-                  class={fileUploadRemoveVariants(
-                    {
-                      size: field.size(),
-                    },
-                    styleProps.classes?.fileRemove,
-                  )}
-                  disabled={field.disabled()}
-                  onClick={() => removeFileAt(index())}
-                >
-                  <Icon name="icon-close" />
-                </button>
+                <FileRemoveButton file={file} index={index()} />
               </li>
             )}
           </For>

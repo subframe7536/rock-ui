@@ -1,7 +1,6 @@
 import type { JSX, ValidComponent } from 'solid-js'
 import {
   Show,
-  children,
   createEffect,
   createMemo,
   createSignal,
@@ -13,6 +12,7 @@ import { Dynamic } from 'solid-js/web'
 
 import { useFormContext } from '../form/form-context'
 import { pathStartsWith, pathToKey, toFieldPath } from '../form/form-path'
+import { resolveRenderProp } from '../shared/render-prop'
 import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
@@ -224,26 +224,6 @@ export function FormField(props: FormFieldProps): JSX.Element {
     return true
   })
 
-  function NormalizedChildren(): JSX.Element {
-    const resolvedChildren = children(() => {
-      const value = contentProps.children
-
-      if (typeof value !== 'function') {
-        return value
-      }
-
-      if (value.length > 0) {
-        return (value as (props: FormFieldRenderProps) => JSX.Element)({
-          error: resolvedError(),
-        })
-      }
-
-      return (value as () => JSX.Element)()
-    })
-
-    return <>{resolvedChildren()}</>
-  }
-
   return (
     <FormFieldProvider value={fieldContextValue}>
       <Dynamic
@@ -291,7 +271,7 @@ export function FormField(props: FormFieldProps): JSX.Element {
                 <span
                   id={`${ariaId()}-hint`}
                   data-slot="hint"
-                  class={cn('text-muted-foreground', styleProps.classes?.hint)}
+                  class={cn('ms-1 text-muted-foreground', styleProps.classes?.hint)}
                 >
                   {contentProps.hint}
                 </span>
@@ -322,7 +302,9 @@ export function FormField(props: FormFieldProps): JSX.Element {
               : cn(styleProps.classes?.container)
           }
         >
-          <NormalizedChildren />
+          {resolveRenderProp<FormFieldRenderProps>(contentProps.children, () => ({
+            error: resolvedError(),
+          }))}
 
           <Show
             when={fieldProps.error !== false && shouldShowError()}

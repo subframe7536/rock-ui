@@ -26,11 +26,7 @@ import type {
   OverlayMenuSharedItem,
   OverlayMenuSharedItemRenderContext,
 } from './types'
-import {
-  getOverlayMenuTextValue,
-  normalizeOverlayMenuGroups,
-  renderOverlayMenuContentSlot,
-} from './utils'
+import { getOverlayMenuTextValue, normalizeOverlayMenuGroups } from './utils'
 import type { OverlayMenuContentSlot, OverlayMenuItems, OverlayMenuSide } from './utils'
 
 type OverlayMenuColor = NonNullable<OverlayMenuItemVariantProps['color']>
@@ -64,194 +60,211 @@ export function OverlayMenuBaseContent<
     )
   }
 
-  function renderItemNode(item: TItem, depth: number): JSX.Element {
-    const hasChildren = normalizeOverlayMenuGroups(item.children).length > 0
-
-    const itemContent = (isCheckbox: boolean): JSX.Element => {
-      const defaultItem = (
-        <>
-          <Show when={item.icon}>
-            <span
-              data-slot="itemLeading"
-              class={cn(
-                'col-start-1 inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground',
-                props.classes?.itemLeading,
-              )}
-            >
-              <Icon name={item.icon as IconName} />
-            </span>
-          </Show>
-
-          <Show when={item.label || item.description}>
-            <span
-              data-slot="itemWrapper"
-              class={cn('col-start-2 grid gap-0.5', props.classes?.itemWrapper)}
-            >
-              <Show when={item.label}>
-                <span data-slot="itemLabel" class={cn('truncate', props.classes?.itemLabel)}>
-                  {item.label}
-                </span>
-              </Show>
-
-              <Show when={item.description}>
-                <span
-                  data-slot="itemDescription"
-                  class={cn(
-                    'truncate text-muted-foreground text-xs',
-                    props.classes?.itemDescription,
-                  )}
-                >
-                  {item.description}
-                </span>
-              </Show>
-            </span>
-          </Show>
-
+  function RenderItemContent(contentProps: {
+    item: TItem
+    depth: number
+    hasChildren: boolean
+    isCheckbox: boolean
+  }): JSX.Element {
+    return (
+      <Show
+        when={!props.itemRender}
+        fallback={props.itemRender!({
+          item: contentProps.item,
+          depth: contentProps.depth,
+          hasChildren: contentProps.hasChildren,
+          isCheckbox: contentProps.isCheckbox,
+        })}
+      >
+        <Show when={contentProps.item.icon}>
           <span
-            data-slot="itemTrailing"
+            data-slot="itemLeading"
             class={cn(
-              'col-start-3 inline-flex items-center justify-end gap-1.5',
-              props.classes?.itemTrailing,
+              'col-start-1 inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground',
+              props.classes?.itemLeading,
             )}
           >
-            <Show when={hasChildren}>
-              <Icon
-                name={props.submenuIcon}
-                class={cn('text-muted-foreground text-sm', props.classes?.itemSub)}
-              />
+            <Icon name={contentProps.item.icon as IconName} />
+          </span>
+        </Show>
+
+        <Show when={contentProps.item.label || contentProps.item.description}>
+          <span
+            data-slot="itemWrapper"
+            class={cn('col-start-2 grid gap-0.5', props.classes?.itemWrapper)}
+          >
+            <Show when={contentProps.item.label}>
+              <span data-slot="itemLabel" class={cn('truncate', props.classes?.itemLabel)}>
+                {contentProps.item.label}
+              </span>
             </Show>
 
-            <Show when={!hasChildren}>
-              <Kbd
-                size="sm"
-                slotPrefix="item"
-                value={item.kbds}
-                classes={{
-                  root: props.classes?.itemKbds,
-                }}
-              />
-            </Show>
-
-            <Show when={isCheckbox}>
-              <ItemIndicator
-                data-slot="itemIndicator"
-                class={cn(
-                  'inline-flex items-center justify-center text-sm',
-                  props.classes?.itemIndicator,
-                )}
+            <Show when={contentProps.item.description}>
+              <span
+                data-slot="itemDescription"
+                class={cn('truncate text-muted-foreground text-xs', props.classes?.itemDescription)}
               >
-                <Icon name={props.checkedIcon} />
-              </ItemIndicator>
+                {contentProps.item.description}
+              </span>
             </Show>
           </span>
-        </>
-      )
+        </Show>
 
-      return (
-        props.itemRender?.({
-          item,
-          depth,
-          hasChildren,
-          isCheckbox,
-          defaultItem,
-        }) ?? defaultItem
-      )
-    }
+        <span
+          data-slot="itemTrailing"
+          class={cn(
+            'col-start-3 inline-flex items-center justify-end gap-1.5',
+            props.classes?.itemTrailing,
+          )}
+        >
+          <Show when={contentProps.hasChildren}>
+            <Icon
+              name={props.submenuIcon}
+              class={cn('text-muted-foreground text-sm', props.classes?.itemSub)}
+            />
+          </Show>
 
-    if (hasChildren) {
-      const subSide: OverlayMenuSide = props.rootSide === 'left' ? 'left' : 'right'
+          <Show when={!contentProps.hasChildren}>
+            <Kbd
+              size="sm"
+              slotPrefix="item"
+              value={contentProps.item.kbds}
+              classes={{
+                root: props.classes?.itemKbds,
+              }}
+            />
+          </Show>
 
-      return (
-        <Sub open={item.open} defaultOpen={item.defaultOpen} overflowPadding={2}>
+          <Show when={contentProps.isCheckbox}>
+            <ItemIndicator
+              data-slot="itemIndicator"
+              class={cn(
+                'inline-flex items-center justify-center text-sm',
+                props.classes?.itemIndicator,
+              )}
+            >
+              <Icon name={props.checkedIcon} />
+            </ItemIndicator>
+          </Show>
+        </span>
+      </Show>
+    )
+  }
+
+  function RenderItemNode(nodeProps: { item: TItem; depth: number }): JSX.Element {
+    return (
+      <Show
+        when={normalizeOverlayMenuGroups(nodeProps.item.children).length > 0}
+        fallback={
+          <Switch
+            fallback={
+              <Item
+                data-slot="item"
+                textValue={getOverlayMenuTextValue(nodeProps.item)}
+                disabled={nodeProps.item.disabled}
+                onSelect={nodeProps.item.onSelect}
+                class={getItemClass(nodeProps.item, props.classes?.item)}
+              >
+                <RenderItemContent
+                  item={nodeProps.item}
+                  depth={nodeProps.depth}
+                  hasChildren={false}
+                  isCheckbox={false}
+                />
+              </Item>
+            }
+          >
+            <Match when={nodeProps.item.type === 'separator'}>
+              <Separator
+                data-slot="separator"
+                class={cn('mx--1 my-1 h-px b-t-border', props.classes?.separator)}
+              />
+            </Match>
+
+            <Match when={nodeProps.item.type === 'label'}>
+              <GroupLabel
+                data-slot="label"
+                class={cn(
+                  'px-1.5 py-1 font-medium text-muted-foreground text-xs',
+                  props.classes?.label,
+                )}
+              >
+                {nodeProps.item.label}
+              </GroupLabel>
+            </Match>
+
+            <Match when={nodeProps.item.type === 'checkbox'}>
+              <CheckboxItem
+                data-slot="item"
+                textValue={getOverlayMenuTextValue(nodeProps.item)}
+                disabled={nodeProps.item.disabled}
+                checked={nodeProps.item.checked}
+                defaultChecked={nodeProps.item.defaultChecked}
+                onChange={nodeProps.item.onCheckedChange}
+                onSelect={nodeProps.item.onSelect}
+                class={getItemClass(nodeProps.item, props.classes?.item)}
+              >
+                <RenderItemContent
+                  item={nodeProps.item}
+                  depth={nodeProps.depth}
+                  hasChildren={false}
+                  isCheckbox={true}
+                />
+              </CheckboxItem>
+            </Match>
+          </Switch>
+        }
+      >
+        <Sub
+          open={nodeProps.item.open}
+          defaultOpen={nodeProps.item.defaultOpen}
+          overflowPadding={2}
+        >
           <SubTrigger
             data-slot="item"
-            disabled={item.disabled}
-            textValue={getOverlayMenuTextValue(item)}
+            disabled={nodeProps.item.disabled}
+            textValue={getOverlayMenuTextValue(nodeProps.item)}
             class={getItemClass(
-              item,
+              nodeProps.item,
               'data-expanded:(bg-accent text-accent-foreground)',
               props.classes?.item,
             )}
           >
-            {itemContent(false)}
+            <RenderItemContent
+              item={nodeProps.item}
+              depth={nodeProps.depth}
+              hasChildren={true}
+              isCheckbox={false}
+            />
           </SubTrigger>
 
           <SubContent
             data-slot="content"
-            class={overlayMenuContentVariants({ side: subSide, sub: true }, props.classes?.content)}
-          >
-            {renderOverlayMenuContentSlot(props.contentTop, true)}
-
-            {renderGroups(item.children, depth + 1)}
-
-            {renderOverlayMenuContentSlot(props.contentBottom, true)}
-          </SubContent>
-        </Sub>
-      )
-    }
-
-    return (
-      <Switch
-        fallback={
-          <Item
-            data-slot="item"
-            textValue={getOverlayMenuTextValue(item)}
-            disabled={item.disabled}
-            onSelect={item.onSelect}
-            class={getItemClass(item, props.classes?.item)}
-          >
-            {itemContent(false)}
-          </Item>
-        }
-      >
-        <Match when={item.type === 'separator'}>
-          <Separator
-            data-slot="separator"
-            class={cn('-mx-1 my-1 h-px border-t-border', props.classes?.separator)}
-          />
-        </Match>
-
-        <Match when={item.type === 'label'}>
-          <GroupLabel
-            data-slot="label"
-            class={cn(
-              'px-1.5 py-1 font-medium text-muted-foreground text-xs',
-              props.classes?.label,
+            class={overlayMenuContentVariants(
+              { side: props.rootSide === 'left' ? 'left' : 'right', sub: true },
+              props.classes?.content,
             )}
           >
-            {item.label}
-          </GroupLabel>
-        </Match>
-
-        <Match when={item.type === 'checkbox'}>
-          <CheckboxItem
-            data-slot="item"
-            textValue={getOverlayMenuTextValue(item)}
-            disabled={item.disabled}
-            checked={item.checked}
-            defaultChecked={item.defaultChecked}
-            onChange={item.onCheckedChange}
-            onSelect={item.onSelect}
-            class={getItemClass(item, props.classes?.item)}
-          >
-            {itemContent(true)}
-          </CheckboxItem>
-        </Match>
-      </Switch>
+            <Show when={props.contentTop}>{(slot) => slot()({ sub: true })}</Show>
+            <RenderGroups sourceItems={nodeProps.item.children} depth={nodeProps.depth + 1} />
+            <Show when={props.contentBottom}>{(slot) => slot()({ sub: true })}</Show>
+          </SubContent>
+        </Sub>
+      </Show>
     )
   }
 
-  function renderGroups(
-    sourceItems: OverlayMenuItems<TItem> | undefined,
-    depth: number,
-  ): JSX.Element {
-    const source = normalizeOverlayMenuGroups(sourceItems)
-
+  function RenderGroups(groupProps: {
+    sourceItems: OverlayMenuItems<TItem> | undefined
+    depth: number
+  }): JSX.Element {
     return (
-      <For each={source}>
+      <For each={normalizeOverlayMenuGroups(groupProps.sourceItems)}>
         {(group) => (
           <Group data-slot="group" class={cn(props.classes?.group)}>
-            <For each={group}>{(item) => renderItemNode(item, depth)}</For>
+            <For each={group}>
+              {(item) => <RenderItemNode item={item} depth={groupProps.depth} />}
+            </For>
           </Group>
         )}
       </For>
@@ -267,11 +280,9 @@ export function OverlayMenuBaseContent<
           props.classes?.content,
         )}
       >
-        {renderOverlayMenuContentSlot(props.contentTop, false)}
-
-        {renderGroups(props.items, 0)}
-
-        {renderOverlayMenuContentSlot(props.contentBottom, false)}
+        <Show when={props.contentTop}>{(slot) => slot()({ sub: false })}</Show>
+        <RenderGroups sourceItems={props.items} depth={0} />
+        <Show when={props.contentBottom}>{(slot) => slot()({ sub: false })}</Show>
       </props.content>
     </Portal>
   )

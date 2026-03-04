@@ -2,6 +2,7 @@ import type { JSX } from 'solid-js'
 import { splitProps } from 'solid-js'
 import { createStore, produce, reconcile } from 'solid-js/store'
 
+import { resolveRenderProp } from '../shared/render-prop'
 import type { SlotClasses } from '../shared/slot-class'
 import { cn, useId } from '../shared/utils'
 
@@ -123,7 +124,11 @@ function toFieldIdentity(name: string | string[] | undefined): FormFieldIdentity
   }
 }
 
-function createFieldEntry(identity: FormFieldIdentity, meta: FormInputMeta = {}, value?: unknown): FormFieldEntry {
+function createFieldEntry(
+  identity: FormFieldIdentity,
+  meta: FormInputMeta = {},
+  value?: unknown,
+): FormFieldEntry {
   return {
     path: [...identity.path],
     meta: { ...meta },
@@ -485,21 +490,6 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
     },
   }
 
-  function renderChildren(): JSX.Element {
-    if (typeof renderProps.children !== 'function') {
-      return renderProps.children as JSX.Element
-    }
-
-    if (renderProps.children.length > 0) {
-      return (renderProps.children as (props: FormRenderProps) => JSX.Element)({
-        errors: formState.errors,
-        loading: formState.loading,
-      })
-    }
-
-    return (renderProps.children as () => JSX.Element)()
-  }
-
   const onSubmit: JSX.EventHandlerUnion<HTMLFormElement, SubmitEvent> = async (event) => {
     event.preventDefault()
 
@@ -552,7 +542,10 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
         onSubmit={onSubmit}
         {...restProps}
       >
-        {renderChildren()}
+        {resolveRenderProp<FormRenderProps>(renderProps.children, () => ({
+          errors: formState.errors,
+          loading: formState.loading,
+        }))}
       </form>
     </FormProvider>
   )
