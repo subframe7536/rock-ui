@@ -94,7 +94,7 @@ export const SelectDemos = () => {
         <div class="max-w-sm space-y-2">
           <Select
             multiple
-            showSearch
+            search
             options={FRUIT_OPTIONS}
             value={tagValues()}
             onChange={(v) => setTagValues(v as string[])}
@@ -112,7 +112,7 @@ export const SelectDemos = () => {
         <div class="max-w-sm space-y-2">
           <Select
             multiple
-            showSearch
+            search
             loading
             options={FRUIT_OPTIONS}
             value={createTagValues()}
@@ -139,8 +139,7 @@ export const SelectDemos = () => {
         <div class="max-w-sm">
           <Select
             options={FRUIT_OPTIONS}
-            showSearch
-            openOnClick="trigger"
+            search
             leadingIcon="i-lucide-search"
             placeholder="Search fruits..."
           />
@@ -154,7 +153,7 @@ export const SelectDemos = () => {
         <div class="max-w-sm">
           <Select
             options={FRUIT_OPTIONS}
-            openOnClick="trigger"
+            preventAutoOpen
             placeholder="Click trigger icon to open..."
           />
         </div>

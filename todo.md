@@ -28,7 +28,7 @@
 - [x] adjust dropmenu / context menu show up transition
 - [x] polish and cleanup select control / input / input number variants
 - [x] simplify variants
-- [ ] bug: unsearchable select menu open and click trigger does not close the menu
+- [x] bug: unsearchable select menu open and click trigger does not close the menu
 
 # Future
 

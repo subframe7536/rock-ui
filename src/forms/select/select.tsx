@@ -143,7 +143,7 @@ export interface SelectBaseProps
   onChange?: (value: SelectValue | null | SelectValue[]) => void
 
   /** Enable search input. Defaults to `false`. */
-  showSearch?: boolean
+  search?: boolean
   /** Controlled search value. */
   searchValue?: string
   /** Default search value. */
@@ -156,8 +156,8 @@ export interface SelectBaseProps
   filterOption?: boolean | ((inputValue: string, option: SelectOption) => boolean)
   /** Property on option to filter by (default: label). */
   optionFilterProp?: string
-  /** Controls which click target can open the menu. */
-  openOnClick?: 'control' | 'trigger'
+  /** Controls whether click input element can open the menu. */
+  preventAutoOpen?: boolean
 
   /** Show a clear button when a value is selected. */
   allowClear?: boolean
@@ -326,14 +326,14 @@ export function Select(props: SelectProps): JSX.Element {
     [...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS, 'onChange'],
     [
       'multiple',
-      'showSearch',
+      'search',
       'searchValue',
       'defaultSearchValue',
       'onSearch',
       'searchMaxLength',
       'filterOption',
       'optionFilterProp',
-      'openOnClick',
+      'preventAutoOpen',
       'allowClear',
       'onClear',
       'tokenSeparators',
@@ -381,7 +381,7 @@ export function Select(props: SelectProps): JSX.Element {
 
   // ---- Mode-derived booleans ----
   const isMultiple = createMemo(() => Boolean(searchInteractionProps.multiple))
-  const isSearchable = createMemo(() => Boolean(searchInteractionProps.showSearch))
+  const isSearchable = createMemo(() => Boolean(searchInteractionProps.search))
 
   // ---- Dynamically created options (allowCreate) ----
   const [createdTags, setCreatedTags] = createSignal<NormalizedOption[]>([])
@@ -819,7 +819,7 @@ export function Select(props: SelectProps): JSX.Element {
           {(icon) => (
             <span class="flex gap-2 col-start-1 items-center">
               <Icon name={icon()} />
-              {<ItemLabel />}
+              <ItemLabel />
             </span>
           )}
         </Show>
@@ -939,9 +939,11 @@ export function Select(props: SelectProps): JSX.Element {
       return Math.max(0, total - searchInteractionProps.maxTagCount!)
     })
 
-    function openMenu(): void {
+    function openMenu(fail?: () => void): void {
       if (!context.isOpen()) {
         context.open(false, 'manual')
+      } else {
+        fail?.()
       }
     }
 
@@ -973,10 +975,11 @@ export function Select(props: SelectProps): JSX.Element {
             }
           }}
           onClick={() => {
-            if (searchInteractionProps.openOnClick === 'control') {
+            if (!searchInteractionProps.preventAutoOpen) {
               // With triggerMode="manual", clicks don't auto-open.
-              // Open explicitly so click-to-open works.
-              openMenu()
+              // Searchable inputs should open on click, while readonly inputs
+              // keep the existing toggle behavior.
+              openMenu(isSearchable() ? undefined : () => context.close())
             }
           }}
           onKeyDown={(e: KeyboardEvent) => {
@@ -1073,10 +1076,10 @@ export function Select(props: SelectProps): JSX.Element {
             onPointerDown={(e) => {
               e.preventDefault()
               inputRef?.focus()
-              if (searchInteractionProps.openOnClick === 'control') {
+              if (!searchInteractionProps.preventAutoOpen) {
                 // With triggerMode="manual", focus alone won't open.
                 // Open explicitly so clicking the tags area opens the dropdown.
-                openMenu()
+                openMenu(() => context.close())
               }
             }}
           >
@@ -1147,7 +1150,7 @@ export function Select(props: SelectProps): JSX.Element {
           onClick={(event: MouseEvent) => {
             // fireEvent.click doesn't emit pointerdown; provide a click fallback.
             if (!(event.currentTarget as HTMLElement).dataset.pointerType) {
-              openMenu()
+              openMenu(() => context.close())
             }
           }}
         />

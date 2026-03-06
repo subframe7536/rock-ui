@@ -48,7 +48,7 @@ test('uses css variable classes for input sizing across modes', () => {
   expect(singleInput?.className).toContain('var-select-6-2-0.5')
 
   const multiSearch = render(() => (
-    <Select multiple showSearch options={FRUITS} size="lg" placeholder="LG" />
+    <Select multiple search options={FRUITS} size="lg" placeholder="LG" />
   ))
   const multiInput = multiSearch.container.querySelector('[data-slot="input"]')
 
@@ -281,7 +281,7 @@ describe('Select - tag creation', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         tokenSeparators={[',']}
         onChange={onChange}
@@ -304,7 +304,7 @@ describe('Select - tag creation', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         tokenSeparators={[',']}
         onChange={onChange}
@@ -328,7 +328,7 @@ describe('Select - tag creation', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         tokenSeparators={[',']}
         defaultValue={['apple']}
@@ -356,7 +356,7 @@ describe('Select - tag creation', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         onChange={onChange}
@@ -377,7 +377,7 @@ describe('Select - tag creation', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         onChange={onChange}
@@ -396,23 +396,35 @@ describe('Select - tag creation', () => {
 
 describe('Select - search', () => {
   test('input is readonly when showSearch is false', () => {
-    const screen = render(() => <Select options={FRUITS} showSearch={false} placeholder="Pick" />)
+    const screen = render(() => <Select options={FRUITS} search={false} placeholder="Pick" />)
 
     const input = screen.getByRole('combobox') as HTMLInputElement
     expect(input.hasAttribute('readonly')).toBe(true)
   })
 
   test('input is editable when showSearch is true', () => {
-    const screen = render(() => <Select options={FRUITS} showSearch placeholder="Pick" />)
+    const screen = render(() => <Select options={FRUITS} search placeholder="Pick" />)
 
     const input = screen.getByRole('combobox') as HTMLInputElement
     expect(input.hasAttribute('readonly')).toBe(false)
   })
 
+  test('opens menu when searchable input is clicked in control mode', async () => {
+    const screen = render(() => <Select options={FRUITS} search placeholder="Search..." />)
+
+    const input = screen.getByRole('combobox') as HTMLInputElement
+
+    fireEvent.click(input)
+
+    await waitFor(() => {
+      expect(input.getAttribute('aria-expanded')).toBe('true')
+    })
+  })
+
   test('calls onSearch with input value', async () => {
     const onSearch = vi.fn()
     const screen = render(() => (
-      <Select options={FRUITS} showSearch onSearch={onSearch} placeholder="Search..." />
+      <Select options={FRUITS} search onSearch={onSearch} placeholder="Search..." />
     ))
 
     const input = screen.getByRole('combobox') as HTMLInputElement
@@ -423,7 +435,7 @@ describe('Select - search', () => {
 
   test('opens menu when searchable input becomes non-empty in trigger-only mode', async () => {
     const screen = render(() => (
-      <Select options={FRUITS} showSearch openOnClick="trigger" placeholder="Search..." />
+      <Select options={FRUITS} search openOnClick="trigger" placeholder="Search..." />
     ))
     const input = screen.getByRole('combobox') as HTMLInputElement
 
@@ -572,7 +584,7 @@ describe('Select - render hooks', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         emptyRender={(context) => {
@@ -599,7 +611,7 @@ describe('Select - render hooks', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         emptyRender={() => <div data-testid="custom-empty">No match</div>}
@@ -619,7 +631,7 @@ describe('Select - render hooks', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         filterOption={(inputValue, option) => String(option.value ?? '').endsWith(inputValue)}
@@ -647,7 +659,7 @@ describe('Select - render hooks', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         allowCreate
         options={FRUITS}
         defaultOpen
@@ -749,7 +761,7 @@ describe('Select - keyboard and ARIA', () => {
   test('when menu is open in multiple mode, Tab toggles focused option', async () => {
     const onChange = vi.fn()
     const screen = render(() => (
-      <Select multiple options={FRUITS} showSearch onChange={onChange} placeholder="Pick" />
+      <Select multiple options={FRUITS} search onChange={onChange} placeholder="Pick" />
     ))
     const input = screen.getByRole('combobox') as HTMLInputElement
 
@@ -915,7 +927,7 @@ describe('Select - emptyRender string', () => {
     const screen = render(() => (
       <Select
         options={FRUITS}
-        showSearch
+        search
         defaultOpen
         emptyRender="Nothing here!"
         placeholder="Search..."
@@ -934,7 +946,7 @@ describe('Select - emptyRender string', () => {
 
   test('renders default "No options" text when emptyRender is not provided', async () => {
     const screen = render(() => (
-      <Select options={FRUITS} showSearch defaultOpen placeholder="Search..." />
+      <Select options={FRUITS} search defaultOpen placeholder="Search..." />
     ))
 
     const input = screen.getByRole('combobox') as HTMLInputElement
@@ -954,7 +966,7 @@ describe('Select - enriched emptyRender context', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultValue={['apple']}
         defaultOpen
@@ -982,7 +994,7 @@ describe('Select - enriched emptyRender context', () => {
   test('close from emptyRender context closes dropdown content', async () => {
     const screen = render(() => (
       <Select
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         emptyRender={(ctx) => (
@@ -1016,7 +1028,7 @@ describe('Select - allowCreate', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         allowCreate
@@ -1038,7 +1050,7 @@ describe('Select - allowCreate', () => {
     const screen = render(() => (
       <Select
         multiple
-        showSearch
+        search
         options={FRUITS}
         defaultOpen
         onChange={onChange}
