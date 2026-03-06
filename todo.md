@@ -27,8 +27,8 @@
 - [x] optimize context menu trigger timing, or implement context by dropdown menu
 - [x] adjust dropmenu / context menu show up transition
 - [x] polish and cleanup select control / input / input number variants
-- [ ] simplify variants
-- [ ] bug: select menu open and click trigger does not close the menu
+- [x] simplify variants
+- [ ] bug: unsearchable select menu open and click trigger does not close the menu
 
 # Future
 
@@ -40,4 +40,5 @@
 - [ ] inline and drop kobalte
   - [ ] bug: When the pointer moves from that parent item toward the submenu, the submenu closes too early before the pointer can reach it, because a different sibling menu item becomes highlighted/triggered during the pointer movement.
   - [ ] animated collapsible component
+  - [ ] slider thumb overlapped, should allow to slide to any direction
 - [ ] refine demo into doc?

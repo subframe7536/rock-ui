@@ -28,76 +28,29 @@ export const inputRootVariants = cva(
 )
 
 export const inputInputVariants = cva(
-  'flex-1 min-w-0 h-full bg-transparent text-foreground outline-none  style-placeholder disabled:effect-dis',
+  'flex-1 min-w-0 h-full bg-transparent text-foreground outline-none style-placeholder disabled:effect-dis',
   {
+    defaultVariants: {
+      size: 'md',
+      hasLeading: false,
+      hasTrailing: false,
+    },
     variants: {
       type: {
         file: 'text-muted-foreground file:(me-1.5 font-medium outline-none)',
       },
+      size: {
+        xs: 'var-input-1',
+        sm: 'var-input-1.5',
+        md: 'var-input-1.5',
+        lg: 'var-input-2',
+        xl: 'var-input-2',
+      },
+      hasLeading: { true: 'ps-$i-sm', false: 'ps-$i-lg' },
+      hasTrailing: { true: 'pe-$i-sm', false: 'pe-$i-lg' },
     },
   },
 )
-
-export const inputStartPaddingNoSlotVariants = cva('', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
-      xs: 'ps-2',
-      sm: 'ps-2.5',
-      md: 'ps-2.5',
-      lg: 'ps-3',
-      xl: 'ps-3',
-    },
-  },
-})
-
-export const inputStartPaddingWithSlotVariants = cva('', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
-      xs: 'ps-1',
-      sm: 'ps-1.5',
-      md: 'ps-1.5',
-      lg: 'ps-2',
-      xl: 'ps-2',
-    },
-  },
-})
-
-export const inputEndPaddingNoSlotVariants = cva('', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
-      xs: 'pe-2',
-      sm: 'pe-2.5',
-      md: 'pe-2.5',
-      lg: 'pe-3',
-      xl: 'pe-3',
-    },
-  },
-})
-
-export const inputEndPaddingWithSlotVariants = cva('', {
-  defaultVariants: {
-    size: 'md',
-  },
-  variants: {
-    size: {
-      xs: 'pe-1',
-      sm: 'pe-1.5',
-      md: 'pe-1.5',
-      lg: 'pe-2',
-      xl: 'pe-2',
-    },
-  },
-})
-
 export const inputLeadingVariants = cva('flex items-center shrink-0 text-muted-foreground', {
   defaultVariants: {
     size: 'md',

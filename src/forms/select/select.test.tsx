@@ -43,10 +43,9 @@ test('uses css variable classes for input sizing across modes', () => {
   const single = render(() => <Select options={FRUITS} size="xs" placeholder="XS" />)
   const singleInput = single.container.querySelector('[data-slot="input"]')
 
-  expect(singleInput?.className).toContain('h-$select-input-h')
-  expect(singleInput?.className).toContain('px-$select-input-px')
-  expect(singleInput?.className).toContain('[--select-input-h:calc(var(--spacing)*6)]')
-  expect(singleInput?.className).toContain('[--select-input-px:calc(var(--spacing)*2)]')
+  expect(singleInput?.className).toContain('h-$s-h')
+  expect(singleInput?.className).toContain('px-$s-px')
+  expect(singleInput?.className).toContain('var-select-6-2-0.5')
 
   const multiSearch = render(() => (
     <Select multiple showSearch options={FRUITS} size="lg" placeholder="LG" />
@@ -54,8 +53,8 @@ test('uses css variable classes for input sizing across modes', () => {
   const multiInput = multiSearch.container.querySelector('[data-slot="input"]')
 
   expect(multiInput?.className).toContain('min-w-12')
-  expect(multiInput?.className).toContain('ps-$select-input-ps')
-  expect(multiInput?.className).toContain('[--select-input-ps:calc(var(--spacing)*1.5)]')
+  expect(multiInput?.className).toContain('ps-$s-ps')
+  expect(multiInput?.className).toContain('var-select-9-3-1.5')
   expect(multiInput?.className).toContain('text-sm')
 })
 

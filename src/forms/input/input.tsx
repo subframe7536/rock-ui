@@ -20,12 +20,8 @@ import { FORM_ID_NAME_DISABLED_KEYS, FORM_INPUT_INTERACTION_KEYS } from '../form
 import type { InputVariantProps } from './input.class'
 import {
   inputInputVariants,
-  inputEndPaddingNoSlotVariants,
-  inputEndPaddingWithSlotVariants,
   inputLeadingVariants,
   inputRootVariants,
-  inputStartPaddingNoSlotVariants,
-  inputStartPaddingWithSlotVariants,
   inputTrailingVariants,
 } from './input.class'
 
@@ -182,9 +178,6 @@ export function Input(props: InputProps): JSX.Element {
     return 'text-sm'
   })
 
-  const hasLeading = createMemo(() => Boolean(resolvedLeading()))
-  const hasTrailing = createMemo(() => Boolean(resolvedTrailing()))
-
   function updateInputValue(value: string | null | undefined): void {
     const nextValue = applyInputModifiers<InputValue>(value, formProps.modelModifiers)
 
@@ -293,21 +286,10 @@ export function Input(props: InputProps): JSX.Element {
         class={inputInputVariants(
           {
             type: baseProps.type === 'file' ? 'file' : undefined,
+            hasLeading: Boolean(resolvedLeading()),
+            hasTrailing: Boolean(resolvedTrailing()),
+            size: styleProps.size,
           },
-          hasLeading()
-            ? inputStartPaddingWithSlotVariants({
-                size: field.size(),
-              })
-            : inputStartPaddingNoSlotVariants({
-                size: field.size(),
-              }),
-          hasTrailing()
-            ? inputEndPaddingWithSlotVariants({
-                size: field.size(),
-              })
-            : inputEndPaddingNoSlotVariants({
-                size: field.size(),
-              }),
           styleProps.classes?.input,
         )}
         onInput={onInput}

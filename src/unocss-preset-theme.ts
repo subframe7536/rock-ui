@@ -372,6 +372,35 @@ export function presetTheme(options?: number | PresetThemeOptions): Preset<Theme
       ['border', 'b-1 b-border'],
       ...createIconShortcuts(appConfig.icons),
     ],
+    rules: [
+      [
+        /var-input-([\d.]+)/,
+        ([, num]) => ({
+          '--i-sm': `calc(var(--spacing) * ${num})`,
+          '--i-lg': `calc(var(--spacing) * ${Number(num) + 1})`,
+        }),
+      ],
+      [
+        /var-progress-([\d.]+)/,
+        ([, num]) => ({
+          '--p-size': `calc(var(--spacing) * ${num})`,
+        }),
+      ],
+      [
+        /var-select-([\d.]+)-([\d.]+)-([\d.]+)/,
+        ([, h, px, ps]) => ({
+          '--s-h': `calc(var(--spacing) * ${h})`,
+          '--s-px': `calc(var(--spacing) * ${px})`,
+          '--s-ps': `calc(var(--spacing) * ${ps})`,
+        }),
+      ],
+      [
+        /var-slider-([\d.]+)/,
+        ([, num]) => ({
+          '--s-size': `${num}px`,
+        }),
+      ],
+    ],
     preflights: [
       {
         getCSS: () => `:root {

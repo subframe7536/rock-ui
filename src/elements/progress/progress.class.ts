@@ -52,15 +52,15 @@ export const progressBaseVariants = cva(
     },
     variants: {
       orientation: {
-        horizontal: 'w-full h-$progress-base-size',
-        vertical: 'h-full min-h-36 w-$progress-base-size',
+        horizontal: 'w-full h-$p-size',
+        vertical: 'h-full min-h-36 w-$p-size',
       },
       size: {
-        xs: '[--progress-base-size:calc(var(--spacing)*0.5)]',
-        sm: '[--progress-base-size:var(--spacing)]',
-        md: '[--progress-base-size:calc(var(--spacing)*2)]',
-        lg: '[--progress-base-size:calc(var(--spacing)*3)]',
-        xl: '[--progress-base-size:calc(var(--spacing)*4)]',
+        xs: 'var-progress-0.5',
+        sm: 'var-progress-1',
+        md: 'var-progress-2',
+        lg: 'var-progress-3',
+        xl: 'var-progress-4',
       },
     },
   },

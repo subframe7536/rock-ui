@@ -72,6 +72,26 @@ describe('presetTheme', () => {
     expect(preset.transformers?.some((item) => item.name === 'transformer-rock')).toBe(true)
   })
 
+  test('registers variable helper rules for input, progress, select and slider', async () => {
+    const uno = await createGenerator({
+      presets: [presetWind4(), presetTheme()],
+    })
+    const result = await uno.generate(
+      new Set(['var-input-1.5', 'var-progress-2', 'var-select-8-2.5-1', 'var-slider-4']),
+      {
+        preflights: false,
+      },
+    )
+
+    expect(result.css).toContain('--i-sm:calc(var(--spacing) * 1.5)')
+    expect(result.css).toContain('--i-lg:calc(var(--spacing) * 2.5)')
+    expect(result.css).toContain('--p-size:calc(var(--spacing) * 2)')
+    expect(result.css).toContain('--s-h:calc(var(--spacing) * 8)')
+    expect(result.css).toContain('--s-px:calc(var(--spacing) * 2.5)')
+    expect(result.css).toContain('--s-ps:calc(var(--spacing) * 1)')
+    expect(result.css).toContain('--s-size:4px')
+  })
+
   test('removes prefix globally for tsx ids', async () => {
     const output = await runRockTransform(
       `const view = <div class="${ROCK_PREFIX}a ${ROCK_PREFIX}b" />\nconst semantic = '${ROCK_PREFIX}token'`,

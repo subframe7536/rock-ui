@@ -12,10 +12,10 @@ describe('Progress', () => {
     const horizontalBase = horizontal.container.querySelector('[data-slot="base"]')
     const verticalBase = vertical.container.querySelector('[data-slot="base"]')
 
-    expect(horizontalBase?.className).toContain('h-$progress-base-size')
-    expect(horizontalBase?.className).toContain('[--progress-base-size:calc(var(--spacing)*0.5)]')
-    expect(verticalBase?.className).toContain('w-$progress-base-size')
-    expect(verticalBase?.className).toContain('[--progress-base-size:calc(var(--spacing)*4)]')
+    expect(horizontalBase?.className).toContain('h-$p-size')
+    expect(horizontalBase?.className).toContain('var-progress-0.5')
+    expect(verticalBase?.className).toContain('w-$p-size')
+    expect(verticalBase?.className).toContain('var-progress-4')
   })
 
   test('renders determinate progress with default aria values', () => {

@@ -70,10 +70,10 @@ describe('Slider', () => {
     const horizontalTrack = horizontal.container.querySelector('[data-slot="track"]')
     const verticalTrack = vertical.container.querySelector('[data-slot="track"]')
 
-    expect(horizontalTrack?.className).toContain('h-$slider-track-size')
-    expect(horizontalTrack?.className).toContain('[--slider-track-size:3px]')
-    expect(verticalTrack?.className).toContain('w-$slider-track-size')
-    expect(verticalTrack?.className).toContain('[--slider-track-size:6px]')
+    expect(horizontalTrack?.className).toContain('h-$s-size')
+    expect(horizontalTrack?.className).toContain('var-slider-3')
+    expect(verticalTrack?.className).toContain('w-$s-size')
+    expect(verticalTrack?.className).toContain('var-slider-6')
   })
 
   test('renders base attributes and orientation without tooltip', () => {

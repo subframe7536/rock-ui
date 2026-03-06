@@ -41,15 +41,15 @@ export const sliderTrackVariants = cva(
     },
     variants: {
       size: {
-        xs: '[--slider-track-size:3px]',
-        sm: '[--slider-track-size:4px]',
-        md: '[--slider-track-size:4px]',
-        lg: '[--slider-track-size:5px]',
-        xl: '[--slider-track-size:6px]',
+        xs: 'var-slider-3',
+        sm: 'var-slider-4',
+        md: 'var-slider-4',
+        lg: 'var-slider-5',
+        xl: 'var-slider-6',
       },
       orientation: {
-        horizontal: 'w-full h-$slider-track-size before:(inset-x-0.5 inset-y-0)',
-        vertical: 'h-full w-$slider-track-size before:(inset-x-0 inset-y-0.5)',
+        horizontal: 'w-full h-$s-size before:(inset-x-0.5 inset-y-0)',
+        vertical: 'h-full w-$s-size before:(inset-x-0 inset-y-0.5)',
       },
       highlight: SURFACE_HIGHLIGHT_VARIANT,
     },

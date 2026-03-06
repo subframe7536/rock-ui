@@ -40,16 +40,16 @@ export const selectInputVariants = cva(
     },
     variants: {
       mode: {
-        single: 'h-$select-input-h px-$select-input-px',
-        multiSearch: 'min-w-12 ps-$select-input-ps',
+        single: 'h-$s-h px-$s-px',
+        multiSearch: 'min-w-12 ps-$s-ps',
         multiHidden: 'sr-only',
       },
       size: {
-        xs: 'text-xs [--select-input-h:calc(var(--spacing)*6)] [--select-input-px:calc(var(--spacing)*2)] [--select-input-ps:calc(var(--spacing)*0.5)]',
-        sm: 'text-xs [--select-input-h:calc(var(--spacing)*7)] [--select-input-px:calc(var(--spacing)*2.5)] [--select-input-ps:var(--spacing)]',
-        md: 'text-sm [--select-input-h:calc(var(--spacing)*8)] [--select-input-px:calc(var(--spacing)*2.5)] [--select-input-ps:var(--spacing)]',
-        lg: 'text-sm [--select-input-h:calc(var(--spacing)*9)] [--select-input-px:calc(var(--spacing)*3)] [--select-input-ps:calc(var(--spacing)*1.5)]',
-        xl: 'text-base [--select-input-h:calc(var(--spacing)*10)] [--select-input-px:calc(var(--spacing)*3)] [--select-input-ps:calc(var(--spacing)*1.5)]',
+        xs: 'text-xs var-select-6-2-0.5',
+        sm: 'text-xs var-select-7-2.5-1',
+        md: 'text-sm var-select-8-2.5-1',
+        lg: 'text-sm var-select-9-3-1.5',
+        xl: 'text-base var-select-10-3-1.5',
       },
       readOnly: {
         true: 'cursor-pointer',

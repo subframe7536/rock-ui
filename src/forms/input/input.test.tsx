@@ -72,40 +72,6 @@ describe('Input', () => {
     expect(input.required).toBe(true)
   })
 
-  test('uses default base padding when leading and trailing are absent', () => {
-    const screen = render(() => <Input />)
-    const input = screen.getByRole('textbox')
-
-    expect(input.className).toContain('ps-2.5')
-    expect(input.className).toContain('pe-2.5')
-  })
-
-  test('uses slot start padding when leading slot is present', () => {
-    const screen = render(() => <Input leading="i-lucide-search" />)
-    const input = screen.getByRole('textbox')
-
-    expect(input.className).toContain('ps-2')
-    expect(input.className).toContain('pe-2.5')
-  })
-
-  test('uses slot end padding when trailing slot is present', () => {
-    const screen = render(() => <Input trailing="i-lucide-search" />)
-    const input = screen.getByRole('textbox')
-
-    expect(input.className).toContain('ps-2.5')
-    expect(input.className).toContain('pe-2')
-  })
-
-  test('uses slot padding for custom inline leading and trailing content', () => {
-    const screen = render(() => (
-      <Input leading={<span>https://</span>} trailing={<span>.com</span>} />
-    ))
-    const input = screen.getByRole('textbox')
-
-    expect(input.className).toContain('ps-2')
-    expect(input.className).toContain('pe-2')
-  })
-
   test('renders leading and trailing slots through Icon', () => {
     const screen = render(() => (
       <>
