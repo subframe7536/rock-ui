@@ -29,13 +29,15 @@ export interface IconButtonBaseProps {
 function getIconSizeClass(size: IconButtonBaseProps['size']) {
   switch (size) {
     case 'xs':
+      return 'size-3.5'
     case 'sm':
       return 'size-4'
     case 'md':
+      return 'size-4.5'
     case 'lg':
       return 'size-5'
     case 'xl':
-      return 'size-6'
+      return 'size-5.5'
   }
   return undefined
 }

@@ -399,6 +399,16 @@ export function presetTheme(options?: number | PresetThemeOptions): Preset<Theme
         }),
       ],
       [
+        /var-stepper-([\d.]+)-([\d.]+)-([\d.]+)-([\d.]+)/,
+        ([, triggerSize, separatorOffset, gap, verticalPt]) => ({
+          '--st-size': `calc(var(--spacing) * ${triggerSize})`,
+          '--st-sep-x': `calc(var(--spacing) * ${separatorOffset})`,
+          '--st-sep-top': `calc(var(--spacing) * ${Number(triggerSize) + 1})`,
+          '--st-gap': `calc(var(--spacing) * ${gap})`,
+          '--st-pt': `calc(var(--spacing) * ${verticalPt})`,
+        }),
+      ],
+      [
         /var-slider-([\d.]+)/,
         ([, num]) => ({
           '--s-size': `${num}px`,

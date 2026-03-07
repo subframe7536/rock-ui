@@ -72,12 +72,18 @@ describe('presetTheme', () => {
     expect(preset.transformers?.some((item) => item.name === 'transformer-rock')).toBe(true)
   })
 
-  test('registers variable helper rules for input, progress, select and slider', async () => {
+  test('registers variable helper rules for input, progress, select, stepper and slider', async () => {
     const uno = await createGenerator({
       presets: [presetWind4(), presetTheme()],
     })
     const result = await uno.generate(
-      new Set(['var-input-1.5', 'var-progress-2', 'var-select-8-2.5-1', 'var-slider-4']),
+      new Set([
+        'var-input-1.5',
+        'var-progress-2',
+        'var-select-8-2.5-1',
+        'var-stepper-10-7-2.5-1',
+        'var-slider-4',
+      ]),
       {
         preflights: false,
       },
@@ -89,6 +95,11 @@ describe('presetTheme', () => {
     expect(result.css).toContain('--s-h:calc(var(--spacing) * 8)')
     expect(result.css).toContain('--s-px:calc(var(--spacing) * 2.5)')
     expect(result.css).toContain('--s-ps:calc(var(--spacing) * 1)')
+    expect(result.css).toContain('--st-size:calc(var(--spacing) * 10)')
+    expect(result.css).toContain('--st-sep-x:calc(var(--spacing) * 7)')
+    expect(result.css).toContain('--st-sep-top:calc(var(--spacing) * 11)')
+    expect(result.css).toContain('--st-gap:calc(var(--spacing) * 2.5)')
+    expect(result.css).toContain('--st-pt:calc(var(--spacing) * 1)')
     expect(result.css).toContain('--s-size:4px')
   })
 

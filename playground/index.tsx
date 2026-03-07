@@ -30,6 +30,7 @@ import { SelectDemos } from './components/select-demos'
 import { SeparatorDemos } from './components/separator-demos'
 import { SheetDemos } from './components/sheet-demos'
 import { SliderDemos } from './components/slider-demos'
+import { StepperDemos } from './components/stepper-demos'
 import { TabsDemos } from './components/tabs-demos'
 import { TooltipDemos } from './components/tooltip-demos'
 
@@ -43,6 +44,7 @@ const PAGES = [
   { key: 'card', label: 'Card', group: 'Layout' },
   { key: 'breadcrumb', label: 'Breadcrumb', group: 'Navigation' },
   { key: 'pagination', label: 'Pagination', group: 'Navigation' },
+  { key: 'stepper', label: 'Stepper', group: 'Navigation' },
   { key: 'tabs', label: 'Tabs', group: 'Navigation' },
   { key: 'accordion', label: 'Accordion', group: 'Disclosure' },
   { key: 'collapsible', label: 'Collapsible', group: 'Disclosure' },
@@ -133,6 +135,9 @@ function App() {
           </Match>
           <Match when={page() === 'pagination'}>
             <PaginationDemos />
+          </Match>
+          <Match when={page() === 'stepper'}>
+            <StepperDemos />
           </Match>
           <Match when={page() === 'sheet'}>
             <SheetDemos />

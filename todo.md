@@ -1,12 +1,13 @@
 # Current
 
 - [x] New Badge: leading, trailing, onTrailingClick, size, variant (default / outline / solid); reuse in select
-- [ ] New Stepper: reference from nuxt-ui/
+- [x] New Stepper: reference from nuxt-ui/
 - [ ] New Resizable: https://corvu.dev/docs/primitives/resizable , `panels: ParentProps<ResizePanelProps>[]`, auto insert handle
 
 # Beta
 
 - [ ] invalid and other boolean state should become `data-*` driven css instead of a variant in `cva`
+- [ ] unify id
 - [ ] refactor: overlay components should consider children as content, and provider optional trigger prop
 - [ ] custom true/false value in form elements
 - [ ] polish theme, like ring color etc.
@@ -26,3 +27,7 @@
 # Maybe Future
 
 - [ ] inline/fork external libs
+  - [ ] When the pointer moves from that parent item toward the submenu, the submenu closes too early before the pointer can reach it, because a different sibling menu item becomes highlighted/triggered during the pointer movement.
+  - [ ] Collapsible component 's content height has not transition
+  - [ ] When slider thumb overlapped, should allow to slide to any direction
+  - [ ] No keyboard loop option in tab
