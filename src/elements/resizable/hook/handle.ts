@@ -1,5 +1,5 @@
-import type { Accessor, JSX } from 'solid-js'
-import { createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
+import type { Accessor } from 'solid-js'
+import { createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
 
 import {
   RESIZABLE_HANDLE_TARGET_END,
@@ -16,16 +16,7 @@ import type {
   ResizableHandleIntersectionTarget,
   ResizableHandleRegistration,
 } from './manager'
-import type { ResizableOrientation } from './panel'
-
-export interface ResizableHandleOptions {
-  renderHandle?: boolean | JSX.Element
-  disableHandle?: boolean
-  intersection?: boolean
-  onHandleDragStart?: (event: PointerEvent) => void
-  onHandleDrag?: (event: CustomEvent) => void
-  onHandleDragEnd?: (event: PointerEvent | TouchEvent | MouseEvent) => void
-}
+import type { ResizableOrientation } from './types'
 
 const HANDLE_STATE_HOVERED = 1 << 0
 const HANDLE_STATE_FOCUSED = 1 << 1
@@ -35,10 +26,16 @@ const HANDLE_STATE_CROSS_HOVERED = 1 << 3
 const HANDLE_START_TARGET_ATTR = 'data-resizable-handle-start-target'
 const HANDLE_END_TARGET_ATTR = 'data-resizable-handle-end-target'
 
+export interface ResizableHandleOptions {
+  disable?: boolean
+  intersection?: boolean
+}
+
 export interface UseResizableHandleOptions {
   handleIndex: Accessor<number>
   orientation: Accessor<ResizableOrientation>
-  options: Accessor<ResizableHandleOptions | undefined>
+  disable: Accessor<boolean | undefined>
+  intersection: Accessor<boolean | undefined>
   onDrag: (handleIndex: number, deltaPx: number, altKey: boolean) => void
   onDragEnd: () => void
   onKeyDown: (handleIndex: number, event: KeyboardEvent, altKey: boolean) => void
@@ -70,22 +67,29 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
     null,
   )
 
-  const mergedOptions = createMemo<ResizableHandleOptions>(() => ({
-    intersection: true,
-    ...options.options(),
-  }))
-
   function setInteractionStateFlag(flag: number, enabled: boolean): void {
     setInteractionState((previous) => (enabled ? previous | flag : previous & ~flag))
   }
 
-  const disabled = createMemo(() => mergedOptions().disableHandle === true)
-  const cross = createMemo(() => startIntersection() !== null || endIntersection() !== null)
+  const disabled = createMemo(() => options.disable() === true)
+  const cross = createMemo(
+    () => !disabled() && (startIntersection() !== null || endIntersection() !== null),
+  )
   const dragging = createMemo(() => (interactionState() & HANDLE_STATE_DRAGGING) !== 0)
   const active = createMemo(() => interactionState() !== 0)
 
   const registrationId = Symbol('resizable-handle')
   let registration: ResizableHandleRegistration | null = null
+
+  createEffect(
+    on(disabled, (isDisabled) => {
+      if (isDisabled) {
+        setInteractionState(0)
+        setStartIntersection(null)
+        setEndIntersection(null)
+      }
+    }),
+  )
 
   createEffect(() => {
     const currentElement = element()
@@ -100,8 +104,8 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
         (element()?.closest('[data-resizable-root]') as HTMLDivElement | null) ?? undefined,
       getOrientation: options.orientation,
       getAltKeyMode: () => true,
-      getStartIntersectionEnabled: () => mergedOptions().intersection !== false,
-      getEndIntersectionEnabled: () => mergedOptions().intersection !== false,
+      getStartIntersectionEnabled: () => options.intersection() !== false,
+      getEndIntersectionEnabled: () => options.intersection() !== false,
       getStartIntersection: startIntersection,
       getEndIntersection: endIntersection,
       setStartIntersection,
@@ -109,19 +113,9 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
       setDragging: (nextDragging) => setInteractionStateFlag(HANDLE_STATE_DRAGGING, nextDragging),
       setCrossHovered: (nextHovered) =>
         setInteractionStateFlag(HANDLE_STATE_CROSS_HOVERED, nextHovered),
-      onDrag: (deltaPx, altKey) => {
-        const dragEvent = new CustomEvent('drag', { cancelable: true })
-        mergedOptions().onHandleDrag?.(dragEvent)
-
-        if (dragEvent.defaultPrevented) {
-          return
-        }
-
-        options.onDrag(options.handleIndex(), deltaPx, altKey)
-      },
-      onDragEnd: (event) => {
+      onDrag: (deltaPx, altKey) => options.onDrag(options.handleIndex(), deltaPx, altKey),
+      onDragEnd: () => {
         options.onDragEnd()
-        mergedOptions().onHandleDragEnd?.(event)
       },
     }
 
@@ -133,29 +127,45 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
   })
 
   createEffect(() => {
-    void [options.orientation(), mergedOptions().intersection]
+    void [options.orientation(), options.intersection()]
     scheduleResizableHandleIntersectionsRefresh()
   })
 
   function onMouseEnter(): void {
+    if (disabled()) {
+      return
+    }
+
     setInteractionStateFlag(HANDLE_STATE_HOVERED, true)
     scheduleResizableHandleIntersectionsRefresh()
   }
 
   function onMouseLeave(): void {
+    if (disabled()) {
+      return
+    }
+
     setInteractionStateFlag(HANDLE_STATE_HOVERED, false)
   }
 
   function onFocus(): void {
+    if (disabled()) {
+      return
+    }
+
     setInteractionStateFlag(HANDLE_STATE_FOCUSED, true)
   }
 
   function onBlur(): void {
+    if (disabled()) {
+      return
+    }
+
     setInteractionStateFlag(HANDLE_STATE_FOCUSED, false)
   }
 
   function onKeyDown(event: KeyboardEvent): void {
-    if (dragging()) {
+    if (disabled() || dragging()) {
       return
     }
 
@@ -164,11 +174,6 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
 
   function onPointerDown(event: PointerEvent): void {
     if (disabled() || !registration) {
-      return
-    }
-
-    mergedOptions().onHandleDragStart?.(event)
-    if (event.defaultPrevented) {
       return
     }
 
@@ -189,7 +194,7 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
   }
 
   function onIntersectionMouseEnter(target: ResizableHandleIntersectionEdge): void {
-    if (!registration) {
+    if (disabled() || !registration) {
       return
     }
 
@@ -198,6 +203,10 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
   }
 
   function onIntersectionMouseLeave(event: MouseEvent): void {
+    if (disabled()) {
+      return
+    }
+
     if (registration) {
       const target = event.currentTarget as HTMLElement | null
       const hoverTarget = target?.hasAttribute(HANDLE_START_TARGET_ATTR)
@@ -224,8 +233,8 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
 
   return {
     setElement,
-    startIntersectionVisible: () => startIntersection() !== null,
-    endIntersectionVisible: () => endIntersection() !== null,
+    startIntersectionVisible: () => !disabled() && startIntersection() !== null,
+    endIntersectionVisible: () => !disabled() && endIntersection() !== null,
     cross,
     dragging,
     active,

@@ -1,12 +1,16 @@
 import { createMemo, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 
-import { Resizable } from '../../src'
+import { Icon, Resizable } from '../../src'
 
 import { DemoPage, DemoSection } from './common/demo-page'
 
-function formatSizes(sizes: number[]): string {
-  return sizes.map((size) => `${Math.round(size * 100)}%`).join(' / ')
+function formatPixelSizes(sizes: number[]): string {
+  return sizes.map((size) => `${Math.round(size)}px`).join(' / ')
+}
+
+function formatPercentValue(value: number): `${number}%` {
+  return `${Number.parseFloat((value * 100).toFixed(2))}%`
 }
 
 function createPanel(title: string, description: string, tone: string) {
@@ -21,14 +25,22 @@ function createPanel(title: string, description: string, tone: string) {
 export const ResizableDemos = () => {
   const [controlledPanels, setControlledPanels] = createStore([
     {
-      size: 0.35,
-      minSize: 0.2,
-      content: createPanel('Logs', 'Drag handle to re-balance panel sizes.', 'bg-zinc-50'),
+      size: 360,
+      minSize: '20%' as const,
+      content: createPanel(
+        'Logs',
+        'Drag or use arrow keys to rebalance with px callbacks.',
+        'bg-zinc-50',
+      ),
     },
     {
-      size: 0.65,
-      minSize: 0.25,
-      content: createPanel('Preview', 'Current ratio is live-updated below.', 'bg-zinc-100'),
+      size: 640,
+      minSize: '25%' as const,
+      content: createPanel(
+        'Preview',
+        'The external store writes callback px values back into panel.size.',
+        'bg-zinc-100',
+      ),
     },
   ])
   const controlledSizes = createMemo(() =>
@@ -43,9 +55,9 @@ export const ResizableDemos = () => {
     handleIcon() === 'grip' ? 'i-lucide-grip-vertical' : 'i-lucide-grip',
   )
 
-  function handleControlledSizesChange(nextSizes: number[]): void {
+  function handleControlledResize(nextSizes: number[]): void {
     nextSizes.forEach((nextSize, index) => {
-      if (typeof nextSize === 'number' && Number.isFinite(nextSize)) {
+      if (Number.isFinite(nextSize)) {
         setControlledPanels(index, 'size', nextSize)
       }
     })
@@ -55,24 +67,24 @@ export const ResizableDemos = () => {
     <DemoPage
       eyebrow="Rock UI Playground"
       title="Resizable"
-      description="Panel splitter layout powered by panels array, with auto handles between panels."
+      description="Panel splitter layout powered by a panels array, with root-level handles and resize lifecycle callbacks."
     >
       <DemoSection
         title="Basic Horizontal"
-        description="Two panels with auto-inserted handle and optional handle icon."
+        description="Two panels with auto-inserted divider and root-level handle rendering."
       >
         <div class="border border-zinc-200 rounded-xl h-52 overflow-hidden">
           <Resizable
-            renderHandle={true}
+            renderHandle
             panels={[
               {
-                initialSize: 0.4,
-                minSize: 0.2,
+                initialSize: '40%',
+                minSize: '20%',
                 content: createPanel('Navigation', 'Left panel can shrink to 20%.', 'bg-zinc-100'),
               },
               {
-                initialSize: 0.6,
-                minSize: 0.3,
+                initialSize: '60%',
+                minSize: '30%',
                 content: createPanel(
                   'Content',
                   'Right panel keeps enough width for details.',
@@ -86,102 +98,141 @@ export const ResizableDemos = () => {
 
       <DemoSection
         title="Controlled Sizes"
-        description="Use panel.size + onSizesChange to sync layout state externally."
+        description="Use panel.size + onResize to sync external state. The callback now returns pixel sizes."
       >
         <div class="space-y-3">
           <div class="border border-zinc-200 rounded-xl h-48 overflow-hidden">
-            <Resizable
-              renderHandle={true}
-              onSizesChange={handleControlledSizesChange}
-              panels={controlledPanels}
-            />
+            <Resizable renderHandle onResize={handleControlledResize} panels={controlledPanels} />
           </div>
-          <p class="text-xs text-zinc-600">Current sizes: {formatSizes(controlledSizes())}</p>
+          <p class="text-xs text-zinc-600">Current sizes: {formatPixelSizes(controlledSizes())}</p>
         </div>
       </DemoSection>
 
       <DemoSection
-        title="Vertical + Per Panel Handle"
-        description="Vertical orientation and selective handle rendering via panel.disableHandle."
+        title="Vertical + Disable"
+        description="The root disable prop keeps dividers visible while turning off drag and keyboard resizing."
       >
-        <div class="border border-zinc-200 rounded-xl h-72 overflow-hidden">
-          <Resizable
-            orientation="vertical"
-            renderHandle
-            classes={{ divider: 'bg-zinc-300/80' }}
-            panels={[
-              {
-                initialSize: 0.33,
-                content: createPanel(
-                  'Top',
-                  'Default handle between top and middle.',
-                  'bg-zinc-100',
-                ),
-              },
-              {
-                initialSize: 0.34,
-                disableHandle: true,
-                content: createPanel(
-                  'Middle',
-                  'disableHandle=true removes the divider after this panel.',
-                  'bg-white',
-                ),
-              },
-              {
-                initialSize: 0.33,
-                content: createPanel('Bottom', 'Last panel in vertical stack.', 'bg-zinc-50'),
-              },
-            ]}
-          />
+        <div class="gap-4 grid md:grid-cols-2">
+          <div class="space-y-2">
+            <p class="text-xs text-zinc-600">
+              <code>disable: false</code>
+            </p>
+            <div class="border border-zinc-200 rounded-xl h-72 overflow-hidden">
+              <Resizable
+                orientation="vertical"
+                renderHandle
+                classes={{ divider: 'bg-zinc-300/80' }}
+                panels={[
+                  {
+                    initialSize: '33%',
+                    content: createPanel(
+                      'Top',
+                      'Interactive vertical divider between top and middle.',
+                      'bg-zinc-100',
+                    ),
+                  },
+                  {
+                    initialSize: '34%',
+                    content: createPanel(
+                      'Middle',
+                      'All dividers remain present because handle settings live on the root now.',
+                      'bg-white',
+                    ),
+                  },
+                  {
+                    initialSize: '33%',
+                    content: createPanel(
+                      'Bottom',
+                      'Last panel in the vertical stack.',
+                      'bg-zinc-50',
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-xs text-zinc-600">
+              <code>disable: true</code>
+            </p>
+            <div class="border border-zinc-200 rounded-xl h-72 overflow-hidden">
+              <Resizable
+                disable
+                orientation="vertical"
+                renderHandle
+                classes={{ divider: 'bg-zinc-300/80 opacity-80' }}
+                panels={[
+                  {
+                    initialSize: '33%',
+                    content: createPanel(
+                      'Top',
+                      'Divider stays visible but is not interactive.',
+                      'bg-zinc-100',
+                    ),
+                  },
+                  {
+                    initialSize: '34%',
+                    content: createPanel(
+                      'Middle',
+                      'Keyboard and pointer resizing are both disabled.',
+                      'bg-white',
+                    ),
+                  },
+                  {
+                    initialSize: '33%',
+                    content: createPanel('Bottom', 'Useful for read-only layouts.', 'bg-zinc-50'),
+                  },
+                ]}
+              />
+            </div>
+          </div>
         </div>
       </DemoSection>
 
       <DemoSection
         title="Nested Panels"
-        description="Use intersection to control whether a crossed edge becomes draggable."
+        description="Use the root intersection prop to control whether crossed dividers become draggable."
       >
         <div class="gap-4 grid md:grid-cols-2">
           <div class="space-y-2">
             <p class="text-xs text-zinc-600">
               <code>intersection: true</code>
             </p>
-            <div class="border border-zinc-200 rounded-xl h-80 overflow-hidden">
+            <div class="border border-zinc-200 rounded-xl h-72 overflow-hidden">
               <Resizable
                 renderHandle
-                classes={{ divider: 'bg-zinc-300/80' }}
+                intersection
                 panels={[
                   {
-                    initialSize: 0.32,
-                    minSize: 0.2,
+                    initialSize: '32%',
+                    minSize: '20%',
                     content: createPanel(
                       'Sidebar',
-                      'Outer handle intersects the inner split.',
-                      'bg-zinc-100',
+                      'Outer divider can intersect with the nested group.',
+                      'bg-zinc-50',
                     ),
                   },
                   {
-                    initialSize: 0.68,
-                    minSize: 0.35,
+                    initialSize: '68%',
+                    minSize: '35%',
                     content: (
                       <Resizable
                         orientation="vertical"
                         renderHandle
-                        classes={{ divider: 'bg-zinc-400/80' }}
+                        intersection
                         panels={[
                           {
-                            minSize: 0.25,
-                            intersection: true,
-                            content: createPanel(
-                              'Editor',
-                              'Cross target is available in this inner handle.',
-                              'bg-zinc-50',
-                            ),
+                            initialSize: '50%',
+                            minSize: '25%',
+                            content: createPanel('Editor', 'Nested top panel.', 'bg-white'),
                           },
                           {
-                            minSize: 0.2,
+                            initialSize: '50%',
+                            minSize: '20%',
                             content: createPanel(
                               'Console',
-                              'Drag the visible cross target for dual-axis resizing.',
+                              'Nested bottom panel with cross drag enabled.',
                               'bg-zinc-100',
                             ),
                           },
@@ -198,34 +249,31 @@ export const ResizableDemos = () => {
             <p class="text-xs text-zinc-600">
               <code>intersection: false</code>
             </p>
-            <div class="border border-zinc-200 rounded-xl h-80 overflow-hidden">
+            <div class="border border-zinc-200 rounded-xl h-72 overflow-hidden">
               <Resizable
                 renderHandle
-                classes={{ divider: 'bg-zinc-300/80' }}
+                intersection={false}
                 panels={[
                   {
-                    initialSize: 0.68,
-                    minSize: 0.35,
+                    initialSize: '68%',
+                    minSize: '35%',
                     content: (
                       <Resizable
                         orientation="vertical"
-                        renderHandle
-                        classes={{ divider: 'bg-zinc-400/80' }}
+                        renderHandle={<Icon name="i-lucide:activity" />}
+                        intersection={false}
                         panels={[
                           {
-                            minSize: 0.25,
-                            intersection: false,
-                            content: createPanel(
-                              'Editor',
-                              'Cross target is disabled for this inner handle.',
-                              'bg-zinc-50',
-                            ),
+                            initialSize: '50%',
+                            minSize: '25%',
+                            content: createPanel('Editor', 'Nested top panel.', 'bg-white'),
                           },
                           {
-                            minSize: 0.2,
+                            initialSize: '50%',
+                            minSize: '20%',
                             content: createPanel(
                               'Console',
-                              'Only direct dragging on the separator is active.',
+                              'Nested bottom panel with cross drag disabled.',
                               'bg-zinc-100',
                             ),
                           },
@@ -234,8 +282,8 @@ export const ResizableDemos = () => {
                     ),
                   },
                   {
-                    initialSize: 0.32,
-                    minSize: 0.2,
+                    initialSize: '32%',
+                    minSize: '20%',
                     content: createPanel(
                       'Inspector',
                       'Comparison panel for nested intersection behavior.',
@@ -251,7 +299,7 @@ export const ResizableDemos = () => {
 
       <DemoSection
         title="Custom Handle + Configurable Collapse"
-        description="Change handle icon, animate hover/dragging line background, and tune collapse behavior live."
+        description="Customize the root handle, animate divider states, and tune collapse thresholds live."
       >
         <div class="space-y-4">
           <div class="flex flex-wrap gap-3 items-end">
@@ -313,37 +361,34 @@ export const ResizableDemos = () => {
               }}
               panels={[
                 {
-                  initialSize: 0.3,
-                  minSize: 0.16,
+                  initialSize: '30%',
+                  minSize: '16%',
                   collapsible: true,
-                  collapsedSize: collapsedSize(),
-                  collapseThreshold: collapseThreshold(),
+                  collapsedSize: formatPercentValue(collapsedSize()),
+                  collapseThreshold: formatPercentValue(collapseThreshold()),
                   onCollapse: () => setIsSidebarCollapsed(true),
                   onExpand: () => setIsSidebarCollapsed(false),
                   content: createPanel(
                     'Sidebar',
-                    'Press Enter on handle or drag past threshold to collapse/expand.',
+                    'Press Enter on the divider or drag past the threshold to collapse and expand.',
                     'bg-zinc-50',
                   ),
                 },
                 {
-                  initialSize: 0.46,
-                  minSize: 0.24,
-                  renderHandle: (
-                    <div class="i-lucide-chevrons-left-right text-zinc-600 h-3.5 w-3.5 pointer-events-none" />
-                  ),
+                  initialSize: '46%',
+                  minSize: '24%',
                   content: createPanel(
                     'Editor',
-                    'This handle uses another icon to show per-panel customization.',
+                    'All dividers use the same custom root handle icon in the new API.',
                     'bg-white',
                   ),
                 },
                 {
-                  initialSize: 0.24,
-                  minSize: 0.16,
+                  initialSize: '24%',
+                  minSize: '16%',
                   content: createPanel(
                     'Preview',
-                    'Hover over handles to see background transition and thicker center line.',
+                    'Hover dividers to see transitions and focus them for keyboard resizing.',
                     'bg-zinc-100',
                   ),
                 },
@@ -352,7 +397,7 @@ export const ResizableDemos = () => {
           </div>
 
           <p class="text-xs text-zinc-600">
-            Sidebar state: {isSidebarCollapsed() ? 'collapsed' : 'expanded'} · Tip: focus handle,
+            Sidebar state: {isSidebarCollapsed() ? 'collapsed' : 'expanded'} · Tip: focus a divider,
             then press <kbd class="px-1 py-0.5 border border-zinc-300 rounded">Enter</kbd> to toggle
             collapse.
           </p>

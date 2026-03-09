@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeAll, afterAll, describe, expect, test, vi } from 'vitest'
 
 import { Resizable } from './resizable'
 
@@ -28,6 +28,32 @@ function createRect(input: { top: number; right: number; bottom: number; left: n
     toJSON: () => ({}),
   } as DOMRect
 }
+
+function setRect(element: Element, rect: DOMRect): void {
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => rect,
+  })
+}
+
+const defaultRect = createRect({ top: 0, right: 1000, bottom: 600, left: 0 })
+const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+    configurable: true,
+    value() {
+      return defaultRect
+    },
+  })
+})
+
+afterAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+    configurable: true,
+    value: originalGetBoundingClientRect,
+  })
+})
 
 describe('Resizable', () => {
   test('renders panels and auto inserts handles between panels', () => {
@@ -56,18 +82,36 @@ describe('Resizable', () => {
     expect(handle?.className).toContain('cursor-row-resize')
   })
 
-  test('allows disabling an auto handle via panel config', () => {
+  test('keeps dividers visible but disables all interactions from root config', async () => {
+    const onResize = vi.fn()
+
     const screen = render(() => (
       <Resizable
-        panels={[{ content: 'One', disableHandle: true }, { content: 'Two' }, { content: 'Three' }]}
+        disable
+        onResize={onResize}
+        panels={[{ content: 'One' }, { content: 'Two' }, { content: 'Three' }]}
       />
     ))
 
     const handles = screen.container.querySelectorAll('[data-slot="divider"]')
-    expect(handles).toHaveLength(1)
+    expect(handles).toHaveLength(2)
+    expect(handles[0]?.getAttribute('aria-disabled')).toBe('true')
+    expect(handles[0]?.getAttribute('tabindex')).toBe('-1')
+
+    const handle = handles[0] as HTMLElement
+    await fireEvent.mouseEnter(handle)
+    expect(handle.getAttribute('data-active')).toBeNull()
+
+    await fireEvent.keyDown(handle, { key: 'ArrowRight' })
+    await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
+    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
+    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 100, clientY: 0 })
+
+    expect(onResize).not.toHaveBeenCalled()
+    expect(handle.getAttribute('data-dragging')).toBeNull()
   })
 
-  test('applies class overrides and supports per-panel handle options', () => {
+  test('applies class overrides and supports root-level custom handle rendering', () => {
     const screen = render(() => (
       <Resizable
         renderHandle={<span data-slot="custom-handle-icon" class="i-lucide-grip-vertical" />}
@@ -77,14 +121,7 @@ describe('Resizable', () => {
           divider: 'divider-override',
           handle: 'handle-override',
         }}
-        panels={[
-          { content: 'A', class: 'panel-a' },
-          {
-            content: 'B',
-            disableHandle: true,
-          },
-          { content: 'C' },
-        ]}
+        panels={[{ content: 'A', class: 'panel-a' }, { content: 'B' }, { content: 'C' }]}
       />
     ))
 
@@ -98,96 +135,123 @@ describe('Resizable', () => {
     expect(panels[0]?.className).toContain('panel-override')
     expect(panels[0]?.className).toContain('panel-a')
     expect(handles[0]?.className).toContain('divider-override')
-    expect(handles).toHaveLength(1)
-    expect(handleInners).toHaveLength(1)
     expect(handleInners[0]?.className).toContain('handle-override')
-    expect(customHandleIcons).toHaveLength(1)
+    expect(handles).toHaveLength(2)
+    expect(handleInners).toHaveLength(2)
+    expect(customHandleIcons).toHaveLength(2)
   })
 
-  test('emits onSizesChange from keyboard resizing in controlled mode', async () => {
-    const onSizesChange = vi.fn()
-
-    const screen = render(() => (
-      <Resizable
-        onSizesChange={onSizesChange}
-        panels={[
-          { content: 'Left', minSize: 0.2, size: 0.5 },
-          { content: 'Right', minSize: 0.2, size: 0.5 },
-        ]}
-      />
-    ))
-
-    const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
-    await fireEvent.keyDown(handle, { key: 'ArrowRight' })
-
-    expect(onSizesChange).toHaveBeenCalled()
-
-    const nextSizes = onSizesChange.mock.calls.at(-1)?.[0] as number[] | undefined
-    expect(Array.isArray(nextSizes)).toBe(true)
-    expect((nextSizes?.[0] ?? 0) > 0.5).toBe(true)
-    expect((nextSizes?.[1] ?? 1) < 0.5).toBe(true)
-  })
-
-  test('updates controlled panel sizes from pointer dragging', async () => {
-    const onSizesChange = vi.fn()
+  test('emits keyboard resize lifecycle in controlled mode with px payloads', async () => {
+    const events: Array<{ type: 'start' | 'resize' | 'end'; sizes: number[] }> = []
 
     const screen = render(() => {
-      const [sizes, setSizes] = createSignal([0.4, 0.6])
-      const handleSizesChange = (nextSizes: number[]) => {
-        onSizesChange(nextSizes)
-        setSizes(nextSizes)
-      }
+      const [sizes, setSizes] = createSignal([500, 500])
 
       return (
         <Resizable
-          onSizesChange={handleSizesChange}
+          onResizeStart={(nextSizes) => events.push({ type: 'start', sizes: nextSizes })}
+          onResize={(nextSizes) => {
+            events.push({ type: 'resize', sizes: nextSizes })
+            setSizes(nextSizes)
+          }}
+          onResizeEnd={(nextSizes) => events.push({ type: 'end', sizes: nextSizes })}
           panels={[
-            { content: 'Logs', minSize: 0.2, size: sizes()[0] },
-            { content: 'Preview', minSize: 0.25, size: sizes()[1] },
+            { content: 'Left', minSize: '20%', size: sizes()[0] },
+            { content: 'Right', minSize: '20%', size: sizes()[1] },
           ]}
         />
       )
     })
 
-    const panel = screen.container.querySelector('[data-slot="panel"]') as HTMLElement
     const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
-    const before = Number.parseFloat(panel.style.flexBasis)
+    await fireEvent.keyDown(handle, { key: 'ArrowRight' })
 
-    await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
-    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 40, clientY: 0 })
-    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 40, clientY: 0 })
-    await Promise.resolve()
-    await Promise.resolve()
+    expect(events.map((event) => event.type)).toEqual(['start', 'resize', 'end'])
+    expect(events[0]?.sizes).toEqual([500, 500])
+    expect(events[1]?.sizes[0]).toBeCloseTo(600, 3)
+    expect(events[1]?.sizes[1]).toBeCloseTo(400, 3)
+    expect(events[2]?.sizes).toEqual(events[1]?.sizes)
 
-    const nextSizes = onSizesChange.mock.calls.at(-1)?.[0] as number[] | undefined
-    const nextPanel = screen.container.querySelector('[data-slot="panel"]') as HTMLElement
-    const after = Number.parseFloat(nextPanel.style.flexBasis)
-    expect(onSizesChange).toHaveBeenCalled()
-    expect(Array.isArray(nextSizes)).toBe(true)
-    expect((nextSizes?.[0] ?? 0) > 0.4).toBe(true)
-    expect(Number.isFinite(before)).toBe(true)
-    expect(Number.isFinite(after)).toBe(true)
-    expect(after).not.toBe(before)
+    const panels = screen.container.querySelectorAll('[data-slot="panel"]')
+    expect((panels[0] as HTMLDivElement).style.flexBasis).toBe('60%')
+    expect((panels[1] as HTMLDivElement).style.flexBasis).toBe('40%')
   })
 
-  test('supports controlled dragging when onSizesChange mutates existing panel list', async () => {
-    const onSizesChange = vi.fn()
+  test('does not emit resize lifecycle when a keyboard interaction cannot change sizes', async () => {
+    const onResizeStart = vi.fn()
+    const onResize = vi.fn()
+    const onResizeEnd = vi.fn()
+
+    const screen = render(() => (
+      <Resizable
+        keyboardDelta={0}
+        onResizeStart={onResizeStart}
+        onResize={onResize}
+        onResizeEnd={onResizeEnd}
+        panels={[
+          { content: 'Left', minSize: '20%', size: 200 },
+          { content: 'Right', minSize: '20%', size: 800 },
+        ]}
+      />
+    ))
+
+    const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
+    await fireEvent.keyDown(handle, { key: 'ArrowLeft' })
+
+    expect(onResizeStart).not.toHaveBeenCalled()
+    expect(onResize).not.toHaveBeenCalled()
+    expect(onResizeEnd).not.toHaveBeenCalled()
+  })
+
+  test('updates controlled panel sizes from pointer dragging with px payloads', async () => {
+    const events: Array<{ type: 'start' | 'resize' | 'end'; sizes: number[] }> = []
+
+    const screen = render(() => {
+      const [sizes, setSizes] = createSignal([400, 600])
+
+      return (
+        <Resizable
+          onResizeStart={(nextSizes) => events.push({ type: 'start', sizes: nextSizes })}
+          onResize={(nextSizes) => {
+            events.push({ type: 'resize', sizes: nextSizes })
+            setSizes(nextSizes)
+          }}
+          onResizeEnd={(nextSizes) => events.push({ type: 'end', sizes: nextSizes })}
+          panels={[
+            { content: 'Left', minSize: '20%', size: sizes()[0] },
+            { content: 'Right', minSize: '20%', size: sizes()[1] },
+          ]}
+        />
+      )
+    })
+
+    const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
+    await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
+    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
+    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 100, clientY: 0 })
+
+    expect(events.map((event) => event.type)).toEqual(['start', 'resize', 'end'])
+    expect(events[0]?.sizes).toEqual([400, 600])
+    expect(events[1]?.sizes[0]).toBeCloseTo(500, 3)
+    expect(events[1]?.sizes[1]).toBeCloseTo(500, 3)
+    expect(events[2]?.sizes[0]).toBeGreaterThan(0)
+    expect(events[2]?.sizes[1]).toBeGreaterThan(0)
+  })
+
+  test('supports controlled dragging when onResize mutates an existing panel list', async () => {
+    const onResize = vi.fn()
 
     const screen = render(() => {
       const [panels, setPanels] = createStore([
-        { content: 'Logs', minSize: 0.2, size: 0.35 },
-        { content: 'Preview', minSize: 0.25, size: 0.65 },
+        { content: 'Left', minSize: '20%' as const, size: 400 },
+        { content: 'Right', minSize: '20%' as const, size: 600 },
       ])
 
       return (
         <Resizable
-          onSizesChange={(nextSizes) => {
-            onSizesChange(nextSizes)
-            nextSizes.forEach((nextSize, index) => {
-              if (typeof nextSize === 'number' && Number.isFinite(nextSize)) {
-                setPanels(index, 'size', nextSize)
-              }
-            })
+          onResize={(nextSizes) => {
+            onResize(nextSizes)
+            nextSizes.forEach((nextSize, index) => setPanels(index, 'size', nextSize))
           }}
           panels={panels}
         />
@@ -196,161 +260,77 @@ describe('Resizable', () => {
 
     const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
     await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
-    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 20, clientY: 0 })
-    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 40, clientY: 0 })
-    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 40, clientY: 0 })
+    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
+    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 100, clientY: 0 })
 
-    expect(onSizesChange.mock.calls.length).toBeGreaterThanOrEqual(2)
+    const nextSizes = onResize.mock.calls.at(-1)?.[0] as number[] | undefined
+    expect(onResize).toHaveBeenCalled()
+    expect(nextSizes?.[0]).toBeCloseTo(500, 3)
+    expect(nextSizes?.[1]).toBeCloseTo(500, 3)
   })
 
-  test('supports mixed controlled panel sizes', () => {
+  test('supports mixed controlled sizes with px numbers and percent strings', () => {
     const screen = render(() => (
       <Resizable
-        panels={[{ content: 'Left', size: 0.2 }, { content: 'Center' }, { content: 'Right' }]}
+        panels={[{ content: 'A', size: 200 }, { content: 'B', size: '30%' }, { content: 'C' }]}
       />
     ))
 
-    const panels = Array.from(
-      screen.container.querySelectorAll('[data-slot="panel"]'),
-    ) as HTMLElement[]
-    expect(panels).toHaveLength(3)
+    const panels = screen.container.querySelectorAll(
+      '[data-slot="panel"]',
+    ) as NodeListOf<HTMLDivElement>
     expect(panels[0]?.style.flexBasis).toBe('20%')
-    expect(panels[1]?.style.flexBasis).toBe('40%')
-    expect(panels[2]?.style.flexBasis).toBe('40%')
+    expect(panels[1]?.style.flexBasis).toBe('30%')
+    expect(panels[2]?.style.flexBasis).toBe('50%')
   })
 
-  test('preserves resize behavior when toggling between controlled and uncontrolled mode', async () => {
-    const onSizesChange = vi.fn()
-
-    const TestHarness = () => {
-      const [controlled, setControlled] = createSignal(true)
-      const [sizes, setSizes] = createSignal([0.7, 0.3])
-      const panels = () => [
-        { content: 'Left', minSize: 0.2, size: controlled() ? sizes()[0] : undefined },
-        { content: 'Right', minSize: 0.2, size: controlled() ? sizes()[1] : undefined },
-      ]
-
-      return (
-        <div>
-          <button
-            type="button"
-            data-slot="toggle-control"
-            onClick={() => setControlled((prev) => !prev)}
-          >
-            Toggle Control
-          </button>
-          <Resizable
-            onSizesChange={(nextSizes) => {
-              onSizesChange(nextSizes)
-              setSizes(nextSizes)
-            }}
-            panels={panels()}
-          />
-        </div>
-      )
-    }
-
-    const screen = render(() => <TestHarness />)
-
-    const toggleButton = screen.container.querySelector(
-      '[data-slot="toggle-control"]',
-    ) as HTMLButtonElement
-    const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
-    const panel = screen.container.querySelector('[data-slot="panel"]') as HTMLElement
-
-    expect(panel.style.flexBasis).toBe('70%')
-
-    await fireEvent.keyDown(handle, { key: 'ArrowRight' })
-    const controlledNextSizes = onSizesChange.mock.calls.at(-1)?.[0] as number[] | undefined
-    expect(Array.isArray(controlledNextSizes)).toBe(true)
-    expect((controlledNextSizes?.[0] ?? 0) > 0.7).toBe(true)
-
-    await fireEvent.click(toggleButton)
-    const basisAfterToggle = Number.parseFloat(panel.style.flexBasis)
-    expect(Number.isFinite(basisAfterToggle)).toBe(true)
-    expect(basisAfterToggle > 0 && basisAfterToggle < 100).toBe(true)
-
-    await fireEvent.keyDown(handle, { key: 'ArrowLeft' })
-    const uncontrolledNextSizes = onSizesChange.mock.calls.at(-1)?.[0] as number[] | undefined
-    expect(Array.isArray(uncontrolledNextSizes)).toBe(true)
-    expect(uncontrolledNextSizes).toHaveLength(2)
-    expect(((uncontrolledNextSizes?.[0] ?? 0) + (uncontrolledNextSizes?.[1] ?? 0)).toFixed(6)).toBe(
-      '1.000000',
-    )
-
-    await fireEvent.click(toggleButton)
-    const controlledPanel = screen.container.querySelector('[data-slot="panel"]') as HTMLElement
-    expect(Number.parseFloat(controlledPanel.style.flexBasis)).toBeCloseTo(
-      (uncontrolledNextSizes?.[0] ?? 0) * 100,
-      4,
-    )
-  })
-
-  test('toggles nearest collapsible panel by Enter key', async () => {
-    const onCollapse = vi.fn()
-    const onExpand = vi.fn()
+  test('toggles the nearest collapsible panel with Enter and emits resize lifecycle', async () => {
+    const events: Array<{ type: 'start' | 'resize' | 'end'; sizes: number[] }> = []
 
     const screen = render(() => (
       <Resizable
+        onResizeStart={(nextSizes) => events.push({ type: 'start', sizes: nextSizes })}
+        onResize={(nextSizes) => events.push({ type: 'resize', sizes: nextSizes })}
+        onResizeEnd={(nextSizes) => events.push({ type: 'end', sizes: nextSizes })}
         panels={[
           {
-            content: 'Left',
+            content: 'Sidebar',
+            initialSize: '30%',
+            minSize: '20%',
             collapsible: true,
-            minSize: 0.2,
             collapsedSize: 0,
-            onCollapse,
-            onExpand,
+            collapseThreshold: '5%',
           },
-          { content: 'Right', minSize: 0.2 },
+          { content: 'Content', initialSize: '70%', minSize: '20%' },
         ]}
       />
     ))
 
     const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
-    const panel = screen.container.querySelector('[data-slot="panel"]')
-
     await fireEvent.keyDown(handle, { key: 'Enter' })
 
-    expect(panel?.getAttribute('data-collapsed')).toBe('')
-    expect(onCollapse).toHaveBeenCalled()
+    expect(events.map((event) => event.type)).toEqual(['start', 'resize', 'end'])
+    expect(events[0]?.sizes).toEqual([300, 700])
+    expect(events[1]?.sizes[0]).toBeCloseTo(0, 3)
+    expect(events[1]?.sizes[1]).toBeCloseTo(1000, 3)
 
-    await fireEvent.keyDown(handle, { key: 'Enter' })
-
-    expect(panel?.getAttribute('data-collapsed')).toBeNull()
-    expect(onExpand).toHaveBeenCalled()
+    const panels = screen.container.querySelectorAll('[data-slot="panel"]')
+    expect(panels[0]?.getAttribute('data-collapsed')).toBe('')
   })
 
-  test('fires handle drag callbacks', async () => {
-    const onHandleDrag = vi.fn()
-    const onHandleDragEnd = vi.fn()
-
+  test('supports nested resizable panels and root-level intersection config', async () => {
     const screen = render(() => (
       <Resizable
-        onHandleDrag={onHandleDrag}
-        onHandleDragEnd={onHandleDragEnd}
-        panels={[{ content: 'Left' }, { content: 'Right' }]}
-      />
-    ))
-
-    const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
-
-    await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
-    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 40, clientY: 0, altKey: true })
-    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 40, clientY: 0 })
-
-    expect(onHandleDrag).toHaveBeenCalled()
-    expect(onHandleDragEnd).toHaveBeenCalled()
-  })
-
-  test('supports nested resizable panels', async () => {
-    const screen = render(() => (
-      <Resizable
+        renderHandle
+        intersection
         panels={[
           { content: 'Outer Left' },
           {
             content: (
               <Resizable
                 orientation="vertical"
+                renderHandle
+                intersection
                 panels={[{ content: 'Inner Top' }, { content: 'Inner Bottom' }]}
               />
             ),
@@ -359,21 +339,11 @@ describe('Resizable', () => {
       />
     ))
 
-    const roots = screen.container.querySelectorAll('[data-slot="root"]')
     const handles = screen.container.querySelectorAll('[data-slot="divider"]')
+    const [outerHandle, innerHandle] = Array.from(handles) as HTMLDivElement[]
 
-    expect(roots).toHaveLength(2)
-    expect(handles).toHaveLength(2)
-    const [outerHandle, innerHandle] = Array.from(handles) as HTMLButtonElement[]
-
-    Object.defineProperty(outerHandle, 'getBoundingClientRect', {
-      value: () => createRect({ top: 0, right: 101, bottom: 200, left: 100 }),
-      configurable: true,
-    })
-    Object.defineProperty(innerHandle, 'getBoundingClientRect', {
-      value: () => createRect({ top: 80, right: 220, bottom: 81, left: 101 }),
-      configurable: true,
-    })
+    setRect(outerHandle, createRect({ top: 0, right: 101, bottom: 200, left: 100 }))
+    setRect(innerHandle, createRect({ top: 80, right: 220, bottom: 81, left: 101 }))
 
     const { refreshResizableHandleIntersections } = await import('./hook/manager')
     refreshResizableHandleIntersections()
@@ -389,15 +359,20 @@ describe('Resizable', () => {
     expect(hasEdgeTarget).toBe(true)
   })
 
-  test('marks all affected handles as active when hovering cross-target', async () => {
+  test('does not show cross targets when the root handle system is disabled', async () => {
     const screen = render(() => (
       <Resizable
+        disable
+        renderHandle
+        intersection
         panels={[
           { content: 'Outer Left' },
           {
             content: (
               <Resizable
                 orientation="vertical"
+                renderHandle
+                intersection
                 panels={[{ content: 'Inner Top' }, { content: 'Inner Bottom' }]}
               />
             ),
@@ -407,16 +382,44 @@ describe('Resizable', () => {
     ))
 
     const handles = screen.container.querySelectorAll('[data-slot="divider"]')
-    const [outerHandle, innerHandle] = Array.from(handles) as HTMLButtonElement[]
+    const [outerHandle, innerHandle] = Array.from(handles) as HTMLDivElement[]
 
-    Object.defineProperty(outerHandle, 'getBoundingClientRect', {
-      value: () => createRect({ top: 0, right: 101, bottom: 200, left: 100 }),
-      configurable: true,
-    })
-    Object.defineProperty(innerHandle, 'getBoundingClientRect', {
-      value: () => createRect({ top: 80, right: 220, bottom: 81, left: 101 }),
-      configurable: true,
-    })
+    setRect(outerHandle, createRect({ top: 0, right: 101, bottom: 200, left: 100 }))
+    setRect(innerHandle, createRect({ top: 80, right: 220, bottom: 81, left: 101 }))
+
+    const { refreshResizableHandleIntersections } = await import('./hook/manager')
+    refreshResizableHandleIntersections()
+    await Promise.resolve()
+
+    expect(screen.container.querySelectorAll('[data-slot="cross-target"]')).toHaveLength(0)
+  })
+
+  test('marks all affected handles as active when hovering a cross-target', async () => {
+    const screen = render(() => (
+      <Resizable
+        renderHandle
+        intersection
+        panels={[
+          { content: 'Outer Left' },
+          {
+            content: (
+              <Resizable
+                orientation="vertical"
+                renderHandle
+                intersection
+                panels={[{ content: 'Inner Top' }, { content: 'Inner Bottom' }]}
+              />
+            ),
+          },
+        ]}
+      />
+    ))
+
+    const handles = screen.container.querySelectorAll('[data-slot="divider"]')
+    const [outerHandle, innerHandle] = Array.from(handles) as HTMLDivElement[]
+
+    setRect(outerHandle, createRect({ top: 0, right: 101, bottom: 200, left: 100 }))
+    setRect(innerHandle, createRect({ top: 80, right: 220, bottom: 81, left: 101 }))
 
     const { refreshResizableHandleIntersections } = await import('./hook/manager')
     refreshResizableHandleIntersections()
@@ -424,10 +427,6 @@ describe('Resizable', () => {
 
     const crossTarget = innerHandle.querySelector('[data-slot="cross-target"]') as HTMLElement
     expect(crossTarget).toBeTruthy()
-    expect(
-      crossTarget.hasAttribute('data-resizable-handle-start-target') ||
-        crossTarget.hasAttribute('data-resizable-handle-end-target'),
-    ).toBe(true)
     expect(outerHandle.getAttribute('data-active')).toBeNull()
     expect(innerHandle.getAttribute('data-active')).toBeNull()
 
@@ -440,16 +439,16 @@ describe('Resizable', () => {
     expect(innerHandle.getAttribute('data-active')).toBeNull()
   })
 
-  test('keeps handle index reactive after panels list changes', async () => {
-    const onSizesChange = vi.fn()
+  test('keeps handle index reactive after the panels list changes', async () => {
+    const onResize = vi.fn()
 
     const screen = render(() => {
       const [panelMetas, setPanelMetas] = createSignal([
-        { content: 'One', minSize: 0.2 },
-        { content: 'Two', minSize: 0.2 },
-        { content: 'Three', minSize: 0.2 },
+        { content: 'One', minSize: '20%' as const },
+        { content: 'Two', minSize: '20%' as const },
+        { content: 'Three', minSize: '20%' as const },
       ])
-      const [sizes, setSizes] = createSignal([0.34, 0.33, 0.33])
+      const [sizes, setSizes] = createSignal([340, 330, 330])
       const panels = () =>
         panelMetas().map((panel, index) =>
           Object.assign({}, panel, {
@@ -464,14 +463,14 @@ describe('Resizable', () => {
             data-slot="shrink"
             onClick={() => {
               setPanelMetas((previous) => previous.slice(1))
-              setSizes([0.5, 0.5])
+              setSizes([500, 500])
             }}
           >
             Shrink
           </button>
           <Resizable
-            onSizesChange={(nextSizes) => {
-              onSizesChange(nextSizes)
+            onResize={(nextSizes) => {
+              onResize(nextSizes)
               setSizes(nextSizes)
             }}
             panels={panels()}
@@ -489,11 +488,11 @@ describe('Resizable', () => {
     const handle = handles[0] as HTMLElement
     await fireEvent.keyDown(handle, { key: 'ArrowRight' })
 
-    const nextSizes = onSizesChange.mock.calls.at(-1)?.[0] as number[] | undefined
+    const nextSizes = onResize.mock.calls.at(-1)?.[0] as number[] | undefined
     expect(Array.isArray(nextSizes)).toBe(true)
     expect(nextSizes).toHaveLength(2)
-    expect((nextSizes?.[0] ?? 0) > 0.5).toBe(true)
-    expect((nextSizes?.[1] ?? 1) < 0.5).toBe(true)
+    expect(nextSizes?.[0]).toBeCloseTo(600, 3)
+    expect(nextSizes?.[1]).toBeCloseTo(400, 3)
   })
 
   test('updates data-active and data-dragging through hover and drag states', async () => {

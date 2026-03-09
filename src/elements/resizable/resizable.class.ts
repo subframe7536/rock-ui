@@ -14,7 +14,7 @@ export const resizableRootVariants = cva('flex h-full w-full min-h-0 min-w-0', {
 })
 
 export const resizableHandleVariants = cva(
-  'relative flex shrink-0 items-center justify-center overflow-visible bg-border after:(absolute content-empty) focus-visible:effect-fv',
+  'relative flex shrink-0 items-center justify-center overflow-visible bg-border after:(absolute content-empty) focus-visible:effect-fv aria-disabled:cursor-default',
   {
     defaultVariants: {
       orientation: 'horizontal',
@@ -33,7 +33,7 @@ export const resizableCrossTargetVariants = cva(
   {
     defaultVariants: {
       orientation: 'horizontal',
-      target: 'startIntersection',
+      target: 'start',
     },
     variants: {
       orientation: {
@@ -41,29 +41,29 @@ export const resizableCrossTargetVariants = cva(
         vertical: 'top-1/2 -translate-y-1/2',
       },
       target: {
-        startIntersection: '',
-        endIntersection: '',
+        start: '',
+        end: '',
       },
     },
     compoundVariants: [
       {
         orientation: 'horizontal',
-        target: 'startIntersection',
+        target: 'start',
         class: 'top-0',
       },
       {
         orientation: 'horizontal',
-        target: 'endIntersection',
+        target: 'end',
         class: 'bottom-0',
       },
       {
         orientation: 'vertical',
-        target: 'startIntersection',
+        target: 'start',
         class: 'left-0',
       },
       {
         orientation: 'vertical',
-        target: 'endIntersection',
+        target: 'end',
         class: 'right-0',
       },
     ],

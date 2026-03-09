@@ -1,30 +1,31 @@
 import { describe, expect, test } from 'vitest'
 
+import { resolvePanels } from './panel'
 import {
+  RESIZE_FLAG_BOTH,
+  RESIZE_FLAG_FOLLOWING,
+  RESIZE_FLAG_PRECEDING,
   collapsePanel,
   expandPanel,
-  normalizePanelSizes,
-  normalizeSizeVector,
-  resolvePanels,
   resizeFromHandle,
   resizePanelToSize,
   toggleHandleNearestPanel,
-} from '.'
+} from './resize'
 
 const ROOT_SIZE = 1000
 
-describe('resizable-core', () => {
+describe('resize', () => {
   test('resizePanelToSize(strategy=following) keeps collapsible neighbor above minSize', () => {
     const panels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2 },
-        { panelId: 'center', minSize: 0.2, maxSize: 1 },
+        { panelId: 'left', minSize: '20%' },
+        { panelId: 'center', minSize: '20%', maxSize: '100%' },
         {
           panelId: 'right',
-          minSize: 0.2,
+          minSize: '20%',
           collapsible: true,
           collapsedSize: 0,
-          collapseThreshold: 0.05,
+          collapseThreshold: '5%',
         },
       ],
       ROOT_SIZE,
@@ -33,8 +34,8 @@ describe('resizable-core', () => {
 
     const nextSizes = resizePanelToSize({
       panelIndex: 1,
-      size: 0.6,
-      strategy: 'following',
+      size: '60%',
+      strategy: RESIZE_FLAG_FOLLOWING,
       initialSizes: [0.4, 0.3, 0.3],
       panels,
       rootSize: ROOT_SIZE,
@@ -49,13 +50,13 @@ describe('resizable-core', () => {
       [
         {
           panelId: 'left',
-          minSize: 0.2,
+          minSize: '20%',
           collapsible: true,
           collapsedSize: 0,
-          collapseThreshold: 0.05,
+          collapseThreshold: '5%',
         },
-        { panelId: 'center', minSize: 0.2, maxSize: 1 },
-        { panelId: 'right', minSize: 0.2 },
+        { panelId: 'center', minSize: '20%', maxSize: '100%' },
+        { panelId: 'right', minSize: '20%' },
       ],
       ROOT_SIZE,
       'resizable-test',
@@ -63,8 +64,8 @@ describe('resizable-core', () => {
 
     const nextSizes = resizePanelToSize({
       panelIndex: 1,
-      size: 0.6,
-      strategy: 'preceding',
+      size: '60%',
+      strategy: RESIZE_FLAG_PRECEDING,
       initialSizes: [0.3, 0.3, 0.4],
       panels,
       rootSize: ROOT_SIZE,
@@ -79,18 +80,18 @@ describe('resizable-core', () => {
       [
         {
           panelId: 'left',
-          minSize: 0.2,
+          minSize: '20%',
           collapsible: true,
           collapsedSize: 0,
-          collapseThreshold: 0.05,
+          collapseThreshold: '5%',
         },
-        { panelId: 'center', minSize: 0.2, maxSize: 1 },
+        { panelId: 'center', minSize: '20%', maxSize: '100%' },
         {
           panelId: 'right',
-          minSize: 0.2,
+          minSize: '20%',
           collapsible: true,
           collapsedSize: 0,
-          collapseThreshold: 0.05,
+          collapseThreshold: '5%',
         },
       ],
       ROOT_SIZE,
@@ -99,8 +100,8 @@ describe('resizable-core', () => {
 
     const nextSizes = resizePanelToSize({
       panelIndex: 1,
-      size: 0.8,
-      strategy: 'both',
+      size: '80%',
+      strategy: RESIZE_FLAG_BOTH,
       initialSizes: [0.3, 0.3, 0.4],
       panels,
       rootSize: ROOT_SIZE,
@@ -114,8 +115,8 @@ describe('resizable-core', () => {
   test('collapsePanel returns unchanged sizes for non-collapsible or already-collapsed panel', () => {
     const nonCollapsiblePanels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2, collapsible: false },
-        { panelId: 'right', minSize: 0.2 },
+        { panelId: 'left', minSize: '20%', collapsible: false },
+        { panelId: 'right', minSize: '20%' },
       ],
       ROOT_SIZE,
       'resizable-test',
@@ -123,7 +124,7 @@ describe('resizable-core', () => {
 
     const unchangedNonCollapsible = collapsePanel({
       panelIndex: 0,
-      strategy: 'following',
+      strategy: RESIZE_FLAG_FOLLOWING,
       initialSizes: [0.4, 0.6],
       panels: nonCollapsiblePanels,
     })
@@ -132,8 +133,8 @@ describe('resizable-core', () => {
 
     const collapsiblePanels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2, collapsible: true, collapsedSize: 0 },
-        { panelId: 'right', minSize: 0.2 },
+        { panelId: 'left', minSize: '20%', collapsible: true, collapsedSize: 0 },
+        { panelId: 'right', minSize: '20%' },
       ],
       ROOT_SIZE,
       'resizable-test',
@@ -141,7 +142,7 @@ describe('resizable-core', () => {
 
     const unchangedCollapsed = collapsePanel({
       panelIndex: 0,
-      strategy: 'following',
+      strategy: RESIZE_FLAG_FOLLOWING,
       initialSizes: [0, 1],
       panels: collapsiblePanels,
     })
@@ -152,8 +153,8 @@ describe('resizable-core', () => {
   test('expandPanel expands collapsed panel to at least minSize', () => {
     const panels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2, collapsible: true, collapsedSize: 0 },
-        { panelId: 'right', minSize: 0.2 },
+        { panelId: 'left', minSize: '20%', collapsible: true, collapsedSize: 0 },
+        { panelId: 'right', minSize: '20%' },
       ],
       ROOT_SIZE,
       'resizable-test',
@@ -161,7 +162,7 @@ describe('resizable-core', () => {
 
     const nextSizes = expandPanel({
       panelIndex: 0,
-      strategy: 'following',
+      strategy: RESIZE_FLAG_FOLLOWING,
       initialSizes: [0, 1],
       panels,
     })
@@ -173,8 +174,8 @@ describe('resizable-core', () => {
   test('toggleHandleNearestPanel handles no-collapsible, collapse and expand cases', () => {
     const nonCollapsiblePanels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2, collapsible: false },
-        { panelId: 'right', minSize: 0.2, collapsible: false },
+        { panelId: 'left', minSize: '20%', collapsible: false },
+        { panelId: 'right', minSize: '20%', collapsible: false },
       ],
       ROOT_SIZE,
       'resizable-test',
@@ -190,8 +191,8 @@ describe('resizable-core', () => {
 
     const collapsiblePanels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2, collapsible: true, collapsedSize: 0 },
-        { panelId: 'right', minSize: 0.2 },
+        { panelId: 'left', minSize: '20%', collapsible: true, collapsedSize: 0 },
+        { panelId: 'right', minSize: '20%' },
       ],
       ROOT_SIZE,
       'resizable-test',
@@ -217,9 +218,9 @@ describe('resizable-core', () => {
   test('resizeFromHandle(altKey) keeps first-handle reverse path equivalent to mirrored center handle', () => {
     const panels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2, maxSize: 0.8 },
-        { panelId: 'center', minSize: 0.2, maxSize: 0.9 },
-        { panelId: 'right', minSize: 0.2, maxSize: 0.8 },
+        { panelId: 'left', minSize: '20%', maxSize: '80%' },
+        { panelId: 'center', minSize: '20%', maxSize: '90%' },
+        { panelId: 'right', minSize: '20%', maxSize: '80%' },
       ],
       ROOT_SIZE,
       'resizable-test',
@@ -251,18 +252,18 @@ describe('resizable-core', () => {
       [
         {
           panelId: 'left',
-          minSize: 0.24,
+          minSize: '24%',
           collapsible: true,
           collapsedSize: 0,
-          collapseThreshold: 0.04,
+          collapseThreshold: '4%',
         },
-        { panelId: 'center', minSize: 0.2, maxSize: 1 },
+        { panelId: 'center', minSize: '20%', maxSize: '100%' },
         {
           panelId: 'right',
-          minSize: 0.24,
+          minSize: '24%',
           collapsible: true,
           collapsedSize: 0,
-          collapseThreshold: 0.04,
+          collapseThreshold: '4%',
         },
       ],
       ROOT_SIZE,
@@ -273,8 +274,8 @@ describe('resizable-core', () => {
 
     const following = resizePanelToSize({
       panelIndex: 1,
-      size: 0.559999,
-      strategy: 'following',
+      size: '55.9999%',
+      strategy: RESIZE_FLAG_FOLLOWING,
       initialSizes,
       panels,
       rootSize: ROOT_SIZE,
@@ -282,8 +283,8 @@ describe('resizable-core', () => {
 
     const preceding = resizePanelToSize({
       panelIndex: 1,
-      size: 0.559999,
-      strategy: 'preceding',
+      size: '55.9999%',
+      strategy: RESIZE_FLAG_PRECEDING,
       initialSizes,
       panels,
       rootSize: ROOT_SIZE,
@@ -291,8 +292,8 @@ describe('resizable-core', () => {
 
     const both = resizePanelToSize({
       panelIndex: 1,
-      size: 0.559999,
-      strategy: 'both',
+      size: '55.9999%',
+      strategy: RESIZE_FLAG_BOTH,
       initialSizes,
       panels,
       rootSize: ROOT_SIZE,
@@ -306,13 +307,13 @@ describe('resizable-core', () => {
   test('resizeFromHandle collapses only when collapseThreshold is reached', () => {
     const panels = resolvePanels(
       [
-        { panelId: 'left', minSize: 0.2, maxSize: 1 },
+        { panelId: 'left', minSize: '20%', maxSize: '100%' },
         {
           panelId: 'right',
-          minSize: 0.24,
+          minSize: '24%',
           collapsible: true,
           collapsedSize: 0,
-          collapseThreshold: 0.04,
+          collapseThreshold: '4%',
         },
       ],
       ROOT_SIZE,
@@ -340,33 +341,5 @@ describe('resizable-core', () => {
 
     expect(atThreshold[0]).toBeCloseTo(1, 6)
     expect(atThreshold[1]).toBeCloseTo(0, 6)
-  })
-
-  test('normalizeSizeVector handles zero, negative and non-finite inputs', () => {
-    expect(normalizeSizeVector([0, 0, 0])).toEqual([0.333333, 0.333333, 0.333334])
-    expect(normalizeSizeVector([1, -1, Number.NaN, Number.POSITIVE_INFINITY])).toEqual([1, 0, 0, 0])
-    expect(normalizeSizeVector([Number.NaN, Number.POSITIVE_INFINITY])).toEqual([0.5, 0.5])
-  })
-
-  test('normalizePanelSizes keeps provided controlled sizes and fills undefined sizes with remainder', () => {
-    expect(
-      normalizePanelSizes({
-        panelCount: 3,
-        rootSize: ROOT_SIZE,
-        panelInitialSizes: [undefined, undefined, undefined],
-        controlledSizes: [0.2, undefined, undefined],
-      }),
-    ).toEqual([0.2, 0.4, 0.4])
-  })
-
-  test('normalizePanelSizes falls back undefined controlled sizes to zero when provided sum exceeds one', () => {
-    expect(
-      normalizePanelSizes({
-        panelCount: 3,
-        rootSize: ROOT_SIZE,
-        panelInitialSizes: [undefined, undefined, undefined],
-        controlledSizes: [0.8, 0.6, undefined],
-      }),
-    ).toEqual([0.571429, 0.428571, 0])
   })
 })

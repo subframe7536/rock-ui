@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import type { ResizableHandleRegistration, ResizableOrientation } from './manager'
+import type { ResizableHandleRegistration } from './manager'
+import type { ResizableOrientation } from './types'
 
 interface RectInput {
   top: number

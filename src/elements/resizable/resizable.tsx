@@ -4,19 +4,20 @@ import { For, Show, createEffect, createMemo, createSignal, mergeProps, onCleanu
 import type { SlotClasses } from '../../shared/slot-class'
 import { cn, useId } from '../../shared/utils'
 
-import { useResizableHandle } from './hook/handle'
-import type { ResizableHandleOptions } from './hook/handle'
-import { RESIZABLE_HANDLE_TARGET_END, RESIZABLE_HANDLE_TARGET_START } from './hook/manager'
 import {
   EPSILON,
+  RESIZABLE_HANDLE_TARGET_END,
+  RESIZABLE_HANDLE_TARGET_START,
   getHandleAria,
   isPanelCollapsed,
   normalizePanelSizes,
   resolveKeyboardDelta,
   resolvePanels,
-} from './hook/panel'
-import type { ResizableOrientation, ResizablePanelItem, ResizableSize } from './hook/panel'
-import { resizeFromHandle, toggleHandleNearestPanel } from './hook/resize'
+  resizeFromHandle,
+  toggleHandleNearestPanel,
+  useResizableHandle,
+} from './hook'
+import type { ResizableOrientation, ResizablePanelItem, ResizableSize } from './hook'
 import {
   resizableCrossTargetVariants,
   resizableHandleVariants,
@@ -28,10 +29,15 @@ type ResizableSlots = 'root' | 'panel' | 'divider' | 'handle' | 'crossTarget'
 
 export type ResizableClasses = SlotClasses<ResizableSlots>
 
-export interface ResizableProps extends ResizableVariantProps, ResizableHandleOptions {
+export interface ResizableProps extends ResizableVariantProps {
   id?: string
   panels?: ResizablePanelItem[]
-  onSizesChange?: (sizes: number[]) => void
+  onResize?: (sizes: number[]) => void
+  onResizeStart?: (sizes: number[]) => void
+  onResizeEnd?: (sizes: number[]) => void
+  disable?: boolean
+  renderHandle?: boolean | JSX.Element
+  intersection?: boolean
   keyboardDelta?: ResizableSize
   classes?: ResizableClasses
 }
@@ -40,13 +46,15 @@ interface DragState {
   initialSizes: number[]
   handleIndex: number
   altKey: boolean
+  started: boolean
+  lastSizes: number[]
 }
 
 export function Resizable(props: ResizableProps): JSX.Element {
   const localProps = mergeProps(
     {
       orientation: 'horizontal' as ResizableOrientation,
-      keyboardDelta: 0.1 as ResizableSize,
+      keyboardDelta: '10%' as ResizableSize,
       renderHandle: true,
     },
     props,
@@ -146,6 +154,25 @@ export function Resizable(props: ResizableProps): JSX.Element {
     prevCollapsed = panels.map((p, i) => isPanelCollapsed(currentSizes[i] ?? 0, p))
   })
 
+  function hasSizeChange(previousSizes: number[], nextSizes: number[]): boolean {
+    if (previousSizes.length !== nextSizes.length) {
+      return true
+    }
+
+    for (let index = 0; index < previousSizes.length; index += 1) {
+      if (Math.abs(previousSizes[index] - nextSizes[index]) > EPSILON) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  function resolvePixelSizes(nextSizes: number[]): number[] {
+    const currentRootSize = Math.max(rootSize(), 1)
+    return nextSizes.map((size) => size * currentRootSize)
+  }
+
   function normalizeSizes(nextSizes: number[]): number[] {
     const nextCount = panelCount()
     if (nextSizes.length !== nextCount) {
@@ -165,15 +192,38 @@ export function Resizable(props: ResizableProps): JSX.Element {
       : nextSizes
   }
 
-  function emitSizes(nextSizes: number[]): void {
-    const normalized = normalizeSizes(nextSizes)
+  function beginResize(nextSizes: number[]): void {
+    localProps.onResizeStart?.(resolvePixelSizes(nextSizes))
+  }
+
+  function endResize(nextSizes: number[]): void {
+    localProps.onResizeEnd?.(resolvePixelSizes(nextSizes))
+  }
+
+  function emitSizes(normalizedSizes: number[]): void {
     if (normalizedControlledSizes() === undefined) {
-      setUncontrolledSizes(normalized)
+      setUncontrolledSizes(normalizedSizes)
     }
-    localProps.onSizesChange?.(normalized)
+    localProps.onResize?.(resolvePixelSizes(normalizedSizes))
   }
 
   let drag: DragState | null = null
+
+  function resetDragState(handleIndex: number, altKey: boolean): DragState {
+    if (drag && drag.started) {
+      endResize(drag.lastSizes)
+    }
+
+    drag = {
+      initialSizes: [...sizes()],
+      handleIndex,
+      altKey,
+      started: false,
+      lastSizes: [...sizes()],
+    }
+
+    return drag
+  }
 
   function resizeHandleByDelta(handleIndex: number, deltaPx: number, altKey: boolean): void {
     if (sizes().length <= 1) {
@@ -181,10 +231,10 @@ export function Resizable(props: ResizableProps): JSX.Element {
     }
 
     if (!drag || drag.handleIndex !== handleIndex || drag.altKey !== altKey) {
-      drag = { initialSizes: [...sizes()], handleIndex, altKey }
+      drag = resetDragState(handleIndex, altKey)
     }
 
-    emitSizes(
+    const nextSizes = normalizeSizes(
       resizeFromHandle({
         handleIndex,
         deltaPercentage: deltaPx / Math.max(rootSize(), 1),
@@ -193,21 +243,50 @@ export function Resizable(props: ResizableProps): JSX.Element {
         panels: resolvedPanels(),
       }),
     )
+    const currentSizes = drag.started ? drag.lastSizes : drag.initialSizes
+
+    if (!hasSizeChange(currentSizes, nextSizes)) {
+      return
+    }
+
+    if (!drag.started) {
+      beginResize(drag.initialSizes)
+      drag.started = true
+    }
+
+    drag.lastSizes = nextSizes
+    emitSizes(nextSizes)
   }
 
   function stopHandleDrag(): void {
+    if (drag?.started) {
+      endResize(drag.lastSizes)
+    }
+
     drag = null
   }
 
   function onHandleKeyDown(handleIndex: number, event: KeyboardEvent, altKey: boolean): void {
+    if (localProps.disable) {
+      return
+    }
+
     if (event.key === 'Enter') {
-      emitSizes(
+      const currentSizes = sizes()
+      const nextSizes = normalizeSizes(
         toggleHandleNearestPanel({
           handleIndex,
-          initialSizes: sizes(),
+          initialSizes: currentSizes,
           panels: resolvedPanels(),
         }),
       )
+
+      if (hasSizeChange(currentSizes, nextSizes)) {
+        beginResize(currentSizes)
+        emitSizes(nextSizes)
+        endResize(nextSizes)
+      }
+
       event.preventDefault()
       return
     }
@@ -233,15 +312,24 @@ export function Resizable(props: ResizableProps): JSX.Element {
       return
     }
 
-    emitSizes(
+    const currentSizes = sizes()
+    const nextSizes = normalizeSizes(
       resizeFromHandle({
         handleIndex,
         deltaPercentage,
         altKey,
-        initialSizes: sizes(),
+        initialSizes: currentSizes,
         panels: resolvedPanels(),
       }),
     )
+
+    if (!hasSizeChange(currentSizes, nextSizes)) {
+      return
+    }
+
+    beginResize(currentSizes)
+    emitSizes(nextSizes)
+    endResize(nextSizes)
     event.preventDefault()
   }
 
@@ -256,15 +344,6 @@ export function Resizable(props: ResizableProps): JSX.Element {
     >
       <For each={resolvedPanels()}>
         {(panel, index) => {
-          const mergedHandleOptions = createMemo<ResizableHandleOptions>(() => ({
-            renderHandle: panel.renderHandle ?? localProps.renderHandle,
-            disableHandle: panel.disableHandle ?? localProps.disableHandle,
-            intersection: panel.intersection ?? localProps.intersection,
-            onHandleDragStart: panel.onHandleDragStart ?? localProps.onHandleDragStart,
-            onHandleDrag: panel.onHandleDrag ?? localProps.onHandleDrag,
-            onHandleDragEnd: panel.onHandleDragEnd ?? localProps.onHandleDragEnd,
-          }))
-
           const size = () => sizes()[index()] ?? 0
           const collapsed = () => isPanelCollapsed(size(), panel)
 
@@ -275,7 +354,8 @@ export function Resizable(props: ResizableProps): JSX.Element {
           const bindings = useResizableHandle({
             handleIndex: index,
             orientation,
-            options: mergedHandleOptions,
+            disable: () => localProps.disable,
+            intersection: () => localProps.intersection,
             onDrag: resizeHandleByDelta,
             onDragEnd: stopHandleDrag,
             onKeyDown: onHandleKeyDown,
@@ -295,12 +375,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
                 {panel.content}
               </div>
 
-              <Show
-                when={
-                  index() < resolvedPanels().length - 1 &&
-                  mergedHandleOptions().disableHandle !== true
-                }
-              >
+              <Show when={index() < resolvedPanels().length - 1}>
                 <div
                   ref={bindings.setElement}
                   role="separator"
@@ -309,8 +384,8 @@ export function Resizable(props: ResizableProps): JSX.Element {
                   aria-valuemin={aria().valueMin}
                   aria-valuemax={aria().valueMax}
                   aria-valuenow={aria().valueNow}
-                  aria-disabled={mergedHandleOptions().disableHandle ? 'true' : undefined}
-                  tabIndex={mergedHandleOptions().disableHandle ? -1 : 0}
+                  aria-disabled={localProps.disable ? 'true' : undefined}
+                  tabIndex={localProps.disable ? -1 : 0}
                   data-slot="divider"
                   data-orientation={orientation()}
                   data-active={bindings.active() ? '' : undefined}
@@ -332,7 +407,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
                       data-resizable-handle-start-target
                       data-cross={bindings.cross() ? '' : undefined}
                       class={resizableCrossTargetVariants(
-                        { orientation: orientation(), target: 'startIntersection' },
+                        { orientation: orientation(), target: 'start' },
                         localProps.classes?.crossTarget,
                       )}
                       onMouseEnter={() =>
@@ -342,7 +417,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
                     />
                   </Show>
 
-                  <Show when={mergedHandleOptions().renderHandle} keyed>
+                  <Show when={localProps.renderHandle} keyed>
                     {(renderHandle) => (
                       <Show
                         when={renderHandle === true}
@@ -376,7 +451,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
                       data-resizable-handle-end-target
                       data-cross={bindings.cross() ? '' : undefined}
                       class={resizableCrossTargetVariants(
-                        { orientation: orientation(), target: 'endIntersection' },
+                        { orientation: orientation(), target: 'end' },
                         localProps.classes?.crossTarget,
                       )}
                       onMouseEnter={() =>

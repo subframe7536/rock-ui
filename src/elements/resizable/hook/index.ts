@@ -1,2 +1,6 @@
+export * from './types'
+export * from './size'
 export * from './panel'
 export * from './resize'
+export * from './handle'
+export * from './manager'
