@@ -199,7 +199,6 @@ export function Stepper(props: StepperProps): JSX.Element {
                     {
                       orientation: merged.orientation,
                       size: merged.size,
-                      disabled: disabled(),
                     },
                     merged.classes?.item,
                     entry.item.class,
@@ -207,7 +206,6 @@ export function Stepper(props: StepperProps): JSX.Element {
                 >
                   <div
                     data-slot="container"
-                    data-state={state()}
                     class={stepperContainerVariants(
                       { orientation: merged.orientation },
                       merged.classes?.container,
@@ -253,8 +251,6 @@ export function Stepper(props: StepperProps): JSX.Element {
                         class={stepperSeparatorVariants(
                           {
                             orientation: merged.orientation,
-                            state: state(),
-                            disabled: disabled(),
                           },
                           merged.classes?.separator,
                         )}

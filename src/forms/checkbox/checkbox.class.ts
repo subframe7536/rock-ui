@@ -1,9 +1,7 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-import { SURFACE_INVALID_VARIANT } from '../../shared/cva-common.class'
-
-export const checkboxRootVariants = cva('relative flex items-start', {
+export const checkboxRootVariants = cva('relative flex items-start data-disabled:effect-dis', {
   defaultVariants: {
     indicator: 'start',
   },
@@ -14,9 +12,6 @@ export const checkboxRootVariants = cva('relative flex items-start', {
     indicator: {
       start: 'flex-row',
       end: 'flex-row-reverse',
-    },
-    disabled: {
-      true: 'effect-dis',
     },
   },
 })
@@ -52,11 +47,10 @@ export const checkboxContainerVariants = cva('flex items-center', {
 })
 
 export const checkboxBaseVariants = cva(
-  'inline-flex items-center justify-center overflow-hidden rounded-sm border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 peer-focus-visible:effect-fv-border data-checked:border-primary',
+  'inline-flex items-center justify-center overflow-hidden rounded-sm border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 peer-focus-visible:effect-fv-border data-checked:border-primary data-invalid:effect-invalid',
   {
     defaultVariants: {
       size: 'md',
-      invalid: false,
     },
     variants: {
       size: {
@@ -66,7 +60,6 @@ export const checkboxBaseVariants = cva(
         lg: 'size-4.5',
         xl: 'size-5',
       },
-      invalid: SURFACE_INVALID_VARIANT,
     },
   },
 )

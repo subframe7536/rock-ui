@@ -1,10 +1,10 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-import { INPUT_VARIANT_CLASSES, SURFACE_HIGHLIGHT_VARIANT } from '../../shared/cva-common.class'
+import { INPUT_VARIANT_CLASSES } from '../../shared/cva-common.class'
 
 export const inputNumberRootVariants = cva(
-  'inline-flex w-full items-stretch overflow-hidden rounded-md transition-[color,box-shadow] focus-within:effect-fv-border data-invalid:effect-invalid focus-within:data-invalid:effect-invalid',
+  'inline-flex w-full items-stretch overflow-hidden rounded-md transition-[color,box-shadow] focus-within:effect-fv-border data-invalid:effect-invalid focus-within:data-invalid:effect-invalid data-highlight:surface-highlight data-disabled:effect-dis',
   {
     defaultVariants: {
       size: 'md',
@@ -19,10 +19,6 @@ export const inputNumberRootVariants = cva(
         xl: 'h-11',
       },
       variant: INPUT_VARIANT_CLASSES,
-      highlight: SURFACE_HIGHLIGHT_VARIANT,
-      disabled: {
-        true: 'effect-dis',
-      },
     },
   },
 )
@@ -112,4 +108,6 @@ export const inputNumberControlColumnVariants = cva(
 
 export type InputNumberVariantProps = VariantProps<typeof inputNumberRootVariants> &
   VariantProps<typeof inputNumberBaseVariants> &
-  VariantProps<typeof inputNumberControlButtonVariants>
+  VariantProps<typeof inputNumberControlButtonVariants> & {
+    highlight?: boolean
+  }

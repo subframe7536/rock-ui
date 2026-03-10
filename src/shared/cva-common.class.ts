@@ -5,14 +5,6 @@ export const INPUT_VARIANT_CLASSES = {
   none: 'focus-within:ring-0',
 } as const
 
-export const SURFACE_HIGHLIGHT_VARIANT = {
-  true: 'surface-highlight',
-} as const
-
-export const SURFACE_INVALID_VARIANT = {
-  true: 'effect-invalid',
-} as const
-
 export const TEXT_SIZE_VARIANT = {
   xs: 'text-xs',
   sm: 'text-xs',

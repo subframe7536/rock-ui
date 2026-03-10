@@ -25,10 +25,9 @@ export const stepperHeaderVariants = cva('flex', {
   },
 })
 
-export const stepperItemVariants = cva('relative min-w-0', {
+export const stepperItemVariants = cva('relative min-w-0 data-disabled:effect-dis', {
   defaultVariants: {
     orientation: 'horizontal',
-    disabled: false,
   },
   variants: {
     orientation: {
@@ -41,9 +40,6 @@ export const stepperItemVariants = cva('relative min-w-0', {
       md: 'var-stepper-10-7-2.5-1',
       lg: 'var-stepper-12-8-3-1',
       xl: 'var-stepper-14-9-3.5-1',
-    },
-    disabled: {
-      true: 'opacity-75',
     },
   },
 })
@@ -60,7 +56,7 @@ export const stepperContainerVariants = cva('relative flex items-center', {
   },
 })
 
-export const stepperTriggerVariants = cva('inline-flex size-$st-size rounded-full', {
+export const stepperTriggerVariants = cva('inline-flex justify-center size-$st-size rounded-full', {
   defaultVariants: {
     size: 'md',
     state: 'inactive',
@@ -81,28 +77,21 @@ export const stepperTriggerVariants = cva('inline-flex size-$st-size rounded-ful
   },
 })
 
-export const stepperSeparatorVariants = cva('absolute rounded-full bg-border transition-colors', {
-  defaultVariants: {
-    orientation: 'horizontal',
-    state: 'inactive',
-    disabled: false,
-  },
-  variants: {
-    orientation: {
-      horizontal:
-        'top-1/2 h-0.5 -translate-y-1/2 start-[calc(50%+var(--st-sep-x))] end-[calc(-50%+var(--st-sep-x))]',
-      vertical: 'left-1/2 w-0.5 -translate-x-1/2 top-$st-sep-top bottom--3',
+export const stepperSeparatorVariants = cva(
+  'absolute rounded-full bg-border transition-colors data-disabled:opacity-75 bg-border data-[state=completed]:bg-primary',
+  {
+    defaultVariants: {
+      orientation: 'horizontal',
     },
-    state: {
-      inactive: 'bg-border',
-      active: 'bg-border',
-      completed: 'bg-primary',
-    },
-    disabled: {
-      true: 'opacity-75',
+    variants: {
+      orientation: {
+        horizontal:
+          'top-1/2 h-0.5 -translate-y-1/2 start-[calc(50%+var(--st-sep-x))] end-[calc(-50%+var(--st-sep-x))]',
+        vertical: 'left-1/2 w-0.5 -translate-x-1/2 top-$st-sep-top bottom--3',
+      },
     },
   },
-})
+)
 
 export const stepperWrapperVariants = cva('min-w-0', {
   defaultVariants: {

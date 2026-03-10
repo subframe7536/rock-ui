@@ -490,10 +490,10 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       required={formProps.required}
       disabled={field.disabled()}
       data-slot="root"
+      data-disabled={field.disabled() ? '' : undefined}
       class={fileUploadRootVariants(
         {
           size: field.size(),
-          disabled: field.disabled(),
         },
         styleProps.classes?.root,
       )}
@@ -504,13 +504,12 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
         fallback={
           <KobalteFileField.Trigger
             data-slot="base"
+            data-highlight={field.highlight() ? '' : undefined}
+            data-invalid={field.invalid() ? '' : undefined}
             class={fileUploadBaseVariants(
               {
                 size: field.size(),
-                highlight: field.highlight(),
-                dragging: false,
                 dropzone: false,
-                invalid: field.invalid(),
               },
               field.disabled() && 'bg-muted/32',
               styleProps.classes?.base,
@@ -524,13 +523,13 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       >
         <KobalteFileField.Dropzone
           data-slot="base"
+          data-highlight={field.highlight() ? '' : undefined}
+          data-dragging={dragging() ? '' : undefined}
+          data-invalid={field.invalid() ? '' : undefined}
           class={fileUploadBaseVariants(
             {
               size: field.size(),
-              highlight: field.highlight(),
-              dragging: dragging(),
               dropzone: true,
-              invalid: field.invalid(),
             },
             field.disabled() && 'bg-muted/32',
             styleProps.classes?.base,

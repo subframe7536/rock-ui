@@ -212,6 +212,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
               value={item.value}
               disabled={item.disabled || field.disabled()}
               data-slot="item"
+              data-disabled={item.disabled || field.disabled() ? '' : undefined}
               class={radioGroupItemVariants(
                 {
                   size: field.size(),
@@ -219,7 +220,6 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                   indicator: styleProps.indicator === 'hidden' ? undefined : styleProps.indicator,
                   tableOrientation:
                     styleProps.variant === 'table' ? styleProps.orientation : undefined,
-                  disabled: item.disabled || field.disabled(),
                 },
                 styleProps.classes?.item,
               )}
@@ -237,10 +237,10 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
 
                 <KobalteRadioGroup.ItemControl
                   data-slot="base"
+                  data-invalid={field.invalid() ? '' : undefined}
                   class={radioGroupBaseVariants(
                     {
                       size: field.size(),
-                      invalid: field.invalid(),
                     },
                     styleProps.indicator === 'hidden' && 'sr-only',
                     styleProps.classes?.base,

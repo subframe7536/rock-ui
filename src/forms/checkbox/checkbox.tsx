@@ -112,11 +112,11 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
       disabled={field.disabled()}
       onChange={onChange}
       data-slot="root"
+      data-disabled={field.disabled() ? '' : undefined}
       class={checkboxRootVariants(
         {
           variant: styleProps.variant === 'card' ? 'card' : undefined,
           indicator: styleProps.indicator === 'hidden' ? undefined : styleProps.indicator,
-          disabled: field.disabled(),
         },
         styleProps.variant === 'card' &&
           checkboxCardPaddingVariants({
@@ -146,10 +146,10 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
 
             <KobalteCheckbox.Control
               data-slot="base"
+              data-invalid={field.invalid() ? '' : undefined}
               class={checkboxBaseVariants(
                 {
                   size: field.size(),
-                  invalid: field.invalid(),
                 },
                 styleProps.indicator === 'hidden' && 'sr-only',
                 styleProps.classes?.base,

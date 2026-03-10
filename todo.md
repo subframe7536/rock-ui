@@ -1,14 +1,6 @@
 # Current
 
-- [x] New Badge: leading, trailing, onTrailingClick, size, variant (default / outline / solid); reuse in select
-- [x] New Stepper: reference from nuxt-ui/
-- [x] New Resizable: only reference from `zaidan/src/registry/kobalte/ui/resizable.tsx` , use `panels` as `Array` to setuo panels, auto insert handle between panels
-  - [x] handle itself cannot drag
-  - [x] when `endIntersaction` start dragging, whole page's text can be selected during drag move, but `startIntersaction` will not
-
-# Beta
-
-- [ ] invalid and other boolean state should become `data-*` driven css instead of a variant in `cva`
+- [x] invalid and other boolean state should become `data-*` driven css instead of a variant in `cva`
 - [ ] unify id
 - [ ] refactor: overlay components should consider children as content, and provider optional trigger prop
 - [ ] custom true/false value in form elements

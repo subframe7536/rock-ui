@@ -241,12 +241,12 @@ export function Input(props: InputProps): JSX.Element {
     <div
       data-slot="root"
       data-invalid={field.invalid() ? '' : undefined}
+      data-highlight={field.highlight() ? '' : undefined}
+      data-disabled={field.disabled() ? '' : undefined}
       class={inputRootVariants(
         {
           size: field.size(),
           variant: styleProps.variant,
-          highlight: field.highlight(),
-          disabled: field.disabled(),
         },
         styleProps.classes?.root,
       )}

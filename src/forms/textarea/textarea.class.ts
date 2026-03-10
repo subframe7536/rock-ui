@@ -1,14 +1,10 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-import {
-  INPUT_VARIANT_CLASSES,
-  SURFACE_HIGHLIGHT_VARIANT,
-  TEXT_SIZE_VARIANT,
-} from '../../shared/cva-common.class'
+import { INPUT_VARIANT_CLASSES, TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
 
 export const textareaRootVariants = cva(
-  'inline-flex w-full flex-col overflow-hidden rounded-md transition-[color,box-shadow] focus-within:effect-fv-border data-invalid:effect-invalid focus-within:data-invalid:effect-invalid',
+  'inline-flex w-full flex-col overflow-hidden rounded-md transition-[color,box-shadow] focus-within:effect-fv-border data-invalid:effect-invalid focus-within:data-invalid:effect-invalid data-highlight:surface-highlight data-disabled:effect-dis',
   {
     defaultVariants: {
       size: 'md',
@@ -17,10 +13,6 @@ export const textareaRootVariants = cva(
     variants: {
       size: TEXT_SIZE_VARIANT,
       variant: INPUT_VARIANT_CLASSES,
-      highlight: SURFACE_HIGHLIGHT_VARIANT,
-      disabled: {
-        true: 'cursor-not-allowed opacity-75',
-      },
     },
   },
 )
@@ -85,4 +77,6 @@ export const textareaFooterVariants = cva(
 )
 
 export type TextareaVariantProps = VariantProps<typeof textareaRootVariants> &
-  VariantProps<typeof textareaBaseVariants>
+  VariantProps<typeof textareaBaseVariants> & {
+    highlight?: boolean
+  }

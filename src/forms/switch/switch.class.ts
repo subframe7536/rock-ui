@@ -1,7 +1,7 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-import { SURFACE_INVALID_VARIANT, TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
+import { TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
 
 export const switchContainerVariants = cva('flex items-center', {
   defaultVariants: {
@@ -19,11 +19,10 @@ export const switchContainerVariants = cva('flex items-center', {
 })
 
 export const switchBaseVariants = cva(
-  'inline-flex shrink-0 items-center rounded-full border border-transparent bg-input p-px outline-none transition-[color,box-shadow] dark:bg-input/80 peer-focus-visible:effect-fv-border data-checked:bg-primary',
+  'inline-flex shrink-0 items-center rounded-full border border-transparent bg-input p-px outline-none transition-[color,box-shadow] dark:bg-input/80 peer-focus-visible:effect-fv-border data-checked:bg-primary data-invalid:effect-invalid',
   {
     defaultVariants: {
       size: 'md',
-      invalid: false,
     },
     variants: {
       size: {
@@ -33,7 +32,6 @@ export const switchBaseVariants = cva(
         lg: 'w-10',
         xl: 'w-11',
       },
-      invalid: SURFACE_INVALID_VARIANT,
     },
   },
 )
@@ -56,19 +54,8 @@ export const switchThumbVariants = cva(
   },
 )
 
-export const switchIconVariants = cva('absolute size-10/12 transition-opacity text-primary', {
-  variants: {
-    checked: {
-      true: 'opacity-100',
-    },
-    unchecked: {
-      true: 'opacity-90 text-muted-foreground',
-    },
-    loading: {
-      true: 'opacity-80 animate-spin',
-    },
-  },
-})
+export const switchIconClass =
+  'absolute size-10/12 transition-opacity text-primary data-checked:opacity-100 data-unchecked:(opacity-90 text-muted-foreground) data-loading:(opacity-80 animate-spin)'
 
 export const switchWrapperVariants = cva('ms-2', {
   defaultVariants: {

@@ -1,16 +1,11 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-import {
-  SURFACE_HIGHLIGHT_VARIANT,
-  SURFACE_INVALID_VARIANT,
-  TEXT_SIZE_VARIANT,
-} from '../../shared/cva-common.class'
+import { TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
 
-export const fileUploadRootVariants = cva('relative flex flex-col', {
+export const fileUploadRootVariants = cva('relative flex flex-col data-disabled:effect-dis', {
   defaultVariants: {
     size: 'md',
-    disabled: false,
   },
   variants: {
     size: {
@@ -20,20 +15,15 @@ export const fileUploadRootVariants = cva('relative flex flex-col', {
       lg: 'gap-3',
       xl: 'gap-3.5',
     },
-    disabled: {
-      true: 'effect-dis',
-    },
   },
 })
 
 export const fileUploadBaseVariants = cva(
-  'group relative inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-input bg-background text-center outline-none transition-[color,box-shadow] dark:bg-input/30 focus-visible:effect-fv-border',
+  'group relative inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-input bg-background text-center outline-none transition-[color,box-shadow] dark:bg-input/30 focus-visible:effect-fv-border data-highlight:surface-highlight data-dragging:(border-primary bg-primary/8) data-invalid:effect-invalid',
   {
     defaultVariants: {
       size: 'md',
       dropzone: true,
-      dragging: false,
-      invalid: false,
     },
     variants: {
       size: {
@@ -43,15 +33,10 @@ export const fileUploadBaseVariants = cva(
         lg: 'min-h-32 gap-2.5 px-4.5 py-3.5 text-sm',
         xl: 'min-h-36 gap-3 px-5 py-4 text-base',
       },
-      highlight: SURFACE_HIGHLIGHT_VARIANT,
-      dragging: {
-        true: 'border-primary bg-primary/8',
-      },
       dropzone: {
         true: 'border-dashed',
         false: 'border-solid',
       },
-      invalid: SURFACE_INVALID_VARIANT,
     },
   },
 )
@@ -216,4 +201,6 @@ export const fileUploadRemoveVariants = cva(
 )
 
 export type FileUploadVariantProps = VariantProps<typeof fileUploadBaseVariants> &
-  VariantProps<typeof fileUploadRootVariants>
+  VariantProps<typeof fileUploadRootVariants> & {
+    highlight?: boolean
+  }

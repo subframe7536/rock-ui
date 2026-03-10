@@ -1,10 +1,10 @@
 import type { VariantProps } from 'cls-variant'
 import { cva } from 'cls-variant/cva'
 
-import { INPUT_VARIANT_CLASSES, SURFACE_HIGHLIGHT_VARIANT } from '../../shared/cva-common.class'
+import { INPUT_VARIANT_CLASSES } from '../../shared/cva-common.class'
 
 export const inputRootVariants = cva(
-  'inline-flex w-full items-center overflow-hidden rounded-md transition-[color,box-shadow] focus-within:effect-fv-border data-invalid:effect-invalid focus-within:data-invalid:effect-invalid',
+  'inline-flex w-full items-center overflow-hidden rounded-md transition-[color,box-shadow] focus-within:effect-fv-border data-invalid:effect-invalid focus-within:data-invalid:effect-invalid data-highlight:surface-highlight data-disabled:effect-dis',
   {
     defaultVariants: {
       size: 'md',
@@ -19,10 +19,6 @@ export const inputRootVariants = cva(
         xl: 'h-11 text-base leading-11',
       },
       variant: INPUT_VARIANT_CLASSES,
-      highlight: SURFACE_HIGHLIGHT_VARIANT,
-      disabled: {
-        true: 'effect-dis',
-      },
     },
   },
 )
@@ -81,4 +77,6 @@ export const inputTrailingVariants = cva('flex items-center shrink-0 text-muted-
   },
 })
 
-export type InputVariantProps = VariantProps<typeof inputRootVariants>
+export type InputVariantProps = VariantProps<typeof inputRootVariants> & {
+  highlight?: boolean
+}

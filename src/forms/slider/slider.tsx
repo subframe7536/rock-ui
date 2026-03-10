@@ -221,12 +221,12 @@ export function Slider(props: SliderProps): JSX.Element {
       onChange={onValueChange}
       onChangeEnd={onChange}
       data-slot="root"
+      data-highlight={field.highlight() ? '' : undefined}
+      data-disabled={field.disabled() ? '' : undefined}
       class={sliderRootVariants(
         {
           size: field.size(),
           orientation: rangeProps.orientation,
-          highlight: field.highlight(),
-          disabled: field.disabled(),
         },
         styleProps.classes?.root,
       )}
@@ -234,21 +234,21 @@ export function Slider(props: SliderProps): JSX.Element {
     >
       <KobalteSlider.Track
         data-slot="track"
+        data-highlight={field.highlight() ? '' : undefined}
         class={sliderTrackVariants(
           {
             size: field.size(),
             orientation: rangeProps.orientation,
-            highlight: field.highlight(),
           },
           styleProps.classes?.track,
         )}
       >
         <KobalteSlider.Fill
           data-slot="range"
+          data-highlight={field.highlight() ? '' : undefined}
           class={sliderRangeVariants(
             {
               orientation: rangeProps.orientation,
-              highlight: field.highlight(),
             },
             styleProps.classes?.range,
           )}
@@ -259,12 +259,12 @@ export function Slider(props: SliderProps): JSX.Element {
         {(thumbIndex) => (
           <KobalteSlider.Thumb
             data-slot="thumb"
+            data-highlight={field.highlight() ? '' : undefined}
             aria-label={createThumbAriaLabel(thumbIndex, thumbValues().length)}
             style={thumbStyle(thumbIndex)}
             class={sliderThumbVariants(
               {
                 size: field.size(),
-                highlight: field.highlight(),
               },
               styleProps.classes?.thumb,
             )}

@@ -966,10 +966,10 @@ export function Select(props: SelectProps): JSX.Element {
             inputRef = el
           }}
           data-slot="input"
+          data-readonly={!isSearchable() && !isMultiple()}
           class={selectInputVariants(
             {
               mode: isMultiple() ? (isSearchable() ? 'multiSearch' : 'multiHidden') : 'single',
-              readOnly: !isSearchable() && !isMultiple(),
               size: field.size(),
             },
             styleProps.classes?.input,
@@ -1322,12 +1322,12 @@ export function Select(props: SelectProps): JSX.Element {
       <Combobox.Control<NormalizedOption>
         data-slot="base"
         data-invalid={field.invalid() ? '' : undefined}
+        data-highlight={field.highlight() ? '' : undefined}
+        data-disabled={field.disabled() ? '' : undefined}
         class={selectControlVariants(
           {
             size: field.size(),
             variant: styleProps.variant,
-            highlight: field.highlight(),
-            disabled: field.disabled(),
           },
           styleProps.classes?.base,
         )}

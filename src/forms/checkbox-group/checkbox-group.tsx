@@ -215,7 +215,6 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
                     tableSize: styleProps.variant === 'table' ? field.size() : undefined,
                     tableOrientation:
                       styleProps.variant === 'table' ? styleProps.orientation : undefined,
-                    disabled: item.disabled || field.disabled(),
                   },
                   styleProps.variant === 'table' &&
                     'relative rounded-none border border-muted data-checked:(bg-primary/10 border-primary/50) data-checked:z-1',

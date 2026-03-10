@@ -31,7 +31,7 @@ export const radioGroupLegendVariants = cva('mb-2 block font-medium text-foregro
   },
 })
 
-export const radioGroupItemVariants = cva('flex items-start', {
+export const radioGroupItemVariants = cva('flex items-start data-disabled:effect-dis', {
   defaultVariants: {
     size: 'md',
     indicator: 'start',
@@ -55,9 +55,6 @@ export const radioGroupItemVariants = cva('flex items-start', {
     tableOrientation: {
       horizontal: 'first-of-type:rounded-s-lg last-of-type:rounded-e-lg not-first-of-type:-ms-px',
       vertical: 'first-of-type:rounded-t-lg last-of-type:rounded-b-lg not-first-of-type:-mt-px',
-    },
-    disabled: {
-      true: 'effect-dis',
     },
   },
   compoundVariants: [
@@ -130,11 +127,10 @@ export const radioGroupContainerVariants = cva('flex items-center', {
 })
 
 export const radioGroupBaseVariants = cva(
-  'inline-flex items-center justify-center overflow-hidden rounded-full border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 peer-focus-visible:effect-fv-border',
+  'inline-flex items-center justify-center overflow-hidden rounded-full border border-input bg-background bg-clip-padding outline-none transition-shadow dark:bg-input/30 peer-focus-visible:effect-fv-border data-invalid:effect-invalid',
   {
     defaultVariants: {
       size: 'md',
-      invalid: false,
     },
     variants: {
       size: {
@@ -143,9 +139,6 @@ export const radioGroupBaseVariants = cva(
         md: 'size-4',
         lg: 'size-4.5',
         xl: 'size-5',
-      },
-      invalid: {
-        true: 'effect-invalid',
       },
     },
   },

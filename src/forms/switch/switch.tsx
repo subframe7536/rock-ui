@@ -14,7 +14,7 @@ import type { SwitchVariantProps } from './switch.class'
 import {
   switchBaseVariants,
   switchContainerVariants,
-  switchIconVariants,
+  switchIconClass,
   switchThumbVariants,
   switchWrapperVariants,
 } from './switch.class'
@@ -127,10 +127,10 @@ export function Switch(props: SwitchProps): JSX.Element {
 
               <KobalteSwitch.Control
                 data-slot="base"
+                data-invalid={field.invalid() ? '' : undefined}
                 class={switchBaseVariants(
                   {
                     size: field.size(),
-                    invalid: field.invalid(),
                   },
                   styleProps.classes?.base,
                 )}
@@ -148,14 +148,10 @@ export function Switch(props: SwitchProps): JSX.Element {
                     {(iconName) => (
                       <Icon
                         name={iconName}
-                        class={switchIconVariants(
-                          {
-                            checked: !displayProps.loading && state.checked(),
-                            unchecked: !displayProps.loading && !state.checked(),
-                            loading: displayProps.loading,
-                          },
-                          styleProps.classes?.icon,
-                        )}
+                        data-checked={!displayProps.loading && state.checked() ? '' : undefined}
+                        data-unchecked={!displayProps.loading && !state.checked() ? '' : undefined}
+                        data-loading={displayProps.loading ? '' : undefined}
+                        class={cn(switchIconClass, styleProps.classes?.icon)}
                       />
                     )}
                   </Show>
