@@ -34,6 +34,7 @@ export interface FormContextValue {
   registerInput: (name: string | string[], meta: FormInputMeta) => void
   unregisterInput: (name: string | string[]) => void
   getInputMeta: (name: string | string[]) => FormInputMeta | undefined
+  getFieldValue: (name?: string | string[]) => unknown
   getFieldState: (name?: string | string[]) => FormFieldRuntimeState
   setFieldValue: (name: string | string[], value: unknown) => void
   emitInputEvent: (event: FormInputEvent) => void

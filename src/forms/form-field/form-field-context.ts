@@ -1,5 +1,5 @@
 import type { Accessor, JSX } from 'solid-js'
-import { createMemo, onCleanup, untrack } from 'solid-js'
+import { createMemo, onCleanup, onMount } from 'solid-js'
 
 import { createContextProvider } from '../../shared/create-context-provider'
 import type { FormFieldRuntimeState, FormInputEventType } from '../form/form-context'
@@ -40,6 +40,7 @@ export interface UseFormFieldOptions {
 export interface UseFormFieldReturn {
   id: Accessor<string>
   name: Accessor<string | undefined>
+  value: Accessor<unknown>
   size: Accessor<FormFieldSize>
   highlight: Accessor<boolean | undefined>
   disabled: Accessor<boolean>
@@ -95,6 +96,23 @@ export function useFormField(
 
   const id = createMemo(() => fieldProps().id ?? formField?.controlId ?? options().defaultId)
   const name = createMemo(() => fieldProps().name ?? formField?.name)
+  const value = createMemo(() => {
+    if (!formContext) {
+      return undefined
+    }
+
+    const fieldPath = formField?.path
+    if (fieldPath) {
+      return formContext.getFieldValue(fieldPath)
+    }
+
+    const fieldName = name()
+    if (!fieldName) {
+      return undefined
+    }
+
+    return formContext.getFieldValue(fieldName)
+  })
   const size = createMemo(() => fieldProps().size ?? formField?.size ?? options().defaultSize)
   const highlight = createMemo(() => {
     if (formField?.error) {
@@ -164,10 +182,14 @@ export function useFormField(
     formContext.setFieldValue(fieldName, value)
   }
 
-  const initValue = opts().initialValue
-  if (initValue !== undefined) {
-    untrack(() => setFormValue(initValue))
-  }
+  onMount(() => {
+    const initValue = opts().initialValue
+    if (initValue === undefined || value() !== undefined) {
+      return
+    }
+
+    setFormValue(initValue)
+  })
 
   const ariaAttrs = createMemo<Record<string, string | boolean | undefined>>(() => {
     if (!formField) {
@@ -203,6 +225,7 @@ export function useFormField(
   return {
     id,
     name,
+    value,
     size,
     highlight,
     disabled,

@@ -52,12 +52,14 @@ const RADIO_ITEMS = [
 
 export const FormDemos = () => {
   const [agreeChecked, setAgreeChecked] = createSignal(true)
+  const [statusValue, setStatusValue] = createSignal<'active' | 'inactive'>('active')
 
   const [groupValue, setGroupValue] = createSignal<string[]>(['beta'])
 
   const [planValue, setPlanValue] = createSignal('pro')
 
   const [switchValue, setSwitchValue] = createSignal(false)
+  const [visibilityValue, setVisibilityValue] = createSignal<0 | 1>(1)
   const [switchLoading, setSwitchLoading] = createSignal(false)
 
   const runSwitchLoading = async () => {
@@ -118,6 +120,16 @@ export const FormDemos = () => {
               indicator="end"
               checked={agreeChecked()}
               onChange={setAgreeChecked}
+            />
+
+            <Checkbox
+              label="Custom status"
+              description={`Current value: ${statusValue()}`}
+              variant="list"
+              checked={statusValue()}
+              trueValue="active"
+              falseValue="inactive"
+              onChange={(nextValue) => setStatusValue(nextValue as 'active' | 'inactive')}
             />
           </div>
         </div>
@@ -207,6 +219,16 @@ export const FormDemos = () => {
               checkedIcon="i-lucide-shield-check"
               uncheckedIcon="i-lucide-shield"
             />
+
+            <Switch
+              label="Visibility flag"
+              description={`Current value: ${visibilityValue()}`}
+              checked={visibilityValue()}
+              trueValue={1}
+              falseValue={0}
+              onChange={(nextValue) => setVisibilityValue(nextValue as 0 | 1)}
+            />
+
             <Button size="sm" variant="outline" onclick={runSwitchLoading}>
               Simulate loading
             </Button>

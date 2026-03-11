@@ -22,34 +22,40 @@ import {
 
 export type CheckboxGroupValue = string
 
-export interface CheckboxGroupItemObject {
+export interface CheckboxGroupItemObject<TTrue = boolean, TFalse = boolean> {
   value?: string
   label?: JSX.Element
   description?: JSX.Element
   disabled?: boolean
-  checkedIcon?: CheckboxProps['checkedIcon']
-  indeterminateIcon?: CheckboxProps['indeterminateIcon']
+  indeterminate?: CheckboxProps<TTrue, TFalse>['indeterminate']
+  checkedIcon?: CheckboxProps<TTrue, TFalse>['checkedIcon']
+  indeterminateIcon?: CheckboxProps<TTrue, TFalse>['indeterminateIcon']
 }
 
-export type CheckboxGroupItem = string | CheckboxGroupItemObject
+export type CheckboxGroupItem<TTrue = boolean, TFalse = boolean> =
+  | string
+  | CheckboxGroupItemObject<TTrue, TFalse>
 
-type CheckboxGroupItemClasses = Omit<NonNullable<CheckboxProps['classes']>, 'root'>
+type CheckboxGroupItemClasses<TTrue = boolean, TFalse = boolean> = Omit<
+  NonNullable<CheckboxProps<TTrue, TFalse>['classes']>,
+  'root'
+>
 
-export interface CheckboxGroupClasses {
+export interface CheckboxGroupClasses<TTrue = boolean, TFalse = boolean> {
   root?: string
   fieldset?: string
   legend?: string
   item?: string
-  container?: CheckboxGroupItemClasses['container']
-  base?: CheckboxGroupItemClasses['base']
-  indicator?: CheckboxGroupItemClasses['indicator']
-  icon?: CheckboxGroupItemClasses['icon']
-  wrapper?: CheckboxGroupItemClasses['wrapper']
-  label?: CheckboxGroupItemClasses['label']
-  description?: CheckboxGroupItemClasses['description']
+  container?: CheckboxGroupItemClasses<TTrue, TFalse>['container']
+  base?: CheckboxGroupItemClasses<TTrue, TFalse>['base']
+  indicator?: CheckboxGroupItemClasses<TTrue, TFalse>['indicator']
+  icon?: CheckboxGroupItemClasses<TTrue, TFalse>['icon']
+  wrapper?: CheckboxGroupItemClasses<TTrue, TFalse>['wrapper']
+  label?: CheckboxGroupItemClasses<TTrue, TFalse>['label']
+  description?: CheckboxGroupItemClasses<TTrue, TFalse>['description']
 }
 
-export interface CheckboxGroupBaseProps
+export interface CheckboxGroupBaseProps<TTrue = boolean, TFalse = boolean>
   extends
     CheckboxGroupVariantProps,
     FormIdentityOptions,
@@ -57,27 +63,33 @@ export interface CheckboxGroupBaseProps
     FormRequiredOption,
     FormDisableOption {
   legend?: JSX.Element
-  items?: CheckboxGroupItem[]
-  indicator?: CheckboxProps['indicator']
-  checkedIcon?: CheckboxProps['checkedIcon']
-  indeterminateIcon?: CheckboxProps['indeterminateIcon']
+  items?: CheckboxGroupItem<TTrue, TFalse>[]
+  indicator?: CheckboxProps<TTrue, TFalse>['indicator']
+  checkedIcon?: CheckboxProps<TTrue, TFalse>['checkedIcon']
+  indeterminateIcon?: CheckboxProps<TTrue, TFalse>['indeterminateIcon']
   onChange?: (value: CheckboxGroupValue[]) => void
-  classes?: CheckboxGroupClasses
+  classes?: CheckboxGroupClasses<TTrue, TFalse>
 }
 
-export type CheckboxGroupProps = CheckboxGroupBaseProps
+export type CheckboxGroupProps<TTrue = boolean, TFalse = boolean> = CheckboxGroupBaseProps<
+  TTrue,
+  TFalse
+>
 
-interface NormalizedCheckboxGroupItem {
+interface NormalizedCheckboxGroupItem<TTrue = boolean, TFalse = boolean> {
   id: string
   value: CheckboxGroupValue
   label?: JSX.Element
   description?: JSX.Element
   disabled: boolean
-  checkedIcon?: CheckboxProps['checkedIcon']
-  indeterminateIcon?: CheckboxProps['indeterminateIcon']
+  indeterminate?: CheckboxProps<TTrue, TFalse>['indeterminate']
+  checkedIcon?: CheckboxProps<TTrue, TFalse>['checkedIcon']
+  indeterminateIcon?: CheckboxProps<TTrue, TFalse>['indeterminateIcon']
 }
 
-export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
+export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
+  props: CheckboxGroupProps<TTrue, TFalse>,
+): JSX.Element {
   const merged = mergeProps(
     {
       orientation: 'vertical' as const,
@@ -89,7 +101,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
   )
 
   const [formProps, collectionProps, styleProps] = splitProps(
-    merged as CheckboxGroupProps,
+    merged as CheckboxGroupProps<TTrue, TFalse>,
     [...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS, 'onChange'],
     ['legend', 'items'],
   )
@@ -117,7 +129,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
   const selectedValues = createMemo(() => formProps.value ?? uncontrolledValue())
   const legendId = createMemo(() => `${groupId()}-legend`)
 
-  const normalizedItems = createMemo<NormalizedCheckboxGroupItem[]>(() => {
+  const normalizedItems = createMemo<NormalizedCheckboxGroupItem<TTrue, TFalse>[]>(() => {
     const items = collectionProps.items ?? []
 
     return items.map((item, index) => {
@@ -138,6 +150,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
         label: item.label,
         description: item.description,
         disabled: Boolean(item.disabled),
+        indeterminate: item.indeterminate,
         checkedIcon: item.checkedIcon,
         indeterminateIcon: item.indeterminateIcon,
       }
@@ -203,6 +216,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
               label={item.label}
               description={item.description}
               disabled={item.disabled || field.disabled()}
+              indeterminate={item.indeterminate}
               required={formProps.required}
               size={field.size()}
               variant={styleProps.variant === 'list' ? 'list' : 'card'}
@@ -222,7 +236,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
                 ),
                 ...styleProps.classes,
               }}
-              onChange={(checked) => onItemCheckedChange(item.value, checked)}
+              onChange={(checked) => onItemCheckedChange(item.value, Boolean(checked))}
             />
           )}
         </For>

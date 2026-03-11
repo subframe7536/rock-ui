@@ -55,6 +55,113 @@ describe('Switch', () => {
     })
   })
 
+  test('maps custom numeric values for controlled switch', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <Switch checked={1} trueValue={1} falseValue={0} label="Visibility" onChange={onChange} />
+    ))
+    const switchInput = screen.getByRole('switch', { name: 'Visibility' }) as HTMLInputElement
+
+    expect(switchInput.checked).toBe(true)
+
+    await fireEvent.click(switchInput)
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith(0)
+
+    await waitFor(() => {
+      expect(switchInput.checked).toBe(true)
+    })
+  })
+
+  test('derives checked state from existing numeric form values', async () => {
+    const state: { visibility: 0 | 1 } = { visibility: 1 }
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="visibility" label="Visibility">
+          <Switch trueValue={1} falseValue={0} />
+        </FormField>
+      </Form>
+    ))
+
+    const switchInput = screen.getByRole('switch', { name: 'Visibility' }) as HTMLInputElement
+
+    expect(state.visibility).toBe(1)
+    expect(switchInput.checked).toBe(true)
+
+    await fireEvent.click(switchInput)
+
+    await waitFor(() => {
+      expect(state.visibility).toBe(0)
+      expect(switchInput.checked).toBe(false)
+    })
+
+    await fireEvent.click(switchInput)
+
+    await waitFor(() => {
+      expect(state.visibility).toBe(1)
+      expect(switchInput.checked).toBe(true)
+    })
+  })
+
+  test('initializes form state from defaultChecked with custom values', async () => {
+    const state: { visibility?: 0 | 1 } = {}
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="visibility" label="Visibility">
+          <Switch defaultChecked trueValue={1} falseValue={0} />
+        </FormField>
+      </Form>
+    ))
+
+    const switchInput = screen.getByRole('switch', { name: 'Visibility' }) as HTMLInputElement
+
+    await waitFor(() => {
+      expect(state.visibility).toBe(1)
+      expect(switchInput.checked).toBe(true)
+    })
+  })
+
+  test('initializes form state to custom falseValue when unchecked by default', async () => {
+    const state: { visibility?: 0 | 1 } = {}
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="visibility" label="Visibility">
+          <Switch trueValue={1} falseValue={0} />
+        </FormField>
+      </Form>
+    ))
+
+    const switchInput = screen.getByRole('switch', { name: 'Visibility' }) as HTMLInputElement
+
+    await waitFor(() => {
+      expect(state.visibility).toBe(0)
+      expect(switchInput.checked).toBe(false)
+    })
+  })
+
+  test('does not overwrite existing form value on mount when defaultChecked differs', async () => {
+    const state: { visibility: 0 | 1 } = { visibility: 1 }
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="visibility" label="Visibility">
+          <Switch defaultChecked={false} trueValue={1} falseValue={0} />
+        </FormField>
+      </Form>
+    ))
+
+    const switchInput = screen.getByRole('switch', { name: 'Visibility' }) as HTMLInputElement
+
+    await waitFor(() => {
+      expect(state.visibility).toBe(1)
+      expect(switchInput.checked).toBe(true)
+    })
+  })
+
   test('shows loading icon and disables interaction when loading', () => {
     const screen = render(() => (
       <Switch loading label="Loading" loadingIcon={<span data-testid="loading-icon">L</span>} />
@@ -99,7 +206,7 @@ describe('Switch', () => {
           <Switch
             defaultChecked={state.enabled}
             onChange={(nextChecked) => {
-              state.enabled = nextChecked
+              state.enabled = Boolean(nextChecked)
             }}
           />
         </FormField>
@@ -161,7 +268,7 @@ describe('Switch', () => {
           <Switch
             defaultChecked={state.enabled}
             onChange={(nextChecked) => {
-              state.enabled = nextChecked
+              state.enabled = Boolean(nextChecked)
             }}
           />
         </FormField>
@@ -206,7 +313,7 @@ describe('Switch', () => {
           <Switch
             checked={state.enabled}
             onChange={(nextChecked) => {
-              state.enabled = nextChecked
+              state.enabled = Boolean(nextChecked)
             }}
           />
         </FormField>

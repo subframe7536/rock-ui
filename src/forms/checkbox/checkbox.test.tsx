@@ -40,6 +40,49 @@ describe('Checkbox', () => {
     expect(checkbox.checked).toBe(false)
   })
 
+  test('renders controlled indeterminate state with indeterminate icon', async () => {
+    const screen = render(() => (
+      <Checkbox
+        checked="indeterminate"
+        label="Select all"
+        checkedIcon={<span data-testid="checked-icon">C</span>}
+        indeterminateIcon={<span data-testid="indeterminate-icon">I</span>}
+      />
+    ))
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Select all' }) as HTMLInputElement
+    const root = screen.container.querySelector('[data-slot="root"]')
+
+    await waitFor(() => {
+      expect(checkbox.indeterminate).toBe(true)
+      expect(checkbox.checked).toBe(false)
+      expect(root?.getAttribute('data-indeterminate')).not.toBeNull()
+      expect(screen.getByTestId('indeterminate-icon').textContent).toBe('I')
+    })
+  })
+
+  test('renders default indeterminate state when defaultChecked is indeterminate', async () => {
+    const screen = render(() => (
+      <Checkbox
+        defaultChecked="indeterminate"
+        label="Default indeterminate"
+        indeterminateIcon={<span data-testid="indeterminate-icon">I</span>}
+      />
+    ))
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: 'Default indeterminate',
+    }) as HTMLInputElement
+    const root = screen.container.querySelector('[data-slot="root"]')
+
+    await waitFor(() => {
+      expect(checkbox.indeterminate).toBe(true)
+      expect(checkbox.checked).toBe(false)
+      expect(root?.getAttribute('data-indeterminate')).not.toBeNull()
+      expect(screen.getByTestId('indeterminate-icon').textContent).toBe('I')
+    })
+  })
+
   test('passes id, name, value and required attributes to input', () => {
     const screen = render(() => (
       <Checkbox id="terms-checkbox" name="terms" value="accepted" required label="Terms" />
@@ -69,6 +112,120 @@ describe('Checkbox', () => {
     })
   })
 
+  test('maps custom true and false values for controlled checkbox', async () => {
+    const onChange = vi.fn()
+
+    const screen = render(() => (
+      <Checkbox
+        checked="active"
+        trueValue="active"
+        falseValue="inactive"
+        label="Status"
+        onChange={onChange}
+      />
+    ))
+    const checkbox = screen.getByRole('checkbox', { name: 'Status' }) as HTMLInputElement
+
+    expect(checkbox.checked).toBe(true)
+
+    await fireEvent.click(checkbox)
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenCalledWith('inactive')
+
+    await waitFor(() => {
+      expect(checkbox.checked).toBe(true)
+    })
+  })
+
+  test('derives checked state from custom form values', async () => {
+    const state: { status: 'active' | 'inactive' } = { status: 'active' }
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="status" label="Status">
+          <Checkbox trueValue="active" falseValue="inactive" />
+        </FormField>
+      </Form>
+    ))
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Status' }) as HTMLInputElement
+
+    expect(state.status).toBe('active')
+    expect(checkbox.checked).toBe(true)
+
+    await fireEvent.click(checkbox)
+
+    await waitFor(() => {
+      expect(state.status).toBe('inactive')
+      expect(checkbox.checked).toBe(false)
+    })
+
+    await fireEvent.click(checkbox)
+
+    await waitFor(() => {
+      expect(state.status).toBe('active')
+      expect(checkbox.checked).toBe(true)
+    })
+  })
+
+  test('initializes form state from defaultChecked with custom values', async () => {
+    const state: { status?: 'active' | 'inactive' } = {}
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="status" label="Status">
+          <Checkbox defaultChecked trueValue="active" falseValue="inactive" />
+        </FormField>
+      </Form>
+    ))
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Status' }) as HTMLInputElement
+
+    await waitFor(() => {
+      expect(state.status).toBe('active')
+      expect(checkbox.checked).toBe(true)
+    })
+  })
+
+  test('initializes form state to custom falseValue when unchecked by default', async () => {
+    const state: { status?: 'active' | 'inactive' } = {}
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="status" label="Status">
+          <Checkbox trueValue="active" falseValue="inactive" />
+        </FormField>
+      </Form>
+    ))
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Status' }) as HTMLInputElement
+
+    await waitFor(() => {
+      expect(state.status).toBe('inactive')
+      expect(checkbox.checked).toBe(false)
+    })
+  })
+
+  test('does not overwrite existing form value on mount when defaultChecked differs', async () => {
+    const state: { status: 'active' | 'inactive' } = { status: 'active' }
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="status" label="Status">
+          <Checkbox defaultChecked={false} trueValue="active" falseValue="inactive" />
+        </FormField>
+      </Form>
+    ))
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Status' }) as HTMLInputElement
+
+    await waitFor(() => {
+      expect(state.status).toBe('active')
+      expect(checkbox.checked).toBe(true)
+    })
+  })
+
   test('integrates with form field aria and validation flow', async () => {
     const state = { agree: false }
 
@@ -88,7 +245,7 @@ describe('Checkbox', () => {
           <Checkbox
             checked={state.agree}
             onChange={(nextChecked) => {
-              state.agree = nextChecked
+              state.agree = Boolean(nextChecked)
             }}
           />
         </FormField>
@@ -220,7 +377,7 @@ describe('Checkbox', () => {
           <Checkbox
             defaultChecked={state.agree}
             onChange={(nextChecked) => {
-              state.agree = nextChecked
+              state.agree = Boolean(nextChecked)
             }}
           />
         </FormField>
@@ -265,7 +422,7 @@ describe('Checkbox', () => {
           <Checkbox
             checked={state.agree}
             onChange={(nextChecked) => {
-              state.agree = nextChecked
+              state.agree = Boolean(nextChecked)
             }}
           />
         </FormField>

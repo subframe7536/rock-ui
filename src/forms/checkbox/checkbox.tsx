@@ -1,6 +1,6 @@
 import * as KobalteCheckbox from '@kobalte/core/checkbox'
 import type { JSX } from 'solid-js'
-import { Show, mergeProps, splitProps } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
 
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
@@ -33,20 +33,27 @@ type CheckboxSlots =
 
 export type CheckboxClasses = SlotClasses<CheckboxSlots>
 
-export interface CheckboxBaseProps
+export interface CheckboxBaseProps<TTrue = boolean, TFalse = boolean>
   extends CheckboxVariantProps, FormIdentityOptions, FormDisableOption {
+  checked?: TTrue | TFalse | 'indeterminate'
+  defaultChecked?: boolean | 'indeterminate'
+  trueValue?: TTrue
+  falseValue?: TFalse
   label?: JSX.Element
   description?: JSX.Element
   formFieldBind?: boolean
+  onChange?: (value: TTrue | TFalse) => void
   checkedIcon?: IconName
   indeterminateIcon?: IconName
   classes?: CheckboxClasses
 }
 
-export type CheckboxProps = CheckboxBaseProps &
+export type CheckboxProps<TTrue = boolean, TFalse = boolean> = CheckboxBaseProps<TTrue, TFalse> &
   Omit<KobalteCheckbox.CheckboxRootProps, keyof CheckboxBaseProps | 'children' | 'class' | 'ref'>
 
-export function Checkbox(props: CheckboxProps): JSX.Element {
+export function Checkbox<TTrue = boolean, TFalse = boolean>(
+  props: CheckboxProps<TTrue, TFalse>,
+): JSX.Element {
   const merged = mergeProps(
     {
       size: 'md' as const,
@@ -55,13 +62,23 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
       checkedIcon: 'icon-check' as IconName,
       indeterminateIcon: 'icon-minus' as IconName,
       formFieldBind: true,
+      trueValue: true,
+      falseValue: false,
     },
     props,
   )
 
   const [formProps, styleProps, restProps] = splitProps(
-    merged as CheckboxProps,
-    [...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS, 'formFieldBind'],
+    merged as CheckboxProps<TTrue, TFalse>,
+    [
+      ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
+      'checked',
+      'defaultChecked',
+      'formFieldBind',
+      'trueValue',
+      'falseValue',
+      'indeterminate',
+    ],
     [
       'label',
       'description',
@@ -88,18 +105,101 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
       defaultId: generatedId(),
       defaultSize: 'md',
       initialValue:
-        formProps.formFieldBind === false ? undefined : restProps.defaultChecked || false,
+        formProps.formFieldBind === false
+          ? undefined
+          : (normalizeFieldValue(
+              formProps.checked !== undefined ? formProps.checked : formProps.defaultChecked,
+            ) ?? formProps.falseValue),
     }),
   )
 
-  function onChange(nextChecked: boolean): void {
-    if (formProps.formFieldBind === false) {
-      formProps.onChange?.(nextChecked)
+  function toCheckedState(value: unknown): boolean | 'indeterminate' {
+    if (value === 'indeterminate') {
+      return 'indeterminate'
+    }
+
+    return value === formProps.trueValue || (typeof value === 'boolean' && value)
+  }
+
+  function normalizeFieldValue(value: unknown): unknown {
+    if (value === undefined || value === 'indeterminate') {
+      return value
+    }
+
+    if (value === formProps.trueValue || value === formProps.falseValue) {
+      return value
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? formProps.trueValue : formProps.falseValue
+    }
+
+    return value
+  }
+
+  function toChangeValue(nextChecked: boolean): TTrue | TFalse {
+    return nextChecked ? (formProps.trueValue as TTrue) : (formProps.falseValue as TFalse)
+  }
+
+  const checked = createMemo<boolean | 'indeterminate' | undefined>(() => {
+    if (formProps.checked !== undefined) {
+      return toCheckedState(formProps.checked)
+    }
+
+    if (formProps.formFieldBind !== false && field.value() !== undefined) {
+      return toCheckedState(field.value())
+    }
+
+    return undefined
+  })
+
+  const defaultChecked = createMemo<boolean | 'indeterminate' | undefined>(() => {
+    if (formProps.defaultChecked === undefined) {
+      return undefined
+    }
+
+    return toCheckedState(formProps.defaultChecked)
+  })
+
+  const resolvedChecked = createMemo<boolean | undefined>(() => {
+    const value = checked()
+
+    return value === 'indeterminate' ? false : value
+  })
+
+  const resolvedDefaultChecked = createMemo<boolean | undefined>(() => {
+    const value = defaultChecked()
+    return value === 'indeterminate' ? false : value
+  })
+
+  const indeterminate = createMemo<boolean>(() => {
+    if (formProps.indeterminate !== undefined) {
+      return formProps.indeterminate
+    }
+    return (
+      checked() === 'indeterminate' ||
+      (checked() === undefined && defaultChecked() === 'indeterminate')
+    )
+  })
+
+  createEffect(() => {
+    if (formProps.formFieldBind === false || formProps.checked === undefined) {
       return
     }
 
-    field.setFormValue(nextChecked)
-    formProps.onChange?.(nextChecked)
+    field.setFormValue(normalizeFieldValue(formProps.checked))
+  })
+
+  function onChange(nextChecked: boolean): void {
+    const nextValue = toChangeValue(nextChecked)
+
+    if (formProps.formFieldBind === false) {
+      formProps.onChange?.(nextValue)
+      return
+    }
+
+    field.setFormValue(nextValue)
+    formProps.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
@@ -111,6 +211,9 @@ export function Checkbox(props: CheckboxProps): JSX.Element {
       name={field.name()}
       disabled={field.disabled()}
       onChange={onChange}
+      checked={resolvedChecked()}
+      defaultChecked={resolvedDefaultChecked()}
+      indeterminate={indeterminate()}
       data-slot="root"
       data-disabled={field.disabled() ? '' : undefined}
       class={checkboxRootVariants(

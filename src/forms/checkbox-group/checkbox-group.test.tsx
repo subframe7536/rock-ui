@@ -24,6 +24,32 @@ describe('CheckboxGroup', () => {
     expect(screen.getByText('First option')).not.toBeNull()
   })
 
+  test('supports indeterminate item state and icon for object items', async () => {
+    const screen = render(() => (
+      <CheckboxGroup
+        legend="Mapped"
+        items={[
+          {
+            value: 'a',
+            label: 'Alpha',
+            indeterminate: true,
+            indeterminateIcon: <span data-testid="indeterminate-icon">I</span>,
+          },
+        ]}
+      />
+    ))
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Alpha' }) as HTMLInputElement
+    const item = screen.container.querySelector('[data-slot="fieldset"] > [data-slot="root"]')
+
+    await waitFor(() => {
+      expect(checkbox.indeterminate).toBe(true)
+      expect(checkbox.checked).toBe(false)
+      expect(item?.getAttribute('data-indeterminate')).not.toBeNull()
+      expect(screen.getByTestId('indeterminate-icon').textContent).toBe('I')
+    })
+  })
+
   test('supports uncontrolled value changes', async () => {
     const onChange = vi.fn()
     const screen = render(() => (

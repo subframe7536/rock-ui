@@ -159,6 +159,24 @@ function setValueAtPath(target: unknown, path: string[] | undefined, value: unkn
   current[leafKey] = value
 }
 
+function getValueAtPath(target: unknown, path: string[] | undefined): unknown {
+  if (!target || typeof target !== 'object' || !path || path.length === 0) {
+    return undefined
+  }
+
+  let current: unknown = target
+
+  for (const key of path) {
+    if (!current || typeof current !== 'object') {
+      return undefined
+    }
+
+    current = (current as Record<string, unknown>)[key]
+  }
+
+  return current
+}
+
 function matchesField(error: FormValidationError, targets: FormFieldIdentity[]): boolean {
   const errorPath = toFieldPath(error.name)
   if (!errorPath) {
@@ -453,6 +471,19 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
     registerInput,
     unregisterInput,
     getInputMeta,
+    getFieldValue: (name) => {
+      const identity = toFieldIdentity(name)
+      if (!identity) {
+        return undefined
+      }
+
+      const fieldValue = formState.fields[identity.key]?.value
+      if (fieldValue !== undefined) {
+        return fieldValue
+      }
+
+      return getValueAtPath(stateProps.state, identity.path)
+    },
     getFieldState: (name) => {
       const identity = toFieldIdentity(name)
       if (!identity) {

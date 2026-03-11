@@ -1,6 +1,6 @@
 import * as KobalteSwitch from '@kobalte/core/switch'
 import type { JSX } from 'solid-js'
-import { Show, mergeProps, splitProps } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
 
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
@@ -31,33 +31,48 @@ type SwitchSlots =
 
 export type SwitchClasses = SlotClasses<SwitchSlots>
 
-export interface SwitchBaseProps
+export interface SwitchBaseProps<TTrue = boolean, TFalse = boolean>
   extends SwitchVariantProps, FormIdentityOptions, FormDisableOption {
+  checked?: TTrue | TFalse
+  defaultChecked?: boolean
+  trueValue?: TTrue
+  falseValue?: TFalse
   loading?: boolean
   loadingIcon?: IconName
   checkedIcon?: IconName
   uncheckedIcon?: IconName
   label?: JSX.Element
   description?: JSX.Element
+  onChange?: (value: TTrue | TFalse) => void
   classes?: SwitchClasses
 }
 
-export type SwitchProps = SwitchBaseProps &
+export type SwitchProps<TTrue = boolean, TFalse = boolean> = SwitchBaseProps<TTrue, TFalse> &
   Omit<KobalteSwitch.SwitchRootProps, keyof SwitchBaseProps | 'children' | 'class'>
 
-export function Switch(props: SwitchProps): JSX.Element {
+export function Switch<TTrue = boolean, TFalse = boolean>(
+  props: SwitchProps<TTrue, TFalse>,
+): JSX.Element {
   const merged = mergeProps(
     {
       size: 'md' as const,
       loading: false,
       loadingIcon: 'icon-loading' as IconName,
+      trueValue: true,
+      falseValue: false,
     },
     props,
   )
 
   const [formProps, displayProps, styleProps, restProps] = splitProps(
-    merged as SwitchProps,
-    [...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS],
+    merged as SwitchProps<TTrue, TFalse>,
+    [
+      ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
+      'checked',
+      'defaultChecked',
+      'trueValue',
+      'falseValue',
+    ],
     ['loading', 'loadingIcon', 'checkedIcon', 'uncheckedIcon', 'label', 'description'],
     ['size', 'classes'],
   )
@@ -73,13 +88,70 @@ export function Switch(props: SwitchProps): JSX.Element {
     () => ({
       defaultId: generatedId(),
       defaultSize: 'md',
-      initialValue: restProps.defaultChecked || false,
+      initialValue:
+        normalizeFieldValue(
+          formProps.checked !== undefined ? formProps.checked : formProps.defaultChecked,
+        ) ?? formProps.falseValue,
     }),
   )
 
+  function toCheckedState(value: unknown): boolean {
+    if (value === formProps.trueValue) {
+      return true
+    }
+
+    if (value === formProps.falseValue) {
+      return false
+    }
+
+    return typeof value === 'boolean' ? value : false
+  }
+
+  function normalizeFieldValue(value: unknown): unknown {
+    if (value === undefined) {
+      return value
+    }
+
+    if (value === formProps.trueValue || value === formProps.falseValue) {
+      return value
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? formProps.trueValue : formProps.falseValue
+    }
+
+    return value
+  }
+
+  function toChangeValue(nextChecked: boolean): TTrue | TFalse {
+    return nextChecked ? (formProps.trueValue as TTrue) : (formProps.falseValue as TFalse)
+  }
+
+  const checked = createMemo<boolean | undefined>(() => {
+    if (formProps.checked !== undefined) {
+      return toCheckedState(formProps.checked)
+    }
+
+    if (field.value() !== undefined) {
+      return toCheckedState(field.value())
+    }
+
+    return undefined
+  })
+
+  createEffect(() => {
+    if (formProps.checked === undefined) {
+      return
+    }
+
+    field.setFormValue(normalizeFieldValue(formProps.checked))
+  })
+
   function onChange(nextChecked: boolean): void {
-    field.setFormValue(nextChecked)
-    formProps.onChange?.(nextChecked)
+    const nextValue = toChangeValue(nextChecked)
+
+    field.setFormValue(nextValue)
+    formProps.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
@@ -89,6 +161,8 @@ export function Switch(props: SwitchProps): JSX.Element {
       id={`${field.id()}-root`}
       name={field.name()}
       disabled={field.disabled()}
+      checked={checked()}
+      defaultChecked={formProps.defaultChecked}
       onChange={onChange}
       data-slot="root"
       class={cn(

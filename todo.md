@@ -2,8 +2,7 @@
 
 - [x] invalid and other boolean state should become `data-*` driven css instead of a variant in `cva`
 - [x] unify id
-- [ ] refactor: overlay components should consider children as content, and provider optional trigger prop
-- [ ] custom true/false value in form elements
+- [x] custom true/false value in form elements, reference from nuxt-ui
 - [ ] polish theme, like ring color etc.
 - [ ] tailwind 3 preset support, remove all unocss-specific class syntax and option to simplify by transformer
 - [ ] `styles: SlotStyles<SlotNames, JSX.CSSProperties>` (like `classes`)
