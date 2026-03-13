@@ -133,7 +133,7 @@ export function CommandPaletteDemos() {
       </DemoSection>
 
       <DemoSection title="Basic" description="Groups of items with icons, kbds, and descriptions.">
-        <div class="border rounded-lg max-w-lg shadow-lg overflow-hidden">
+        <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
           <CommandPalette groups={BASIC_GROUPS} />
         </div>
       </DemoSection>
@@ -142,7 +142,7 @@ export function CommandPaletteDemos() {
         title="Sub-navigation"
         description="Items with children drill into a sub-group. Press Backspace or the back button to return."
       >
-        <div class="border rounded-lg max-w-lg shadow-lg overflow-hidden">
+        <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
           <CommandPalette groups={SUB_NAV_GROUPS} />
         </div>
       </DemoSection>
@@ -151,14 +151,14 @@ export function CommandPaletteDemos() {
         title="With Close Button"
         description="A close button in the input trailing slot."
       >
-        <div class="border rounded-lg max-w-lg shadow-lg overflow-hidden">
+        <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
           <CommandPalette groups={BASIC_GROUPS} close onClose={() => setCloseCount((c) => c + 1)} />
         </div>
         <p class="text-sm text-muted-foreground mt-2">Close clicked: {closeCount()} time(s)</p>
       </DemoSection>
 
       <DemoSection title="Loading" description="Search icon becomes a spinner while loading.">
-        <div class="border rounded-lg max-w-lg shadow-lg overflow-hidden">
+        <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
           <CommandPalette groups={BASIC_GROUPS} loading />
         </div>
       </DemoSection>
@@ -167,7 +167,7 @@ export function CommandPaletteDemos() {
         title="Custom empty state"
         description="Override the default 'No results.' message."
       >
-        <div class="border rounded-lg max-w-lg shadow-lg overflow-hidden">
+        <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
           <CommandPalette
             groups={[]}
             empty={

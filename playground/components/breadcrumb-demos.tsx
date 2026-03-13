@@ -1,6 +1,6 @@
 import { createSignal } from 'solid-js'
 
-import { Breadcrumb } from '../../src'
+import { Breadcrumb, Button } from '../../src'
 
 import { DemoPage, DemoSection } from './common/demo-page'
 
@@ -64,13 +64,9 @@ export const BreadcrumbDemos = () => {
         description="Toggle wrapping behavior for long breadcrumb labels."
       >
         <div class="space-y-3">
-          <button
-            type="button"
-            class="text-sm px-3 py-1.5 border border-zinc-300 rounded-md hover:bg-zinc-100"
-            onClick={() => setWrap((value) => !value)}
-          >
+          <Button onClick={() => setWrap((value) => !value)}>
             Wrap: {wrap() ? 'enabled' : 'disabled'}
-          </button>
+          </Button>
 
           <div class="max-w-md">
             <Breadcrumb

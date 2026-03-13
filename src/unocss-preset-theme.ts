@@ -1,36 +1,14 @@
-import type { colors as wind4Colors } from '@unocss/preset-wind4/colors'
 import type { Preset } from 'unocss'
 import type { Theme } from 'unocss/preset-wind4'
 
 import { createInjectRockPrefixTransformer } from './unocss-transformer-inject-rock-prefix'
 
-type Shortcut = [string, string]
-type WindColorName = keyof typeof wind4Colors
-type ColorName = WindColorName | string
-type IconKey = keyof typeof DEFAULT_ICONS
-type ColorKey = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
-
-export interface AppConfig {
-  colors: Record<ColorKey, ColorName>
-  icons: Record<IconKey, string>
-}
-
 export interface PresetThemeOptions {
   radiusRem?: number
-  colors?: Partial<AppConfig['colors']>
-  icons?: Partial<AppConfig['icons']>
+  colors?: Record<string, unknown>
+  icons?: Partial<Record<keyof typeof DEFAULT_ICONS, string>>
   idFilter?: (id: string) => boolean
   lowLayer?: boolean | 'use-prefix'
-}
-
-export const DEFAULT_COLORS: AppConfig['colors'] = {
-  primary: 'gray',
-  secondary: 'blue',
-  success: 'green',
-  info: 'blue',
-  warning: 'yellow',
-  error: 'red',
-  neutral: 'slate',
 }
 
 export const DEFAULT_ICONS = {
@@ -141,28 +119,8 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function createIconShortcuts(icons: AppConfig['icons']): Shortcut[] {
+function createIconShortcuts(icons: Record<string, string>): [string, string][] {
   return Object.entries(icons).map(([name, icon]) => [`icon-${toKebabCase(name)}`, icon])
-}
-
-function normalizeOptions(options?: number | PresetThemeOptions): Required<PresetThemeOptions> {
-  if (typeof options === 'number') {
-    return {
-      radiusRem: options,
-      colors: {},
-      icons: {},
-      idFilter: DEFAULT_ID_FILTER,
-      lowLayer: false,
-    }
-  }
-
-  return {
-    radiusRem: options?.radiusRem ?? 0.5,
-    colors: options?.colors ?? {},
-    icons: options?.icons ?? {},
-    idFilter: options?.idFilter ?? DEFAULT_ID_FILTER,
-    lowLayer: options?.lowLayer ?? false,
-  }
 }
 
 export const ROCK_COMPONENT_LAYER = 'rock-component'
@@ -173,17 +131,13 @@ const RE_SCRIPT_ID = /\.(?:js|jsx|ts|tsx|mjs|cjs|mts|cts)(?:$|[?#])/i
 const DEFAULT_ID_FILTER = (id: string): boolean => RE_SCRIPT_ID.test(id)
 const RE_ATTR = /^(data|aria)-(\w+):/
 
-export function presetTheme(options?: number | PresetThemeOptions): Preset<Theme> {
-  const normalized = normalizeOptions(options)
-  const appConfig: AppConfig = {
-    colors: {
-      ...DEFAULT_COLORS,
-      ...normalized.colors,
-    },
-    icons: {
-      ...DEFAULT_ICONS,
-      ...normalized.icons,
-    },
+export function presetTheme(options?: PresetThemeOptions): Preset<Theme> {
+  const normalized = {
+    radiusRem: options?.radiusRem ?? 0.5,
+    colors: options?.colors ?? {},
+    icons: options?.icons ?? {},
+    idFilter: options?.idFilter ?? DEFAULT_ID_FILTER,
+    lowLayer: options?.lowLayer ?? false,
   }
 
   const lightTheme: Theme = {
@@ -304,7 +258,7 @@ export function presetTheme(options?: number | PresetThemeOptions): Preset<Theme
         'border-destructive ring-3 ring-destructive/20 dark:(border-destructive/50 ring-destructive/40)',
       ],
       ['effect-dis', 'opacity-64 pointer-events-none'],
-      ...createIconShortcuts(appConfig.icons),
+      ...createIconShortcuts(DEFAULT_ICONS),
     ],
     rules: [
       [
@@ -348,16 +302,16 @@ export function presetTheme(options?: number | PresetThemeOptions): Preset<Theme
     preflights: [
       {
         getCSS: () => `:root {
-  --radius: ${normalized.radiusRem}rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 2px);
-  --ui-radius: var(--radius);
-  --ui-container: 80rem;
+--radius: ${normalized.radiusRem}rem;
+--radius-sm: calc(var(--radius) - 4px);
+--radius-md: calc(var(--radius) - 2px);
+--radius-lg: var(--radius);
+--radius-xl: calc(var(--radius) + 2px);
+--ui-radius: var(--radius);
+--ui-container: 80rem;
 }
 .dark {
-  ${darkThemeVars};
+${darkThemeVars};
 }`,
       },
     ],

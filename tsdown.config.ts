@@ -11,7 +11,7 @@ import { createMigrateSyntaxTransformer } from './src/unocss-transformer-migrate
 const baseUnocssConfig = (preset: any): UnoCSSPluginOptions => {
   const theme = presetTheme()
   return {
-    filter: { id: ['src/**/*.tsx', 'src/**/*.class.ts'] },
+    filter: { id: ['src/**/*.tsx', 'src/**/*.ts'] },
     config: {
       configFile: false,
       presets: [
@@ -29,7 +29,22 @@ const baseUnocssConfig = (preset: any): UnoCSSPluginOptions => {
           extract(ctx) {
             const shortcuts = new Set((theme.shortcuts as any[]).map((s) => s[0]))
             Array.from(ctx.extracted.keys())
-              .filter((e) => !e.startsWith('var-') && !shortcuts.has(e))
+              .filter((e) => {
+                // Keep var-* tokens
+                if (e.startsWith('var-')) {
+                  return false
+                }
+                // Keep animate-* and keyframes-* tokens for animation keyframes
+                if (e.includes('animate-') || e.includes('keyframes-')) {
+                  return false
+                }
+                // Keep shortcuts
+                if (shortcuts.has(e)) {
+                  return false
+                }
+                // Delete everything else
+                return true
+              })
               .forEach((s) => ctx.extracted.delete(s))
           },
         },

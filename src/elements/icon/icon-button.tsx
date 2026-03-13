@@ -75,12 +75,8 @@ export function IconButton<T extends ValidComponent = 'button'>(
       {...restProps}
     >
       <Icon
-        name={
-          localProps.loading
-            ? localProps.loadingIcon || 'icon-loading' + 'animate-spin'
-            : localProps.name
-        }
-        class="size-full"
+        name={localProps.loading ? localProps.loadingIcon || 'icon-loading' : localProps.name}
+        class={cn('size-full', localProps.loading && 'animate-spin')}
       />
     </KobalteButton.Root>
   )

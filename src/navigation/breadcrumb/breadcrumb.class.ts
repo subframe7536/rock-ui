@@ -5,7 +5,7 @@ export const breadcrumbListVariants = cva('flex items-center', {
   variants: {
     wrap: {
       true: 'flex-wrap',
-      false: 'flex-nowrap',
+      false: 'flex-nowrap overflow-hidden',
     },
   },
   defaultVariants: {

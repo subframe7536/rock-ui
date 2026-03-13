@@ -96,44 +96,43 @@ export const progressIndicatorVariants = cva(
       {
         orientation: 'horizontal',
         animation: 'carousel',
-        class:
-          'data-indeterminate:animate-[carousel] data-indeterminate:rtl:animate-[carousel-rtl]',
+        class: 'data-indeterminate:animate-carousel data-indeterminate:rtl:animate-carousel-rtl',
       },
       {
         orientation: 'vertical',
         animation: 'carousel',
-        class: 'data-indeterminate:animate-[carousel-vertical]',
+        class: 'data-indeterminate:animate-carousel-vertical',
       },
       {
         orientation: 'horizontal',
         animation: 'carousel-inverse',
         class:
-          'data-indeterminate:animate-[carousel-inverse] data-indeterminate:rtl:animate-[carousel-inverse-rtl]',
+          'data-indeterminate:animate-carousel-inverse data-indeterminate:rtl:animate-carousel-inverse-rtl',
       },
       {
         orientation: 'vertical',
         animation: 'carousel-inverse',
-        class: 'data-indeterminate:animate-[carousel-inverse-vertical]',
+        class: 'data-indeterminate:animate-carousel-inverse-vertical',
       },
       {
         orientation: 'horizontal',
         animation: 'swing',
-        class: 'data-indeterminate:animate-[swing]',
+        class: 'data-indeterminate:animate-swing',
       },
       {
         orientation: 'vertical',
         animation: 'swing',
-        class: 'data-indeterminate:animate-[swing-vertical]',
+        class: 'data-indeterminate:animate-swing-vertical',
       },
       {
         orientation: 'horizontal',
         animation: 'elastic',
-        class: 'data-indeterminate:animate-[elastic]',
+        class: 'data-indeterminate:animate-elastic',
       },
       {
         orientation: 'vertical',
         animation: 'elastic',
-        class: 'data-indeterminate:animate-[elastic-vertical]',
+        class: 'data-indeterminate:animate-elastic-vertical',
       },
     ],
   },
