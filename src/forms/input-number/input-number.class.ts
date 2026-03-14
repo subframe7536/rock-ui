@@ -24,7 +24,7 @@ export const inputNumberRootVariants = cva(
 )
 
 export const inputNumberBaseVariants = cva(
-  'style-placeholder text-foreground outline-none bg-transparent flex-1 min-w-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none disabled:bg-transparent',
+  'style-placeholder text-foreground style-input-number outline-none bg-transparent flex-1 min-w-0 disabled:bg-transparent',
   {
     defaultVariants: {
       size: 'md',

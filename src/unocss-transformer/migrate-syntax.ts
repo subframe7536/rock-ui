@@ -1,6 +1,6 @@
 import type { SourceCodeTransformer } from 'unocss'
 
-import { runTransform } from './unocss-transformer-shared'
+import { runTransform } from './shared'
 
 const TSX_SUFFIX = '.tsx'
 const CLASS_TS_SUFFIX = '.class.ts'

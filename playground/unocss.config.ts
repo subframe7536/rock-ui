@@ -2,10 +2,10 @@ import lucideIcons from '@iconify-json/lucide/icons.json' with { type: 'json' }
 import type { PresetWind4Theme } from 'unocss'
 import { defineConfig, presetIcons, presetWind4, transformerVariantGroup } from 'unocss'
 import { presetAnimations } from 'unocss-preset-animations'
-import { presetFunctionCompletion, presetObjectCompletion } from 'unocss-preset-completion'
 
 import { presetTheme } from '../src/unocss-preset-theme'
 
+const transformer = transformerVariantGroup()
 export default defineConfig<PresetWind4Theme>({
   presets: [
     presetWind4(),
@@ -17,17 +17,15 @@ export default defineConfig<PresetWind4Theme>({
     }),
     presetAnimations() as any,
     presetTheme({
-      // lowLayer: true,
+      enableComponentLayer: {
+        idFilter(id: string) {
+          return id.endsWith('.class.ts') || id.endsWith('.tsx')
+        },
+        beforeTransform(code, id, ctx) {
+          transformer.transform(code, id, ctx)
+        },
+      },
     }),
-    presetObjectCompletion(),
-    presetFunctionCompletion(),
-  ],
-  transformers: [
-    // pipelines:
-    // 1) lib build: inject only
-    // 2) playground fast-simulate: inject + rock post
-    // 3) real user app: rock post only
-    transformerVariantGroup(),
   ],
   content: {
     pipeline: {
@@ -38,38 +36,6 @@ export default defineConfig<PresetWind4Theme>({
         '../src/**/*.class.ts',
         'node_modules/**/*.*',
       ],
-    },
-  },
-  theme: {
-    animation: {
-      durations: {
-        slideup: '.3s',
-        slidedown: '.3s',
-      },
-      timingFns: {
-        slideup: 'ease-out',
-        slidedown: 'ease-out',
-      },
-      keyframes: {
-        slideup: `
-{
-    0% {
-        height: var(--rock-collapsible-content-height);
-    }
-    100% {
-        height: 0;
-    }
-}`,
-        slidedown: `
-{
-    0% {
-        height: 0;
-    }
-    100% {
-        height: var(--rock-collapsible-content-height);
-    }
-}`,
-      },
     },
   },
 })

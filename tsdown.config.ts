@@ -6,7 +6,7 @@ import { presetAnimations } from 'unocss-preset-animations'
 import solid from 'vite-plugin-solid'
 
 import { presetTheme } from './src/unocss-preset-theme'
-import { createMigrateSyntaxTransformer } from './src/unocss-transformer-migrate-syntax'
+import { createMigrateSyntaxTransformer } from './src/unocss-transformer/migrate-syntax'
 
 const baseUnocssConfig = (preset: any): UnoCSSPluginOptions => {
   const theme = presetTheme()
@@ -35,7 +35,12 @@ const baseUnocssConfig = (preset: any): UnoCSSPluginOptions => {
                   return false
                 }
                 // Keep animate-* and keyframes-* tokens for animation keyframes
-                if (e.includes('animate-') || e.includes('keyframes-')) {
+                if (
+                  e.includes('animate-') ||
+                  e.includes('zoom-') ||
+                  e.includes('fade-') ||
+                  e.includes('keyframes-')
+                ) {
                   return false
                 }
                 // Keep shortcuts

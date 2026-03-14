@@ -1,24 +1,24 @@
 import MagicString from 'magic-string'
+import { transformerVariantGroup } from 'unocss'
 import { describe, expect, test } from 'vitest'
 
-import { ROCK_PREFIX } from './unocss-preset-theme'
-import {
-  createInjectRockPrefixTransformer,
-  prefixClassList,
-} from './unocss-transformer-inject-rock-prefix'
+import { transformerInjectPrefix, prefixClassList } from './inject-prefix'
 
-type InjectTransformer = ReturnType<typeof createInjectRockPrefixTransformer>
-type TransformContext = Parameters<InjectTransformer['transform']>[2]
-const TEST_PREFIX = ROCK_PREFIX
+const TEST_PREFIX = 'rk-'
 
 async function runTransform(source: string, id: string): Promise<string> {
-  const transformer = createInjectRockPrefixTransformer(TEST_PREFIX)
+  const variantGroupTransformer = transformerVariantGroup()
+  const transformer = transformerInjectPrefix({
+    prefix: TEST_PREFIX,
+    beforeTransform(code, id, context) {
+      variantGroupTransformer.transform(code, id, context)
+    },
+  })
   const code = new MagicString(source)
-  const context = {
-    tokens: new Set<string>(),
-  } as unknown as TransformContext
 
-  await transformer.transform(code, id, context)
+  await transformer.transform(code, id, {
+    tokens: new Set<string>(),
+  } as any)
 
   return code.toString()
 }
@@ -29,6 +29,18 @@ describe('transformer-inject-rock-prefix', () => {
       `${TEST_PREFIX}a ${TEST_PREFIX}b ${TEST_PREFIX}c`,
     )
     expect(prefixClassList('   ', TEST_PREFIX)).toBe('   ')
+  })
+
+  test('flattens variant groups before prefixing', async () => {
+    const output = await runTransform(
+      `const view = <div class="hover:(bg-red text-white) text-sm" />`,
+      'src/example.tsx',
+    )
+
+    expect(output).toContain(
+      `class="${TEST_PREFIX}hover:bg-red ${TEST_PREFIX}hover:text-white ${TEST_PREFIX}text-sm"`,
+    )
+    expect(output).not.toContain('hover:(')
   })
 
   test('prefixes class strings in cva base, variants and compoundVariants.class only', async () => {

@@ -1,17 +1,6 @@
 import type { SourceCodeTransformer } from 'unocss'
 
-import { runTransform } from './unocss-transformer-shared'
-
-const TSX_SUFFIX = '.tsx'
-const CLASS_TS_SUFFIX = '.class.ts'
-
-function isClassFile(id: string): boolean {
-  return id.endsWith(CLASS_TS_SUFFIX)
-}
-
-function isTsxFile(id: string): boolean {
-  return id.endsWith(TSX_SUFFIX)
-}
+import { runTransform } from './shared'
 
 export function prefixClassList(value: string, prefix: string): string {
   const tokens = value.match(/\S+/g)
@@ -23,12 +12,25 @@ export function prefixClassList(value: string, prefix: string): string {
   return tokens.map((token) => (token.startsWith(prefix) ? token : `${prefix}${token}`)).join(' ')
 }
 
-export function createInjectRockPrefixTransformer(prefix: string): SourceCodeTransformer {
+export interface TransformerInjectPrefixOption {
+  prefix: string
+  idFilter?: (id: string) => boolean
+  /**
+   * Hooks before inject prefix
+   */
+  beforeTransform?: (...args: Parameters<SourceCodeTransformer['transform']>) => void
+}
+
+export function transformerInjectPrefix(
+  options: TransformerInjectPrefixOption,
+): SourceCodeTransformer {
+  const { prefix, idFilter, beforeTransform } = options
   return {
-    name: 'transformer-inject-rock-prefix',
+    name: 'transformer-inject-prefix',
     enforce: 'pre',
-    idFilter: (id) => isClassFile(id) || isTsxFile(id),
-    transform(code, id) {
+    idFilter,
+    async transform(code, id, context) {
+      beforeTransform?.(code, id, context)
       runTransform(code, id, (start, end, text, source) => {
         const nextValue = prefixClassList(text, prefix)
         const originalSlice = source.slice(start, end)

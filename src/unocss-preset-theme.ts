@@ -1,14 +1,17 @@
 import type { Preset } from 'unocss'
 import type { Theme } from 'unocss/preset-wind4'
 
-import { createInjectRockPrefixTransformer } from './unocss-transformer-inject-rock-prefix'
+import { transformerInjectPrefix } from './unocss-transformer/inject-prefix'
+import type { TransformerInjectPrefixOption } from './unocss-transformer/inject-prefix'
 
-export interface PresetThemeOptions {
+export interface PresetThemeOptions extends Pick<TransformerInjectPrefixOption, 'beforeTransform'> {
   radiusRem?: number
   colors?: Record<string, unknown>
   icons?: Partial<Record<keyof typeof DEFAULT_ICONS, string>>
-  idFilter?: (id: string) => boolean
-  lowLayer?: boolean | 'use-prefix'
+  enableComponentLayer?:
+    | boolean
+    | 'preservePrefix'
+    | (Partial<TransformerInjectPrefixOption> & { preservePrefix?: boolean })
 }
 
 export const DEFAULT_ICONS = {
@@ -95,65 +98,83 @@ const DARK_BASE_COLORS = {
   destructive: { DEFAULT: 'rgb(234, 97, 97)', foreground: 'rgb(240, 219, 219)' },
 } satisfies Theme['colors']
 
-function generateCSSVariables(obj: Record<string, unknown>, prefix: string[] = []): string[] {
-  return Object.entries(obj).flatMap(([key, value]) => {
-    const currentPath = [...prefix, key]
+const ROCK_COMPONENT_LAYER = 'rock-component'
+const ROCK_PREFIX = 'rk-'
+const RE_ROCK_PREFIX = new RegExp(ROCK_PREFIX, 'g')
+const RE_ROCK_PREFIX_CLEAN = new RegExp(`\\\\?${ROCK_PREFIX}`, 'g')
 
-    if (typeof value === 'string') {
-      return [`--${currentPath.join('-')}: ${value}`]
-    }
-
-    if (value && typeof value === 'object') {
-      return generateCSSVariables(value as Record<string, unknown>, currentPath)
-    }
-
-    return []
-  })
-}
-
-function toKebabCase(value: string): string {
-  return value.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function createIconShortcuts(icons: Record<string, string>): [string, string][] {
-  return Object.entries(icons).map(([name, icon]) => [`icon-${toKebabCase(name)}`, icon])
-}
-
-export const ROCK_COMPONENT_LAYER = 'rock-component'
-export const ROCK_PREFIX = 'rk'
-const RE_ROCK_PREFIX = new RegExp(escapeRegExp(ROCK_PREFIX) + '-', 'g')
-const RE_ROCK_PREFIX_CLEAN = new RegExp(`\\\\?${escapeRegExp(ROCK_PREFIX + '-')}`, 'g')
-const RE_SCRIPT_ID = /\.(?:js|jsx|ts|tsx|mjs|cjs|mts|cts)(?:$|[?#])/i
-const DEFAULT_ID_FILTER = (id: string): boolean => RE_SCRIPT_ID.test(id)
 const RE_ATTR = /^(data|aria)-(\w+):/
+interface ResolvedPresetThemeOptions {
+  radiusRem: number
+  colors: Record<string, unknown>
+  icons: Partial<Record<keyof typeof DEFAULT_ICONS, string>>
+  enableComponentLayer: boolean
+  preservePrefix: boolean
+  prefix: string
+  idFilter: (id: string) => boolean
+  beforeTransform?: TransformerInjectPrefixOption['beforeTransform']
+}
 
-export function presetTheme(options?: PresetThemeOptions): Preset<Theme> {
-  const normalized = {
+export function resolvePresetThemeOptions(
+  options?: PresetThemeOptions,
+): ResolvedPresetThemeOptions {
+  const layerOpt = options?.enableComponentLayer ?? false
+  const isObj = typeof layerOpt === 'object' && layerOpt !== null
+
+  let enableComponentLayer = false
+  let preservePrefix = false
+
+  if (isObj) {
+    enableComponentLayer = true
+    if (layerOpt.preservePrefix) {
+      preservePrefix = true
+    }
+  } else if (layerOpt) {
+    enableComponentLayer = true
+    if (layerOpt === 'preservePrefix') {
+      preservePrefix = true
+    }
+  }
+
+  return {
     radiusRem: options?.radiusRem ?? 0.5,
     colors: options?.colors ?? {},
     icons: options?.icons ?? {},
-    idFilter: options?.idFilter ?? DEFAULT_ID_FILTER,
-    lowLayer: options?.lowLayer ?? false,
+    enableComponentLayer,
+    preservePrefix,
+    prefix: (isObj && layerOpt.prefix) || ROCK_PREFIX,
+    idFilter:
+      (isObj && layerOpt.idFilter) || ((id: string) => id.includes('node_modules/rock-ui/')),
+    beforeTransform: (isObj && layerOpt.beforeTransform) || options?.beforeTransform,
   }
+}
+
+export function presetTheme(options?: PresetThemeOptions): Preset<Theme> {
+  const normalized = resolvePresetThemeOptions(options)
 
   const lightTheme: Theme = {
     colors: LIGHT_BASE_COLORS,
   }
-  const darkTheme: Theme = {
-    colors: DARK_BASE_COLORS,
-  }
 
-  const darkThemeVars = generateCSSVariables(darkTheme as Record<string, unknown>).join(';\n')
+  const darkThemeVars = Object.entries(DARK_BASE_COLORS)
+    .flatMap(([k, v]) =>
+      typeof v === 'string'
+        ? `--colors-${k}: ${v}`
+        : Object.entries(v).map(([sk, sv]) => `--colors-${k}-${sk}: ${sv}`),
+    )
+    .join(';\n')
 
   const transformers: Preset['transformers'] = []
-  if (normalized.lowLayer) {
-    transformers.push(createInjectRockPrefixTransformer(ROCK_PREFIX + '-'))
+  if (normalized.enableComponentLayer) {
+    transformers.push(
+      transformerInjectPrefix({
+        prefix: normalized.prefix,
+        idFilter: normalized.idFilter,
+        beforeTransform: normalized.beforeTransform,
+      }),
+    )
 
-    if (normalized.lowLayer === true) {
+    if (!normalized.preservePrefix) {
       transformers.push({
         name: 'transformer-rock',
         enforce: 'post',
@@ -185,20 +206,20 @@ export function presetTheme(options?: PresetThemeOptions): Preset<Theme> {
     },
   ]
 
-  if (normalized.lowLayer) {
+  if (normalized.enableComponentLayer) {
     variants.push((matcher) => {
       if (!matcher.startsWith(ROCK_PREFIX)) {
         return matcher
       }
 
       return {
-        matcher: matcher.slice(ROCK_PREFIX.length + 1),
+        matcher: matcher.slice(ROCK_PREFIX.length),
         layer: ROCK_COMPONENT_LAYER,
       }
     })
   }
   return {
-    name: 'preset-rock',
+    name: 'preset-theme-rock',
     theme: {
       ...lightTheme,
       animation: {
@@ -225,7 +246,7 @@ export function presetTheme(options?: PresetThemeOptions): Preset<Theme> {
     transformers,
     variants,
     postprocess:
-      normalized.lowLayer === true
+      normalized.enableComponentLayer && !normalized.preservePrefix
         ? [
             (util) => {
               if (util.layer !== ROCK_COMPONENT_LAYER) {
@@ -245,6 +266,10 @@ export function presetTheme(options?: PresetThemeOptions): Preset<Theme> {
       ['transition-flex-basis', '[transition-property:flex-basis]'],
       ['style-placeholder', 'placeholder:(text-muted-foreground select-none)'],
       [
+        'style-input-number',
+        '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+      ],
+      [
         'style-accordion-content',
         '[&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4',
       ],
@@ -258,7 +283,10 @@ export function presetTheme(options?: PresetThemeOptions): Preset<Theme> {
         'border-destructive ring-3 ring-destructive/20 dark:(border-destructive/50 ring-destructive/40)',
       ],
       ['effect-dis', 'opacity-64 pointer-events-none'],
-      ...createIconShortcuts(DEFAULT_ICONS),
+      ...Object.entries(DEFAULT_ICONS).map(
+        ([k, v]) =>
+          [`icon-${k.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`, v] as [string, string],
+      ),
     ],
     rules: [
       [
