@@ -35,8 +35,9 @@
   "scripts": {
     "build": "bun --bun tsdown",
     "dev": "bun --bun tsdown --watch",
-    "play": "bun --bun vite serve playground",
-    "play:build": "bun --bun vite build playground",
+    "meta": "bun run scripts/extract-component-meta.ts",
+    "play": "bun run meta && bun --bun vite serve playground",
+    "play:build": "bun run meta && bun --bun vite build playground",
     "test": "bun --bun vitest",
     "lint": "bun --bun oxlint",
     "format": "bun --bun oxfmt",

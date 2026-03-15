@@ -85,6 +85,7 @@ export type PopupProps = RockUIComposeProps<
   'preventScroll'
 >
 
+/** Low-level overlay primitive providing portal, overlay backdrop, and content positioning. */
 export function Popup(props: PopupProps): JSX.Element {
   const merged = mergeProps(
     {

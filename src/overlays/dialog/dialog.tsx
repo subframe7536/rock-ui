@@ -147,6 +147,7 @@ export interface DialogBaseProps extends DialogCardVariantProps {
  */
 export type DialogProps = RockUIComposeProps<DialogBaseProps, KobalteDialog.DialogRootProps>
 
+/** Modal dialog with header, body, and footer slots, backdrop overlay, and dismissal control. */
 export function Dialog(props: DialogProps): JSX.Element {
   const merged = mergeProps(
     {

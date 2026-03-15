@@ -139,6 +139,7 @@ export interface BreadcrumbBaseProps extends BreadcrumbVariantProps {
  */
 export type BreadcrumbProps = BreadcrumbBaseProps
 
+/** Breadcrumb navigation trail with separator icons and collapsible overflow. */
 export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
   const merged = mergeProps(
     {

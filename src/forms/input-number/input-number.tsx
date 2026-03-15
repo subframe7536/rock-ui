@@ -138,6 +138,7 @@ export type InputNumberProps = RockUIComposeProps<
   KobalteNumberField.NumberFieldRootProps
 >
 
+/** Numeric input with increment/decrement controls, step, and min/max constraints. */
 export function InputNumber(props: InputNumberProps): JSX.Element {
   const merged = mergeProps(
     {

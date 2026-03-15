@@ -127,6 +127,7 @@ interface DragState {
   lastSizes: number[]
 }
 
+/** Resizable panel layout with draggable dividers and keyboard support. */
 export function Resizable(props: ResizableProps): JSX.Element {
   const localProps = mergeProps(
     {

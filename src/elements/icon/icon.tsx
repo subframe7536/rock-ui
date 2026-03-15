@@ -52,6 +52,7 @@ export interface IconBaseProps extends Omit<
  */
 export type IconProps = IconBaseProps
 
+/** Renders an icon from a UnoCSS icon class, JSX element, or render function. */
 export function Icon(props: IconProps): JSX.Element {
   const [localProps, restProps] = splitProps(props, ['name', 'class', 'style', 'size', 'data-slot'])
 

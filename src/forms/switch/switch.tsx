@@ -127,6 +127,7 @@ export type SwitchProps<TTrue = boolean, TFalse = boolean> = RockUIComposeProps<
   KobalteSwitch.SwitchRootProps
 >
 
+/** Toggle switch control with icon slots and loading state. */
 export function Switch<TTrue = boolean, TFalse = boolean>(
   props: SwitchProps<TTrue, TFalse>,
 ): JSX.Element {

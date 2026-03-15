@@ -4,3 +4,4 @@ nuxt-ui
 zaidan
 .worktrees
 *.local.*
+playground/.meta/

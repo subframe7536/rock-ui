@@ -123,6 +123,7 @@ export type CheckboxProps<TTrue = boolean, TFalse = boolean> = RockUIComposeProp
   'ref' | 'indeterminate'
 >
 
+/** Single checkbox control with card and list variants and custom true/false values. */
 export function Checkbox<TTrue = boolean, TFalse = boolean>(
   props: CheckboxProps<TTrue, TFalse>,
 ): JSX.Element {

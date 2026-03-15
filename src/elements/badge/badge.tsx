@@ -70,6 +70,7 @@ export interface BadgeBaseProps {
  * Props for the Badge component.
  */
 export type BadgeProps = BadgeBaseProps & BadgeVariantProps
+/** Compact label component with leading/trailing icon slots and variant styles. */
 export function Badge(props: BadgeProps): JSX.Element {
   const merged = mergeProps(
     {

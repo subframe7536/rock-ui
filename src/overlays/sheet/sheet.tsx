@@ -133,6 +133,7 @@ export interface SheetBaseProps extends SheetVariantProps {
  */
 export type SheetProps = RockUIComposeProps<SheetBaseProps, KobalteDialog.DialogRootProps>
 
+/** Slide-in panel overlay from any screen edge with header, body, and footer slots. */
 export function Sheet(props: SheetProps): JSX.Element {
   const merged = mergeProps(
     {

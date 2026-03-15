@@ -134,6 +134,7 @@ export type DropdownMenuProps = RockUIComposeProps<
   'arrowPadding'
 >
 
+/** Trigger-activated dropdown menu with nested items, checkboxes, and radio groups. */
 export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
   const merged = mergeProps(
     {

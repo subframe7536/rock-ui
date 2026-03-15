@@ -43,6 +43,7 @@ export interface KbdBaseProps {
  */
 export type KbdProps = KbdBaseProps & KbdVariantProps
 
+/** Keyboard shortcut display component with configurable size and variant. */
 export function Kbd(props: KbdProps): JSX.Element {
   const inner = (val: string) => (
     <kbd

@@ -148,6 +148,7 @@ function isTouchOrPen(pointerType: string): boolean {
   return pointerType === 'touch' || pointerType === 'pen'
 }
 
+/** Right-click activated context menu with nested items, checkboxes, and radio groups. */
 export function ContextMenu(props: ContextMenuProps): JSX.Element {
   const merged = mergeProps(
     {

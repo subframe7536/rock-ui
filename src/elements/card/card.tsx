@@ -66,6 +66,7 @@ export interface CardBaseProps {
  */
 export type CardProps = CardBaseProps
 
+/** Structured content container with optional header, body, footer, and action slots. */
 export function Card(props: CardProps): JSX.Element {
   return (
     <div

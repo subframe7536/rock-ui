@@ -300,6 +300,7 @@ function constrainSingleFile(accepted: File[]): {
   return { accepted: [accepted[0]!], rejected }
 }
 
+/** Drag-and-drop file upload component with progress tracking and file list management. */
 export function FileUpload(props: FileUploadProps): JSX.Element {
   const merged = mergeProps(
     {

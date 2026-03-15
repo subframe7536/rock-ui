@@ -82,6 +82,7 @@ export type CollapsibleProps = RockUIComposeProps<
   KobalteCollapsible.CollapsibleRootProps
 >
 
+/** Expandable content section with animated open/close transitions. */
 export function Collapsible(props: CollapsibleProps): JSX.Element {
   const [contentProps, restProps] = splitProps(props as CollapsibleProps, [
     'classes',

@@ -133,6 +133,7 @@ export interface FormFieldBaseProps {
  */
 export type FormFieldProps = FormFieldBaseProps & FormFieldVariantProps
 
+/** Form field wrapper providing label, description, and validation message layout. */
 export function FormField(props: FormFieldProps): JSX.Element {
   const merged = mergeProps(
     {

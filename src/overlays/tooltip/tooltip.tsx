@@ -51,6 +51,7 @@ export interface TooltipBaseProps extends TooltipVariantProps {
  */
 export type TooltipProps = RockUIComposeProps<TooltipBaseProps, KobalteTooltip.TooltipRootProps>
 
+/** Hover-triggered informational overlay anchored to a trigger element. */
 export function Tooltip(props: TooltipProps): JSX.Element {
   const merged = mergeProps(
     {

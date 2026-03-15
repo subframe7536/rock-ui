@@ -342,6 +342,7 @@ function escapeRegex(str: string): string {
 // Component
 // ---------------------------------------------------------------------------
 
+/** Dropdown select component with search, multi-select, and custom item rendering. */
 export function Select(props: SelectProps): JSX.Element {
   const merged = mergeProps(
     {

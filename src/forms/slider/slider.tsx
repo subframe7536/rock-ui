@@ -131,6 +131,7 @@ function createThumbAriaLabel(index: number, total: number): string {
   return `Thumb ${index + 1} of ${total}`
 }
 
+/** Range slider component with single or multi-thumb support and step markers. */
 export function Slider(props: SliderProps): JSX.Element {
   const merged = mergeProps(
     {

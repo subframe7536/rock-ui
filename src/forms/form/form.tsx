@@ -289,6 +289,7 @@ async function validateStandardSchema(
   }))
 }
 
+/** Form container with schema-based validation and submission handling. */
 export function Form<TState extends FormState = FormState>(props: FormProps<TState>): JSX.Element {
   const [stateProps, eventProps, renderProps, restProps] = splitProps(
     props as FormProps<TState>,

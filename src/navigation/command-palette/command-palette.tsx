@@ -322,6 +322,9 @@ function createNormalizedGroups(
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
+/**
+ * Keyboard-driven command palette with search, grouping, and nested page navigation.
+ */
 export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   const merged = mergeProps(
     {

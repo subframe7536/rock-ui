@@ -52,6 +52,7 @@ export type SeparatorProps = RockUIComposeProps<
   KobalteSeparator.SeparatorRootProps<HTMLDivElement>
 >
 
+/** Visual divider with configurable orientation, style, and optional label content. */
 export function Separator(props: SeparatorProps): JSX.Element {
   const merged = mergeProps(
     {

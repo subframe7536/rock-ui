@@ -1,5 +1,5 @@
 import type { Accessor } from 'solid-js'
-import { For, createMemo } from 'solid-js'
+import { For, Show, createMemo, createSignal } from 'solid-js'
 
 export interface SidebarPage {
   key: string
@@ -14,10 +14,20 @@ export interface SidebarProps {
 }
 
 export const Sidebar = (props: SidebarProps) => {
+  const [search, setSearch] = createSignal('')
+
+  const filtered = createMemo(() => {
+    const q = search().toLowerCase().trim()
+    if (!q) {
+      return props.pages
+    }
+    return props.pages.filter((p) => p.label.toLowerCase().includes(q))
+  })
+
   const grouped = createMemo(() => {
     const map = new Map<string, SidebarPage[]>()
 
-    for (const page of props.pages) {
+    for (const page of filtered()) {
       const list = map.get(page.group) ?? []
       list.push(page)
       map.set(page.group, list)
@@ -27,35 +37,52 @@ export const Sidebar = (props: SidebarProps) => {
   })
 
   return (
-    <aside class="text-white p-4 bg-zinc-900 flex shrink-0 flex-col gap-6 w-56 overflow-y-auto">
+    <aside class="text-white p-4 bg-zinc-900 flex shrink-0 flex-col gap-4 w-56 overflow-y-auto">
       <div class="text-xs text-zinc-400 tracking-widest font-semibold px-2 uppercase">Rock UI</div>
 
-      <For each={grouped()}>
-        {([group, pages]) => (
-          <div>
-            <div class="text-[11px] text-zinc-500 tracking-wider font-medium mb-1.5 px-2 uppercase">
-              {group}
+      <div class="px-1">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search()}
+          onInput={(e) => setSearch(e.currentTarget.value)}
+          class="text-xs text-zinc-200 px-2.5 py-1.5 outline-none b-1 b-zinc-700/50 rounded-md bg-zinc-800 w-full transition-colors placeholder:text-zinc-500 focus:b-zinc-600"
+        />
+      </div>
+
+      <nav class="flex flex-col gap-4">
+        <For each={grouped()}>
+          {([group, pages]) => (
+            <div>
+              <div class="text-[11px] text-zinc-500 tracking-wider font-medium mb-1.5 px-2 flex uppercase items-center justify-between">
+                <span>{group}</span>
+                <span class="text-zinc-600 font-normal">{pages.length}</span>
+              </div>
+              <div class="flex flex-col gap-0.5">
+                <For each={pages}>
+                  {(page) => (
+                    <button
+                      type="button"
+                      class={`text-sm px-2.5 py-1.5 text-left rounded-md transition-colors ${
+                        props.activePage() === page.key
+                          ? 'bg-zinc-700/80 font-medium text-white'
+                          : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+                      }`}
+                      onClick={() => props.setActivePage(page.key)}
+                    >
+                      {page.label}
+                    </button>
+                  )}
+                </For>
+              </div>
             </div>
-            <nav class="flex flex-col gap-0.5">
-              <For each={pages}>
-                {(page) => (
-                  <button
-                    type="button"
-                    class={`text-sm px-2.5 py-1.5 text-left rounded-md transition-colors ${
-                      props.activePage() === page.key
-                        ? 'bg-zinc-700/80 font-medium text-white'
-                        : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
-                    }`}
-                    onClick={() => props.setActivePage(page.key)}
-                  >
-                    {page.label}
-                  </button>
-                )}
-              </For>
-            </nav>
-          </div>
-        )}
-      </For>
+          )}
+        </For>
+
+        <Show when={grouped().length === 0}>
+          <p class="text-xs text-zinc-500 px-2">No results</p>
+        </Show>
+      </nav>
     </aside>
   )
 }

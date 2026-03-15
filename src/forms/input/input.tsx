@@ -152,6 +152,7 @@ export interface InputBaseProps
  */
 export type InputProps = InputBaseProps & InputStyleVariantProps
 
+/** Text input component with leading/trailing icon slots, loading state, and form field integration. */
 export function Input(props: InputProps): JSX.Element {
   const merged = mergeProps(
     {

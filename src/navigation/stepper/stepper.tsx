@@ -140,6 +140,9 @@ interface NormalizedStepperItem {
   value: StepperValue
 }
 
+/**
+ * Multi-step progress indicator with configurable orientation and separator layout.
+ */
 export function Stepper(props: StepperProps): JSX.Element {
   const merged = mergeProps(
     {

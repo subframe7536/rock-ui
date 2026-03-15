@@ -152,6 +152,7 @@ function resolveFallbackText(text: string | undefined, alt: string | undefined):
   return initials || '\u00A0'
 }
 
+/** Circular user or entity avatar with fallback initials and optional indicator. */
 export function Avatar(props: AvatarProps): JSX.Element {
   const merged = mergeProps(
     {

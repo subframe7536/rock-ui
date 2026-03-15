@@ -114,6 +114,7 @@ function resolveMaxValue(max: ProgressProps['max']): number {
   return 100
 }
 
+/** Determinate or indeterminate progress indicator with optional step labels. */
 export function Progress(props: ProgressProps): JSX.Element {
   const merged = mergeProps(
     {

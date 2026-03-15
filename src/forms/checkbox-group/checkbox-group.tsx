@@ -168,6 +168,7 @@ interface NormalizedCheckboxGroupItem<TTrue = boolean, TFalse = boolean> {
   indeterminateIcon?: CheckboxProps<TTrue, TFalse>['indeterminateIcon']
 }
 
+/** Multi-select checkbox group with card, list, and table layout variants. */
 export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
   props: CheckboxGroupProps<TTrue, TFalse>,
 ): JSX.Element {

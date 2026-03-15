@@ -166,6 +166,9 @@ function getSize(size: string | undefined, text?: string): ButtonProps['size'] {
   return (text ? size : `icon-${size}`) as ButtonProps['size']
 }
 
+/**
+ * Page navigation component with configurable sibling count and edge display.
+ */
 export function Pagination(props: PaginationProps): JSX.Element {
   const merged = mergeProps(
     {

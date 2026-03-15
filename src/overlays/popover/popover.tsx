@@ -76,6 +76,7 @@ export interface PopoverBaseProps extends PopoverContentVariantProps {
  */
 export type PopoverProps = RockUIComposeProps<PopoverBaseProps, KobaltePopover.PopoverRootProps>
 
+/** Click-triggered floating content panel anchored to a trigger element. */
 export function Popover(props: PopoverProps): JSX.Element {
   const merged = mergeProps(
     {

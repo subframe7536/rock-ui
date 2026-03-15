@@ -103,6 +103,9 @@ function normalizeItemValue(item: TabsItem, index: number): string {
   return String(item.value)
 }
 
+/**
+ * Tabbed navigation component with configurable orientation and variant styles.
+ */
 export function Tabs(props: TabsProps): JSX.Element {
   const merged = mergeProps(
     {

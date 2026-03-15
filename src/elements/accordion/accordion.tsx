@@ -96,6 +96,7 @@ export type AccordionProps = RockUIComposeProps<
   KobalteAccordion.AccordionRootProps
 >
 
+/** Stacked disclosure component with single or multiple expanded sections. */
 export function Accordion(props: AccordionProps): JSX.Element {
   const merged = mergeProps(
     {

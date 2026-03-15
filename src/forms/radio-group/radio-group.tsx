@@ -135,6 +135,7 @@ export type RadioGroupProps = RockUIComposeProps<
   KobalteRadioGroup.RadioGroupRootProps
 >
 
+/** Single-select radio group with card, list, and table layout variants. */
 export function RadioGroup(props: RadioGroupProps): JSX.Element {
   const merged = mergeProps(
     {

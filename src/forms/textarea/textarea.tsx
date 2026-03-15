@@ -148,6 +148,7 @@ export interface TextareaBaseProps
  */
 export type TextareaProps = TextareaBaseProps & TextareaStyleVariantProps
 
+/** Multi-line text input with autoresize support and form field integration. */
 export function Textarea(props: TextareaProps): JSX.Element {
   const merged = mergeProps(
     {
