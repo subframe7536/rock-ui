@@ -75,7 +75,11 @@ export interface ButtonBaseProps extends ButtonVariantProps {
  */
 export type ButtonProps<T extends ValidComponent = 'button'> = PolymorphicProps<
   T,
-  RockUIComposeProps<ButtonBaseProps, KobalteButton.ButtonRootProps<ElementOf<T>>>
+  RockUIComposeProps<
+    ButtonBaseProps,
+    KobalteButton.ButtonRootProps<ElementOf<T>>,
+    'class' | 'style'
+  >
 >
 
 type PromiseLikeWithFinally = PromiseLike<unknown> & {
@@ -96,7 +100,7 @@ function isPromiseLike(value: unknown): value is PromiseLikeWithFinally {
 export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T>): JSX.Element {
   const [styleProps, stateProps, contentProps, restProps] = splitProps(
     props as ButtonProps,
-    ['class', 'variant', 'size', 'classes', 'styles'],
+    ['variant', 'size', 'classes', 'styles'],
     ['disabled', 'loading', 'loadingAuto', 'loadingIcon', 'onClick'],
     ['leading', 'trailing', 'children'],
   )

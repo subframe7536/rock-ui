@@ -1,6 +1,8 @@
 import type { JSX } from 'solid-js'
 import { For, Show, createSignal } from 'solid-js'
 
+import { Button, Icon } from '../../../src'
+
 import { PropsTable } from './props-table'
 
 // ── Legacy DemoPage (kept for compatibility) ───────────────────────────
@@ -50,16 +52,19 @@ export const DemoSection = (props: DemoSectionProps) => {
       </div>
 
       <Show when={props.code}>
-        <div class="py-1.5 b-t border-zinc-200/80 flex justify-center">
-          <button
-            type="button"
-            class={`text-xs px-3 py-1 rounded-md flex gap-1.5 cursor-pointer transition-colors items-center ${showCode() ? 'bg-zinc-100 text-zinc-700' : 'text-zinc-400 hover:text-zinc-600'}`}
-            onClick={() => setShowCode((v) => !v)}
-          >
-            <span class="text-[10px] font-mono">&lt;/&gt;</span>
-            Source
-          </button>
-        </div>
+        <Button
+          variant="ghost"
+          classes={{
+            base: [
+              'w-full rounded-none',
+              showCode() ? 'bg-zinc-100 text-zinc-800' : 'text-zinc-500 hover:text-zinc-600',
+            ],
+          }}
+          onClick={() => setShowCode((v) => !v)}
+          leading="i-lucide:code-xml"
+        >
+          Source
+        </Button>
 
         <Show when={showCode()}>
           {/* eslint-disable-next-line solid/no-innerhtml -- shiki HTML generated at build time */}

@@ -12,11 +12,11 @@ export const selectControlVariants = cva(
     },
     variants: {
       size: {
-        xs: 'me-1',
-        sm: 'me-1.5',
-        md: 'me-2',
-        lg: 'me-2.5',
-        xl: 'me-3',
+        xs: 'pe-1',
+        sm: 'pe-1.5',
+        md: 'pe-2',
+        lg: 'pe-2.5',
+        xl: 'pe-3',
       },
       variant: INPUT_VARIANT_CLASSES,
     },
@@ -24,7 +24,7 @@ export const selectControlVariants = cva(
 )
 
 export const selectInputVariants = cva(
-  'style-placeholder outline-none bg-transparent flex-1 disabled:effect-dis data-readonly:cursor-pointer',
+  'w-full style-placeholder outline-none bg-transparent flex-1 disabled:effect-dis data-readonly:cursor-pointer',
   {
     defaultVariants: {
       mode: 'single',
@@ -32,34 +32,34 @@ export const selectInputVariants = cva(
     },
     variants: {
       mode: {
-        single: 'm-1.5 px-$s-px',
-        multiSearch: 'ps-$s-ps min-w-12',
+        single: 'm-1.5 px-$s-p',
+        multiSearch: 'ps-$s-p min-w-12',
         multiHidden: 'sr-only',
       },
       size: {
-        xs: 'text-xs h-4 var-select-6-0.5-0.5',
-        sm: 'text-xs h-4.5 var-select-7-1-1',
-        md: 'text-sm h-5.5 var-select-8-1-1',
-        lg: 'text-sm h-6 var-select-9-1.5-1.5',
-        xl: 'text-base h-6.5 var-select-10-1.5-1.5',
+        xs: 'text-xs h-4 var-select-6-0.5',
+        sm: 'text-xs h-4.5 var-select-7-1',
+        md: 'text-sm h-5.5 var-select-8-1',
+        lg: 'text-sm h-6 var-select-9-1.5',
+        xl: 'text-base h-6.5 var-select-10-1.5',
       },
     },
   },
 )
 
 export const selectTriggerIconVariants = cva(
-  'text-muted-foreground outline-none opacity-80 cursor-pointer',
+  'text-muted-foreground me-0.5 outline-none opacity-80 cursor-pointer',
   {
     defaultVariants: {
       size: 'md',
     },
     variants: {
       size: {
-        xs: 'me-1 size-3.5',
-        sm: 'me-1.5 size-4',
-        md: 'me-2 size-5',
-        lg: 'me-2.5 size-6',
-        xl: 'me-3 size-6',
+        xs: 'size-3',
+        sm: 'size-3.4',
+        md: 'size-4',
+        lg: 'size-4.5',
+        xl: 'size-5',
       },
     },
   },

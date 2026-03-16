@@ -306,11 +306,10 @@ export function presetTheme(options?: PresetThemeOptions): Preset {
         }),
       ],
       [
-        /var-select-([\d.]+)-([\d.]+)-([\d.]+)/,
-        ([, h, px, ps], { theme }) => ({
+        /var-select-([\d.]+)-([\d.]+)/,
+        ([, h, px], { theme }) => ({
           '--s-h': createLength(theme, h),
-          '--s-px': createLength(theme, px),
-          '--s-ps': createLength(theme, ps),
+          '--s-p': createLength(theme, px),
         }),
       ],
       [
