@@ -50,29 +50,24 @@ export const DemoSection = (props: DemoSectionProps) => {
       </div>
 
       <Show when={props.code}>
-        <div class="b-t border-zinc-200/80">
+        <div class="py-1.5 b-t border-zinc-200/80 flex justify-center">
           <button
             type="button"
-            class="text-xs text-zinc-500 px-5 py-2 text-left flex gap-1.5 w-full cursor-pointer transition-colors items-center hover:text-zinc-700"
+            class={`text-xs px-3 py-1 rounded-md flex gap-1.5 cursor-pointer transition-colors items-center ${showCode() ? 'bg-zinc-100 text-zinc-700' : 'text-zinc-400 hover:text-zinc-600'}`}
             onClick={() => setShowCode((v) => !v)}
           >
-            <span
-              class="text-[10px] inline-block transition-transform"
-              style={{ transform: showCode() ? 'rotate(90deg)' : 'rotate(0deg)' }}
-            >
-              ▶
-            </span>
-            {showCode() ? 'Hide source' : 'View source'}
+            <span class="text-[10px] font-mono">&lt;/&gt;</span>
+            Source
           </button>
-
-          <Show when={showCode()}>
-            <div class="b-t border-zinc-100">
-              <pre class="text-xs text-zinc-700 leading-relaxed p-4 bg-zinc-50/80 overflow-x-auto">
-                <code>{props.code}</code>
-              </pre>
-            </div>
-          </Show>
         </div>
+
+        <Show when={showCode()}>
+          <div class="b-t border-zinc-100">
+            <pre class="text-xs text-zinc-700 leading-relaxed p-4 bg-zinc-50/80 overflow-x-auto">
+              <code>{props.code}</code>
+            </pre>
+          </div>
+        </Show>
       </Show>
     </section>
   )

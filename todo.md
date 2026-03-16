@@ -10,8 +10,10 @@
 - [x] unify icon size resolver
 - [x] `styles: SlotStyles<SlotNames, JSX.CSSProperties>` (like `classes`)
 - [x] props jsdoc
+- [x] refine demo into doc?
+- [ ] select trigger icon position overflow
+- [ ] unify docs: preview different variants, options
 - [ ] check `props.highlight` actual usage and style effect, optimize `surface-highlight` and `surface-outline` and `surface-overlay`, unify text size / line height / spacing / border color , border implement style (directly border or box-shadow)
-- [ ] refine demo into doc?
 
 # V1
 

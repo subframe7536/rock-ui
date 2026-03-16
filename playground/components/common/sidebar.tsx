@@ -37,7 +37,7 @@ export const Sidebar = (props: SidebarProps) => {
   })
 
   return (
-    <aside class="text-white p-4 bg-zinc-900 flex shrink-0 flex-col gap-4 w-56 overflow-y-auto">
+    <aside class="text-zinc-800 p-4 bg-zinc-100 flex shrink-0 flex-col gap-4 w-56 overflow-y-auto">
       <div class="text-xs text-zinc-400 tracking-widest font-semibold px-2 uppercase">Rock UI</div>
 
       <div class="px-1">
@@ -46,7 +46,7 @@ export const Sidebar = (props: SidebarProps) => {
           placeholder="Search..."
           value={search()}
           onInput={(e) => setSearch(e.currentTarget.value)}
-          class="text-xs text-zinc-200 px-2.5 py-1.5 outline-none b-1 b-zinc-700/50 rounded-md bg-zinc-800 w-full transition-colors placeholder:text-zinc-500 focus:b-zinc-600"
+          class="text-xs px-2.5 py-1.5 outline-none b-1 b-zinc-300/50 rounded-md bg-zinc-200 w-full transition-colors placeholder:text-zinc-500 focus:b-zinc-400"
         />
       </div>
 
@@ -63,10 +63,10 @@ export const Sidebar = (props: SidebarProps) => {
                   {(page) => (
                     <button
                       type="button"
-                      class={`text-sm px-2.5 py-1.5 text-left rounded-md transition-colors ${
+                      class={`text-sm text-zinc-600 px-2.5 py-1.5 text-left rounded-md ${
                         props.activePage() === page.key
-                          ? 'bg-zinc-700/80 font-medium text-white'
-                          : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+                          ? 'bg-zinc-300/80 font-medium'
+                          : 'hover:bg-zinc-200 hover:text-zinc-800'
                       }`}
                       onClick={() => props.setActivePage(page.key)}
                     >

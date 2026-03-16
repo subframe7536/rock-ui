@@ -32,16 +32,16 @@ export const selectInputVariants = cva(
     },
     variants: {
       mode: {
-        single: 'px-$s-px h-$s-h',
+        single: 'm-1.5 px-$s-px',
         multiSearch: 'ps-$s-ps min-w-12',
         multiHidden: 'sr-only',
       },
       size: {
-        xs: 'text-xs h-4 var-select-6-2-0.5',
-        sm: 'text-xs h-4.5 var-select-7-2.5-1',
-        md: 'text-sm h-5.5 var-select-8-2.5-1',
-        lg: 'text-sm h-6 var-select-9-3-1.5',
-        xl: 'text-base h-6.5 var-select-10-3-1.5',
+        xs: 'text-xs h-4 var-select-6-0.5-0.5',
+        sm: 'text-xs h-4.5 var-select-7-1-1',
+        md: 'text-sm h-5.5 var-select-8-1-1',
+        lg: 'text-sm h-6 var-select-9-1.5-1.5',
+        xl: 'text-base h-6.5 var-select-10-1.5-1.5',
       },
     },
   },

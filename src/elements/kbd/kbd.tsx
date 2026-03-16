@@ -28,6 +28,11 @@ export interface KbdBaseProps {
   styles?: KbdStyles
 
   /**
+   * Slot between kbds
+   */
+  between?: JSX.Element
+
+  /**
    * Prefix for data-slot attributes.
    */
   slotPrefix?: string
@@ -45,32 +50,37 @@ export type KbdProps = KbdBaseProps & KbdVariantProps
 
 /** Keyboard shortcut display component with configurable size and variant. */
 export function Kbd(props: KbdProps): JSX.Element {
-  const inner = (val: string) => (
-    <kbd
-      data-slot={props.slotPrefix ? `${props.slotPrefix}-kbd` : 'kbd'}
-      class={kbdItemVariants(
-        {
-          size: props.size,
-          variant: props.variant,
-        },
-        props.classes?.item,
-      )}
-      style={props.styles?.item}
-    >
-      {val}
-    </kbd>
+  const Inner = (innerProps: { val: string; append?: boolean }) => (
+    <>
+      <kbd
+        data-slot={props.slotPrefix ? `${props.slotPrefix}-kbd` : 'kbd'}
+        class={kbdItemVariants(
+          {
+            size: props.size,
+            variant: props.variant,
+          },
+          props.classes?.item,
+        )}
+        style={props.styles?.item}
+      >
+        {innerProps.val}
+      </kbd>
+      <Show when={innerProps.append}>{props.between}</Show>
+    </>
   )
   return (
     <Show when={props.value}>
       <Switch>
-        <Match when={props.value!.length === 1}>{inner(props.value![0])}</Match>
+        <Match when={props.value!.length === 1}>{<Inner val={props.value![0]} />}</Match>
         <Match when={props.value!.length > 1}>
           <span
             data-slot={props.slotPrefix ? `${props.slotPrefix}-kbds` : 'kbds'}
             class={cn('inline-flex gap-1 items-center', props.classes?.root)}
             style={props.styles?.root}
           >
-            <For each={props.value}>{(value) => inner(value)}</For>
+            <For each={props.value}>
+              {(value, idx) => <Inner val={value} append={idx() < props.value!.length - 1} />}
+            </For>
           </span>
         </Match>
       </Switch>
