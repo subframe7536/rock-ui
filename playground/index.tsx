@@ -21,7 +21,6 @@ const DEMO_MAP: Record<string, Component> = {
   'context-menu': lazy(() => import('./demo/overlay/context-menu-demos')),
   dialog: lazy(() => import('./demo/overlay/dialog-demos')),
   'dropdown-menu': lazy(() => import('./demo/overlay/dropdown-menu-demos')),
-  'dropdown-menu-reactivity': lazy(() => import('./demo/overlay/dialog-reactivity-demos')),
   'file-upload': lazy(() => import('./demo/form/file-upload-demos')),
   form: lazy(() => import('./demo/form/form-demos')),
   'form-field': lazy(() => import('./demo/form/form-field-demos')),
@@ -47,10 +46,11 @@ const DEMO_MAP: Record<string, Component> = {
 }
 
 // Build PAGES from registry, plus special demo-only entries
-const PAGES = [
-  ...registry.map((entry) => ({ key: entry.key, label: entry.name, group: entry.category })),
-  { key: 'dropdown-menu-reactivity', label: 'Dropdown Menu Reactivity', group: 'Overlay' },
-]
+const PAGES = registry.map((entry) => ({
+  key: entry.key,
+  label: entry.name,
+  group: entry.category,
+}))
 
 function App() {
   const [page, setPage] = createSignal(location.hash.slice(1) || 'button')

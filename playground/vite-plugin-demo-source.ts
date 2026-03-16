@@ -1,5 +1,7 @@
 import { parseSync } from 'oxc-parser'
 import { walk } from 'oxc-walker'
+import { createHighlighterCore } from 'shiki/core'
+import { createJavaScriptRegexEngine } from 'shiki/engine-javascript.mjs'
 import type { Plugin } from 'vite'
 
 interface Injection {
@@ -22,7 +24,11 @@ function dedentSource(source: string): string {
     : [first, ...lines.map((l) => l.slice(minIndent))].join('\n')
 }
 
-function transformDemoSource(code: string, id: string): string | null {
+async function transformDemoSource(
+  code: string,
+  id: string,
+  toHTML: (src: string) => string,
+): Promise<string | null> {
   const { program } = parseSync(id, code, { lang: 'tsx', sourceType: 'module' })
 
   const injections: Injection[] = []
@@ -101,7 +107,8 @@ function transformDemoSource(code: string, id: string): string | null {
         .trim()
         .replace(/^\n+|\n+$/g, ''),
     )
-    const escaped = JSON.stringify(childrenSource)
+    const html = toHTML(childrenSource)
+    const escaped = JSON.stringify(html)
     result =
       result.slice(0, inj.propInsertPos) + ` code={${escaped}}` + result.slice(inj.propInsertPos)
   }
@@ -109,7 +116,12 @@ function transformDemoSource(code: string, id: string): string | null {
   return result
 }
 
-export function demoSourcePlugin(): Plugin {
+export async function demoSourcePlugin(): Promise<Plugin> {
+  const highlighter = await createHighlighterCore({
+    themes: [import('shiki/themes/one-light.mjs')],
+    langs: [import('shiki/langs/tsx.mjs')],
+    engine: createJavaScriptRegexEngine(),
+  })
   return {
     name: 'rock-ui-demo-source',
     enforce: 'pre',
@@ -118,8 +130,10 @@ export function demoSourcePlugin(): Plugin {
       filter: {
         id: [/^(?!.*node_modules).*-demos\.tsx$/],
       },
-      handler(code, id) {
-        return transformDemoSource(code, id)
+      async handler(code, id) {
+        return transformDemoSource(code, id, (s) =>
+          highlighter.codeToHtml(s, { lang: 'tsx', theme: 'one-light' }),
+        )
       },
     },
   }

@@ -66,11 +66,11 @@ const CATEGORY_ORDER = ['General', 'Navigation', 'Overlay', 'Form']
 function resolveDisplayType(typeText: string): string {
   const classesMatch = typeText.match(/^(\w+)Classes$/)
   if (classesMatch) {
-    return `Classes<${classesMatch[1]}Slots, ClassValue>`
+    return `SlotClasses<${classesMatch[1]}Slots, ClassValue>`
   }
   const stylesMatch = typeText.match(/^(\w+)Styles$/)
   if (stylesMatch) {
-    return `Styles<${stylesMatch[1]}Slots, JSX.CSSProperties>`
+    return `SlotStyles<${stylesMatch[1]}Slots, JSX.CSSProperties>`
   }
   return typeText
 }

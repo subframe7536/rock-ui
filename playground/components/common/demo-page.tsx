@@ -62,11 +62,12 @@ export const DemoSection = (props: DemoSectionProps) => {
         </div>
 
         <Show when={showCode()}>
-          <div class="b-t border-zinc-100">
-            <pre class="text-xs text-zinc-700 leading-relaxed p-4 bg-zinc-50/80 overflow-x-auto">
-              <code>{props.code}</code>
-            </pre>
-          </div>
+          {/* eslint-disable-next-line solid/no-innerhtml -- shiki HTML generated at build time */}
+          <div
+            class="text-xs leading-relaxed b-t border-zinc-100 overflow-x-auto [&_pre]:(m-0 p-4 bg-transparent)"
+            // oxlint-disable-next-line solid/no-innerhtml
+            innerHTML={props.code}
+          />
         </Show>
       </Show>
     </section>
