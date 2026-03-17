@@ -1,10 +1,17 @@
 import 'uno.css'
 
 import type { Component } from 'solid-js'
-import { createSignal, lazy, onMount } from 'solid-js'
+import {
+  Show,
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  lazy,
+  onMount,
+} from 'solid-js'
 import { Dynamic, render } from 'solid-js/web'
 
-import registry from './.meta/index.json'
 import { Sidebar } from './components/sidebar'
 
 const DEMO_MAP: Record<string, Component> = {
@@ -45,14 +52,28 @@ const DEMO_MAP: Record<string, Component> = {
   tooltip: lazy(() => import('./demo/overlay/tooltip-demos')),
 }
 
-// Build PAGES from registry, plus special demo-only entries
-const PAGES = registry.map((entry) => ({
-  key: entry.key,
-  label: entry.name,
-  group: entry.category,
-}))
+interface ComponentApiIndexDoc {
+  components: Array<{ key: string; name: string; category: string }>
+}
+
+async function fetchComponentIndex(): Promise<ComponentApiIndexDoc> {
+  const res = await fetch('/component-api/index.json')
+  if (!res.ok) {
+    throw new Error('Failed to load component api index')
+  }
+  return (await res.json()) as ComponentApiIndexDoc
+}
 
 function App() {
+  const [apiIndex] = createResource(fetchComponentIndex)
+
+  const pages = createMemo(() => {
+    const list = apiIndex()?.components ?? []
+    return list
+      .filter((entry) => entry.key in DEMO_MAP)
+      .map((entry) => ({ key: entry.key, label: entry.name, group: entry.category }))
+  })
+
   const [page, setPage] = createSignal(location.hash.slice(1) || 'button')
 
   onMount(() => {
@@ -61,16 +82,36 @@ function App() {
     })
   })
 
+  createEffect(() => {
+    const current = page()
+    const hasDemo = Boolean(DEMO_MAP[current])
+    if (hasDemo) {
+      return
+    }
+    const first = pages()[0]?.key
+    if (first) {
+      setPage(first)
+      location.hash = first
+    }
+  })
+
   const navigate = (key: string) => {
     location.hash = key
     setPage(key)
   }
 
+  const ActiveDemo = createMemo(() => DEMO_MAP[page()])
+
   return (
     <div class="flex h-screen overflow-hidden">
-      <Sidebar pages={PAGES} activePage={page} setActivePage={navigate} />
+      <Sidebar pages={pages()} activePage={page} setActivePage={navigate} />
       <div class="flex-1 overflow-y-auto">
-        <Dynamic component={DEMO_MAP[page()]} />
+        <Show
+          when={ActiveDemo()}
+          fallback={<div class="text-sm text-zinc-500 p-6">Demo not found.</div>}
+        >
+          <Dynamic component={ActiveDemo()!} />
+        </Show>
       </div>
     </div>
   )

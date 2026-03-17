@@ -145,7 +145,7 @@
     "unicorn/prefer-date-now": "error",
     "unicorn/prefer-blob-reading-methods": "error",
     "unicorn/no-typeof-undefined": "error",
-    "unicorn/no-new-array": "error",
+    "unicorn/no-new-array": "off",
     "unicorn/new-for-builtins": "error",
     "unicorn/prefer-node-protocol": "error",
     "import/no-cycle": [

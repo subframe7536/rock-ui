@@ -2,7 +2,6 @@ import { createSignal, onCleanup, onMount } from 'solid-js'
 
 import { Button, CommandPalette, Kbd, Popup } from '../../../src'
 import type { CommandPaletteGroup } from '../../../src'
-import meta from '../../.meta/command-palette.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -88,7 +87,7 @@ export default function CommandPaletteDemos() {
   })
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="command-palette">
       <DemoSection
         title="Usage"
         description="Click the button or press ⌘K to open the command palette."

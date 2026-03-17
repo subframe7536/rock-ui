@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Button, Checkbox, CheckboxGroup, RadioGroup, Switch } from '../../../src'
-import meta from '../../.meta/form.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -70,7 +69,7 @@ export default () => {
   }
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="form">
       <DemoSection
         title="Checkbox"
         description="Single checkbox states with full-surface card interactions and controlled value."

@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Tabs } from '../../../src'
-import meta from '../../.meta/tabs.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -9,7 +8,7 @@ export default () => {
   const [value, setValue] = createSignal('overview')
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="tabs">
       <DemoSection
         title="Uncontrolled"
         description="Default value with icon-leading triggers and panel content."

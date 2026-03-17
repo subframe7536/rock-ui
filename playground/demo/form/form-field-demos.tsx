@@ -13,7 +13,6 @@ import {
   Textarea,
 } from '../../../src'
 import type { SelectOption } from '../../../src/forms/select/select'
-import meta from '../../.meta/form-field.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -83,7 +82,7 @@ export default () => {
   }
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="form-field">
       <DemoSection
         title="Basic FormField"
         description="Labels, descriptions, hints, and required markers."

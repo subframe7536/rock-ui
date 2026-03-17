@@ -1,7 +1,6 @@
 import { For, createSignal } from 'solid-js'
 
 import { Button, Stepper } from '../../../src'
-import meta from '../../.meta/stepper.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -75,7 +74,7 @@ export default () => {
   const [releaseStep, setReleaseStep] = createSignal('review')
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="stepper">
       <DemoSection
         title="Size variants"
         description="Preview the Stepper across all supported sizes using the default linear, non-clickable behavior."

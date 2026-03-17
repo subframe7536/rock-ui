@@ -2,7 +2,6 @@ import { For, createSignal } from 'solid-js'
 
 import { Button } from '../../../src/elements/button/button'
 import type { ButtonVariantProps } from '../../../src/elements/button/button.class'
-import meta from '../../.meta/button.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -42,7 +41,7 @@ export default () => {
   }
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="button">
       <DemoSection
         title="Variants"
         description="Visual variants from the Rock UI button class contract."

@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Avatar } from '../../../src'
-import meta from '../../.meta/avatar.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -17,7 +16,7 @@ export default () => {
   const [source, setSource] = createSignal(IMAGE_A)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="avatar">
       <DemoSection
         title="Single Avatar"
         description="Fallback first, then image crossfades in after preload."

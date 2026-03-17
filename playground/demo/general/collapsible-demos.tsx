@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Collapsible } from '../../../src'
-import meta from '../../.meta/collapsible.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -9,7 +8,7 @@ export default () => {
   const [open, setOpen] = createSignal(true)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="collapsible">
       <DemoSection
         title="Uncontrolled"
         description="Default closed panel using the built-in trigger slot."

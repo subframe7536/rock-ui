@@ -1,7 +1,6 @@
 import { For, createSignal } from 'solid-js'
 
 import { Button, Dialog } from '../../../src'
-import meta from '../../.meta/dialog.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -11,7 +10,7 @@ export default () => {
   const [preventedCloseCount, setPreventedCloseCount] = createSignal(0)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="dialog">
       <DemoSection
         title="Default Shell"
         description="Header, description, actions, body, and footer slots."

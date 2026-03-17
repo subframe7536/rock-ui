@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Button, Progress } from '../../../src'
-import meta from '../../.meta/progress.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -19,7 +18,7 @@ export default () => {
   }
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="progress">
       <DemoSection
         title="Determinate"
         description="Standard progress bar with status text and custom status renderer."

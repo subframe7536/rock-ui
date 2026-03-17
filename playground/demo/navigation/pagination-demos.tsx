@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Pagination } from '../../../src'
-import meta from '../../.meta/pagination.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -9,7 +8,7 @@ export default () => {
   const [page, setPage] = createSignal(3)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="pagination">
       <DemoSection
         title="Controlled"
         description="Default ghost + outline controls with external page state management."

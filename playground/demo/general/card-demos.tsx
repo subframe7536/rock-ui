@@ -1,5 +1,4 @@
 import { Button, Card, FormField, Icon, Input, Select } from '../../../src'
-import meta from '../../.meta/card.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -11,7 +10,7 @@ const frameworkOptions = [
 ]
 
 export default () => (
-  <DemoPage meta={meta}>
+  <DemoPage componentKey="card">
     <DemoSection title="Default" description="Create project form card from coss/ui.">
       <Card
         title="Create project"

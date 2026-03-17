@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Accordion } from '../../../src'
-import meta from '../../.meta/accordion.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -9,7 +8,7 @@ export default () => {
   const [openValue, setOpenValue] = createSignal<string[]>(['shipping'])
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="accordion">
       <DemoSection
         title="Single"
         description="Single-open mode with controlled state and icon leading/trailing slots."

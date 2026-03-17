@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Switch } from '../../../src'
-import meta from '../../.meta/switch.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -9,7 +8,7 @@ export default () => {
   const [checked, setChecked] = createSignal(false)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="switch">
       <DemoSection title="Basic" description="Toggle states with icon slots and controlled value.">
         <div class="flex flex-col gap-3 max-w-md">
           <Switch

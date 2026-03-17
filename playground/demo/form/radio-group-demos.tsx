@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { RadioGroup } from '../../../src'
-import meta from '../../.meta/radio-group.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -15,7 +14,7 @@ export default () => {
   const [value, setValue] = createSignal('pro')
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="radio-group">
       <DemoSection
         title="Variants"
         description="List, card, and table variants with controlled value."

@@ -2,7 +2,6 @@ import { createMemo, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 
 import { Icon, Resizable } from '../../../src'
-import meta from '../../.meta/resizable.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -88,7 +87,7 @@ export default () => {
   }
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="resizable">
       <DemoSection
         title="Basic Horizontal"
         description="Two panels with auto-inserted divider and root-level handle rendering."

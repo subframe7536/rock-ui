@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { Breadcrumb, Button } from '../../../src'
-import meta from '../../.meta/breadcrumb.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -16,7 +15,7 @@ export default () => {
   const [wrap, setWrap] = createSignal(true)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="breadcrumb">
       <DemoSection title="Default" description="Simple breadcrumb trail with active last item.">
         <Breadcrumb items={DEFAULT_ITEMS} />
       </DemoSection>

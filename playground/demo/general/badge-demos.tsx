@@ -2,7 +2,6 @@ import { For, createSignal } from 'solid-js'
 
 import { Badge, Button } from '../../../src'
 import type { BadgeVariantProps } from '../../../src/elements/badge/badge.class'
-import meta from '../../.meta/badge.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -17,7 +16,7 @@ export default () => {
   const [tags, setTags] = createSignal(INITIAL_TAGS)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="badge">
       <DemoSection title="Variants" description="Default, outline, and solid styles.">
         <div class="flex flex-wrap gap-3 items-center">
           <For each={VARIANTS}>{(variant) => <Badge variant={variant}>{variant}</Badge>}</For>

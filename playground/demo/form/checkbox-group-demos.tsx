@@ -1,7 +1,6 @@
 import { createSignal } from 'solid-js'
 
 import { CheckboxGroup } from '../../../src'
-import meta from '../../.meta/checkbox-group.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -15,7 +14,7 @@ export default () => {
   const [value, setValue] = createSignal<string[]>(['beta'])
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="checkbox-group">
       <DemoSection
         title="Variants"
         description="Card and table variants with controlled and uncontrolled state."

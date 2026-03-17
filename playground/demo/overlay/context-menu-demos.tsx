@@ -2,7 +2,6 @@ import { createMemo, createSignal } from 'solid-js'
 
 import { ContextMenu } from '../../../src'
 import type { ContextMenuT } from '../../../src'
-import meta from '../../.meta/context-menu.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -269,7 +268,7 @@ export default () => {
   ]
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="context-menu">
       <DemoSection
         title="File Explorer"
         description="A file-row context menu with move flows, shortcuts, mixed labels, and destructive actions."

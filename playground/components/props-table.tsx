@@ -1,49 +1,41 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, createSignal } from 'solid-js'
-
-interface PropMeta {
-  name: string
-  type: string
-  optional: boolean
-  description: string
-  default?: string
-  inherited: boolean
-  inheritedFrom?: string
-}
+import { For, Show, createSignal } from 'solid-js'
 
 export interface PropsTableProps {
-  props: PropMeta[]
+  props: ComponentPropsDoc
+}
+
+export interface PropDoc {
+  name: string
+  required: boolean
+  typeText: string
+  defaultValue?: string
+  description?: string
+}
+
+export interface InheritedGroupDoc {
+  from: string
+  props: PropDoc[]
+}
+
+export interface ComponentPropsDoc {
+  own: PropDoc[]
+  inherited: InheritedGroupDoc[]
 }
 
 export function PropsTable(props: PropsTableProps): JSX.Element {
-  const ownProps = createMemo(() => props.props.filter((p) => !p.inherited))
-  const inheritedGroups = createMemo(() => {
-    const groups = new Map<string, PropMeta[]>()
-    for (const p of props.props) {
-      if (!p.inherited || !p.inheritedFrom) {
-        continue
-      }
-      const list = groups.get(p.inheritedFrom) ?? []
-      list.push(p)
-      groups.set(p.inheritedFrom, list)
-    }
-    return [...groups.entries()]
-  })
-
   return (
     <div class="bg-background flex flex-col gap-4">
-      <Show when={ownProps().length > 0}>
-        <PropRows props={ownProps()} />
+      <Show when={props.props.own.length > 0}>
+        <PropRows props={props.props.own} />
       </Show>
 
-      <For each={inheritedGroups()}>
-        {([groupName, groupProps]) => <InheritedGroup name={groupName} props={groupProps} />}
-      </For>
+      <For each={props.props.inherited}>{(group) => <InheritedGroup group={group} />}</For>
     </div>
   )
 }
 
-function PropRows(tableProps: { props: PropMeta[] }): JSX.Element {
+function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
   return (
     <div class="b-1 b-zinc-200/80 rounded-lg overflow-x-auto">
       <table class="text-sm w-full border-collapse">
@@ -61,19 +53,23 @@ function PropRows(tableProps: { props: PropMeta[] }): JSX.Element {
               <tr class="b-t b-zinc-100 hover:bg-zinc-50/50">
                 <td class="text-xs text-primary font-mono px-3 py-2 whitespace-nowrap">
                   {prop.name}
-                  {prop.optional ? '' : '*'}
+                  {prop.required ? '*' : ''}
                 </td>
                 <td class="px-3 py-2">
                   <code class="text-xs text-zinc-600 px-1.5 py-0.5 rounded bg-zinc-100">
-                    {prop.type}
+                    {prop.typeText}
                   </code>
                 </td>
                 <td class="text-xs text-zinc-500 px-3 py-2">
-                  <Show when={prop.default} fallback={<span class="text-zinc-300">—</span>}>
-                    <code class="px-1.5 py-0.5 rounded bg-zinc-100">{prop.default}</code>
+                  <Show when={prop.defaultValue} fallback={<span class="text-zinc-300">—</span>}>
+                    <code class="px-1.5 py-0.5 rounded bg-zinc-100">{prop.defaultValue}</code>
                   </Show>
                 </td>
-                <td class="text-zinc-600 px-3 py-2">{prop.description}</td>
+                <td class="text-zinc-600 px-3 py-2">
+                  <Show when={prop.description} fallback={<span class="text-zinc-300">—</span>}>
+                    {prop.description}
+                  </Show>
+                </td>
               </tr>
             )}
           </For>
@@ -83,7 +79,7 @@ function PropRows(tableProps: { props: PropMeta[] }): JSX.Element {
   )
 }
 
-function InheritedGroup(groupProps: { name: string; props: PropMeta[] }): JSX.Element {
+function InheritedGroup(groupProps: { group: InheritedGroupDoc }): JSX.Element {
   const [open, setOpen] = createSignal(false)
 
   return (
@@ -99,13 +95,13 @@ function InheritedGroup(groupProps: { name: string; props: PropMeta[] }): JSX.El
         >
           ▶
         </span>
-        Inherited from <code class="text-zinc-600 font-mono">{groupProps.name}</code>
-        <span class="text-zinc-400">({groupProps.props.length})</span>
+        Inherited from <code class="text-zinc-600 font-mono">{groupProps.group.from}</code>
+        <span class="text-zinc-400">({groupProps.group.props.length})</span>
       </button>
 
       <Show when={open()}>
         <div class="mt-2">
-          <PropRows props={groupProps.props} />
+          <PropRows props={groupProps.group.props} />
         </div>
       </Show>
     </div>

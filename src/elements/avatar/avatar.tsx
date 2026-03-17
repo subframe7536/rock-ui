@@ -40,6 +40,7 @@ export namespace AvatarT {
     | 'groupItem'
     | 'groupCount'
   export type Variant = AvatarVariantProps
+  export type BadgePosition = Exclude<AvatarVariantProps['badgePosition'], undefined>
   export interface Items {
     /**
      * Source URL for the avatar image.
@@ -55,6 +56,12 @@ export namespace AvatarT {
      * Icon name for the badge.
      */
     badge?: IconName
+
+    /**
+     * Position of the badge.
+     * @default 'bottom-right'
+     */
+    badgePosition?: BadgePosition
 
     /**
      * Initial text to show if image fails or is missing.

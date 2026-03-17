@@ -2,7 +2,6 @@ import { For, createSignal } from 'solid-js'
 
 import { Button, Form, FormField, Slider } from '../../../src'
 import type { SliderT } from '../../../src'
-import meta from '../../.meta/slider.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -32,7 +31,7 @@ export default () => {
   }
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="slider">
       <DemoSection
         title="Controlled Single"
         description="Input phase updates with onValueChange and commit phase updates with onChange."

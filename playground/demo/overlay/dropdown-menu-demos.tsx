@@ -2,7 +2,6 @@ import { createMemo, createSignal } from 'solid-js'
 
 import { Button, DropdownMenu } from '../../../src'
 import type { DropdownMenuT } from '../../../src'
-import meta from '../../.meta/dropdown-menu.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -358,7 +357,7 @@ export default () => {
   ]
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="dropdown-menu">
       <DemoSection
         title="Account / Team"
         description="An account dropdown with grouped actions, workspace switching, shortcut hints, and a destructive sign-out row."

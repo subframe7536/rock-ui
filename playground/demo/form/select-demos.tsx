@@ -2,7 +2,6 @@ import { For, createSignal } from 'solid-js'
 
 import { Select } from '../../../src'
 import type { SelectOption } from '../../../src/forms/select/select'
-import meta from '../../.meta/select.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -53,7 +52,7 @@ export default () => {
   const [loadingMore, setLoadingMore] = createSignal(false)
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="select">
       <DemoSection
         title="Single Select"
         description="Basic single selection with controlled value."

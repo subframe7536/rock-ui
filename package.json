@@ -36,8 +36,9 @@
   "scripts": {
     "build": "bun --bun tsdown",
     "dev": "bun --bun tsdown --watch",
-    "play": "bun --bun vite serve playground",
-    "play:build": "bun --bun vite build playground",
+    "gen:api": "bun --bun scripts/generate-component-api.ts",
+    "play": "bun run build && bun run gen:api && bun --bun vite serve playground",
+    "play:build": "bun run build && bun run gen:api && bun --bun vite build playground",
     "test": "bun --bun vitest",
     "lint": "bun --bun oxlint",
     "format": "bun --bun oxfmt",

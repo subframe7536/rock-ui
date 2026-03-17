@@ -1,7 +1,6 @@
 import { For } from 'solid-js'
 
 import { Icon } from '../../../src'
-import meta from '../../.meta/icon.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -23,7 +22,7 @@ const ICON_NAMES = [
 const ICON_SIZES = [12, 16, 20, 24, 32, 48]
 
 export default () => (
-  <DemoPage meta={meta}>
+  <DemoPage componentKey="icon">
     <DemoSection
       title="Icon Gallery"
       description="Common Lucide icons rendered via UnoCSS classes."

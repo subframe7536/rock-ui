@@ -2,7 +2,6 @@ import { createSignal } from 'solid-js'
 
 import { Button, FileUpload, Form, FormField } from '../../../src'
 import type { FileUploadT } from '../../../src'
-import meta from '../../.meta/file-upload.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -46,7 +45,7 @@ export default () => {
   }
 
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="file-upload">
       <DemoSection
         title="Single Upload"
         description="Basic single-file mode with a live readout from onValueChange."

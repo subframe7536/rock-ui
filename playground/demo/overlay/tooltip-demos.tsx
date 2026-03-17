@@ -1,7 +1,6 @@
 import { createSignal, For } from 'solid-js'
 
 import { Button, Switch, Tooltip } from '../../../src'
-import meta from '../../.meta/tooltip.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -10,7 +9,7 @@ const PLACEMENTS = ['top', 'right', 'bottom', 'left'] as const
 export default () => {
   const [invert, setInvert] = createSignal(false)
   return (
-    <DemoPage meta={meta}>
+    <DemoPage componentKey="tooltip">
       <DemoSection title="Placements" description="Tooltip positioned on each side.">
         <div class="flex flex-wrap gap-4 items-center">
           <For each={PLACEMENTS}>

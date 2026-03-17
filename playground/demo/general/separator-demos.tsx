@@ -1,7 +1,6 @@
 import { For } from 'solid-js'
 
 import { Separator } from '../../../src'
-import meta from '../../.meta/separator.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
@@ -9,7 +8,7 @@ const TYPES = ['solid', 'dashed', 'dotted'] as const
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 
 export default () => (
-  <DemoPage meta={meta}>
+  <DemoPage componentKey="separator">
     <DemoSection title="Types" description="Solid, dashed, and dotted divider styles.">
       <div class="space-y-4">
         <For each={TYPES}>
