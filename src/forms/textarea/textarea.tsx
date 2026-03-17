@@ -4,6 +4,7 @@ import { Show, createEffect, createMemo, mergeProps, on, onMount, splitProps } f
 import type { ModelModifiers } from '../../shared/input-modifiers'
 import { applyInputModifiers } from '../../shared/input-modifiers'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { callHandler, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -23,130 +24,136 @@ import {
   textareaRootVariants,
 } from './textarea.class'
 
-type TextareaStyleVariantProps = Pick<
-  TextareaVariantProps,
-  'size' | 'variant' | 'highlight' | 'autoresize'
->
+export namespace TextareaT {
+  export type Slot = 'root' | 'header' | 'base' | 'footer'
 
-export type TextareaValue = string | number | undefined
-export type TextareaChangeValue = TextareaValue | null
+  export type Variant = Pick<TextareaVariantProps, 'size' | 'variant' | 'highlight' | 'autoresize'>
 
-type TextareaSlots = 'root' | 'header' | 'base' | 'footer'
+  export interface Items {}
 
-export type TextareaClasses = SlotClasses<TextareaSlots>
+  export type Value = string | number | undefined
+  export type ChangeValue = Value | null
 
-export type TextareaStyles = SlotStyles<TextareaSlots>
-
-/**
- * Base props for the Textarea component.
- */
-export interface TextareaBaseProps
-  extends
-    FormIdentityOptions,
-    FormValueOptions<TextareaValue>,
-    FormRequiredOption,
-    FormReadOnlyOption,
-    FormDisableOption {
-  /**
-   * Placeholder text for the textarea.
-   */
-  placeholder?: string
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Whether to automatically focus the textarea on mount.
-   * @default false
+   * Base props for the Textarea component.
    */
-  autofocus?: boolean
+  export interface Base
+    extends
+      FormIdentityOptions,
+      FormValueOptions<Value>,
+      FormRequiredOption,
+      FormReadOnlyOption,
+      FormDisableOption {
+    /**
+     * Placeholder text for the textarea.
+     */
+    placeholder?: string
+
+    /**
+     * Whether to automatically focus the textarea on mount.
+     * @default false
+     */
+    autofocus?: boolean
+
+    /**
+     * Delay in milliseconds before focusing the textarea.
+     * @default 0
+     */
+    autofocusDelay?: number
+
+    /**
+     * Maximum character length for the textarea.
+     */
+    maxLength?: number
+
+    /**
+     * Delay in milliseconds before triggering autoresize on mount.
+     * @default 0
+     */
+    autoresizeDelay?: number
+
+    /**
+     * Default number of rows.
+     * @default 3
+     */
+    rows?: number
+
+    /**
+     * Maximum number of rows allowed during autoresize.
+     * @default 0
+     */
+    maxrows?: number
+
+    /**
+     * Element to render above the textarea.
+     */
+    header?: JSX.Element
+
+    /**
+     * Element to render below the textarea.
+     */
+    footer?: JSX.Element
+
+    /**
+     * Modifiers for input processing (e.g., lazy, trim, number).
+     */
+    modelModifiers?: ModelModifiers
+
+    /**
+     * Callback when the value changes.
+     */
+    onValueChange?: (value: ChangeValue) => void
+
+    /**
+     * Native input event handler.
+     */
+    onInput?: JSX.EventHandlerUnion<HTMLTextAreaElement, InputEvent>
+
+    /**
+     * Native change event handler.
+     */
+    onChange?: JSX.EventHandlerUnion<HTMLTextAreaElement, Event>
+
+    /**
+     * Native blur event handler.
+     */
+    onBlur?: JSX.FocusEventHandlerUnion<HTMLTextAreaElement, FocusEvent>
+
+    /**
+     * Native focus event handler.
+     */
+    onFocus?: JSX.FocusEventHandlerUnion<HTMLTextAreaElement, FocusEvent>
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Children elements, rendered inside the root below the textarea.
+     */
+    children?: JSX.Element
+  }
 
   /**
-   * Delay in milliseconds before focusing the textarea.
-   * @default 0
+   * Props for the Textarea component.
    */
-  autofocusDelay?: number
-
-  /**
-   * Maximum character length for the textarea.
-   */
-  maxLength?: number
-
-  /**
-   * Delay in milliseconds before triggering autoresize on mount.
-   * @default 0
-   */
-  autoresizeDelay?: number
-
-  /**
-   * Default number of rows.
-   * @default 3
-   */
-  rows?: number
-
-  /**
-   * Maximum number of rows allowed during autoresize.
-   * @default 0
-   */
-  maxrows?: number
-
-  /**
-   * Element to render above the textarea.
-   */
-  header?: JSX.Element
-
-  /**
-   * Element to render below the textarea.
-   */
-  footer?: JSX.Element
-
-  /**
-   * Modifiers for input processing (e.g., lazy, trim, number).
-   */
-  modelModifiers?: ModelModifiers
-
-  /**
-   * Callback when the value changes.
-   */
-  onValueChange?: (value: TextareaChangeValue) => void
-
-  /**
-   * Native input event handler.
-   */
-  onInput?: JSX.EventHandlerUnion<HTMLTextAreaElement, InputEvent>
-
-  /**
-   * Native change event handler.
-   */
-  onChange?: JSX.EventHandlerUnion<HTMLTextAreaElement, Event>
-
-  /**
-   * Native blur event handler.
-   */
-  onBlur?: JSX.FocusEventHandlerUnion<HTMLTextAreaElement, FocusEvent>
-
-  /**
-   * Native focus event handler.
-   */
-  onFocus?: JSX.FocusEventHandlerUnion<HTMLTextAreaElement, FocusEvent>
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: TextareaClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: TextareaStyles
-
-  /**
-   * Children elements, rendered inside the root below the textarea.
-   */
-  children?: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Textarea component.
  */
-export type TextareaProps = TextareaBaseProps & TextareaStyleVariantProps
+export interface TextareaProps extends TextareaT.Props {}
 
 /** Multi-line text input with autoresize support and form field integration. */
 export function Textarea(props: TextareaProps): JSX.Element {
@@ -212,8 +219,8 @@ export function Textarea(props: TextareaProps): JSX.Element {
   const isLazy = createMemo(() => Boolean(formProps.modelModifiers?.lazy))
 
   const textareaValueProps = createMemo<{
-    value?: TextareaValue
-    defaultValue?: TextareaValue
+    value?: TextareaT.Value
+    defaultValue?: TextareaT.Value
   }>(() => {
     if (formProps.value !== undefined) {
       return { value: formProps.value }
@@ -227,7 +234,7 @@ export function Textarea(props: TextareaProps): JSX.Element {
   })
 
   function updateInputValue(value: string | null | undefined): void {
-    const nextValue = applyInputModifiers<TextareaChangeValue>(value, formProps.modelModifiers)
+    const nextValue = applyInputModifiers<TextareaT.ChangeValue>(value, formProps.modelModifiers)
 
     field.setFormValue(nextValue)
     formProps.onValueChange?.(nextValue)

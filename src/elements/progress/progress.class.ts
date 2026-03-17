@@ -198,9 +198,5 @@ export const progressStepVariants = cva(
   },
 )
 
-export type ProgressVariantProps = VariantProps<typeof progressRootVariants> &
-  VariantProps<typeof progressStatusVariants> &
-  VariantProps<typeof progressBaseVariants> &
-  VariantProps<typeof progressIndicatorVariants> &
-  VariantProps<typeof progressStepsVariants> &
-  VariantProps<typeof progressStepVariants>
+export type ProgressVariantProps = VariantProps<typeof progressStatusVariants> &
+  VariantProps<typeof progressIndicatorVariants>

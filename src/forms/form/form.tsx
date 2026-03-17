@@ -4,6 +4,7 @@ import { createStore, produce, reconcile } from 'solid-js/store'
 
 import { resolveRenderProp } from '../../shared/render-prop'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 
 import type {
@@ -54,90 +55,105 @@ export interface FormRenderProps {
   loading: boolean
 }
 
-type FormSlots = 'root'
+export namespace FormT {
+  export type Slot = 'root'
 
-export type FormClasses = SlotClasses<FormSlots>
+  export interface Variant {}
 
-export type FormStyles = SlotStyles<FormSlots>
+  export interface Items {}
 
-/**
- * Base props for the Form component.
- */
-export interface FormBaseProps<TState extends FormState = FormState> {
-  /**
-   * Unique identifier for the form.
-   */
-  id?: string
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * The state of the form (controlled).
+   * Base props for the Form component.
    */
-  state?: TState
+  export interface Base<TState extends FormState = FormState> {
+    /**
+     * Unique identifier for the form.
+     */
+    id?: string
+
+    /**
+     * The state of the form (controlled).
+     */
+    state?: TState
+
+    /**
+     * Standard Schema V1 for form validation.
+     */
+    schema?: StandardSchemaV1<TState>
+
+    /**
+     * Custom validation function.
+     */
+    validate?: (state: TState | undefined) => FormValidationError[] | Promise<FormValidationError[]>
+
+    /**
+     * When to trigger validation.
+     * @default ['input', 'blur', 'change']
+     */
+    validateOn?: FormInputEventType[]
+
+    /**
+     * Delay in milliseconds before triggering validation on input events.
+     * @default 300
+     */
+    validateOnInputDelay?: number
+
+    /**
+     * Whether the entire form is disabled.
+     * @default false
+     */
+    disabled?: boolean
+
+    /**
+     * Whether to automatically set the form to a loading state during submission.
+     * @default true
+     */
+    loadingAuto?: boolean
+
+    /**
+     * Callback when the form is submitted successfully.
+     */
+    onSubmit?: (event: FormSubmitEvent<TState>) => void | Promise<void>
+
+    /**
+     * Callback when the form submission fails due to validation errors.
+     */
+    onError?: (event: FormErrorEvent) => void
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Children of the form, can be a render function.
+     */
+    children?: JSX.Element | ((props: FormRenderProps) => JSX.Element)
+  }
 
   /**
-   * Standard Schema V1 for form validation.
+   * Props for the Form component.
    */
-  schema?: StandardSchemaV1<TState>
-
-  /**
-   * Custom validation function.
-   */
-  validate?: (state: TState | undefined) => FormValidationError[] | Promise<FormValidationError[]>
-
-  /**
-   * When to trigger validation.
-   * @default ['input', 'blur', 'change']
-   */
-  validateOn?: FormInputEventType[]
-
-  /**
-   * Delay in milliseconds before triggering validation on input events.
-   * @default 300
-   */
-  validateOnInputDelay?: number
-
-  /**
-   * Whether the entire form is disabled.
-   * @default false
-   */
-  disabled?: boolean
-
-  /**
-   * Whether to automatically set the form to a loading state during submission.
-   * @default true
-   */
-  loadingAuto?: boolean
-
-  /**
-   * Callback when the form is submitted successfully.
-   */
-  onSubmit?: (event: FormSubmitEvent<TState>) => void | Promise<void>
-
-  /**
-   * Callback when the form submission fails due to validation errors.
-   */
-  onError?: (event: FormErrorEvent) => void
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: FormClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: FormStyles
-
-  /**
-   * Children of the form, can be a render function.
-   */
-  children?: JSX.Element | ((props: FormRenderProps) => JSX.Element)
+  export interface Props<TState extends FormState = FormState> extends RockUIProps<
+    Base<TState>,
+    Variant,
+    Extend
+  > {}
 }
 
 /**
  * Props for the Form component.
  */
-export type FormProps<TState extends FormState = FormState> = FormBaseProps<TState>
+export interface FormProps<TState extends FormState = FormState> extends FormT.Props<TState> {}
 
 interface FormFieldRuntimeEntry {
   touched: boolean

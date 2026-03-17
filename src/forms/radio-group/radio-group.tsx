@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -25,115 +25,106 @@ import {
   radioGroupWrapperVariants,
 } from './radio-group.class'
 
-export type RadioGroupValue = string
+export namespace RadioGroupT {
+  export type Slot =
+    | 'root'
+    | 'fieldset'
+    | 'legend'
+    | 'item'
+    | 'container'
+    | 'base'
+    | 'indicator'
+    | 'wrapper'
+    | 'label'
+    | 'description'
 
-type RadioGroupSlots =
-  | 'root'
-  | 'fieldset'
-  | 'legend'
-  | 'item'
-  | 'container'
-  | 'base'
-  | 'indicator'
-  | 'wrapper'
-  | 'label'
-  | 'description'
+  export type Variant = RadioGroupVariantProps
 
-export type RadioGroupClasses = SlotClasses<RadioGroupSlots>
+  export type Value = string
 
-export type RadioGroupStyles = SlotStyles<RadioGroupSlots>
+  export interface Items {
+    /**
+     * Value of the radio item.
+     */
+    value?: string
 
-type RadioGroupItemSlots =
-  | 'root'
-  | 'container'
-  | 'base'
-  | 'indicator'
-  | 'dot'
-  | 'wrapper'
-  | 'label'
-  | 'description'
+    /**
+     * Label for the radio item.
+     */
+    label?: JSX.Element
 
-export type RadioGroupItemClasses = SlotClasses<RadioGroupItemSlots>
+    /**
+     * Description for the radio item.
+     */
+    description?: JSX.Element
 
-export type RadioGroupItemStyles = SlotStyles<RadioGroupItemSlots>
+    /**
+     * Whether the item is disabled.
+     */
+    disabled?: boolean
+  }
 
-export interface RadioGroupItemObject {
-  /**
-   * Value of the radio item.
-   */
-  value?: string
+  export type Extend = KobalteRadioGroup.RadioGroupRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
-  /**
-   * Label for the radio item.
-   */
-  label?: JSX.Element
-
-  /**
-   * Description for the radio item.
-   */
-  description?: JSX.Element
+  export type Item = string | Items
 
   /**
-   * Whether the item is disabled.
+   * Base props for the RadioGroup component.
    */
-  disabled?: boolean
-}
+  export interface Base
+    extends
+      FormIdentityOptions,
+      FormValueOptions<Value>,
+      FormRequiredOption,
+      FormDisableOption,
+      FormReadOnlyOption {
+    /**
+     * Legend for the radio group.
+     */
+    legend?: JSX.Element
 
-export type RadioGroupItem = string | RadioGroupItemObject
+    /**
+     * Array of items to render in the group.
+     */
+    items?: Item[]
 
-interface NormalizedRadioGroupItem {
-  id: string
-  inputId: string
-  value: RadioGroupValue
-  label?: JSX.Element
-  description?: JSX.Element
-  disabled: boolean
-}
+    /**
+     * Callback when the selected value changes.
+     */
+    onChange?: (value: Value) => void
 
-/**
- * Base props for the RadioGroup component.
- */
-export interface RadioGroupBaseProps
-  extends
-    FormIdentityOptions,
-    FormValueOptions<RadioGroupValue>,
-    FormRequiredOption,
-    FormDisableOption,
-    FormReadOnlyOption,
-    RadioGroupVariantProps {
-  /**
-   * Legend for the radio group.
-   */
-  legend?: JSX.Element
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
 
-  /**
-   * Array of items to render in the group.
-   */
-  items?: RadioGroupItem[]
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Callback when the selected value changes.
+   * Props for the RadioGroup component.
    */
-  onChange?: (value: RadioGroupValue) => void
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: RadioGroupClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: RadioGroupStyles
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the RadioGroup component.
  */
-export type RadioGroupProps = RockUIComposeProps<
-  RadioGroupBaseProps,
-  KobalteRadioGroup.RadioGroupRootProps
->
+export interface RadioGroupProps extends RadioGroupT.Props {}
+
+interface NormalizedRadioGroupItem {
+  id: string
+  inputId: string
+  value: RadioGroupT.Value
+  label?: JSX.Element
+  description?: JSX.Element
+  disabled: boolean
+}
 
 /** Single-select radio group with card, list, and table layout variants. */
 export function RadioGroup(props: RadioGroupProps): JSX.Element {

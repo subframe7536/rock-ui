@@ -4,7 +4,7 @@ import type { JSX, ValidComponent } from 'solid-js'
 import { Show, createMemo, createSignal, splitProps } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { callHandler, cn } from '../../shared/utils'
 import { Icon } from '../icon'
 import type { IconName } from '../icon'
@@ -12,72 +12,78 @@ import type { IconName } from '../icon'
 import type { ButtonVariantProps } from './button.class'
 import { buttonVariants } from './button.class'
 
-/**
- * Class overrides for Button slots.
- */
-type ButtonSlots = 'base' | 'loading' | 'leading' | 'label' | 'trailing'
-
-export type ButtonClasses = SlotClasses<ButtonSlots>
-
-export type ButtonStyles = SlotStyles<ButtonSlots>
-
-/**
- * Base props for the Button component.
- */
-export interface ButtonBaseProps extends ButtonVariantProps {
-  /**
-   * Controlled loading state.
-   * @default false
-   */
-  loading?: boolean
+export namespace ButtonT {
+  export type Slot = 'base' | 'loading' | 'leading' | 'label' | 'trailing'
+  export type Variant = ButtonVariantProps
+  export interface Items {}
+  export type Extend<T extends ValidComponent = 'button'> = PolymorphicProps<
+    T,
+    KobalteButton.ButtonRootProps<ElementOf<T>>
+  >
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Auto toggles loading while async click handlers are pending.
-   * @default false
+   * Base props for the Button component.
    */
-  loadingAuto?: boolean
+  export interface Base {
+    /**
+     * Controlled loading state.
+     * @default false
+     */
+    loading?: boolean
+
+    /**
+     * Auto toggles loading while async click handlers are pending.
+     * @default false
+     */
+    loadingAuto?: boolean
+
+    /**
+     * Optional icon shown when `loading` is active.
+     * @default 'icon-loading'
+     */
+    loadingIcon?: IconName
+
+    /**
+     * Leading visual content, usually an icon.
+     */
+    leading?: IconName
+
+    /**
+     * Trailing visual content, usually an icon.
+     */
+    trailing?: IconName
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Children of the button.
+     */
+    children?: JSX.Element
+  }
 
   /**
-   * Optional icon shown when `loading` is active.
-   * @default 'icon-loading'
+   * Props for the Button component.
+   * Polymorphic button props composed from Kobalte button root props and Rock UI button options.
    */
-  loadingIcon?: IconName
-
-  /**
-   * Leading visual content, usually an icon.
-   */
-  leading?: IconName
-
-  /**
-   * Trailing visual content, usually an icon.
-   */
-  trailing?: IconName
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: ButtonClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: ButtonStyles
-
-  /**
-   * Children of the button.
-   */
-  children?: JSX.Element
+  export type Props<T extends ValidComponent = 'button'> = RockUIProps<Base, Variant, Extend<T>>
 }
 
 /**
  * Props for the Button component.
  * Polymorphic button props composed from Kobalte button root props and Rock UI button options.
  */
-export type ButtonProps<T extends ValidComponent = 'button'> = RockUIComposeProps<
-  ButtonBaseProps,
-  PolymorphicProps<T, KobalteButton.ButtonRootProps<ElementOf<T>>>,
-  'class' | 'style'
->
+// NOTE: keep `type` here; `interface extends ...` breaks Solid JSX inference for polymorphic components.
+export type ButtonProps<T extends ValidComponent = 'button'> = ButtonT.Props<T>
 
 type PromiseLikeWithFinally = PromiseLike<unknown> & {
   then: PromiseLike<unknown>['then']

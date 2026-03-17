@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 import { Show, createSignal, mergeProps, onCleanup, splitProps } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import { popoverContentVariants } from './popover.class'
@@ -11,70 +11,78 @@ import type { PopoverContentVariantProps } from './popover.class'
 
 type PopoverMode = 'click' | 'hover'
 
-type PopoverSlots = 'trigger' | 'content' | 'body'
-
-export type PopoverClasses = SlotClasses<PopoverSlots>
-
-export type PopoverStyles = SlotStyles<PopoverSlots>
-
-/**
- * Base props for the Popover component.
- */
-export interface PopoverBaseProps extends PopoverContentVariantProps {
-  /**
-   * Interaction mode for triggering the popover.
-   * @default 'click'
-   */
-  mode?: PopoverMode
+export namespace PopoverT {
+  export type Slot = 'trigger' | 'content' | 'body'
+  export type Variant = PopoverContentVariantProps
+  export interface Items {}
+  export type Extend = KobaltePopover.PopoverRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Delay in milliseconds before opening in hover mode.
-   * @default 100
+   * Base props for the Popover component.
    */
-  openDelay?: number
+  export interface Base {
+    /**
+     * Interaction mode for triggering the popover.
+     * @default 'click'
+     */
+    mode?: PopoverMode
+
+    /**
+     * Delay in milliseconds before opening in hover mode.
+     * @default 100
+     */
+    openDelay?: number
+
+    /**
+     * Delay in milliseconds before closing in hover mode.
+     * @default 100
+     */
+    closeDelay?: number
+
+    /**
+     * Content to render inside the popover body.
+     */
+    content?: JSX.Element
+
+    /**
+     * Whether the popover should close when clicking outside or pressing Escape.
+     * @default true
+     */
+    dismissible?: boolean
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Callback triggered when a dismissal action is prevented.
+     */
+    onClosePrevent?: () => void
+
+    /**
+     * The reference element that triggers the popover.
+     */
+    children: JSX.Element
+  }
 
   /**
-   * Delay in milliseconds before closing in hover mode.
-   * @default 100
+   * Props for the Popover component.
    */
-  closeDelay?: number
-
-  /**
-   * Content to render inside the popover body.
-   */
-  content?: JSX.Element
-
-  /**
-   * Whether the popover should close when clicking outside or pressing Escape.
-   * @default true
-   */
-  dismissible?: boolean
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: PopoverClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: PopoverStyles
-
-  /**
-   * Callback triggered when a dismissal action is prevented.
-   */
-  onClosePrevent?: () => void
-
-  /**
-   * The reference element that triggers the popover.
-   */
-  children: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Popover component.
  */
-export type PopoverProps = RockUIComposeProps<PopoverBaseProps, KobaltePopover.PopoverRootProps>
+export interface PopoverProps extends PopoverT.Props {}
 
 /** Click-triggered floating content panel anchored to a trigger element. */
 export function Popover(props: PopoverProps): JSX.Element {

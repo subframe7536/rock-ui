@@ -4,52 +4,60 @@ import { Show, mergeProps, splitProps } from 'solid-js'
 
 import { Kbd } from '../../elements/kbd'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import { tooltipContentVariants } from './tooltip.class'
 import type { TooltipVariantProps } from './tooltip.class'
 
-type TooltipSlots = 'content' | 'trigger' | 'text' | 'kbds' | 'kbd'
-
-export type TooltipClasses = SlotClasses<TooltipSlots>
-
-export type TooltipStyles = SlotStyles<TooltipSlots>
-
-/**
- * Base props for the Tooltip component.
- */
-export interface TooltipBaseProps extends TooltipVariantProps {
-  /**
-   * Primary text content or element to display.
-   */
-  text?: JSX.Element
+export namespace TooltipT {
+  export type Slot = 'content' | 'trigger' | 'text' | 'kbds' | 'kbd'
+  export type Variant = TooltipVariantProps
+  export interface Items {}
+  export type Extend = KobalteTooltip.TooltipRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Keyboard shortcuts to display next to the text.
+   * Base props for the Tooltip component.
    */
-  kbds?: string[]
+  export interface Base {
+    /**
+     * Primary text content or element to display.
+     */
+    text?: JSX.Element
+
+    /**
+     * Keyboard shortcuts to display next to the text.
+     */
+    kbds?: string[]
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * The reference element that triggers the tooltip.
+     */
+    children: JSX.Element
+  }
 
   /**
-   * Slot-based class overrides.
+   * Props for the Tooltip component.
    */
-  classes?: TooltipClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: TooltipStyles
-
-  /**
-   * The reference element that triggers the tooltip.
-   */
-  children: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Tooltip component.
  */
-export type TooltipProps = RockUIComposeProps<TooltipBaseProps, KobalteTooltip.TooltipRootProps>
+export interface TooltipProps extends TooltipT.Props {}
 
 /** Hover-triggered informational overlay anchored to a trigger element. */
 export function Tooltip(props: TooltipProps): JSX.Element {

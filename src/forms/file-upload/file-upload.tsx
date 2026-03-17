@@ -15,7 +15,7 @@ import {
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -42,117 +42,124 @@ import {
   fileUploadWrapperVariants,
 } from './file-upload.class'
 
-export type FileUploadValue = File | File[] | null
+export namespace FileUploadT {
+  export type Slot =
+    | 'root'
+    | 'base'
+    | 'wrapper'
+    | 'icon'
+    | 'label'
+    | 'description'
+    | 'files'
+    | 'file'
+    | 'filePreview'
+    | 'fileMeta'
+    | 'fileName'
+    | 'fileSize'
+    | 'fileRemove'
 
-type FileUploadSlots =
-  | 'root'
-  | 'base'
-  | 'wrapper'
-  | 'icon'
-  | 'label'
-  | 'description'
-  | 'files'
-  | 'file'
-  | 'filePreview'
-  | 'fileMeta'
-  | 'fileName'
-  | 'fileSize'
-  | 'fileRemove'
+  export type Variant = FileUploadVariantProps
 
-export type FileUploadClasses = SlotClasses<FileUploadSlots>
+  export interface Items {}
 
-export type FileUploadStyles = SlotStyles<FileUploadSlots>
+  export type Value = File | File[] | null
 
-/**
- * Base props for the FileUpload component.
- */
-export interface FileUploadBaseProps
-  extends FormIdentityOptions, FormRequiredOption, FormDisableOption, FileUploadVariantProps {
-  /**
-   * The HTML element or component to render as.
-   * @default 'div'
-   */
-  as?: ValidComponent
+  export type Extend = KobalteFileField.FileFieldRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Accepted file types (e.g., ".jpg,.png", "image/*").
-   * @default '*'
+   * Base props for the FileUpload component.
    */
-  accept?: string
+  export interface Base extends FormIdentityOptions, FormRequiredOption, FormDisableOption {
+    /**
+     * The HTML element or component to render as.
+     * @default 'div'
+     */
+    as?: ValidComponent
+
+    /**
+     * Accepted file types (e.g., ".jpg,.png", "image/*").
+     * @default '*'
+     */
+    accept?: string
+
+    /**
+     * Whether multiple files can be uploaded.
+     * @default false
+     */
+    multiple?: boolean
+
+    /**
+     * Whether to enable drag and drop.
+     * @default true
+     */
+    dropzone?: boolean
+
+    /**
+     * Whether to show file previews.
+     * @default true
+     */
+    preview?: boolean
+
+    /**
+     * Label for the upload area.
+     */
+    label?: JSX.Element
+
+    /**
+     * Description text for the upload area.
+     */
+    description?: JSX.Element
+
+    /**
+     * Icon to show in the upload area.
+     * @default 'icon-upload'
+     */
+    icon?: IconName
+
+    /**
+     * Icon to show for individual files when no preview is available.
+     * @default 'icon-file'
+     */
+    fileIcon?: IconName
+
+    /**
+     * Maximum number of files allowed.
+     */
+    maxFiles?: number
+
+    /**
+     * Callback when the selected files change.
+     */
+    onValueChange?: (value: Value) => void
+
+    /**
+     * Callback when files are rejected (e.g., due to type or count).
+     */
+    onFileReject?: (files: FileRejection[]) => void
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Whether multiple files can be uploaded.
-   * @default false
+   * Props for the FileUpload component.
    */
-  multiple?: boolean
-
-  /**
-   * Whether to enable drag and drop.
-   * @default true
-   */
-  dropzone?: boolean
-
-  /**
-   * Whether to show file previews.
-   * @default true
-   */
-  preview?: boolean
-
-  /**
-   * Label for the upload area.
-   */
-  label?: JSX.Element
-
-  /**
-   * Description text for the upload area.
-   */
-  description?: JSX.Element
-
-  /**
-   * Icon to show in the upload area.
-   * @default 'icon-upload'
-   */
-  icon?: IconName
-
-  /**
-   * Icon to show for individual files when no preview is available.
-   * @default 'icon-file'
-   */
-  fileIcon?: IconName
-
-  /**
-   * Maximum number of files allowed.
-   */
-  maxFiles?: number
-
-  /**
-   * Callback when the selected files change.
-   */
-  onValueChange?: (value: FileUploadValue) => void
-
-  /**
-   * Callback when files are rejected (e.g., due to type or count).
-   */
-  onFileReject?: (files: FileRejection[]) => void
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: FileUploadClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: FileUploadStyles
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the FileUpload component.
  */
-export type FileUploadProps = RockUIComposeProps<
-  FileUploadBaseProps,
-  KobalteFileField.FileFieldRootProps
->
+export interface FileUploadProps extends FileUploadT.Props {}
 
 function isImageFile(file: File): boolean {
   return file.type.startsWith('image/')
@@ -362,7 +369,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
     return formProps.multiple ? Number.POSITIVE_INFINITY : 1
   })
 
-  function resolveValue(files: File[]): FileUploadValue {
+  function resolveValue(files: File[]): FileUploadT.Value {
     if (formProps.multiple) {
       return [...files]
     }

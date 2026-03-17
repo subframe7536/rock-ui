@@ -5,7 +5,7 @@ import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-options'
@@ -22,106 +22,121 @@ import {
   checkboxWrapperVariants,
 } from './checkbox.class'
 
-type CheckboxSlots =
-  | 'root'
-  | 'container'
-  | 'base'
-  | 'indicator'
-  | 'icon'
-  | 'wrapper'
-  | 'label'
-  | 'description'
+export namespace CheckboxT {
+  export type Slot =
+    | 'root'
+    | 'container'
+    | 'base'
+    | 'indicator'
+    | 'icon'
+    | 'wrapper'
+    | 'label'
+    | 'description'
 
-export type CheckboxClasses = SlotClasses<CheckboxSlots>
+  export type Variant = CheckboxVariantProps
 
-export type CheckboxStyles = SlotStyles<CheckboxSlots>
+  export interface Items {}
 
-/**
- * Base props for the Checkbox component.
- */
-export interface CheckboxBaseProps<TTrue = boolean, TFalse = boolean>
-  extends FormIdentityOptions, FormDisableOption, CheckboxVariantProps {
-  /**
-   * Whether the checkbox is checked (controlled).
-   */
-  checked?: TTrue | TFalse | 'indeterminate'
+  export type Extend = KobalteCheckbox.CheckboxRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Whether the checkbox is checked by default (uncontrolled).
-   * @default false
+   * Base props for the Checkbox component.
    */
-  defaultChecked?: boolean | 'indeterminate'
+  export interface Base<TTrue = boolean, TFalse = boolean>
+    extends FormIdentityOptions, FormDisableOption {
+    /**
+     * Whether the checkbox is checked (controlled).
+     */
+    checked?: TTrue | TFalse | 'indeterminate'
+
+    /**
+     * Whether the checkbox is checked by default (uncontrolled).
+     * @default false
+     */
+    defaultChecked?: boolean | 'indeterminate'
+
+    /**
+     * Value to use when the checkbox is checked.
+     * @default true
+     */
+    trueValue?: TTrue
+
+    /**
+     * Value to use when the checkbox is unchecked.
+     * @default false
+     */
+    falseValue?: TFalse
+
+    /**
+     * Label for the checkbox.
+     */
+    label?: JSX.Element
+
+    /**
+     * Description text for the checkbox.
+     */
+    description?: JSX.Element
+
+    /**
+     * Whether to bind the checkbox value to the parent FormField.
+     * @default true
+     */
+    formFieldBind?: boolean
+
+    /**
+     * Callback when the checked state changes.
+     */
+    onChange?: (value: TTrue | TFalse) => void
+
+    /**
+     * Whether the checkbox is in an indeterminate state.
+     * @default false
+     */
+    indeterminate?: boolean
+
+    /**
+     * Icon to show when checked.
+     * @default 'icon-check'
+     */
+    checkedIcon?: IconName
+
+    /**
+     * Icon to show when indeterminate.
+     * @default 'icon-minus'
+     */
+    indeterminateIcon?: IconName
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Value to use when the checkbox is checked.
-   * @default true
+   * Props for the Checkbox component.
    */
-  trueValue?: TTrue
-
-  /**
-   * Value to use when the checkbox is unchecked.
-   * @default false
-   */
-  falseValue?: TFalse
-
-  /**
-   * Label for the checkbox.
-   */
-  label?: JSX.Element
-
-  /**
-   * Description text for the checkbox.
-   */
-  description?: JSX.Element
-
-  /**
-   * Whether to bind the checkbox value to the parent FormField.
-   * @default true
-   */
-  formFieldBind?: boolean
-
-  /**
-   * Callback when the checked state changes.
-   */
-  onChange?: (value: TTrue | TFalse) => void
-
-  /**
-   * Whether the checkbox is in an indeterminate state.
-   * @default false
-   */
-  indeterminate?: boolean
-
-  /**
-   * Icon to show when checked.
-   * @default 'icon-check'
-   */
-  checkedIcon?: IconName
-
-  /**
-   * Icon to show when indeterminate.
-   * @default 'icon-minus'
-   */
-  indeterminateIcon?: IconName
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: CheckboxClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: CheckboxStyles
+  export interface Props<TTrue = boolean, TFalse = boolean> extends RockUIProps<
+    Base<TTrue, TFalse>,
+    Variant,
+    Extend,
+    'ref' | 'indeterminate'
+  > {}
 }
 
 /**
  * Props for the Checkbox component.
  */
-export type CheckboxProps<TTrue = boolean, TFalse = boolean> = RockUIComposeProps<
-  CheckboxBaseProps<TTrue, TFalse>,
-  KobalteCheckbox.CheckboxRootProps,
-  'ref' | 'indeterminate'
->
+export interface CheckboxProps<TTrue = boolean, TFalse = boolean> extends CheckboxT.Props<
+  TTrue,
+  TFalse
+> {}
 
 /** Single checkbox control with card and list variants and custom true/false values. */
 export function Checkbox<TTrue = boolean, TFalse = boolean>(

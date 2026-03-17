@@ -11,15 +11,15 @@ import {
 } from 'solid-js'
 
 import type { IconName } from '../../elements/icon'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { OverlayMenuBaseContent } from '../shared-overlay-menu/menu'
 import type { OverlayMenuItemVariantProps } from '../shared-overlay-menu/menu.class'
 import type {
-  OverlayMenuSharedClasses,
   OverlayMenuSharedItem,
   OverlayMenuSharedItemRenderContext,
-  OverlayMenuSharedStyles,
+  OverlayMenuSharedSlots,
 } from '../shared-overlay-menu/types'
 import type {
   OverlayMenuContentSlot,
@@ -31,116 +31,127 @@ import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
 type ContextMenuColor = NonNullable<OverlayMenuItemVariantProps['color']>
 type ContextMenuSize = NonNullable<OverlayMenuItemVariantProps['size']>
 
-export type ContextMenuItem = OverlayMenuSharedItem<ContextMenuColor, ContextMenuItem>
-export type ContextMenuItems = OverlayMenuItems<ContextMenuItem>
-export type ContextMenuClasses = OverlayMenuSharedClasses
-export type ContextMenuStyles = OverlayMenuSharedStyles
-export type ContextMenuItemRenderContext = OverlayMenuSharedItemRenderContext<ContextMenuItem>
+export namespace ContextMenuT {
+  export type Slot = OverlayMenuSharedSlots
+  export interface Variant {}
+  export type Extend = KobalteDropdownMenu.DropdownMenuRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
-/**
- * Base props for the ContextMenu component.
- */
-export interface ContextMenuBaseProps {
-  /**
-   * Unique identifier for the context menu.
-   */
-  id?: string
+  export type Item = OverlayMenuSharedItem<ContextMenuColor, Item>
+  export type Items = OverlayMenuItems<Item>
 
   /**
-   * Controlled open state of the menu.
+   * Base props for the ContextMenu component.
    */
-  open?: boolean
+  export interface Base {
+    /**
+     * Unique identifier for the context menu.
+     */
+    id?: string
+
+    /**
+     * Controlled open state of the menu.
+     */
+    open?: boolean
+
+    /**
+     * Initial open state when uncontrolled.
+     * @default false
+     */
+    defaultOpen?: boolean
+
+    /**
+     * Callback triggered when the open state changes.
+     */
+    onOpenChange?: (open: boolean) => void
+
+    /**
+     * Preferred placement of the menu relative to the interaction point.
+     * @default 'right-start'
+     */
+    placement?: OverlayMenuPlacement
+
+    /**
+     * Distance in pixels between the menu and the interaction point.
+     */
+    gutter?: number
+
+    /**
+     * Size of the menu items.
+     * @default 'md'
+     */
+    size?: ContextMenuSize
+
+    /**
+     * Whether the context menu is disabled.
+     * @default false
+     */
+    disabled?: boolean
+
+    /**
+     * Items to display in the context menu.
+     */
+    items?: Items
+
+    /**
+     * Icon name used for checked menu items.
+     * @default 'icon-check'
+     */
+    checkedIcon?: IconName
+
+    /**
+     * Icon name used for submenu indicators.
+     * @default 'icon-chevron-right'
+     */
+    submenuIcon?: IconName
+
+    /**
+     * Custom renderer for individual menu items.
+     */
+    itemRender?: (context: OverlayMenuSharedItemRenderContext<Item>) => JSX.Element
+
+    /**
+     * Content to render at the top of the menu.
+     */
+    contentTop?: OverlayMenuContentSlot
+
+    /**
+     * Content to render at the bottom of the menu.
+     */
+    contentBottom?: OverlayMenuContentSlot
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * The element to which the context menu is attached.
+     */
+    children: JSX.Element
+  }
 
   /**
-   * Initial open state when uncontrolled.
-   * @default false
+   * Props for the ContextMenu component.
    */
-  defaultOpen?: boolean
-
-  /**
-   * Callback triggered when the open state changes.
-   */
-  onOpenChange?: (open: boolean) => void
-
-  /**
-   * Preferred placement of the menu relative to the interaction point.
-   * @default 'right-start'
-   */
-  placement?: OverlayMenuPlacement
-
-  /**
-   * Distance in pixels between the menu and the interaction point.
-   */
-  gutter?: number
-
-  /**
-   * Size of the menu items.
-   * @default 'md'
-   */
-  size?: ContextMenuSize
-
-  /**
-   * Whether the context menu is disabled.
-   * @default false
-   */
-  disabled?: boolean
-
-  /**
-   * Items to display in the context menu.
-   */
-  items?: ContextMenuItems
-
-  /**
-   * Icon name used for checked menu items.
-   * @default 'icon-check'
-   */
-  checkedIcon?: IconName
-
-  /**
-   * Icon name used for submenu indicators.
-   * @default 'icon-chevron-right'
-   */
-  submenuIcon?: IconName
-
-  /**
-   * Custom renderer for individual menu items.
-   */
-  itemRender?: (context: ContextMenuItemRenderContext) => JSX.Element
-
-  /**
-   * Content to render at the top of the menu.
-   */
-  contentTop?: OverlayMenuContentSlot
-
-  /**
-   * Content to render at the bottom of the menu.
-   */
-  contentBottom?: OverlayMenuContentSlot
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: ContextMenuClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: ContextMenuStyles
-
-  /**
-   * The element to which the context menu is attached.
-   */
-  children: JSX.Element
+  export interface Props extends RockUIProps<
+    Base,
+    Variant,
+    Extend,
+    'arrowPadding' | 'getAnchorRect'
+  > {}
 }
 
 /**
  * Props for the ContextMenu component.
  */
-export type ContextMenuProps = RockUIComposeProps<
-  ContextMenuBaseProps,
-  KobalteDropdownMenu.DropdownMenuRootProps,
-  'arrowPadding' | 'getAnchorRect'
->
+export interface ContextMenuProps extends ContextMenuT.Props {}
 
 const CONTEXT_MENU_LONG_PRESS_DELAY = 700
 
@@ -418,7 +429,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
         {localProps.children}
       </KobalteDropdownMenu.Trigger>
 
-      <OverlayMenuBaseContent<ContextMenuItem>
+      <OverlayMenuBaseContent<ContextMenuT.Item>
         content={Content}
         classes={localProps.classes}
         styles={localProps.styles}

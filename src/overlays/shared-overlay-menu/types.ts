@@ -84,7 +84,7 @@ export interface OverlayMenuSharedItem<TColor extends string, TItem> {
   onCheckedChange?: (checked: boolean) => void
 }
 
-type OverlayMenuSharedSlots =
+export type OverlayMenuSharedSlots =
   | 'trigger'
   | 'content'
   | 'group'

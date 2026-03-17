@@ -10,6 +10,7 @@ import {
 } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 
 import {
@@ -35,89 +36,96 @@ import {
 } from './resizable.class'
 import type { ResizableVariantProps } from './resizable.class'
 
-type ResizableSlots = 'root' | 'panel' | 'divider' | 'handle' | 'crossTarget'
-
-export type ResizableClasses = SlotClasses<ResizableSlots>
-
-export type ResizableStyles = SlotStyles<ResizableSlots>
-
-/**
- * Base props for the Resizable component.
- */
-export interface ResizableBaseProps {
+export namespace ResizableT {
+  export type Slot = 'root' | 'panel' | 'divider' | 'handle' | 'crossTarget'
+  export type Variant = ResizableVariantProps
+  export interface Items {}
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
   /**
-   * Unique identifier for the resizable root.
+   * Base props for the Resizable component.
    */
-  id?: string
+  export interface Base {
+    /**
+     * Unique identifier for the resizable root.
+     */
+    id?: string
+
+    /**
+     * Array of panels to render.
+     */
+    panels?: ResizablePanelItem[]
+
+    /**
+     * Callback when any panel is resized.
+     */
+    onResize?: (sizes: number[]) => void
+
+    /**
+     * Callback when a resize operation starts.
+     */
+    onResizeStart?: (sizes: number[]) => void
+
+    /**
+     * Callback when a resize operation ends.
+     */
+    onResizeEnd?: (sizes: number[]) => void
+
+    /**
+     * Callback when a key is pressed on a handle.
+     */
+    onHandleKeyDown?: (context: {
+      event: KeyboardEvent
+      handleIndex: number
+      sizes: number[]
+    }) => void
+
+    /**
+     * Whether the resizable component is disabled.
+     * @default false
+     */
+    disable?: boolean
+
+    /**
+     * Custom handle to render, or boolean to toggle default handle.
+     * @default true
+     */
+    renderHandle?: boolean | JSX.Element
+
+    /**
+     * Whether to use intersection-based handle sizing.
+     * @default false
+     */
+    intersection?: boolean
+
+    /**
+     * The amount to resize when using keyboard shortcuts.
+     * @default '10%'
+     */
+    keyboardDelta?: ResizableSize
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Array of panels to render.
+   * Props for the Resizable component.
    */
-  panels?: ResizablePanelItem[]
-
-  /**
-   * Callback when any panel is resized.
-   */
-  onResize?: (sizes: number[]) => void
-
-  /**
-   * Callback when a resize operation starts.
-   */
-  onResizeStart?: (sizes: number[]) => void
-
-  /**
-   * Callback when a resize operation ends.
-   */
-  onResizeEnd?: (sizes: number[]) => void
-
-  /**
-   * Callback when a key is pressed on a handle.
-   */
-  onHandleKeyDown?: (context: {
-    event: KeyboardEvent
-    handleIndex: number
-    sizes: number[]
-  }) => void
-
-  /**
-   * Whether the resizable component is disabled.
-   * @default false
-   */
-  disable?: boolean
-
-  /**
-   * Custom handle to render, or boolean to toggle default handle.
-   * @default true
-   */
-  renderHandle?: boolean | JSX.Element
-
-  /**
-   * Whether to use intersection-based handle sizing.
-   * @default false
-   */
-  intersection?: boolean
-
-  /**
-   * The amount to resize when using keyboard shortcuts.
-   * @default '10%'
-   */
-  keyboardDelta?: ResizableSize
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: ResizableClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: ResizableStyles
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Resizable component.
  */
-export type ResizableProps = ResizableBaseProps & ResizableVariantProps
+export interface ResizableProps extends ResizableT.Props {}
 
 interface DragState {
   initialSizes: number[]

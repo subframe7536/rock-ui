@@ -5,7 +5,7 @@ import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -25,107 +25,117 @@ import {
   switchWrapperVariants,
 } from './switch.class'
 
-type SwitchSlots =
-  | 'root'
-  | 'container'
-  | 'base'
-  | 'thumb'
-  | 'icon'
-  | 'wrapper'
-  | 'label'
-  | 'description'
+export namespace SwitchT {
+  export type Slot =
+    | 'root'
+    | 'container'
+    | 'base'
+    | 'thumb'
+    | 'icon'
+    | 'wrapper'
+    | 'label'
+    | 'description'
 
-export type SwitchClasses = SlotClasses<SwitchSlots>
+  export type Variant = SwitchVariantProps
 
-export type SwitchStyles = SlotStyles<SwitchSlots>
+  export interface Items {}
 
-/**
- * Base props for the Switch component.
- */
-export interface SwitchBaseProps<TTrue = boolean, TFalse = boolean>
-  extends
-    FormIdentityOptions,
-    FormDisableOption,
-    FormRequiredOption,
-    FormReadOnlyOption,
-    SwitchVariantProps {
-  /**
-   * Whether the switch is checked.
-   */
-  checked?: TTrue | TFalse
+  export type Extend = KobalteSwitch.SwitchRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Whether the switch is checked by default.
+   * Base props for the Switch component.
    */
-  defaultChecked?: boolean
+  export interface Base<TTrue = boolean, TFalse = boolean>
+    extends FormIdentityOptions, FormDisableOption, FormRequiredOption, FormReadOnlyOption {
+    /**
+     * Whether the switch is checked.
+     */
+    checked?: TTrue | TFalse
+
+    /**
+     * Whether the switch is checked by default.
+     */
+    defaultChecked?: boolean
+
+    /**
+     * Value to use when the switch is checked.
+     * @default true
+     */
+    trueValue?: TTrue
+
+    /**
+     * Value to use when the switch is unchecked.
+     * @default false
+     */
+    falseValue?: TFalse
+
+    /**
+     * Whether the switch is in a loading state.
+     * @default false
+     */
+    loading?: boolean
+
+    /**
+     * Icon shown during loading state.
+     * @default 'icon-loading'
+     */
+    loadingIcon?: IconName
+
+    /**
+     * Icon shown when the switch is checked.
+     */
+    checkedIcon?: IconName
+
+    /**
+     * Icon shown when the switch is unchecked.
+     */
+    uncheckedIcon?: IconName
+
+    /**
+     * Label for the switch.
+     */
+    label?: JSX.Element
+
+    /**
+     * Description for the switch.
+     */
+    description?: JSX.Element
+
+    /**
+     * Callback when the switch state changes.
+     */
+    onChange?: (value: TTrue | TFalse) => void
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Value to use when the switch is checked.
-   * @default true
+   * Props for the Switch component.
    */
-  trueValue?: TTrue
-
-  /**
-   * Value to use when the switch is unchecked.
-   * @default false
-   */
-  falseValue?: TFalse
-
-  /**
-   * Whether the switch is in a loading state.
-   * @default false
-   */
-  loading?: boolean
-
-  /**
-   * Icon shown during loading state.
-   * @default 'icon-loading'
-   */
-  loadingIcon?: IconName
-
-  /**
-   * Icon shown when the switch is checked.
-   */
-  checkedIcon?: IconName
-
-  /**
-   * Icon shown when the switch is unchecked.
-   */
-  uncheckedIcon?: IconName
-
-  /**
-   * Label for the switch.
-   */
-  label?: JSX.Element
-
-  /**
-   * Description for the switch.
-   */
-  description?: JSX.Element
-
-  /**
-   * Callback when the switch state changes.
-   */
-  onChange?: (value: TTrue | TFalse) => void
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: SwitchClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: SwitchStyles
+  export interface Props<TTrue = boolean, TFalse = boolean> extends RockUIProps<
+    Base<TTrue, TFalse>,
+    Variant,
+    Extend
+  > {}
 }
 
 /**
  * Props for the Switch component.
  */
-export type SwitchProps<TTrue = boolean, TFalse = boolean> = RockUIComposeProps<
-  SwitchBaseProps<TTrue, TFalse>,
-  KobalteSwitch.SwitchRootProps
->
+export interface SwitchProps<TTrue = boolean, TFalse = boolean> extends SwitchT.Props<
+  TTrue,
+  TFalse
+> {}
 
 /** Toggle switch control with icon slots and loading state. */
 export function Switch<TTrue = boolean, TFalse = boolean>(

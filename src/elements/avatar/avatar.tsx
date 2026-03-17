@@ -1,17 +1,22 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createEffect, createSignal, mergeProps, on, splitProps } from 'solid-js'
+import {
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  splitProps,
+} from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import type { IconName } from '../icon'
 import { Icon } from '../icon'
 
-import type {
-  AvatarBadgePosition,
-  AvatarSize,
-  AvatarTransition,
-  AvatarVariantProps,
-} from './avatar.class'
+import type { AvatarVariantProps } from './avatar.class'
 import {
   avatarBadgeVariants,
   avatarFallbackIconVariants,
@@ -24,97 +29,87 @@ import {
 
 export type AvatarStatus = 'idle' | 'loading' | 'loaded' | 'error'
 
-type AvatarSlots =
-  | 'root'
-  | 'image'
-  | 'fallback'
-  | 'fallbackIcon'
-  | 'badge'
-  | 'group'
-  | 'groupItem'
-  | 'groupCount'
+export namespace AvatarT {
+  export type Slot =
+    | 'root'
+    | 'image'
+    | 'fallback'
+    | 'fallbackIcon'
+    | 'badge'
+    | 'group'
+    | 'groupItem'
+    | 'groupCount'
+  export type Variant = AvatarVariantProps
+  export interface Items {
+    /**
+     * Source URL for the avatar image.
+     */
+    src?: string
 
-export type AvatarClasses = SlotClasses<AvatarSlots>
+    /**
+     * Accessible alt text for the avatar.
+     */
+    alt?: string
 
-export type AvatarStyles = SlotStyles<AvatarSlots>
+    /**
+     * Icon name for the badge.
+     */
+    badge?: IconName
 
-export interface AvatarItem {
-  /**
-   * Source URL for the avatar image.
-   */
-  src?: string
+    /**
+     * Initial text to show if image fails or is missing.
+     */
+    text?: string
 
-  /**
-   * Accessible alt text for the avatar.
-   */
-  alt?: string
+    /**
+     * Icon name to show as fallback.
+     */
+    fallback?: IconName
 
-  /**
-   * Icon name for the badge.
-   */
-  badge?: IconName
-
-  /**
-   * Position of the badge.
-   * @default 'bottom-right'
-   */
-  badgePosition?: AvatarBadgePosition
-
-  /**
-   * Initial text to show if image fails or is missing.
-   */
-  text?: string
-
-  /**
-   * Icon name to show as fallback.
-   */
-  fallback?: IconName
-
-  /**
-   * Callback when the loading status of the avatar changes.
-   */
-  onStatusChange?: (status: AvatarStatus) => void
-}
-
-/**
- * Base props for the Avatar component.
- */
-export interface AvatarBaseProps extends AvatarItem {
-  /**
-   * Array of items to render in a group.
-   */
-  items?: AvatarItem[]
+    /**
+     * Callback when the loading status of the avatar changes.
+     */
+    onStatusChange?: (status: AvatarStatus) => void
+  }
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Maximum number of avatars to show when in a group.
+   * Base props for the Avatar component.
    */
-  max?: number | string
+  export interface Base extends Items {
+    /**
+     * Array of items to render in a group.
+     */
+    items?: Items[]
+
+    /**
+     * Maximum number of avatars to show when in a group.
+     */
+    max?: number | string
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Slot-based class overrides.
+   * Props for the Avatar component.
    */
-  classes?: AvatarClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: AvatarStyles
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Avatar component.
  */
-export type AvatarProps = AvatarBaseProps & Pick<AvatarVariantProps, 'size' | 'transition'>
-
-interface AvatarFaceInput {
-  src: () => string | undefined
-  alt: () => string | undefined
-  badge: () => IconName | undefined
-  badgePosition: () => AvatarBadgePosition | undefined
-  text: () => string | undefined
-  fallback: () => IconName | undefined
-  onStatusChange: () => ((status: AvatarStatus) => void) | undefined
-}
+export interface AvatarProps extends AvatarT.Props {}
 
 function resolveMax(max: AvatarProps['max']): number | undefined {
   if (typeof max === 'string') {
@@ -158,14 +153,14 @@ export function Avatar(props: AvatarProps): JSX.Element {
     {
       size: 'md' as const,
       transition: 'normal' as const,
-      items: undefined as AvatarItem[] | undefined,
+      items: undefined as AvatarT.Items[] | undefined,
       max: undefined as number | string | undefined,
       badgePosition: 'bottom-right' as const,
     },
     props,
   )
 
-  const [itemProps, styleProps] = splitProps(merged as AvatarProps, [
+  const [faceProps, restProps] = splitProps(merged, [
     'src',
     'alt',
     'badge',
@@ -173,33 +168,30 @@ export function Avatar(props: AvatarProps): JSX.Element {
     'text',
     'fallback',
     'onStatusChange',
-    'items',
-    'max',
   ])
 
-  function visibleItems(): AvatarItem[] {
-    const allItems = itemProps.items ?? []
+  const visibleItems = createMemo(() => {
+    const allItems = restProps.items ?? []
     if (allItems.length === 0) {
       return []
     }
 
-    const max = resolveMax(itemProps.max)
+    const max = resolveMax(restProps.max)
     if (!max) {
       return [...allItems].reverse()
     }
 
     return [...allItems].slice(0, max).reverse()
-  }
+  })
 
-  function hiddenCount(): number {
-    return (itemProps.items?.length ?? 0) - visibleItems().length
-  }
+  const hiddenCount = createMemo(() => {
+    return (restProps.items?.length ?? 0) - visibleItems().length
+  })
 
-  function renderAvatarFace(face: AvatarFaceInput, slot: 'root' | 'groupItem'): JSX.Element {
+  function AvatarFace(props: AvatarT.Items & { slot: 'root' | 'groupItem' }): JSX.Element {
     const [status, setStatusSignal] = createSignal<AvatarStatus>('idle')
     const [resolvedSrc, setResolvedSrc] = createSignal<string | undefined>(undefined)
 
-    let requestId = 0
     let currentStatus: AvatarStatus = 'idle'
 
     function setStatus(nextStatus: AvatarStatus): void {
@@ -209,13 +201,16 @@ export function Avatar(props: AvatarProps): JSX.Element {
 
       currentStatus = nextStatus
       setStatusSignal(nextStatus)
-      face.onStatusChange()?.(nextStatus)
+      props.onStatusChange?.(nextStatus)
     }
 
     createEffect(() => {
-      const source = face.src()?.trim() || undefined
-      requestId += 1
-      const currentRequestId = requestId
+      const source = props.src?.trim() || undefined
+      let cancelled = false
+
+      onCleanup(() => {
+        cancelled = true
+      })
 
       setResolvedSrc(undefined)
 
@@ -228,18 +223,17 @@ export function Avatar(props: AvatarProps): JSX.Element {
       const loader = new window.Image()
 
       loader.onload = () => {
-        if (currentRequestId !== requestId) {
+        if (cancelled) {
           return
         }
-
         setResolvedSrc(source)
+        setStatus('loaded')
       }
 
       loader.onerror = () => {
-        if (currentRequestId !== requestId) {
+        if (cancelled) {
           return
         }
-
         setResolvedSrc(undefined)
         setStatus('error')
       }
@@ -247,55 +241,41 @@ export function Avatar(props: AvatarProps): JSX.Element {
       loader.src = source
     })
 
-    createEffect(
-      on(
-        resolvedSrc,
-        (source) => {
-          if (source) {
-            setStatus('loaded')
-          }
-        },
-        {
-          defer: true,
-        },
-      ),
-    )
-
-    const size: AvatarSize = styleProps.size ?? 'md'
-    const transition: AvatarTransition = styleProps.transition ?? 'normal'
-    const badgePosition: AvatarBadgePosition = face.badgePosition() ?? 'bottom-right'
+    const size = () => restProps.size
+    const transition = () => restProps.transition
+    const badgePosition = () => faceProps.badgePosition
 
     return (
       <span
-        data-slot={slot}
+        data-slot={props.slot}
         data-status={status()}
-        style={slot === 'groupItem' ? merged.styles?.groupItem : merged.styles?.root}
+        style={props.slot === 'groupItem' ? merged.styles?.groupItem : merged.styles?.root}
         class={avatarRootVariants(
           {
-            size,
+            size: size(),
           },
-          slot === 'groupItem'
+          props.slot === 'groupItem'
             ? avatarGroupItemVariants(
                 {
-                  size,
+                  size: size(),
                 },
-                styleProps.classes?.root,
-                styleProps.classes?.groupItem,
+                restProps.classes?.root,
+                restProps.classes?.groupItem,
               )
-            : styleProps.classes?.root,
+            : restProps.classes?.root,
         )}
       >
         <img
           data-slot="image"
           style={merged.styles?.image}
           src={resolvedSrc()}
-          alt={face.alt() ?? ''}
+          alt={props.alt ?? ''}
           class={avatarImageVariants(
             {
               status: status(),
-              transition,
+              transition: transition(),
             },
-            styleProps.classes?.image,
+            restProps.classes?.image,
           )}
         />
 
@@ -304,14 +284,14 @@ export function Avatar(props: AvatarProps): JSX.Element {
           style={merged.styles?.fallback}
           class={avatarFallbackVariants(
             {
-              size,
+              size: size(),
               status: status(),
-              transition,
+              transition: transition(),
             },
-            styleProps.classes?.fallback,
+            restProps.classes?.fallback,
           )}
         >
-          <Show when={face.fallback()} fallback={resolveFallbackText(face.text(), face.alt())}>
+          <Show when={props.fallback} fallback={resolveFallbackText(props.text, props.alt)}>
             {(fallbackIcon) => (
               <Icon
                 name={fallbackIcon()}
@@ -319,26 +299,26 @@ export function Avatar(props: AvatarProps): JSX.Element {
                 style={merged.styles?.fallbackIcon}
                 class={avatarFallbackIconVariants(
                   {
-                    size,
+                    size: size(),
                   },
-                  styleProps.classes?.fallbackIcon,
+                  restProps.classes?.fallbackIcon,
                 )}
               />
             )}
           </Show>
         </span>
 
-        <Show when={face.badge()}>
+        <Show when={props.badge}>
           {(badge) => (
             <span
               data-slot="badge"
               style={merged.styles?.badge}
               class={avatarBadgeVariants(
                 {
-                  size,
-                  badgePosition,
+                  size: size(),
+                  badgePosition: badgePosition(),
                 },
-                styleProps.classes?.badge,
+                restProps.classes?.badge,
               )}
             >
               <Icon name={badge()} class="text-[0.75em]" />
@@ -351,24 +331,13 @@ export function Avatar(props: AvatarProps): JSX.Element {
 
   return (
     <Show
-      when={(itemProps.items?.length ?? 0) > 0}
-      fallback={renderAvatarFace(
-        {
-          src: () => itemProps.src,
-          alt: () => itemProps.alt,
-          badge: () => itemProps.badge,
-          badgePosition: () => itemProps.badgePosition,
-          text: () => itemProps.text,
-          fallback: () => itemProps.fallback,
-          onStatusChange: () => itemProps.onStatusChange,
-        },
-        'root',
-      )}
+      when={(restProps.items?.length ?? 0) > 0}
+      fallback={<AvatarFace {...faceProps} slot="root" />}
     >
       <div
         data-slot="group"
         style={merged.styles?.group}
-        class={cn('inline-flex flex-row-reverse justify-end', styleProps.classes?.group)}
+        class={cn('inline-flex flex-row-reverse justify-end', restProps.classes?.group)}
       >
         <Show when={hiddenCount() > 0}>
           <span
@@ -376,31 +345,16 @@ export function Avatar(props: AvatarProps): JSX.Element {
             style={merged.styles?.groupCount}
             class={avatarGroupCountVariants(
               {
-                size: styleProps.size,
+                size: restProps.size,
               },
-              styleProps.classes?.groupCount,
+              restProps.classes?.groupCount,
             )}
           >
             +{hiddenCount()}
           </span>
         </Show>
 
-        <For each={visibleItems()}>
-          {(item) =>
-            renderAvatarFace(
-              {
-                src: () => item.src,
-                alt: () => item.alt,
-                badge: () => item.badge,
-                badgePosition: () => item.badgePosition ?? itemProps.badgePosition,
-                text: () => item.text,
-                fallback: () => item.fallback,
-                onStatusChange: () => item.onStatusChange,
-              },
-              'groupItem',
-            )
-          }
-        </For>
+        <For each={visibleItems()}>{(item) => <AvatarFace {...item} slot="groupItem" />}</For>
       </div>
     </Show>
   )

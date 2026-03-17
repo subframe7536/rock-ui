@@ -14,227 +14,238 @@ import { Icon, IconButton } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
 import { Kbd } from '../../elements/kbd'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
-/**
- * An individual item in the command palette.
- */
-export interface CommandPaletteItem {
+export namespace CommandPaletteT {
+  export type Slot =
+    | 'root'
+    | 'inputWrapper'
+    | 'input'
+    | 'listbox'
+    | 'footer'
+    | 'group'
+    | 'label'
+    | 'item'
+    | 'itemLeading'
+    | 'itemWrapper'
+    | 'itemLabel'
+    | 'itemLabelBase'
+    | 'itemLabelPrefix'
+    | 'itemLabelSuffix'
+    | 'itemDescription'
+    | 'itemTrailing'
+    | 'itemTrailingKbds'
+    | 'itemTrailingKbd'
+    | 'search'
+    | 'back'
+    | 'close'
+    | 'empty'
+  export interface Variant {}
   /**
-   * Unique value for the item.
+   * An individual item in the command palette.
    */
-  value: string
+  export interface Item {
+    /**
+     * Unique value for the item.
+     */
+    value: string
+
+    /**
+     * Primary label for the item.
+     */
+    label?: string
+
+    /**
+     * Optional prefix text shown before the label.
+     */
+    prefix?: string
+
+    /**
+     * Optional suffix text shown after the label.
+     */
+    suffix?: string
+
+    /**
+     * Secondary description text shown below the label.
+     */
+    description?: string
+
+    /**
+     * UnoCSS icon class or name to display.
+     * @example 'icon-search'
+     */
+    icon?: string
+
+    /**
+     * Array of keyboard shortcuts to display.
+     */
+    kbds?: string[]
+
+    /**
+     * Whether to force the item into an active (highlighted) state.
+     */
+    active?: boolean
+
+    /**
+     * Whether the item is disabled and cannot be selected.
+     */
+    disabled?: boolean
+
+    /**
+     * Selecting this item drills into a nested group of items.
+     */
+    children?: Item[]
+
+    /**
+     * Callback triggered when the item is selected.
+     */
+    onSelect?: () => void
+  }
 
   /**
-   * Primary label for the item.
+   * A grouped collection of items in the command palette.
    */
-  label?: string
+  export interface Group {
+    /**
+     * Unique identifier for the group.
+     */
+    id: string
+
+    /**
+     * Display name for the group header.
+     */
+    label?: string
+
+    /**
+     * Items belonging to this group.
+     */
+    children?: Item[]
+  }
+
+  export interface Items extends Group {}
+  export interface Extend {}
+
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Optional prefix text shown before the label.
+   * Base props for the CommandPalette component.
    */
-  prefix?: string
+  export interface Base {
+    /**
+     * Command groups to display initially.
+     */
+    items?: Group[]
 
-  /**
-   * Optional suffix text shown after the label.
-   */
-  suffix?: string
+    /**
+     * Placeholder text for the search input.
+     * @default 'Search...'
+     */
+    placeholder?: string
 
-  /**
-   * Secondary description text shown below the label.
-   */
-  description?: string
+    /**
+     * Controlled search term.
+     */
+    searchTerm?: string
 
-  /**
-   * UnoCSS icon class or name to display.
-   * @example 'icon-search'
-   */
-  icon?: string
+    /**
+     * Callback triggered when the search term changes.
+     */
+    onSearchTermChange?: (term: string) => void
 
-  /**
-   * Array of keyboard shortcuts to display.
-   */
-  kbds?: string[]
+    /**
+     * Maximum allowed length for the search text.
+     */
+    searchMaxLength?: number
 
-  /**
-   * Whether to force the item into an active (highlighted) state.
-   */
-  active?: boolean
+    /**
+     * Whether to focus the search input automatically on mount.
+     * @default true
+     */
+    autofocus?: boolean
 
-  /**
-   * Whether the item is disabled and cannot be selected.
-   */
-  disabled?: boolean
+    /**
+     * Icon name for the search indicator.
+     * @default 'icon-search'
+     */
+    searchIcon?: IconName
 
-  /**
-   * Selecting this item drills into a nested group of items.
-   */
-  children?: CommandPaletteItem[]
+    /**
+     * Icon name for the loading state.
+     * @default 'icon-loading'
+     */
+    loadingIcon?: IconName
 
-  /**
-   * Callback triggered when the item is selected.
-   */
-  onSelect?: () => void
+    /**
+     * Icon name for items with sub-groups.
+     * @default 'icon-chevron-right'
+     */
+    childIcon?: IconName
+
+    /**
+     * Icon name for the group navigation back button.
+     * @default 'icon-arrow-left'
+     */
+    backIcon?: IconName
+
+    /**
+     * Icon name for the palette close button.
+     * @default 'icon-close'
+     */
+    closeIcon?: IconName
+
+    /**
+     * Whether to show a close button in the header.
+     * @default false
+     */
+    close?: boolean
+
+    /**
+     * Callback triggered when the close button is clicked.
+     */
+    onClose?: () => void
+
+    /**
+     * Whether the palette is in a loading state.
+     */
+    loading?: boolean
+
+    /**
+     * Elements to show when no items match the search.
+     * @default 'No results.'
+     */
+    empty?: JSX.Element
+
+    /**
+     * Content to render at bottom of the palette.
+     */
+    footer?: JSX.Element
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
+
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
-/**
- * A grouped collection of items in the command palette.
- */
-export interface CommandPaletteGroup {
-  /**
-   * Unique identifier for the group.
-   */
-  id: string
+export interface CommandPaletteItem extends CommandPaletteT.Item {}
 
-  /**
-   * Display name for the group header.
-   */
-  label?: string
-
-  /**
-   * Items belonging to this group.
-   */
-  children?: CommandPaletteItem[]
-}
-
-type CommandPaletteSlots =
-  | 'root'
-  | 'inputWrapper'
-  | 'input'
-  | 'listbox'
-  | 'footer'
-  | 'group'
-  | 'label'
-  | 'item'
-  | 'itemLeading'
-  | 'itemWrapper'
-  | 'itemLabel'
-  | 'itemLabelBase'
-  | 'itemLabelPrefix'
-  | 'itemLabelSuffix'
-  | 'itemDescription'
-  | 'itemTrailing'
-  | 'itemTrailingKbds'
-  | 'itemTrailingKbd'
-  | 'search'
-  | 'back'
-  | 'close'
-  | 'empty'
-
-export type CommandPaletteClasses = SlotClasses<CommandPaletteSlots>
-
-export type CommandPaletteStyles = SlotStyles<CommandPaletteSlots>
-
-/**
- * Base props for the CommandPalette component.
- */
-export interface CommandPaletteBaseProps {
-  /**
-   * Command groups to display initially.
-   */
-  items?: CommandPaletteGroup[]
-
-  /**
-   * Placeholder text for the search input.
-   * @default 'Search...'
-   */
-  placeholder?: string
-
-  /**
-   * Controlled search term.
-   */
-  searchTerm?: string
-
-  /**
-   * Callback triggered when the search term changes.
-   */
-  onSearchTermChange?: (term: string) => void
-
-  /**
-   * Maximum allowed length for the search text.
-   */
-  searchMaxLength?: number
-
-  /**
-   * Whether to focus the search input automatically on mount.
-   * @default true
-   */
-  autofocus?: boolean
-
-  /**
-   * Icon name for the search indicator.
-   * @default 'icon-search'
-   */
-  searchIcon?: IconName
-
-  /**
-   * Icon name for the loading state.
-   * @default 'icon-loading'
-   */
-  loadingIcon?: IconName
-
-  /**
-   * Icon name for items with sub-groups.
-   * @default 'icon-chevron-right'
-   */
-  childIcon?: IconName
-
-  /**
-   * Icon name for the group navigation back button.
-   * @default 'icon-arrow-left'
-   */
-  backIcon?: IconName
-
-  /**
-   * Icon name for the palette close button.
-   * @default 'icon-close'
-   */
-  closeIcon?: IconName
-
-  /**
-   * Whether to show a close button in the header.
-   * @default false
-   */
-  close?: boolean
-
-  /**
-   * Callback triggered when the close button is clicked.
-   */
-  onClose?: () => void
-
-  /**
-   * Whether the palette is in a loading state.
-   */
-  loading?: boolean
-
-  /**
-   * Elements to show when no items match the search.
-   * @default 'No results.'
-   */
-  empty?: JSX.Element
-
-  /**
-   * Content to render at bottom of the palette.
-   */
-  footer?: JSX.Element
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: CommandPaletteClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: CommandPaletteStyles
-}
+export interface CommandPaletteGroup extends CommandPaletteT.Group {}
 
 /**
  * Props for the CommandPalette component.
  */
-export type CommandPaletteProps = CommandPaletteBaseProps
+export interface CommandPaletteProps extends CommandPaletteT.Props {}
 
 // ─── Internal normalized types ────────────────────────────────────────────────
 

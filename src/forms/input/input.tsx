@@ -6,6 +6,7 @@ import { Icon } from '../../elements/icon'
 import type { ModelModifiers } from '../../shared/input-modifiers'
 import { applyInputModifiers } from '../../shared/input-modifiers'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { callHandler, cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -25,132 +26,141 @@ import {
   inputTrailingVariants,
 } from './input.class'
 
-type InputStyleVariantProps = Pick<InputVariantProps, 'size' | 'variant' | 'highlight'>
+export namespace InputT {
+  export type Slot = 'root' | 'input' | 'leading' | 'trailing'
 
-export type InputValue = string | number | undefined
+  export type Variant = Pick<InputVariantProps, 'size' | 'variant' | 'highlight'>
 
-type InputSlots = 'root' | 'input' | 'leading' | 'trailing'
+  export interface Items {}
 
-export type InputClasses = SlotClasses<InputSlots>
+  export type Value = string | number | undefined
 
-export type InputStyles = SlotStyles<InputSlots>
-
-/**
- * Base props for the Input component.
- */
-export interface InputBaseProps
-  extends
-    FormIdentityOptions,
-    FormValueOptions<InputValue>,
-    FormRequiredOption,
-    FormReadOnlyOption,
-    FormDisableOption {
-  /**
-   * The type of the input element.
-   * @default 'text'
-   */
-  type?: JSX.InputHTMLAttributes<HTMLInputElement>['type']
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * The placeholder text for the input.
+   * Base props for the Input component.
    */
-  placeholder?: string
+  export interface Base
+    extends
+      FormIdentityOptions,
+      FormValueOptions<Value>,
+      FormRequiredOption,
+      FormReadOnlyOption,
+      FormDisableOption {
+    /**
+     * The type of the input element.
+     * @default 'text'
+     */
+    type?: JSX.InputHTMLAttributes<HTMLInputElement>['type']
+
+    /**
+     * The placeholder text for the input.
+     */
+    placeholder?: string
+
+    /**
+     * The autocomplete attribute for the input.
+     * @default 'off'
+     */
+    autocomplete?: JSX.InputHTMLAttributes<HTMLInputElement>['autocomplete']
+
+    /**
+     * Whether the input should automatically receive focus on mount.
+     * @default false
+     */
+    autofocus?: boolean
+
+    /**
+     * The delay in milliseconds before automatically focusing the input.
+     * @default 0
+     */
+    autofocusDelay?: number
+
+    /**
+     * The maximum number of characters allowed in the input.
+     */
+    maxLength?: number
+
+    /**
+     * Leading icon name.
+     */
+    leading?: IconName
+
+    /**
+     * Trailing icon name.
+     */
+    trailing?: IconName
+
+    /**
+     * Whether the input is in a loading state.
+     * @default false
+     */
+    loading?: boolean
+
+    /**
+     * The icon to show when the input is in a loading state.
+     * @default 'icon-loading'
+     */
+    loadingIcon?: IconName
+
+    /**
+     * Modifiers for the input value (e.g., trim, lazy).
+     */
+    modelModifiers?: ModelModifiers
+
+    /**
+     * Callback when the value changes.
+     */
+    onValueChange?: (value: Value) => void
+
+    /**
+     * Event handler for the input event.
+     */
+    onInput?: JSX.EventHandlerUnion<HTMLInputElement, InputEvent>
+
+    /**
+     * Event handler for the change event.
+     */
+    onChange?: JSX.EventHandlerUnion<HTMLInputElement, Event>
+
+    /**
+     * Event handler for the blur event.
+     */
+    onBlur?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
+
+    /**
+     * Event handler for the focus event.
+     */
+    onFocus?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Additional content to render inside the input container.
+     */
+    children?: JSX.Element
+  }
 
   /**
-   * The autocomplete attribute for the input.
-   * @default 'off'
+   * Props for the Input component.
    */
-  autocomplete?: JSX.InputHTMLAttributes<HTMLInputElement>['autocomplete']
-
-  /**
-   * Whether the input should automatically receive focus on mount.
-   * @default false
-   */
-  autofocus?: boolean
-
-  /**
-   * The delay in milliseconds before automatically focusing the input.
-   * @default 0
-   */
-  autofocusDelay?: number
-
-  /**
-   * The maximum number of characters allowed in the input.
-   */
-  maxLength?: number
-
-  /**
-   * Leading icon name.
-   */
-  leading?: IconName
-
-  /**
-   * Trailing icon name.
-   */
-  trailing?: IconName
-
-  /**
-   * Whether the input is in a loading state.
-   * @default false
-   */
-  loading?: boolean
-
-  /**
-   * The icon to show when the input is in a loading state.
-   * @default 'icon-loading'
-   */
-  loadingIcon?: IconName
-
-  /**
-   * Modifiers for the input value (e.g., trim, lazy).
-   */
-  modelModifiers?: ModelModifiers
-
-  /**
-   * Callback when the value changes.
-   */
-  onValueChange?: (value: InputValue) => void
-
-  /**
-   * Event handler for the input event.
-   */
-  onInput?: JSX.EventHandlerUnion<HTMLInputElement, InputEvent>
-
-  /**
-   * Event handler for the change event.
-   */
-  onChange?: JSX.EventHandlerUnion<HTMLInputElement, Event>
-
-  /**
-   * Event handler for the blur event.
-   */
-  onBlur?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
-
-  /**
-   * Event handler for the focus event.
-   */
-  onFocus?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: InputClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: InputStyles
-
-  /**
-   * Additional content to render inside the input container.
-   */
-  children?: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Input component.
  */
-export type InputProps = InputBaseProps & InputStyleVariantProps
+export interface InputProps extends InputT.Props {}
 
 /** Text input component with leading/trailing icon slots, loading state, and form field integration. */
 export function Input(props: InputProps): JSX.Element {
@@ -203,8 +213,8 @@ export function Input(props: InputProps): JSX.Element {
   const isLazy = createMemo(() => Boolean(formProps.modelModifiers?.lazy))
 
   const inputValueProps = createMemo<{
-    value?: InputValue
-    defaultValue?: InputValue
+    value?: InputT.Value
+    defaultValue?: InputT.Value
   }>(() => {
     if (formProps.value !== undefined) {
       return { value: formProps.value }
@@ -251,7 +261,7 @@ export function Input(props: InputProps): JSX.Element {
   )
 
   function updateInputValue(value: string | null | undefined): void {
-    const nextValue = applyInputModifiers<InputValue>(value, formProps.modelModifiers)
+    const nextValue = applyInputModifiers<InputT.Value>(value, formProps.modelModifiers)
 
     field.setFormValue(nextValue)
     formProps.onValueChange?.(nextValue)

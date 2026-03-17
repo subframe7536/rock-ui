@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 import { Show, mergeProps } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 
 import type { SeparatorVariantProps } from './separator.class'
 import {
@@ -12,45 +12,49 @@ import {
   separatorRootVariants,
 } from './separator.class'
 
-type SeparatorSlots = 'root' | 'border' | 'container'
-
-export type SeparatorClasses = SlotClasses<SeparatorSlots>
-
-export type SeparatorStyles = SlotStyles<SeparatorSlots>
-
-/**
- * Base props for the Separator component.
- */
-export interface SeparatorBaseProps extends SeparatorVariantProps {
+export namespace SeparatorT {
+  export type Slot = 'root' | 'border' | 'container'
+  export type Variant = SeparatorVariantProps
+  export interface Items {}
+  export type Extend = KobalteSeparator.SeparatorRootProps<HTMLDivElement>
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
   /**
-   * Whether the separator is decorative (hidden from assistive technologies).
-   * @default false
+   * Base props for the Separator component.
    */
-  decorative?: boolean
+  export interface Base {
+    /**
+     * Whether the separator is decorative (hidden from assistive technologies).
+     * @default false
+     */
+    decorative?: boolean
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Additional content to render inside the separator (usually between two borders).
+     */
+    children?: JSX.Element
+  }
 
   /**
-   * Slot-based class overrides.
+   * Props for the Separator component.
    */
-  classes?: SeparatorClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: SeparatorStyles
-
-  /**
-   * Additional content to render inside the separator (usually between two borders).
-   */
-  children?: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Separator component.
  */
-export type SeparatorProps = RockUIComposeProps<
-  SeparatorBaseProps,
-  KobalteSeparator.SeparatorRootProps<HTMLDivElement>
->
+export interface SeparatorProps extends SeparatorT.Props {}
 
 /** Visual divider with configurable orientation, style, and optional label content. */
 export function Separator(props: SeparatorProps): JSX.Element {

@@ -52,6 +52,4 @@ export const separatorContainerVariants = cva('font-medium flex items-center', {
   },
 })
 
-export type SeparatorVariantProps = VariantProps<typeof separatorRootVariants> &
-  VariantProps<typeof separatorBorderVariants> &
-  VariantProps<typeof separatorContainerVariants>
+export type SeparatorVariantProps = VariantProps<typeof separatorBorderVariants>

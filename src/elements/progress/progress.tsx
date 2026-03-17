@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 
 import type { ProgressVariantProps } from './progress.class'
 import {
@@ -17,11 +17,68 @@ import {
 
 type ProgressStepState = ProgressStepRenderContext['state']
 
-type ProgressSlots = 'root' | 'status' | 'base' | 'indicator' | 'steps' | 'step'
+export namespace ProgressT {
+  export type Slot = 'root' | 'status' | 'base' | 'indicator' | 'steps' | 'step'
+  export type Variant = ProgressVariantProps
+  export interface Items {}
+  export type Extend = KobalteProgress.ProgressRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
+  /**
+   * Base props for the Progress component.
+   */
+  export interface Base {
+    /**
+     * The current value of the progress bar. If null/undefined, it is indeterminate.
+     * @default null
+     */
+    value?: number | null
 
-export type ProgressClasses = SlotClasses<ProgressSlots>
+    /**
+     * The maximum value of the progress bar, or an array of step labels.
+     * @default 100
+     */
+    max?: number | string[]
 
-export type ProgressStyles = SlotStyles<ProgressSlots>
+    /**
+     * Whether to show the status label.
+     * @default false
+     */
+    status?: boolean
+
+    /**
+     * Callback to get a localized label for the current value.
+     */
+    getValueLabel?: KobalteProgress.ProgressRootProps['getValueLabel']
+
+    /**
+     * Custom render function for the status label.
+     */
+    renderStatus?: (context: ProgressStatusRenderContext) => JSX.Element
+
+    /**
+     * Custom render function for each step when `max` is an array.
+     */
+    renderStep?: (context: ProgressStepRenderContext) => JSX.Element
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
+
+  export interface Props extends RockUIProps<
+    Base,
+    Variant,
+    Extend,
+    'indeterminate' | 'minValue' | 'maxValue'
+  > {}
+}
 
 export interface ProgressStatusRenderContext {
   /**
@@ -46,61 +103,9 @@ export interface ProgressStepRenderContext {
 }
 
 /**
- * Base props for the Progress component.
- */
-export interface ProgressBaseProps extends ProgressVariantProps {
-  /**
-   * The current value of the progress bar. If null/undefined, it is indeterminate.
-   * @default null
-   */
-  value?: number | null
-
-  /**
-   * The maximum value of the progress bar, or an array of step labels.
-   * @default 100
-   */
-  max?: number | string[]
-
-  /**
-   * Whether to show the status label.
-   * @default false
-   */
-  status?: boolean
-
-  /**
-   * Callback to get a localized label for the current value.
-   */
-  getValueLabel?: KobalteProgress.ProgressRootProps['getValueLabel']
-
-  /**
-   * Custom render function for the status label.
-   */
-  renderStatus?: (context: ProgressStatusRenderContext) => JSX.Element
-
-  /**
-   * Custom render function for each step when `max` is an array.
-   */
-  renderStep?: (context: ProgressStepRenderContext) => JSX.Element
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: ProgressClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: ProgressStyles
-}
-
-/**
  * Props for the Progress component.
  */
-export type ProgressProps = RockUIComposeProps<
-  ProgressBaseProps,
-  KobalteProgress.ProgressRootProps,
-  'as' | 'indeterminate' | 'minValue' | 'maxValue'
->
+export interface ProgressProps extends ProgressT.Props {}
 
 function resolveMaxValue(max: ProgressProps['max']): number {
   if (Array.isArray(max)) {

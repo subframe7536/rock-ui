@@ -3,47 +3,64 @@ import type { ElementOf, PolymorphicProps } from '@kobalte/core/polymorphic'
 import type { JSX, ValidComponent } from 'solid-js'
 import { splitProps } from 'solid-js'
 
-import type { RockUIComposeProps } from '../../shared/types'
+import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 
 import { Icon } from './icon'
 import type { IconName } from './icon'
 import { iconButtonVariants } from './icon-button.class'
 
-/**
- * Base props for the IconButton component.
- */
-export interface IconButtonBaseProps {
+export namespace IconButtonT {
+  export type Slot = 'root'
+  export interface Variant {}
+  export interface Items {}
+  export type Extend<T extends ValidComponent = 'button'> = KobalteButton.ButtonRootProps<
+    ElementOf<T>
+  >
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
   /**
-   * Icon source. Strings should be Uno icon classes such as `i-lucide-search`.
+   * Base props for the IconButton component.
    */
-  name: IconName
+  export interface Base {
+    /**
+     * Icon source. Strings should be Uno icon classes such as `i-lucide-search`.
+     */
+    name: IconName
+
+    /**
+     * Controlled loading state.
+     * @default false
+     */
+    loading?: boolean
+
+    /**
+     * Optional icon shown when `loading` is active.
+     * @default 'icon-loading'
+     */
+    loadingIcon?: IconName
+
+    /**
+     * The size of the button.
+     * @default 'md'
+     */
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  }
 
   /**
-   * Controlled loading state.
-   * @default false
+   * Props for the IconButton component.
    */
-  loading?: boolean
-
-  /**
-   * Optional icon shown when `loading` is active.
-   * @default 'icon-loading'
-   */
-  loadingIcon?: IconName
-
-  /**
-   * The size of the button.
-   * @default 'md'
-   */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  export type Props<T extends ValidComponent = 'button'> = PolymorphicProps<
+    T,
+    RockUIProps<Base, Variant, Extend<T>>
+  >
 }
 
 /**
  * Props for the IconButton component.
  */
-export type IconButtonProps<T extends ValidComponent = 'button'> = PolymorphicProps<
-  T,
-  RockUIComposeProps<IconButtonBaseProps, KobalteButton.ButtonRootProps<ElementOf<T>>, 'class'>
->
+// NOTE: keep `type` here; `interface extends ...` breaks Solid JSX inference for polymorphic components.
+export type IconButtonProps<T extends ValidComponent = 'button'> = IconButtonT.Props<T>
 
 export function IconButton<T extends ValidComponent = 'button'>(
   props: IconButtonProps<T>,

@@ -1,7 +1,7 @@
 import { createMemo, createSignal } from 'solid-js'
 
 import { ContextMenu } from '../../../src'
-import type { ContextMenuItems } from '../../../src'
+import type { ContextMenuT } from '../../../src'
 import meta from '../../.meta/context-menu.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
@@ -22,7 +22,7 @@ export default () => {
   const [showInlineHints, setShowInlineHints] = createSignal(false)
   const [editorTheme, setEditorTheme] = createSignal<'light' | 'dark' | 'system'>('dark')
 
-  const fileItems: ContextMenuItems = [
+  const fileItems: ContextMenuT.Items = [
     [
       { type: 'label', label: 'File Actions' },
       {
@@ -110,7 +110,7 @@ export default () => {
     ],
   ]
 
-  const editorItems = createMemo<ContextMenuItems>(() => [
+  const editorItems = createMemo<ContextMenuT.Items>(() => [
     [
       { type: 'label', label: 'Editor Selection' },
       {
@@ -148,21 +148,21 @@ export default () => {
         label: 'Show Minimap',
         icon: 'i-lucide-map',
         checked: showMinimap(),
-        onCheckedChange: (checked) => setShowMinimap(checked),
+        onCheckedChange: (checked: boolean) => setShowMinimap(checked),
       },
       {
         type: 'checkbox',
         label: 'Sticky Scroll',
         icon: 'i-lucide-panel-top',
         checked: showStickyScroll(),
-        onCheckedChange: (checked) => setShowStickyScroll(checked),
+        onCheckedChange: (checked: boolean) => setShowStickyScroll(checked),
       },
       {
         type: 'checkbox',
         label: 'Inline Hints',
         icon: 'i-lucide-message-square-quote',
         checked: showInlineHints(),
-        onCheckedChange: (checked) => setShowInlineHints(checked),
+        onCheckedChange: (checked: boolean) => setShowInlineHints(checked),
       },
     ],
     [
@@ -185,7 +185,7 @@ export default () => {
     ],
   ])
 
-  const projectItems: ContextMenuItems = [
+  const projectItems: ContextMenuT.Items = [
     [
       {
         type: 'label',

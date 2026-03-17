@@ -1,12 +1,14 @@
 import { For, createSignal } from 'solid-js'
 
 import { Button, Form, FormField, Slider } from '../../../src'
-import type { SliderValue } from '../../../src/forms/slider/slider'
+import type { SliderT } from '../../../src'
 import meta from '../../.meta/slider.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
+
+type SliderValue = SliderT.Value
 
 function formatSliderValue(value: SliderValue): string {
   if (Array.isArray(value)) {

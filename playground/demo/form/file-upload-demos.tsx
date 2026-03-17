@@ -1,10 +1,12 @@
 import { createSignal } from 'solid-js'
 
 import { Button, FileUpload, Form, FormField } from '../../../src'
-import type { FileUploadValue } from '../../../src/forms/file-upload/file-upload'
+import type { FileUploadT } from '../../../src'
 import meta from '../../.meta/file-upload.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
+
+type FileUploadValue = FileUploadT.Value
 
 function fileCount(value: FileUploadValue): number {
   if (value === null) {

@@ -1,6 +1,8 @@
 /**
- * Utility to compose component props by combining base props with external props.
- * Automatically omits conflicting keys from the external props, as well as 'children' and 'class'.
+ * Composes final component props by combining Base (`B`), Variant (`V`) and
+ * external Extend (`E`). Automatically omits from `E` any keys present in
+ * `B & V` as well as 'children', 'class', 'style', and any `ExtraOmitKeys`.
  */
-export type RockUIComposeProps<B, E, ExtraOmitKeys extends keyof any = never> = B &
-  Omit<E, keyof B | 'children' | 'class' | 'style' | ExtraOmitKeys>
+export type RockUIProps<B, V, E, ExtraOmitKeys extends keyof E = never> = B &
+  V &
+  Omit<E, keyof (B & V) | 'children' | 'class' | 'style' | ExtraOmitKeys>

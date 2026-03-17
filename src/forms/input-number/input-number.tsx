@@ -6,7 +6,7 @@ import { Button } from '../../elements/button'
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { callHandler, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-options'
@@ -21,115 +21,122 @@ import {
   resolveInputNumberAlign,
 } from './input-number.class'
 
-type InputNumberSlots = 'root' | 'base' | 'increment' | 'decrement'
-
 const INPUT_NUMBER_HOLD_REPEAT_DELAY = 400
 const INPUT_NUMBER_HOLD_REPEAT_INTERVAL = 60
 
-export type InputNumberClasses = SlotClasses<InputNumberSlots>
+export namespace InputNumberT {
+  export type Slot = 'root' | 'base' | 'increment' | 'decrement'
 
-export type InputNumberStyles = SlotStyles<InputNumberSlots>
+  export type Variant = InputNumberVariantProps
 
-/**
- * Base props for the InputNumber component.
- */
-export interface InputNumberBaseProps
-  extends FormIdentityOptions, FormDisableOption, InputNumberVariantProps {
-  /**
-   * The orientation of the control buttons.
-   * @default 'horizontal'
-   */
-  orientation?: InputNumberOrientation
+  export interface Items {}
+
+  export type Extend = KobalteNumberField.NumberFieldRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Placeholder text for the input.
+   * Base props for the InputNumber component.
    */
-  placeholder?: string
+  export interface Base extends FormIdentityOptions, FormDisableOption {
+    /**
+     * The orientation of the control buttons.
+     * @default 'horizontal'
+     */
+    orientation?: InputNumberOrientation
+
+    /**
+     * Placeholder text for the input.
+     */
+    placeholder?: string
+
+    /**
+     * Whether to show the increment button.
+     * @default true
+     */
+    increment?: boolean
+
+    /**
+     * Icon for the increment button.
+     * @default orientation === 'vertical' ? 'icon-chevron-up' : 'icon-plus'
+     */
+    incrementIcon?: IconName
+
+    /**
+     * Whether the increment button is disabled.
+     */
+    incrementDisabled?: boolean
+
+    /**
+     * Whether to show the decrement button.
+     * @default true
+     */
+    decrement?: boolean
+
+    /**
+     * Icon for the decrement button.
+     * @default orientation === 'vertical' ? 'icon-chevron-down' : 'icon-minus'
+     */
+    decrementIcon?: IconName
+
+    /**
+     * Whether the decrement button is disabled.
+     */
+    decrementDisabled?: boolean
+
+    /**
+     * Whether to automatically focus the input on mount.
+     * @default false
+     */
+    autofocus?: boolean
+
+    /**
+     * Delay in milliseconds before focusing the input.
+     * @default 0
+     */
+    autofocusDelay?: number
+
+    /**
+     * Callback when the input loses focus.
+     */
+    onBlur?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
+
+    /**
+     * Callback when the input gains focus.
+     */
+    onFocus?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
+
+    /**
+     * Callback when the increment button is clicked.
+     */
+    onIncrementClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>
+
+    /**
+     * Callback when the decrement button is clicked.
+     */
+    onDecrementClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Whether to show the increment button.
-   * @default true
+   * Props for the InputNumber component.
    */
-  increment?: boolean
-
-  /**
-   * Icon for the increment button.
-   * @default orientation === 'vertical' ? 'icon-chevron-up' : 'icon-plus'
-   */
-  incrementIcon?: IconName
-
-  /**
-   * Whether the increment button is disabled.
-   */
-  incrementDisabled?: boolean
-
-  /**
-   * Whether to show the decrement button.
-   * @default true
-   */
-  decrement?: boolean
-
-  /**
-   * Icon for the decrement button.
-   * @default orientation === 'vertical' ? 'icon-chevron-down' : 'icon-minus'
-   */
-  decrementIcon?: IconName
-
-  /**
-   * Whether the decrement button is disabled.
-   */
-  decrementDisabled?: boolean
-
-  /**
-   * Whether to automatically focus the input on mount.
-   * @default false
-   */
-  autofocus?: boolean
-
-  /**
-   * Delay in milliseconds before focusing the input.
-   * @default 0
-   */
-  autofocusDelay?: number
-
-  /**
-   * Callback when the input loses focus.
-   */
-  onBlur?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
-
-  /**
-   * Callback when the input gains focus.
-   */
-  onFocus?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
-
-  /**
-   * Callback when the increment button is clicked.
-   */
-  onIncrementClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>
-
-  /**
-   * Callback when the decrement button is clicked.
-   */
-  onDecrementClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: InputNumberClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: InputNumberStyles
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the InputNumber component.
  */
-export type InputNumberProps = RockUIComposeProps<
-  InputNumberBaseProps,
-  KobalteNumberField.NumberFieldRootProps
->
+export interface InputNumberProps extends InputNumberT.Props {}
 
 /** Numeric input with increment/decrement controls, step, and min/max constraints. */
 export function InputNumber(props: InputNumberProps): JSX.Element {

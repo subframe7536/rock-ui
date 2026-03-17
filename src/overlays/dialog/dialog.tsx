@@ -6,146 +6,155 @@ import { Card } from '../../elements/card'
 import { IconButton } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { Popup } from '../popup'
 
 import { dialogCardVariants } from './dialog.class'
 import type { DialogCardVariantProps } from './dialog.class'
 
-type DialogSlots =
-  | 'trigger'
-  | 'overlay'
-  | 'content'
-  | 'header'
-  | 'wrapper'
-  | 'title'
-  | 'description'
-  | 'close'
-  | 'body'
-  | 'footer'
+export namespace DialogT {
+  export type Slot =
+    | 'trigger'
+    | 'overlay'
+    | 'content'
+    | 'header'
+    | 'wrapper'
+    | 'title'
+    | 'description'
+    | 'close'
+    | 'body'
+    | 'footer'
 
-export type DialogClasses = SlotClasses<DialogSlots>
-
-export type DialogStyles = SlotStyles<DialogSlots>
-
-/**
- * Base props for the Dialog component.
- */
-export interface DialogBaseProps extends DialogCardVariantProps {
-  /**
-   * Unique identifier for the dialog.
-   */
-  id?: string
+  export type Variant = DialogCardVariantProps
+  export interface Items {}
+  export type Extend = KobalteDialog.DialogRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Controlled open state of the dialog.
+   * Base props for the Dialog component.
    */
-  open?: boolean
+  export interface Base {
+    /**
+     * Unique identifier for the dialog.
+     */
+    id?: string
+
+    /**
+     * Controlled open state of the dialog.
+     */
+    open?: boolean
+
+    /**
+     * Initial open state when uncontrolled.
+     * @default false
+     */
+    defaultOpen?: boolean
+
+    /**
+     * Callback triggered when the open state changes.
+     */
+    onOpenChange?: (open: boolean) => void
+
+    /**
+     * Primary title displayed in the dialog header.
+     */
+    title?: JSX.Element
+
+    /**
+     * Secondary description displayed below the title.
+     */
+    description?: JSX.Element
+
+    /**
+     * Whether to show a background overlay.
+     * @default true
+     */
+    overlay?: boolean
+
+    /**
+     * Whether the dialog content body should be scrollable.
+     * @default false
+     */
+    scrollable?: boolean
+
+    /**
+     * Whether to enable transition animations.
+     * @default true
+     */
+    transition?: boolean
+
+    /**
+     * Whether the dialog should take up the full viewport.
+     * @default false
+     */
+    fullscreen?: boolean
+
+    /**
+     * Whether to show a close button.
+     * @default true
+     */
+    close?: boolean
+
+    /**
+     * Icon name for the close button.
+     * @default 'icon-close'
+     */
+    closeIcon?: IconName
+
+    /**
+     * Whether the dialog can be dismissed by clicking outside or pressing Escape.
+     * @default true
+     */
+    dismissible?: boolean
+
+    /**
+     * Callback triggered when a dismissal action is prevented.
+     */
+    onClosePrevent?: () => void
+
+    /**
+     * Custom element to render in the header slot.
+     */
+    header?: JSX.Element
+
+    /**
+     * Custom element to render in the body slot.
+     */
+    body?: JSX.Element
+
+    /**
+     * Custom element to render in the footer slot.
+     */
+    footer?: JSX.Element
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Content to render inside the dialog.
+     */
+    children?: JSX.Element
+  }
 
   /**
-   * Initial open state when uncontrolled.
-   * @default false
+   * Props for the Dialog component.
    */
-  defaultOpen?: boolean
-
-  /**
-   * Callback triggered when the open state changes.
-   */
-  onOpenChange?: (open: boolean) => void
-
-  /**
-   * Primary title displayed in the dialog header.
-   */
-  title?: JSX.Element
-
-  /**
-   * Secondary description displayed below the title.
-   */
-  description?: JSX.Element
-
-  /**
-   * Whether to show a background overlay.
-   * @default true
-   */
-  overlay?: boolean
-
-  /**
-   * Whether the dialog content body should be scrollable.
-   * @default false
-   */
-  scrollable?: boolean
-
-  /**
-   * Whether to enable transition animations.
-   * @default true
-   */
-  transition?: boolean
-
-  /**
-   * Whether the dialog should take up the full viewport.
-   * @default false
-   */
-  fullscreen?: boolean
-
-  /**
-   * Whether to show a close button.
-   * @default true
-   */
-  close?: boolean
-
-  /**
-   * Icon name for the close button.
-   * @default 'icon-close'
-   */
-  closeIcon?: IconName
-
-  /**
-   * Whether the dialog can be dismissed by clicking outside or pressing Escape.
-   * @default true
-   */
-  dismissible?: boolean
-
-  /**
-   * Callback triggered when a dismissal action is prevented.
-   */
-  onClosePrevent?: () => void
-
-  /**
-   * Custom element to render in the header slot.
-   */
-  header?: JSX.Element
-
-  /**
-   * Custom element to render in the body slot.
-   */
-  body?: JSX.Element
-
-  /**
-   * Custom element to render in the footer slot.
-   */
-  footer?: JSX.Element
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: DialogClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: DialogStyles
-
-  /**
-   * Content to render inside the dialog.
-   */
-  children?: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Dialog component.
  */
-export type DialogProps = RockUIComposeProps<DialogBaseProps, KobalteDialog.DialogRootProps>
+export interface DialogProps extends DialogT.Props {}
 
 /** Modal dialog with header, body, and footer slots, backdrop overlay, and dismissal control. */
 export function Dialog(props: DialogProps): JSX.Element {

@@ -149,14 +149,4 @@ export const avatarGroupCountVariants = cva(
   },
 )
 
-export type AvatarVariantProps = VariantProps<typeof avatarRootVariants> &
-  VariantProps<typeof avatarImageVariants> &
-  VariantProps<typeof avatarFallbackVariants> &
-  VariantProps<typeof avatarFallbackIconVariants> &
-  VariantProps<typeof avatarBadgeVariants> &
-  VariantProps<typeof avatarGroupItemVariants> &
-  VariantProps<typeof avatarGroupCountVariants>
-
-export type AvatarSize = Exclude<AvatarVariantProps['size'], undefined>
-export type AvatarTransition = Exclude<AvatarVariantProps['transition'], undefined>
-export type AvatarBadgePosition = Exclude<AvatarVariantProps['badgePosition'], undefined>
+export type AvatarVariantProps = VariantProps<typeof avatarBadgeVariants>

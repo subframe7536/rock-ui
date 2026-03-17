@@ -180,12 +180,16 @@ describe('CheckboxGroup', () => {
   test('toggles item when clicking table item root', async () => {
     const screen = render(() => <CheckboxGroup items={['A']} variant="table" />)
 
-    const checkbox = screen.getByRole('checkbox', { name: 'A' }) as HTMLInputElement
+    const checkbox = screen.container.querySelector(
+      'input[type="checkbox"][value="A"]',
+    ) as HTMLInputElement
     const item = screen.container.querySelector('[data-slot="fieldset"] > [data-slot="root"]')
+    const hitArea = item?.querySelector(`label[for="${checkbox.id}"]`) as HTMLLabelElement | null
 
     expect(checkbox.checked).toBe(false)
 
-    await fireEvent.click(item as HTMLElement)
+    // JSDOM doesn't compute layout, so clicking the item root won't hit the absolute-positioned label.
+    await fireEvent.click(hitArea as HTMLLabelElement)
 
     await waitFor(() => {
       expect(checkbox.checked).toBe(true)
@@ -391,7 +395,12 @@ describe('CheckboxGroup', () => {
       expect(screen.getByText('Select at least one release channel.')).not.toBeNull()
     })
 
-    await fireEvent.click(screen.getByRole('checkbox', { name: 'A' }))
+    const checkboxA = screen.container.querySelector(
+      'input[type="checkbox"][value="A"]',
+    ) as HTMLInputElement
+    expect(checkboxA).not.toBeNull()
+
+    await fireEvent.click(checkboxA)
     await waitFor(() => {
       expect(screen.queryByText('Select at least one release channel.')).toBeNull()
     })

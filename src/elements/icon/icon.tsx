@@ -2,55 +2,72 @@ import type { Component, JSX } from 'solid-js'
 import { createMemo, splitProps } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
+import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 export type IconName = string | JSX.Element | Component<Omit<IconProps, 'name'>>
 
-/**
- * Base props for the Icon component.
- */
-export interface IconBaseProps extends Omit<
-  JSX.HTMLAttributes<HTMLElement>,
-  'aria-hidden' | 'children' | 'style' | 'size' | 'class' | 'id'
-> {
-  /**
-   * Icon source. Strings should be Uno icon classes such as `i-lucide-search`
-   * or app-config aliases such as `icon-search`.
-   * Non-string values can be JSX nodes or render functions.
-   */
-  name: IconName
+export namespace IconT {
+  export type Slot = 'icon'
+  export interface Variant {}
+  export interface Items {}
+  export interface Extend {}
+
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Icon size. Numbers are interpreted as px.
+   * Base props for the Icon component.
    */
-  size?: string | number
+  export interface Base extends Omit<
+    JSX.HTMLAttributes<HTMLElement>,
+    'aria-hidden' | 'children' | 'style' | 'size' | 'class' | 'id'
+  > {
+    /**
+     * Icon source. Strings should be Uno icon classes such as `i-lucide-search`
+     * or app-config aliases such as `icon-search`.
+     * Non-string values can be JSX nodes or render functions.
+     */
+    name: IconName
+
+    /**
+     * Icon size. Numbers are interpreted as px.
+     */
+    size?: string | number
+
+    /**
+     * Data slot for styling.
+     * @default 'icon'
+     */
+    slotName?: string
+
+    /**
+     * Custom style overrides.
+     */
+    style?: JSX.CSSProperties
+
+    /**
+     * Additional CSS class.
+     */
+    class?: string
+
+    /**
+     * Unique identifier.
+     */
+    id?: string
+  }
 
   /**
-   * Data slot for styling.
-   * @default 'icon'
+   * Props for the Icon component.
    */
-  slotName?: string
-
-  /**
-   * Custom style overrides.
-   */
-  style?: JSX.CSSProperties
-
-  /**
-   * Additional CSS class.
-   */
-  class?: string
-
-  /**
-   * Unique identifier.
-   */
-  id?: string
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Icon component.
  */
-export type IconProps = IconBaseProps
+export interface IconProps extends IconT.Props {}
 
 /** Renders an icon from a UnoCSS icon class, JSX element, or render function. */
 export function Icon(props: IconProps): JSX.Element {
@@ -75,7 +92,7 @@ export function Icon(props: IconProps): JSX.Element {
             ? localProps.name
             : () => localProps.name as JSX.Element
       }
-      slotName={localProps.slotName ?? 'icon'}
+      data-slot={localProps.slotName ?? 'icon'}
       class={cn(typeof localProps.name === 'string' && localProps.name, localProps.class)}
       style={style()}
       {...restProps}

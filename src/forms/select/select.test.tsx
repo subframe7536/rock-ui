@@ -43,9 +43,10 @@ test('uses css variable classes for input sizing across modes', () => {
   const single = render(() => <Select options={FRUITS} size="xs" placeholder="XS" />)
   const singleInput = single.container.querySelector('[data-slot="input"]')
 
-  expect(singleInput?.className).toContain('h-$s-h')
-  expect(singleInput?.className).toContain('px-$s-px')
-  expect(singleInput?.className).toContain('var-select-6-2-0.5')
+  expect(singleInput?.className).toContain('h-4')
+  expect(singleInput?.className).toContain('px-$s-p')
+  expect(singleInput?.className).toContain('text-xs')
+  expect(singleInput?.className).toContain('var-select-6-0.5')
 
   const multiSearch = render(() => (
     <Select multiple search options={FRUITS} size="lg" placeholder="LG" />
@@ -53,8 +54,8 @@ test('uses css variable classes for input sizing across modes', () => {
   const multiInput = multiSearch.container.querySelector('[data-slot="input"]')
 
   expect(multiInput?.className).toContain('min-w-12')
-  expect(multiInput?.className).toContain('ps-$s-ps')
-  expect(multiInput?.className).toContain('var-select-9-3-1.5')
+  expect(multiInput?.className).toContain('ps-$s-p')
+  expect(multiInput?.className).toContain('var-select-9-1.5')
   expect(multiInput?.className).toContain('text-sm')
 })
 
@@ -68,8 +69,8 @@ describe('Select - single mode', () => {
     ))
 
     const controls = screen.container.querySelectorAll('[data-slot="base"]')
-    expect(controls[0]?.className).toContain('me-1')
-    expect(controls[1]?.className).toContain('me-3')
+    expect(controls[0]?.className).toContain('pe-1')
+    expect(controls[1]?.className).toContain('pe-3')
   })
 
   test('applies classes.root override', () => {

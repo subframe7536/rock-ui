@@ -12,6 +12,7 @@ import { Dynamic } from 'solid-js/web'
 
 import { resolveRenderProp } from '../../shared/render-prop'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormContext } from '../form/form-context'
 import { pathStartsWith, pathToKey, toFieldPath } from '../form/form-path'
@@ -25,20 +26,109 @@ import {
   formFieldSizeVariants,
 } from './form-field.class'
 
-type FormFieldSlots =
-  | 'root'
-  | 'wrapper'
-  | 'labelWrapper'
-  | 'label'
-  | 'container'
-  | 'description'
-  | 'error'
-  | 'hint'
-  | 'help'
+export namespace FormFieldT {
+  export type Slot =
+    | 'root'
+    | 'wrapper'
+    | 'labelWrapper'
+    | 'label'
+    | 'container'
+    | 'description'
+    | 'error'
+    | 'hint'
+    | 'help'
 
-export type FormFieldClasses = SlotClasses<FormFieldSlots>
+  export type Variant = FormFieldVariantProps
 
-export type FormFieldStyles = SlotStyles<FormFieldSlots>
+  export interface Items {}
+
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
+
+  /**
+   * Base props for the FormField component.
+   */
+  export interface Base {
+    /**
+     * The HTML element or component to render as.
+     * @default 'div'
+     */
+    as?: ValidComponent
+
+    /**
+     * Unique identifier for the form field.
+     */
+    id?: string
+
+    /**
+     * The name of the field (key in form state).
+     */
+    name?: string | string[]
+
+    /**
+     * Label for the field.
+     */
+    label?: JSX.Element
+
+    /**
+     * Description text shown below the label.
+     */
+    description?: JSX.Element
+
+    /**
+     * Help text shown below the control when no error is present.
+     */
+    help?: JSX.Element
+
+    /**
+     * Custom error message or force error state.
+     */
+    error?: boolean | string | JSX.Element
+
+    /**
+     * Hint text shown near the label.
+     */
+    hint?: JSX.Element
+
+    /**
+     * Whether the field is required.
+     * @default false
+     */
+    required?: boolean
+
+    /**
+     * Whether to trigger validation eagerly on every input.
+     * @default false
+     */
+    eagerValidation?: boolean
+
+    /**
+     * Delay in milliseconds for debounced input validation.
+     */
+    validateOnInputDelay?: number
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Children of the field, can be a render function.
+     */
+    children?: JSX.Element | ((props: FormFieldRenderProps) => JSX.Element)
+  }
+
+  /**
+   * Props for the FormField component.
+   */
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+}
 
 /**
  * Props passed to the children of FormField when provided as a render function.
@@ -51,87 +141,9 @@ export interface FormFieldRenderProps {
 }
 
 /**
- * Base props for the FormField component.
- */
-export interface FormFieldBaseProps {
-  /**
-   * The HTML element or component to render as.
-   * @default 'div'
-   */
-  as?: ValidComponent
-
-  /**
-   * Unique identifier for the form field.
-   */
-  id?: string
-
-  /**
-   * The name of the field (key in form state).
-   */
-  name?: string | string[]
-
-  /**
-   * Label for the field.
-   */
-  label?: JSX.Element
-
-  /**
-   * Description text shown below the label.
-   */
-  description?: JSX.Element
-
-  /**
-   * Help text shown below the control when no error is present.
-   */
-  help?: JSX.Element
-
-  /**
-   * Custom error message or force error state.
-   */
-  error?: boolean | string | JSX.Element
-
-  /**
-   * Hint text shown near the label.
-   */
-  hint?: JSX.Element
-
-  /**
-   * Whether the field is required.
-   * @default false
-   */
-  required?: boolean
-
-  /**
-   * Whether to trigger validation eagerly on every input.
-   * @default false
-   */
-  eagerValidation?: boolean
-
-  /**
-   * Delay in milliseconds for debounced input validation.
-   */
-  validateOnInputDelay?: number
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: FormFieldClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: FormFieldStyles
-
-  /**
-   * Children of the field, can be a render function.
-   */
-  children?: JSX.Element | ((props: FormFieldRenderProps) => JSX.Element)
-}
-
-/**
  * Props for the FormField component.
  */
-export type FormFieldProps = FormFieldBaseProps & FormFieldVariantProps
+export interface FormFieldProps extends FormFieldT.Props {}
 
 /** Form field wrapper providing label, description, and validation message layout. */
 export function FormField(props: FormFieldProps): JSX.Element {

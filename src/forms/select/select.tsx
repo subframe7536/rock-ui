@@ -24,7 +24,7 @@ import { Icon, IconButton } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
 import { overlayMenuContentVariants } from '../../overlays/shared-overlay-menu/menu.class'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -112,137 +112,144 @@ export interface SelectEmptyRenderContext {
   close: () => void
 }
 
-type SelectSlots =
-  | 'root'
-  | 'base'
-  | 'input'
-  | 'leading'
-  | 'trigger'
-  | 'clear'
-  | 'content'
-  | 'listbox'
-  | 'item'
-  | 'itemTrailing'
-  | 'itemLabel'
-  | 'itemDescription'
-  | 'group'
-  | 'label'
-  | 'tagsContainer'
-  | 'tag'
-  | 'tagRemove'
-  | 'tagOverflow'
-  | 'empty'
-
-export type SelectClasses = SlotClasses<SelectSlots>
-
-export type SelectStyles = SlotStyles<SelectSlots>
-
 type SelectSize = NonNullable<SelectControlVariantProps['size']>
 type SelectVariant = NonNullable<SelectControlVariantProps['variant']>
 
-/**
- * Base props for the Select component.
- */
-export interface SelectBaseProps
-  extends
-    FormIdentityOptions,
-    FormValueOptions<SelectValue | null | SelectValue[]>,
-    FormRequiredOption,
-    FormDisableOption,
-    SelectControlVariantProps {
-  /** Whether to allow multiple selections. When true, value is `SelectValue[]`. */
-  multiple?: boolean
+export namespace SelectT {
+  export type Slot =
+    | 'root'
+    | 'base'
+    | 'input'
+    | 'leading'
+    | 'trigger'
+    | 'clear'
+    | 'content'
+    | 'listbox'
+    | 'item'
+    | 'itemTrailing'
+    | 'itemLabel'
+    | 'itemDescription'
+    | 'group'
+    | 'label'
+    | 'tagsContainer'
+    | 'tag'
+    | 'tagRemove'
+    | 'tagOverflow'
+    | 'empty'
 
-  /** Available options. */
-  options?: SelectOption[]
-  /** Custom field name mapping for option objects. */
-  fieldNames?: SelectFieldNames
+  export type Variant = SelectControlVariantProps
 
-  /** Called when the selection changes. */
-  onChange?: (value: SelectValue | null | SelectValue[]) => void
+  export type Items = SelectOption
 
-  /** Enable search input. Defaults to `false`. */
-  search?: boolean
-  /** Controlled search value. */
-  searchValue?: string
-  /** Default search value. */
-  defaultSearchValue?: string
-  /** Called when the search input changes. */
-  onSearch?: (value: string) => void
-  /** Maximum search text length applied on final commit. */
-  searchMaxLength?: number
-  /** Filter function or boolean. `false` disables filtering. */
-  filterOption?: boolean | ((inputValue: string, option: SelectOption) => boolean)
-  /** Property on option to filter by (default: label). */
-  optionFilterProp?: string
-  /** Controls whether clicking the control opens the menu. */
-  openOnClick?: SelectOpenOnClick
-  /** Legacy alias for `openOnClick="trigger"`. */
-  preventAutoOpen?: boolean
+  export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
-  /** Show a clear button when a value is selected. */
-  allowClear?: boolean
-  /** Called when clear is triggered. */
-  onClear?: () => void
-  /** Variant for the selected tags. */
-  tagVariant?: BadgeProps['variant']
+  /**
+   * Base props for the Select component.
+   */
+  export interface Base
+    extends
+      FormIdentityOptions,
+      FormValueOptions<SelectValue | null | SelectValue[]>,
+      FormRequiredOption,
+      FormDisableOption {
+    /** Whether to allow multiple selections. When true, value is `SelectValue[]`. */
+    multiple?: boolean
 
-  /** Characters that split input into tokens and immediately select them (requires `multiple`). */
-  tokenSeparators?: string[]
-  /** Allow creating new tags on Enter when no match is found (requires `multiple`). */
-  allowCreate?: boolean
+    /** Available options. */
+    options?: SelectOption[]
+    /** Custom field name mapping for option objects. */
+    fieldNames?: SelectFieldNames
 
-  /** Maximum number of selected values (multiple/tags). */
-  maxCount?: number
-  /** Maximum visible tags before showing +N (visual only). */
-  maxTagCount?: number
+    /** Called when the selection changes. */
+    onChange?: (value: SelectValue | null | SelectValue[]) => void
 
-  /** Custom renderer for each option in the dropdown. */
-  optionRender?: SelectOptionRender
-  /** Custom renderer for each selected tag (multiple/tags). */
-  tagRender?: SelectTagRender
-  /** Custom renderer for the option label text. */
-  labelRender?: SelectLabelRender
-  /** Custom renderer for the empty state when current filtered result has no matches. */
-  emptyRender?: SelectEmptyRender
+    /** Enable search input. Defaults to `false`. */
+    search?: boolean
+    /** Controlled search value. */
+    searchValue?: string
+    /** Default search value. */
+    defaultSearchValue?: string
+    /** Called when the search input changes. */
+    onSearch?: (value: string) => void
+    /** Maximum search text length applied on final commit. */
+    searchMaxLength?: number
+    /** Filter function or boolean. `false` disables filtering. */
+    filterOption?: boolean | ((inputValue: string, option: SelectOption) => boolean)
+    /** Property on option to filter by (default: label). */
+    optionFilterProp?: string
+    /** Controls whether clicking the control opens the menu. */
+    openOnClick?: SelectOpenOnClick
+    /** Legacy alias for `openOnClick="trigger"`. */
+    preventAutoOpen?: boolean
 
-  /** Size of the select control. */
-  size?: SelectSize
-  /** Visual variant of the select control. */
-  variant?: SelectVariant
-  /** Whether to highlight the control (e.g., on error). */
-  highlight?: boolean
-  /** Placeholder text shown when no value is selected. */
-  placeholder?: string
-  /** Whether the select is in a loading state. */
-  loading?: boolean
-  /** Icon shown during loading state. */
-  loadingIcon?: IconName
-  /** Icon shown before the input/value area. */
-  leadingIcon?: IconName
-  /** Icon for the dropdown trigger. Default: 'icon-chevron-down'. */
-  triggerIcon?: IconName
-  /** Icon shown on the clear button. */
-  closeIcon?: IconName
+    /** Show a clear button when a value is selected. */
+    allowClear?: boolean
+    /** Called when clear is triggered. */
+    onClear?: () => void
+    /** Variant for the selected tags. */
+    tagVariant?: BadgeProps['variant']
 
-  /** Called when the user scrolls near the bottom of the listbox. Use for infinite loading. */
-  onScrollEnd?: () => void
-  /** Distance (px) from the bottom at which onScrollEnd fires. Default: 20. */
-  scrollEndThreshold?: number
+    /** Characters that split input into tokens and immediately select them (requires `multiple`). */
+    tokenSeparators?: string[]
+    /** Allow creating new tags on Enter when no match is found (requires `multiple`). */
+    allowCreate?: boolean
 
-  /** Slot-based class overrides. */
-  classes?: SelectClasses
-  /** Slot-based style overrides. */
-  styles?: SelectStyles
+    /** Maximum number of selected values (multiple/tags). */
+    maxCount?: number
+    /** Maximum visible tags before showing +N (visual only). */
+    maxTagCount?: number
+
+    /** Custom renderer for each option in the dropdown. */
+    optionRender?: SelectOptionRender
+    /** Custom renderer for each selected tag (multiple/tags). */
+    tagRender?: SelectTagRender
+    /** Custom renderer for the option label text. */
+    labelRender?: SelectLabelRender
+    /** Custom renderer for the empty state when current filtered result has no matches. */
+    emptyRender?: SelectEmptyRender
+
+    /** Size of the select control. */
+    size?: SelectSize
+    /** Visual variant of the select control. */
+    variant?: SelectVariant
+    /** Whether to highlight the control (e.g., on error). */
+    highlight?: boolean
+    /** Placeholder text shown when no value is selected. */
+    placeholder?: string
+    /** Whether the select is in a loading state. */
+    loading?: boolean
+    /** Icon shown during loading state. */
+    loadingIcon?: IconName
+    /** Icon shown before the input/value area. */
+    leadingIcon?: IconName
+    /** Icon for the dropdown trigger. Default: 'icon-chevron-down'. */
+    triggerIcon?: IconName
+    /** Icon shown on the clear button. */
+    closeIcon?: IconName
+
+    /** Called when the user scrolls near the bottom of the listbox. Use for infinite loading. */
+    onScrollEnd?: () => void
+    /** Distance (px) from the bottom at which onScrollEnd fires. Default: 20. */
+    scrollEndThreshold?: number
+
+    /** Slot-based class overrides. */
+    classes?: Classes
+    /** Slot-based style overrides. */
+    styles?: Styles
+  }
+
+  /**
+   * Props for the Select component.
+   */
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Select component.
  */
-export type SelectProps = RockUIComposeProps<
-  SelectBaseProps,
-  ComboboxRootProps<NormalizedOption, NormalizedGroup>
->
+export interface SelectProps extends SelectT.Props {}
 
 // ---------------------------------------------------------------------------
 // Normalized option types (internal)

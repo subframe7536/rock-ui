@@ -2,51 +2,59 @@ import type { JSX } from 'solid-js'
 import { For, Match, Show, Switch } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import type { KbdVariantProps } from './kbd.class'
 import { kbdItemVariants } from './kbd.class'
 
-type KbdSlots = 'root' | 'item'
-
-export type KbdClasses = SlotClasses<KbdSlots>
-
-export type KbdStyles = SlotStyles<KbdSlots>
-
-/**
- * Base props for the Kbd component.
- */
-export interface KbdBaseProps {
+export namespace KbdT {
+  export type Slot = 'root' | 'item'
+  export type Variant = KbdVariantProps
+  export interface Items {}
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
   /**
-   * Slot-based class overrides.
+   * Base props for the Kbd component.
    */
-  classes?: KbdClasses
+  export interface Base {
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Slot between kbds
+     */
+    between?: JSX.Element
+
+    /**
+     * Prefix for data-slot attributes.
+     */
+    slotPrefix?: string
+
+    /**
+     * Array of keys to display.
+     */
+    value?: string[]
+  }
 
   /**
-   * Slot-based style overrides.
+   * Props for the Kbd component.
    */
-  styles?: KbdStyles
-
-  /**
-   * Slot between kbds
-   */
-  between?: JSX.Element
-
-  /**
-   * Prefix for data-slot attributes.
-   */
-  slotPrefix?: string
-
-  /**
-   * Array of keys to display.
-   */
-  value?: string[]
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Kbd component.
  */
-export type KbdProps = KbdBaseProps & KbdVariantProps
+export interface KbdProps extends KbdT.Props {}
 
 /** Keyboard shortcut display component with configurable size and variant. */
 export function Kbd(props: KbdProps): JSX.Element {

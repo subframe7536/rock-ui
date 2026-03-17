@@ -5,7 +5,7 @@ import { For, Show, mergeProps, splitProps } from 'solid-js'
 import { Icon } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import {
@@ -19,83 +19,90 @@ import type { TabsVariantProps } from './tabs.class'
 
 export type TabsValue = string
 
-/**
- * An individual tab in the tabs component.
- */
-export interface TabsItem {
-  /**
-   * Label to display on the tab trigger.
-   */
-  label?: JSX.Element
+export namespace TabsT {
+  export type Slot =
+    | 'root'
+    | 'list'
+    | 'indicator'
+    | 'trigger'
+    | 'leading'
+    | 'label'
+    | 'trailing'
+    | 'content'
+  export type Variant = TabsVariantProps
 
   /**
-   * Icon to display next to the label.
+   * An individual tab in the tabs component.
    */
-  icon?: IconName
+  export interface Items {
+    /**
+     * Label to display on the tab trigger.
+     */
+    label?: JSX.Element
+
+    /**
+     * Icon to display next to the label.
+     */
+    icon?: IconName
+
+    /**
+     * Unique value for the tab.
+     * @default index of the item
+     */
+    value?: TabsValue
+
+    /**
+     * Content to display when the tab is active.
+     */
+    content?: JSX.Element
+
+    /**
+     * Whether the tab is disabled.
+     * @default false
+     */
+    disabled?: boolean
+
+    /**
+     * Custom class for the tab content panel.
+     */
+    class?: string
+  }
+  export type Extend = KobalteTabs.TabsRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Unique value for the tab.
-   * @default index of the item
+   * Base props for the Tabs component.
    */
-  value?: TabsValue
+  export interface Base {
+    /**
+     * Array of tabs to display.
+     */
+    items?: Items[]
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Content to display when the tab is active.
+   * Props for the Tabs component.
    */
-  content?: JSX.Element
-
-  /**
-   * Whether the tab is disabled.
-   * @default false
-   */
-  disabled?: boolean
-
-  /**
-   * Custom class for the tab content panel.
-   */
-  class?: string
-}
-
-type TabsSlots =
-  | 'root'
-  | 'list'
-  | 'indicator'
-  | 'trigger'
-  | 'leading'
-  | 'label'
-  | 'trailing'
-  | 'content'
-
-export type TabsClasses = SlotClasses<TabsSlots>
-
-export type TabsStyles = SlotStyles<TabsSlots>
-
-/**
- * Base props for the Tabs component.
- */
-export interface TabsBaseProps extends TabsVariantProps {
-  /**
-   * Array of tabs to display.
-   */
-  items?: TabsItem[]
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: TabsClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: TabsStyles
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Tabs component.
  */
-export type TabsProps = RockUIComposeProps<TabsBaseProps, KobalteTabs.TabsRootProps>
+export interface TabsProps extends TabsT.Props {}
 
-function normalizeItemValue(item: TabsItem, index: number): string {
+function normalizeItemValue(item: TabsT.Items, index: number): string {
   if (item.value === undefined || item.value === null) {
     return String(index)
   }

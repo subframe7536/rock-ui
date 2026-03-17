@@ -2,69 +2,78 @@ import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
-type CardSlots = 'root' | 'header' | 'title' | 'description' | 'action' | 'body' | 'footer'
-
-export type CardClasses = SlotClasses<CardSlots>
-
-export type CardStyles = SlotStyles<CardSlots>
-
-/**
- * Base props for the Card component.
- */
-export interface CardBaseProps {
-  /**
-   * Whether to use a compact layout.
-   * @default false
-   */
-  compact?: boolean
+export namespace CardT {
+  export type Slot = 'root' | 'header' | 'title' | 'description' | 'action' | 'body' | 'footer'
+  export interface Variant {}
+  export interface Items {}
+  export interface Extend {}
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Title of the card.
+   * Base props for the Card component.
    */
-  title?: JSX.Element
+  export interface Base {
+    /**
+     * Whether to use a compact layout.
+     * @default false
+     */
+    compact?: boolean
+
+    /**
+     * Title of the card.
+     */
+    title?: JSX.Element
+
+    /**
+     * Description of the card.
+     */
+    description?: JSX.Element
+
+    /**
+     * Content to render in the header slot, overrides title/description.
+     */
+    header?: JSX.Element
+
+    /**
+     * Content to render in the footer slot.
+     */
+    footer?: JSX.Element
+
+    /**
+     * Content to render in the action slot (usually a button in the header).
+     */
+    action?: JSX.Element
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Children of the card.
+     */
+    children?: JSX.Element
+  }
 
   /**
-   * Description of the card.
+   * Props for the Card component.
    */
-  description?: JSX.Element
-
-  /**
-   * Content to render in the header slot, overrides title/description.
-   */
-  header?: JSX.Element
-
-  /**
-   * Content to render in the footer slot.
-   */
-  footer?: JSX.Element
-
-  /**
-   * Content to render in the action slot (usually a button in the header).
-   */
-  action?: JSX.Element
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: CardClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: CardStyles
-
-  /**
-   * Children of the card.
-   */
-  children?: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend> {}
 }
 
 /**
  * Props for the Card component.
  */
-export type CardProps = CardBaseProps
+export interface CardProps extends CardT.Props {}
 
 /** Structured content container with optional header, body, footer, and action slots. */
 export function Card(props: CardProps): JSX.Element {

@@ -81,9 +81,4 @@ export const sliderThumbVariants = cva(
   },
 )
 
-export type SliderVariantProps = VariantProps<typeof sliderRootVariants> &
-  VariantProps<typeof sliderTrackVariants> &
-  VariantProps<typeof sliderRangeVariants> &
-  VariantProps<typeof sliderThumbVariants> & {
-    highlight?: boolean
-  }
+export type SliderVariantProps = VariantProps<typeof sliderRootVariants>

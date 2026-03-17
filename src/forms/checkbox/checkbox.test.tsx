@@ -355,11 +355,15 @@ describe('Checkbox', () => {
     const screen = render(() => <Checkbox variant="card" label="Card root click" />)
 
     const root = screen.container.querySelector('[data-slot="root"]') as HTMLElement
-    const checkbox = screen.getByRole('checkbox', { name: 'Card root click' }) as HTMLInputElement
+    const checkbox = screen.container.querySelector(
+      'input[type="checkbox"][data-slot="input"]',
+    ) as HTMLInputElement
+    const hitArea = root.querySelector(`label[for="${checkbox.id}"]`) as HTMLLabelElement
 
     expect(checkbox.checked).toBe(false)
 
-    await fireEvent.click(root)
+    // JSDOM doesn't compute layout, so clicking the root won't hit the absolute-positioned label.
+    await fireEvent.click(hitArea)
 
     await waitFor(() => {
       expect(checkbox.checked).toBe(true)

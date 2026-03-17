@@ -1,7 +1,7 @@
 import { createMemo, createSignal } from 'solid-js'
 
 import { Button, DropdownMenu } from '../../../src'
-import type { DropdownMenuItems } from '../../../src'
+import type { DropdownMenuT } from '../../../src'
 import meta from '../../.meta/dropdown-menu.json'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
@@ -20,7 +20,7 @@ export default () => {
   const [autoSave, setAutoSave] = createSignal(true)
   const [theme, setTheme] = createSignal<'light' | 'dark' | 'system'>('dark')
 
-  const accountItems: DropdownMenuItems = [
+  const accountItems: DropdownMenuT.Items = [
     [
       { type: 'label', label: 'Account' },
       {
@@ -112,7 +112,7 @@ export default () => {
     ],
   ]
 
-  const editorItems = createMemo<DropdownMenuItems>(() => [
+  const editorItems = createMemo<DropdownMenuT.Items>(() => [
     [
       { type: 'label', label: 'Editor' },
       {
@@ -175,28 +175,28 @@ export default () => {
         label: 'Line Numbers',
         icon: 'i-lucide-list',
         checked: showLineNumbers(),
-        onCheckedChange: (checked) => setShowLineNumbers(checked),
+        onCheckedChange: (checked: boolean) => setShowLineNumbers(checked),
       },
       {
         type: 'checkbox',
         label: 'Minimap',
         icon: 'i-lucide-map',
         checked: showMinimap(),
-        onCheckedChange: (checked) => setShowMinimap(checked),
+        onCheckedChange: (checked: boolean) => setShowMinimap(checked),
       },
       {
         type: 'checkbox',
         label: 'Preview Tabs',
         icon: 'i-lucide-panel-top',
         checked: previewTabs(),
-        onCheckedChange: (checked) => setPreviewTabs(checked),
+        onCheckedChange: (checked: boolean) => setPreviewTabs(checked),
       },
       {
         type: 'checkbox',
         label: 'Auto Save',
         icon: 'i-lucide-save',
         checked: autoSave(),
-        onCheckedChange: (checked) => setAutoSave(checked),
+        onCheckedChange: (checked: boolean) => setAutoSave(checked),
       },
       { type: 'separator' },
       {
@@ -241,7 +241,7 @@ export default () => {
     ],
   ])
 
-  const projectItems: DropdownMenuItems = [
+  const projectItems: DropdownMenuT.Items = [
     [
       {
         type: 'label',

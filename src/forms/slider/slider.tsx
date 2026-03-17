@@ -3,7 +3,7 @@ import type { JSX, ValidComponent } from 'solid-js'
 import { For, createEffect, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -23,93 +23,101 @@ import {
   sliderTrackVariants,
 } from './slider.class'
 
-export type SliderValue = number | number[]
+export namespace SliderT {
+  export type Slot = 'root' | 'track' | 'range' | 'thumb'
 
-type SliderSlots = 'root' | 'track' | 'range' | 'thumb'
+  export type Variant = SliderVariantProps
 
-export type SliderClasses = SlotClasses<SliderSlots>
+  export interface Items {}
 
-export type SliderStyles = SlotStyles<SliderSlots>
+  export type Value = number | number[]
 
-/**
- * Base props for the Slider component.
- */
-export interface SliderBaseProps
-  extends
-    FormIdentityOptions,
-    FormValueOptions<SliderValue>,
-    FormRequiredOption,
-    FormDisableOption,
-    FormReadOnlyOption,
-    SliderVariantProps {
-  /**
-   * Minimum value of the slider.
-   * @default 0
-   */
-  min?: number
+  export type Extend = KobalteSlider.SliderRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Maximum value of the slider.
-   * @default 100
+   * Base props for the Slider component.
    */
-  max?: number
+  export interface Base
+    extends
+      FormIdentityOptions,
+      FormValueOptions<Value>,
+      FormRequiredOption,
+      FormDisableOption,
+      FormReadOnlyOption {
+    /**
+     * Minimum value of the slider.
+     * @default 0
+     */
+    min?: number
+
+    /**
+     * Maximum value of the slider.
+     * @default 100
+     */
+    max?: number
+
+    /**
+     * Step increment between values.
+     * @default 1
+     */
+    step?: number
+
+    /**
+     * Minimum steps required between thumbs in a multi-thumb slider.
+     * @default 0
+     */
+    minStepsBetweenThumbs?: number
+
+    /**
+     * Orientation of the slider.
+     * @default 'horizontal'
+     */
+    orientation?: 'horizontal' | 'vertical'
+
+    /**
+     * Whether to invert the slider axis.
+     * @default false
+     */
+    inverted?: boolean
+
+    highlight?: boolean
+
+    /**
+     * Callback when the slider selection changes during interaction.
+     */
+    onValueChange?: (value: Value) => void
+
+    /**
+     * Callback when the slider selection change is committed.
+     */
+    onChange?: (value: Value) => void
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+  }
 
   /**
-   * Step increment between values.
-   * @default 1
+   * Props for the Slider component.
    */
-  step?: number
-
-  /**
-   * Minimum steps required between thumbs in a multi-thumb slider.
-   * @default 0
-   */
-  minStepsBetweenThumbs?: number
-
-  /**
-   * Orientation of the slider.
-   * @default 'horizontal'
-   */
-  orientation?: 'horizontal' | 'vertical'
-
-  /**
-   * Whether to invert the slider axis.
-   * @default false
-   */
-  inverted?: boolean
-
-  /**
-   * Callback when the slider selection changes during interaction.
-   */
-  onValueChange?: (value: SliderValue) => void
-
-  /**
-   * Callback when the slider selection change is committed.
-   */
-  onChange?: (value: SliderValue) => void
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: SliderClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: SliderStyles
+  export interface Props extends RockUIProps<Base, Variant, Extend, 'minValue' | 'maxValue'> {}
 }
 
 /**
  * Props for the Slider component.
  */
-export type SliderProps = RockUIComposeProps<
-  SliderBaseProps,
-  KobalteSlider.SliderRootProps,
-  'minValue' | 'maxValue'
->
+export interface SliderProps extends SliderT.Props {}
 
 function normalizeSliderValues(
-  value: SliderValue | undefined,
+  value: SliderT.Value | undefined,
   fallback: number,
 ): number[] | undefined {
   if (value === undefined) {
@@ -150,7 +158,7 @@ export function Slider(props: SliderProps): JSX.Element {
     merged as SliderProps,
     [...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS, 'readOnly', 'onValueChange', 'onChange'],
     ['min', 'max', 'step', 'minStepsBetweenThumbs', 'orientation', 'inverted'],
-    ['size', 'highlight', 'classes'],
+    ['size', 'classes', 'styles', 'highlight'],
   )
 
   const generatedId = useId(() => formProps.id, 'slider')
@@ -195,7 +203,7 @@ export function Slider(props: SliderProps): JSX.Element {
     return `${field.id()}-${index + 1}`
   }
 
-  function toPublicValue(values: number[]): SliderValue {
+  function toPublicValue(values: number[]): SliderT.Value {
     if (Array.isArray(formProps.value) || Array.isArray(formProps.defaultValue)) {
       return [...values]
     }
@@ -280,7 +288,7 @@ export function Slider(props: SliderProps): JSX.Element {
       onChange={onValueChange}
       onChangeEnd={onChange}
       data-slot="root"
-      style={merged.styles?.root}
+      style={styleProps.styles?.root}
       data-highlight={field.highlight() ? '' : undefined}
       data-disabled={field.disabled() ? '' : undefined}
       class={sliderRootVariants(
@@ -294,7 +302,7 @@ export function Slider(props: SliderProps): JSX.Element {
     >
       <KobalteSlider.Track
         data-slot="track"
-        style={merged.styles?.track}
+        style={styleProps.styles?.track}
         data-highlight={field.highlight() ? '' : undefined}
         class={sliderTrackVariants(
           {
@@ -306,7 +314,7 @@ export function Slider(props: SliderProps): JSX.Element {
       >
         <KobalteSlider.Fill
           data-slot="range"
-          style={merged.styles?.range}
+          style={styleProps.styles?.range}
           data-highlight={field.highlight() ? '' : undefined}
           class={sliderRangeVariants(
             {
@@ -323,7 +331,7 @@ export function Slider(props: SliderProps): JSX.Element {
             data-slot="thumb"
             data-highlight={field.highlight() ? '' : undefined}
             aria-label={createThumbAriaLabel(thumbIndex, thumbValues().length)}
-            style={{ ...thumbStyle(thumbIndex), ...merged.styles?.thumb }}
+            style={{ ...thumbStyle(thumbIndex), ...styleProps.styles?.thumb }}
             class={sliderThumbVariants(
               {
                 size: field.size(),

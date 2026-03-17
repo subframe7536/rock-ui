@@ -4,86 +4,90 @@ import type { JSX } from 'solid-js'
 import { Show, mergeProps, onCleanup, splitProps } from 'solid-js'
 
 import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIComposeProps } from '../../shared/types'
+import type { RockUIProps } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import { popupContentVariants, popupOverlayVariants } from './popup.class'
 import type { PopupContentVariantProps } from './popup.class'
 
-type PopupSlots = 'trigger' | 'overlay' | 'content'
-
-export type PopupClasses = SlotClasses<PopupSlots>
-
-export type PopupStyles = SlotStyles<PopupSlots>
-
-/**
- * Base props for the Popup component.
- */
-export interface PopupBaseProps extends PopupContentVariantProps {
-  /**
-   * Whether to display a backdrop overlay.
-   * @default true
-   */
-  overlay?: boolean
+export namespace PopupT {
+  export type Slot = 'trigger' | 'overlay' | 'content'
+  export type Variant = PopupContentVariantProps
+  export interface Items {}
+  export type Extend = KobalteDialog.DialogRootProps
+  export interface Classes extends SlotClasses<Slot> {}
+  export interface Styles extends SlotStyles<Slot> {}
 
   /**
-   * Whether to allow scrolling within the popup.
-   * @default false
+   * Base props for the Popup component.
    */
-  scrollable?: boolean
+  export interface Base {
+    /**
+     * Whether to display a backdrop overlay.
+     * @default true
+     */
+    overlay?: boolean
+
+    /**
+     * Whether to allow scrolling within the popup.
+     * @default false
+     */
+    scrollable?: boolean
+
+    /**
+     * Whether to enable transition animations.
+     * @default true
+     */
+    transition?: boolean
+
+    /**
+     * Whether the popup should cover the entire viewport.
+     * @default false
+     */
+    fullscreen?: boolean
+
+    /**
+     * Whether the popup should close on outside interaction or Escape key.
+     * @default true
+     */
+    dismissible?: boolean
+
+    /**
+     * Callback triggered when a dismissal is prevented.
+     */
+    onClosePrevent?: () => void
+
+    /**
+     * Main content to render inside the popup.
+     */
+    content?: JSX.Element
+
+    /**
+     * Slot-based class overrides.
+     */
+    classes?: Classes
+
+    /**
+     * Slot-based style overrides.
+     */
+    styles?: Styles
+
+    /**
+     * Element that triggers the popup or additional content.
+     */
+    children?: JSX.Element
+  }
 
   /**
-   * Whether to enable transition animations.
-   * @default true
+   * Props for the Popup component.
    */
-  transition?: boolean
-
-  /**
-   * Whether the popup should cover the entire viewport.
-   * @default false
-   */
-  fullscreen?: boolean
-
-  /**
-   * Whether the popup should close on outside interaction or Escape key.
-   * @default true
-   */
-  dismissible?: boolean
-
-  /**
-   * Callback triggered when a dismissal is prevented.
-   */
-  onClosePrevent?: () => void
-
-  /**
-   * Main content to render inside the popup.
-   */
-  content?: JSX.Element
-
-  /**
-   * Slot-based class overrides.
-   */
-  classes?: PopupClasses
-
-  /**
-   * Slot-based style overrides.
-   */
-  styles?: PopupStyles
-
-  /**
-   * Element that triggers the popup or additional content.
-   */
-  children?: JSX.Element
+  export interface Props extends RockUIProps<Base, Variant, Extend, 'preventScroll'> {}
 }
 
 /**
  * Props for the Popup component.
  */
-export type PopupProps = RockUIComposeProps<
-  PopupBaseProps,
-  KobalteDialog.DialogRootProps,
-  'preventScroll'
->
+export interface PopupProps extends PopupT.Props {}
 
 /** Low-level overlay primitive providing portal, overlay backdrop, and content positioning. */
 export function Popup(props: PopupProps): JSX.Element {

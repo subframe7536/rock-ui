@@ -10,7 +10,7 @@ const GROUPS = [
   {
     id: 'actions',
     label: 'Actions',
-    items: [
+    children: [
       { value: 'new-file', label: 'New File', icon: 'i-lucide-file-plus', kbds: ['⌘', 'N'] },
       { value: 'open-folder', label: 'Open Folder', icon: 'i-lucide-folder-open' },
       { value: 'disabled-action', label: 'Disabled Action', disabled: true },
@@ -19,7 +19,7 @@ const GROUPS = [
   {
     id: 'navigation',
     label: 'Navigation',
-    items: [
+    children: [
       { value: 'go-dashboard', label: 'Go to Dashboard' },
       { value: 'go-settings', label: 'Go to Settings' },
     ],
