@@ -64,11 +64,6 @@ export interface StepperItem {
    * Additional class name for the step item.
    */
   class?: string
-
-  /**
-   * Additional arbitrary properties for the step item.
-   */
-  [key: string]: unknown
 }
 
 type StepperState = 'inactive' | 'active' | 'completed'

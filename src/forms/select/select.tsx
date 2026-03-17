@@ -1111,7 +1111,7 @@ export function Select(props: SelectProps): JSX.Element {
             <Icon
               name={icon()}
               size={field.size()}
-              data-slot="leading"
+              slotName="leading"
               style={merged.styles?.leading}
               class={selectLeadingIconVariants({ size: field.size() }, styleProps.classes?.leading)}
             />
@@ -1151,7 +1151,7 @@ export function Select(props: SelectProps): JSX.Element {
                     fallback={renderDisplayProps.tagRender!({ ...option.raw, onClose })}
                   >
                     <Badge
-                      data-slot="tag"
+                      slotName="tag"
                       size={field.size()}
                       title={option.label}
                       variant={renderDisplayProps.tagVariant}

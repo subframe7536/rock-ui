@@ -10,7 +10,7 @@ export type IconName = string | JSX.Element | Component<Omit<IconProps, 'name'>>
  * Base props for the Icon component.
  */
 export interface IconBaseProps extends Omit<
-  JSX.HTMLAttributes<HTMLSpanElement>,
+  JSX.HTMLAttributes<HTMLElement>,
   'aria-hidden' | 'children' | 'style' | 'size' | 'class' | 'id'
 > {
   /**
@@ -29,7 +29,7 @@ export interface IconBaseProps extends Omit<
    * Data slot for styling.
    * @default 'icon'
    */
-  'data-slot'?: string
+  slotName?: string
 
   /**
    * Custom style overrides.
@@ -54,7 +54,7 @@ export type IconProps = IconBaseProps
 
 /** Renders an icon from a UnoCSS icon class, JSX element, or render function. */
 export function Icon(props: IconProps): JSX.Element {
-  const [localProps, restProps] = splitProps(props, ['name', 'class', 'style', 'size', 'data-slot'])
+  const [localProps, restProps] = splitProps(props, ['name', 'class', 'style', 'size', 'slotName'])
 
   const style = createMemo(() => {
     if (!localProps.size) {
@@ -75,7 +75,7 @@ export function Icon(props: IconProps): JSX.Element {
             ? localProps.name
             : () => localProps.name as JSX.Element
       }
-      data-slot={localProps['data-slot'] ?? 'icon'}
+      slotName={localProps.slotName ?? 'icon'}
       class={cn(typeof localProps.name === 'string' && localProps.name, localProps.class)}
       style={style()}
       {...restProps}

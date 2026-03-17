@@ -29,7 +29,7 @@ const GROUPS = [
 describe('CommandPalette', () => {
   test('forces input focus in dialog when autofocus is enabled', async () => {
     render(() => (
-      <Dialog open close={false} body={<CommandPalette groups={GROUPS} />}>
+      <Dialog open close={false} body={<CommandPalette items={GROUPS} />}>
         <button type="button">Open</button>
       </Dialog>
     ))
@@ -43,7 +43,7 @@ describe('CommandPalette', () => {
   })
 
   test('applies fixed listbox max height', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} />)
+    const screen = render(() => <CommandPalette items={GROUPS} />)
 
     await waitFor(() => {
       expect(screen.container.querySelector('[data-slot="listbox"]')?.className).toContain(
@@ -54,7 +54,7 @@ describe('CommandPalette', () => {
 
   test('adjusts item trailing spacing via classes.itemTrailingKbds', async () => {
     const xs = render(() => (
-      <CommandPalette groups={GROUPS} classes={{ itemTrailingKbds: 'gap-1' }} />
+      <CommandPalette items={GROUPS} classes={{ itemTrailingKbds: 'gap-1' }} />
     ))
 
     await waitFor(() => {
@@ -65,7 +65,7 @@ describe('CommandPalette', () => {
     })
 
     const md = render(() => (
-      <CommandPalette groups={GROUPS} classes={{ itemTrailingKbds: 'gap-1.5' }} />
+      <CommandPalette items={GROUPS} classes={{ itemTrailingKbds: 'gap-1.5' }} />
     ))
 
     await waitFor(() => {
@@ -76,7 +76,7 @@ describe('CommandPalette', () => {
     })
 
     const xl = render(() => (
-      <CommandPalette groups={GROUPS} classes={{ itemTrailingKbds: 'gap-2' }} />
+      <CommandPalette items={GROUPS} classes={{ itemTrailingKbds: 'gap-2' }} />
     ))
 
     await waitFor(() => {
@@ -88,7 +88,7 @@ describe('CommandPalette', () => {
   })
 
   test('keeps item gap classes for icon and non-icon entries', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} />)
+    const screen = render(() => <CommandPalette items={GROUPS} />)
 
     await waitFor(() => {
       const withIcon = screen.getByText('New File').closest('[data-slot="item"]')
@@ -101,7 +101,7 @@ describe('CommandPalette', () => {
   })
 
   test('renders input and item labels', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} />)
+    const screen = render(() => <CommandPalette items={GROUPS} />)
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Search...')).toBeTruthy()
@@ -111,7 +111,7 @@ describe('CommandPalette', () => {
   })
 
   test('renders group labels', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} />)
+    const screen = render(() => <CommandPalette items={GROUPS} />)
 
     await waitFor(() => {
       expect(screen.getByText('Actions')).toBeTruthy()
@@ -120,7 +120,7 @@ describe('CommandPalette', () => {
   })
 
   test('shows empty state when no groups', async () => {
-    const screen = render(() => <CommandPalette groups={[]} />)
+    const screen = render(() => <CommandPalette items={[]} />)
 
     await waitFor(() => {
       expect(screen.getByText('No results.')).toBeTruthy()
@@ -128,7 +128,7 @@ describe('CommandPalette', () => {
   })
 
   test('kbds render in item', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} />)
+    const screen = render(() => <CommandPalette items={GROUPS} />)
 
     await waitFor(() => {
       const kbds = screen.container.querySelectorAll('[data-slot="itemTrailing-kbd"]')
@@ -142,7 +142,7 @@ describe('CommandPalette', () => {
 
     const screen = render(() => (
       <CommandPalette
-        groups={[{ id: 'g', items: [{ value: 'action', label: 'Action', onSelect }] }]}
+        items={[{ id: 'g', children: [{ value: 'action', label: 'Action', onSelect }] }]}
       />
     ))
 
@@ -163,10 +163,10 @@ describe('CommandPalette', () => {
         childIcon="icon-arrow-right"
         backIcon="icon-arrow-up"
         closeIcon="icon-minus"
-        groups={[
+        items={[
           {
             id: 'g',
-            items: [
+            children: [
               {
                 value: 'parent',
                 label: 'Parent',
@@ -206,10 +206,10 @@ describe('CommandPalette', () => {
   test('navigates into children on selection and shows back button', async () => {
     const screen = render(() => (
       <CommandPalette
-        groups={[
+        items={[
           {
             id: 'g',
-            items: [
+            children: [
               {
                 value: 'more',
                 label: 'More',
@@ -234,10 +234,10 @@ describe('CommandPalette', () => {
   test('navigates back on back button click', async () => {
     const screen = render(() => (
       <CommandPalette
-        groups={[
+        items={[
           {
             id: 'g',
-            items: [
+            children: [
               {
                 value: 'parent',
                 label: 'Parent',
@@ -270,10 +270,10 @@ describe('CommandPalette', () => {
   test('navigates back on Backspace with empty input', async () => {
     const screen = render(() => (
       <CommandPalette
-        groups={[
+        items={[
           {
             id: 'g',
-            items: [
+            children: [
               {
                 value: 'parent',
                 label: 'Parent',
@@ -305,7 +305,7 @@ describe('CommandPalette', () => {
 
   test('close button renders and calls onClose', async () => {
     const onClose = vi.fn()
-    const screen = render(() => <CommandPalette groups={GROUPS} close onClose={onClose} />)
+    const screen = render(() => <CommandPalette items={GROUPS} close onClose={onClose} />)
 
     await waitFor(() => {
       const closeBtn = screen.container.querySelector('[data-slot="close"]') as HTMLElement
@@ -317,7 +317,7 @@ describe('CommandPalette', () => {
   })
 
   test('disabled item has data-disabled attribute', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} />)
+    const screen = render(() => <CommandPalette items={GROUPS} />)
 
     await waitFor(() => {
       const items = screen.container.querySelectorAll('[data-slot="item"]')
@@ -327,7 +327,7 @@ describe('CommandPalette', () => {
   })
 
   test('renders custom placeholder', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} placeholder="Type a command..." />)
+    const screen = render(() => <CommandPalette items={GROUPS} placeholder="Type a command..." />)
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Type a command...')).toBeTruthy()
@@ -338,7 +338,7 @@ describe('CommandPalette', () => {
     const screen = render(() => (
       <CommandPalette
         close
-        groups={GROUPS}
+        items={GROUPS}
         classes={{
           root: 'root-override',
           inputWrapper: 'input-wrapper-override',
@@ -391,7 +391,7 @@ describe('CommandPalette', () => {
 
   test('renders footer content when footer is provided', async () => {
     const screen = render(() => (
-      <CommandPalette groups={GROUPS} footer={<span>Palette Footer</span>} />
+      <CommandPalette items={GROUPS} footer={<span>Palette Footer</span>} />
     ))
 
     await waitFor(() => {
@@ -401,9 +401,7 @@ describe('CommandPalette', () => {
   })
 
   test('applies classes.empty override', async () => {
-    const screen = render(() => (
-      <CommandPalette groups={[]} classes={{ empty: 'empty-override' }} />
-    ))
+    const screen = render(() => <CommandPalette items={[]} classes={{ empty: 'empty-override' }} />)
 
     await waitFor(() => {
       expect(screen.container.querySelector('[data-slot="empty"]')?.className).toContain(
@@ -414,7 +412,7 @@ describe('CommandPalette', () => {
 
   test('applies styles.empty override', async () => {
     const screen = render(() => (
-      <CommandPalette groups={[]} styles={{ empty: { width: '200px' } }} />
+      <CommandPalette items={[]} styles={{ empty: { width: '200px' } }} />
     ))
 
     await waitFor(() => {
@@ -427,10 +425,10 @@ describe('CommandPalette', () => {
   test('applies classes.back override', async () => {
     const screen = render(() => (
       <CommandPalette
-        groups={[
+        items={[
           {
             id: 'g',
-            items: [
+            children: [
               {
                 value: 'parent',
                 label: 'Parent',
@@ -458,7 +456,7 @@ describe('CommandPalette', () => {
   })
 
   test('filters by controlled searchTerm', async () => {
-    const screen = render(() => <CommandPalette groups={GROUPS} searchTerm="Settings" />)
+    const screen = render(() => <CommandPalette items={GROUPS} searchTerm="Settings" />)
 
     await waitFor(() => {
       expect(screen.getByText('Go to Settings')).toBeTruthy()
@@ -471,10 +469,10 @@ describe('CommandPalette', () => {
 
     const screen = render(() => (
       <CommandPalette
-        groups={[
+        items={[
           {
             id: 'g',
-            items: [
+            children: [
               { value: 'dup', label: 'First' },
               { value: 'dup', label: 'Second' },
             ],

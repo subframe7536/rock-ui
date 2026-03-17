@@ -28,7 +28,7 @@ export interface BadgeBaseProps {
    * Data slot for styling.
    * @default 'badge'
    */
-  'data-slot'?: string
+  slotName?: string
 
   /**
    * Accessible title for the badge.
@@ -74,7 +74,7 @@ export type BadgeProps = BadgeBaseProps & BadgeVariantProps
 export function Badge(props: BadgeProps): JSX.Element {
   const merged = mergeProps(
     {
-      'data-slot': 'badge',
+      slotName: 'badge',
       size: 'md' as const,
       variant: 'default' as const,
     },
@@ -85,7 +85,7 @@ export function Badge(props: BadgeProps): JSX.Element {
 
   return (
     <span
-      data-slot={merged['data-slot']}
+      data-slot={merged.slotName}
       data-size={merged.size}
       data-variant={merged.variant}
       title={merged.title}
@@ -106,7 +106,7 @@ export function Badge(props: BadgeProps): JSX.Element {
         {(leading) => (
           <Icon
             name={leading()}
-            data-slot="leading"
+            slotName="leading"
             style={merged.styles?.leading}
             class={cn('me-.5', merged.classes?.leading)}
           />
@@ -130,7 +130,7 @@ export function Badge(props: BadgeProps): JSX.Element {
             fallback={
               <Icon
                 name={trailing()}
-                data-slot="trailing"
+                slotName="trailing"
                 style={merged.styles?.trailing}
                 class={cn('ms-.5', merged.classes?.trailing)}
               />

@@ -159,7 +159,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
           <Icon
             name={leading()}
             size={iconSize()}
-            data-slot="leading"
+            slotName="leading"
             style={styleProps.styles?.leading}
             class={cn(
               styleProps.classes?.leading,
@@ -185,7 +185,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
           <Icon
             name={trailing()}
             size={iconSize()}
-            data-slot="trailing"
+            slotName="trailing"
             style={styleProps.styles?.trailing}
             class={cn(styleProps.classes?.trailing)}
           />

@@ -306,7 +306,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
                   when={item >= 0}
                   fallback={
                     <Icon
-                      data-slot="ellipsis"
+                      slotName="ellipsis"
                       style={uiProps.styles?.ellipsis}
                       name={uiProps.ellipsisIcon}
                       class={cn(uiProps.classes?.ellipsis)}

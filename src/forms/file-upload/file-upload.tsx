@@ -511,7 +511,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       >
         <Icon
           name={displayProps.icon}
-          data-slot="icon"
+          slotName="icon"
           style={merged.styles?.icon}
           class={fileUploadIconVariants(
             {

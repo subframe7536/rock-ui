@@ -10,7 +10,7 @@ const BASIC_GROUPS: CommandPaletteGroup[] = [
   {
     id: 'actions',
     label: 'Actions',
-    items: [
+    children: [
       { value: 'new-file', label: 'New File', icon: 'i-lucide-file-plus', kbds: ['⌘', 'N'] },
       { value: 'open-file', label: 'Open File', icon: 'i-lucide-folder-open', kbds: ['⌘', 'O'] },
       { value: 'save', label: 'Save', icon: 'i-lucide-save', kbds: ['⌘', 'S'] },
@@ -25,7 +25,7 @@ const BASIC_GROUPS: CommandPaletteGroup[] = [
   {
     id: 'navigation',
     label: 'Navigation',
-    items: [
+    children: [
       { value: 'dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
       { value: 'settings', label: 'Settings', icon: 'i-lucide-settings', suffix: 'Preferences' },
       { value: 'profile', label: 'Profile', icon: 'i-lucide-user', disabled: true },
@@ -45,7 +45,7 @@ const SUB_NAV_GROUPS: CommandPaletteGroup[] = [
   {
     id: 'main',
     label: 'Commands',
-    items: [
+    children: [
       {
         value: 'create',
         label: 'Create',
@@ -98,7 +98,7 @@ export default function CommandPaletteDemos() {
           onOpenChange={setPaletteOpen}
           content={
             <CommandPalette
-              groups={BASIC_GROUPS}
+              items={BASIC_GROUPS}
               close
               onClose={() => setPaletteOpen(false)}
               footer={
@@ -131,7 +131,7 @@ export default function CommandPaletteDemos() {
 
       <DemoSection title="Basic" description="Groups of items with icons, kbds, and descriptions.">
         <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
-          <CommandPalette groups={BASIC_GROUPS} />
+          <CommandPalette items={BASIC_GROUPS} />
         </div>
       </DemoSection>
 
@@ -140,7 +140,7 @@ export default function CommandPaletteDemos() {
         description="Items with children drill into a sub-group. Press Backspace or the back button to return."
       >
         <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
-          <CommandPalette groups={SUB_NAV_GROUPS} />
+          <CommandPalette items={SUB_NAV_GROUPS} />
         </div>
       </DemoSection>
 
@@ -149,14 +149,14 @@ export default function CommandPaletteDemos() {
         description="A close button in the input trailing slot."
       >
         <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
-          <CommandPalette groups={BASIC_GROUPS} close onClose={() => setCloseCount((c) => c + 1)} />
+          <CommandPalette items={BASIC_GROUPS} close onClose={() => setCloseCount((c) => c + 1)} />
         </div>
         <p class="text-sm text-muted-foreground mt-2">Close clicked: {closeCount()} time(s)</p>
       </DemoSection>
 
       <DemoSection title="Loading" description="Search icon becomes a spinner while loading.">
         <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
-          <CommandPalette groups={BASIC_GROUPS} loading />
+          <CommandPalette items={BASIC_GROUPS} loading />
         </div>
       </DemoSection>
 
@@ -166,7 +166,7 @@ export default function CommandPaletteDemos() {
       >
         <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
           <CommandPalette
-            groups={[]}
+            items={[]}
             empty={
               <span class="flex flex-col gap-1 items-center">
                 <span>Nothing here yet.</span>

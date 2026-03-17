@@ -67,7 +67,7 @@ describe('Badge', () => {
   test('supports slot and attribute overrides used by select tags', () => {
     const screen = render(() => (
       <Badge
-        data-slot="tag"
+        slotName="tag"
         trailing="i-lucide-x"
         onTrailingClick={() => undefined}
         classes={{
@@ -92,7 +92,7 @@ describe('Badge', () => {
   test('supports style overrides', () => {
     const screen = render(() => (
       <Badge
-        data-slot="tag"
+        slotName="tag"
         trailing="i-lucide-x"
         onTrailingClick={() => undefined}
         styles={

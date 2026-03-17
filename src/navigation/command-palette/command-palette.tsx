@@ -96,7 +96,7 @@ export interface CommandPaletteGroup {
   /**
    * Items belonging to this group.
    */
-  items?: CommandPaletteItem[]
+  children?: CommandPaletteItem[]
 }
 
 type CommandPaletteSlots =
@@ -134,7 +134,7 @@ export interface CommandPaletteBaseProps {
   /**
    * Command groups to display initially.
    */
-  groups?: CommandPaletteGroup[]
+  items?: CommandPaletteGroup[]
 
   /**
    * Placeholder text for the search input.
@@ -295,7 +295,7 @@ function createNormalizedGroups(
 
   return (groups ?? []).map((group) => ({
     label: group.label ?? '',
-    items: (group.items ?? []).map((item, index) => {
+    items: (group.children ?? []).map((item, index) => {
       if (seenValues.has(item.value)) {
         warnDuplicateValue(item.value)
       }
@@ -422,7 +422,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   // ── Current groups: last history entry or root ─────────────────────────────
   const currentGroups = createMemo<CommandPaletteGroup[]>(() => {
     const hist = history()
-    return hist.length > 0 ? [hist[hist.length - 1]] : (merged.groups ?? [])
+    return hist.length > 0 ? [hist[hist.length - 1]] : (merged.items ?? [])
   })
 
   const normalizedGroups = createMemo<NormalizedGroup[]>(() =>
@@ -451,7 +451,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     if ((item.children?.length ?? 0) > 0) {
       setHistory((h) => [
         ...h,
-        { id: `history-${item.key}`, label: item.itemLabel, items: item.children! },
+        { id: `history-${item.key}`, label: item.itemLabel, children: item.children! },
       ])
       applySearchValue('')
       // Suppress the onInputChange('More') Kobalte fires after selection
@@ -518,7 +518,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             <Show when={option().icon}>
               <Icon
                 name={option().icon}
-                data-slot="itemLeading"
+                slotName="itemLeading"
                 style={merged.styles?.itemLeading}
                 class={cn('text-muted-foreground shrink-0', merged.classes?.itemLeading)}
               />
@@ -599,7 +599,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             >
               <Icon
                 name={merged.childIcon}
-                data-slot="itemTrailing"
+                slotName="itemTrailing"
                 style={merged.styles?.itemTrailing}
                 class={cn('text-muted-foreground shrink-0', merged.classes?.itemTrailing)}
               />

@@ -154,7 +154,7 @@ export function Accordion(props: AccordionProps): JSX.Element {
                 <Show when={item.leading}>
                   <Icon
                     name={item.leading}
-                    data-slot="leading"
+                    slotName="leading"
                     style={merged.styles?.leading}
                     class={cn('shrink-0 size-5', renderProps.classes?.leading)}
                   />
@@ -173,7 +173,7 @@ export function Accordion(props: AccordionProps): JSX.Element {
                 <Show when={renderProps.trailing}>
                   <Icon
                     name={renderProps.trailing}
-                    data-slot="trailing"
+                    slotName="trailing"
                     style={merged.styles?.trailing}
                     class={cn(
                       'text-muted-foreground ml-auto shrink-0 size-4 pointer-events-none duration-150 group-aria-expanded:rotate-180',
