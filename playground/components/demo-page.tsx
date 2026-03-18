@@ -1,17 +1,12 @@
 import type { JSX } from 'solid-js'
-import { Show, createMemo, createResource } from 'solid-js'
+import { For, Show } from 'solid-js'
 
 import { Badge } from '../../src'
 
 import { PropsTable } from './props-table'
 import type { ComponentPropsDoc } from './props-table'
 
-// ── ComponentDocPage ───────────────────────────────────────────────────
-
-interface ComponentDoc {
-  component: ComponentIndexEntry
-  props: ComponentPropsDoc
-}
+// ── Types ────────────────────────────────────────────────────────────
 
 interface ComponentIndexEntry {
   name: string
@@ -22,35 +17,28 @@ interface ComponentIndexEntry {
   polymorphic: boolean
 }
 
+interface ComponentApiDoc {
+  component: ComponentIndexEntry
+  slots: string[]
+  props: ComponentPropsDoc
+}
+
 export interface DemoPageProps {
   componentKey: string
+  /** Auto-injected by vite-plugin-demo-source at build time */
+  apiDoc?: ComponentApiDoc
   children: JSX.Element
 }
 
-async function fetchComponentDoc(key: string): Promise<ComponentDoc> {
-  const res = await fetch(`/component-api/components/${key}.json`)
-  if (!res.ok) {
-    throw new Error(`Failed to load component doc: ${key}`)
-  }
-  return (await res.json()) as ComponentDoc
-}
-
 export const DemoPage = (props: DemoPageProps) => {
-  const [doc] = createResource(() => props.componentKey, fetchComponentDoc)
+  const component = () => props.apiDoc?.component
+  const propsDoc = () => props.apiDoc?.props ?? { own: [], inherited: [] }
+  const slots = () => props.apiDoc?.slots ?? []
 
-  const component = createMemo(() => doc()?.component)
-  const propsDoc = createMemo(() => {
-    const data = doc()?.props
-    if (!data) {
-      return { own: [], inherited: [] }
-    }
-    return data
-  })
-
-  const hasProps = createMemo(() => {
+  const hasProps = () => {
     const data = propsDoc()
     return data.own.length > 0 || data.inherited.length > 0
-  })
+  }
 
   return (
     <main class="text-zinc-900 p-6 min-h-screen w-full from-stone-100 to-slate-100 via-zinc-50 bg-gradient-to-br sm:p-10">
@@ -82,6 +70,17 @@ export const DemoPage = (props: DemoPageProps) => {
         </header>
 
         {props.children}
+
+        <Show when={slots().length > 0}>
+          <section>
+            <h2 class="text-sm text-zinc-600 tracking-[0.16em] font-semibold mb-4 uppercase">
+              Slots
+            </h2>
+            <div class="flex flex-wrap gap-2">
+              <For each={slots()}>{(slot) => <Badge>{slot}</Badge>}</For>
+            </div>
+          </section>
+        </Show>
 
         <Show when={hasProps()}>
           <section>

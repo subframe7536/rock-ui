@@ -3,8 +3,7 @@ import type { ElementOf, PolymorphicProps } from '@kobalte/core/polymorphic'
 import type { JSX, ValidComponent } from 'solid-js'
 import { Show, createMemo, createSignal, splitProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { callHandler, cn } from '../../shared/utils'
 import { Icon } from '../icon'
 import type { IconName } from '../icon'
@@ -56,16 +55,6 @@ export namespace ButtonT {
     trailing?: IconName
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Children of the button.
      */
     children?: JSX.Element
@@ -75,7 +64,12 @@ export namespace ButtonT {
    * Props for the Button component.
    * Polymorphic button props composed from Kobalte button root props and Rock UI button options.
    */
-  export type Props<T extends ValidComponent = 'button'> = RockUIProps<Base, Variant, Extend<T>>
+  export type Props<T extends ValidComponent = 'button'> = RockUIProps<
+    Base,
+    Variant,
+    Extend<T>,
+    Slot
+  >
 }
 
 /**

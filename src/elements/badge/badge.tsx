@@ -1,8 +1,7 @@
 import type { JSX } from 'solid-js'
 import { Show, createMemo, mergeProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { Icon, IconButton } from '../icon'
 import type { IconButtonProps, IconName } from '../icon'
@@ -49,16 +48,6 @@ export namespace BadgeT {
     onTrailingClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Children of the badge.
      */
     children?: JSX.Element
@@ -67,7 +56,7 @@ export namespace BadgeT {
   /**
    * Props for the Badge component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 export interface BadgeTrailingButtonProps extends Omit<

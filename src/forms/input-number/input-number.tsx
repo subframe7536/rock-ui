@@ -5,8 +5,7 @@ import { createMemo, mergeProps, onCleanup, onMount, Show, splitProps } from 'so
 import { Button } from '../../elements/button'
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { callHandler, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-options'
@@ -115,22 +114,12 @@ export namespace InputNumberT {
      * Callback when the decrement button is clicked.
      */
     onDecrementClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
    * Props for the InputNumber component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

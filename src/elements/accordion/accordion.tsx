@@ -2,8 +2,7 @@ import * as KobalteAccordion from '@kobalte/core/accordion'
 import type { JSX } from 'solid-js'
 import { For, Show, mergeProps, splitProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { Icon } from '../icon'
 import type { IconName } from '../icon'
@@ -76,22 +75,12 @@ export namespace AccordionT {
      * @default 'icon-chevron-down'
      */
     trailing?: IconName
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
    * Props for the Accordion component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

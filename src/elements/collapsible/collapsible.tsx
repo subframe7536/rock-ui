@@ -2,8 +2,7 @@ import * as KobalteCollapsible from '@kobalte/core/collapsible'
 import type { JSX } from 'solid-js'
 import { Show, splitProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 export namespace CollapsibleT {
@@ -45,16 +44,6 @@ export namespace CollapsibleT {
     forceMount?: boolean
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Custom trigger render function.
      */
     trigger?: (props: CollapsibleTriggerSlotProps) => JSX.Element
@@ -68,7 +57,7 @@ export namespace CollapsibleT {
   /**
    * Props for the Collapsible component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

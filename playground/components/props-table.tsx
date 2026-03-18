@@ -1,16 +1,10 @@
 import type { JSX } from 'solid-js'
 import { For, Show, createSignal } from 'solid-js'
 
+import type { PropDoc } from '../vite-plugin/api-doc'
+
 export interface PropsTableProps {
   props: ComponentPropsDoc
-}
-
-export interface PropDoc {
-  name: string
-  required: boolean
-  typeText: string
-  defaultValue?: string
-  description?: string
 }
 
 export interface InheritedGroupDoc {
@@ -35,6 +29,16 @@ export function PropsTable(props: PropsTableProps): JSX.Element {
   )
 }
 
+function normalizeType(type: string): string {
+  if (type.endsWith('T.Classes')) {
+    return `Partial<Record<${type.split('T.')[0]}Slots, ClassValue>>`
+  }
+  if (type.endsWith('T.Styles')) {
+    return `Partial<Record<${type.split('T.')[0]}Slots, JSX.CSSProperties>>`
+  }
+  return type
+}
+
 function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
   return (
     <div class="b-1 b-zinc-200/80 rounded-lg overflow-x-auto">
@@ -57,7 +61,7 @@ function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
                 </td>
                 <td class="px-3 py-2">
                   <code class="text-xs text-zinc-600 px-1.5 py-0.5 rounded bg-zinc-100">
-                    {prop.typeText}
+                    {normalizeType(prop.type)}
                   </code>
                 </td>
                 <td class="text-xs text-zinc-500 px-3 py-2">

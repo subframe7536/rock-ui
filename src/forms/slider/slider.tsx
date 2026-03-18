@@ -2,8 +2,7 @@ import * as KobalteSlider from '@kobalte/core/slider'
 import type { JSX, ValidComponent } from 'solid-js'
 import { For, createEffect, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -93,22 +92,18 @@ export namespace SliderT {
      * Callback when the slider selection change is committed.
      */
     onChange?: (value: Value) => void
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
    * Props for the Slider component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend, 'minValue' | 'maxValue'> {}
+  export interface Props extends RockUIProps<
+    Base,
+    Variant,
+    Extend,
+    Slot,
+    'minValue' | 'maxValue'
+  > {}
 }
 
 /**

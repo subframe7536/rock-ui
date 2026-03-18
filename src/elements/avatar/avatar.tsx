@@ -10,8 +10,7 @@ import {
   splitProps,
 } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import type { IconName } from '../icon'
 import { Icon } from '../icon'
@@ -95,22 +94,12 @@ export namespace AvatarT {
      * Maximum number of avatars to show when in a group.
      */
     max?: number | string
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
    * Props for the Avatar component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

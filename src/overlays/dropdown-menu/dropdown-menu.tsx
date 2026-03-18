@@ -3,8 +3,7 @@ import type { JSX } from 'solid-js'
 import { mergeProps, splitProps } from 'solid-js'
 
 import type { IconName } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { OverlayMenuBaseContent } from '../shared-overlay-menu/menu'
 import type { OverlayMenuItemVariantProps } from '../shared-overlay-menu/menu.class'
@@ -114,16 +113,6 @@ export namespace DropdownMenuT {
     contentBottom?: OverlayMenuContentSlot
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Trigger element that opens the dropdown menu.
      */
     children: JSX.Element
@@ -132,7 +121,7 @@ export namespace DropdownMenuT {
   /**
    * Props for the DropdownMenu component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend, 'arrowPadding'> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot, 'arrowPadding'> {}
 }
 
 /**

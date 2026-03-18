@@ -1,7 +1,7 @@
 import type { JSX } from 'solid-js'
 
 import type { IconName } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
+import type { SlotClasses, SlotStyles } from '../../shared/types'
 
 import type { OverlayMenuItems } from './utils'
 

@@ -3,8 +3,7 @@ import { splitProps } from 'solid-js'
 import { createStore, produce, reconcile } from 'solid-js/store'
 
 import { resolveRenderProp } from '../../shared/render-prop'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 
 import type {
@@ -125,16 +124,6 @@ export namespace FormT {
     onError?: (event: FormErrorEvent) => void
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Children of the form, can be a render function.
      */
     children?: JSX.Element | ((props: FormRenderProps) => JSX.Element)
@@ -146,7 +135,8 @@ export namespace FormT {
   export interface Props<TState extends FormState = FormState> extends RockUIProps<
     Base<TState>,
     Variant,
-    Extend
+    Extend,
+    Slot
   > {}
 }
 

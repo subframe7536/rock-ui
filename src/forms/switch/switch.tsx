@@ -4,8 +4,7 @@ import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js
 
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -107,16 +106,6 @@ export namespace SwitchT {
      * Callback when the switch state changes.
      */
     onChange?: (value: TTrue | TFalse) => void
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
@@ -125,7 +114,8 @@ export namespace SwitchT {
   export interface Props<TTrue = boolean, TFalse = boolean> extends RockUIProps<
     Base<TTrue, TFalse>,
     Variant,
-    Extend
+    Extend,
+    Slot
   > {}
 }
 

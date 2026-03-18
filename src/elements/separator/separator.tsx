@@ -2,8 +2,7 @@ import * as KobalteSeparator from '@kobalte/core/separator'
 import type { JSX } from 'solid-js'
 import { Show, mergeProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 
 import type { SeparatorVariantProps } from './separator.class'
 import {
@@ -30,16 +29,6 @@ export namespace SeparatorT {
     decorative?: boolean
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Additional content to render inside the separator (usually between two borders).
      */
     children?: JSX.Element
@@ -48,7 +37,7 @@ export namespace SeparatorT {
   /**
    * Props for the Separator component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

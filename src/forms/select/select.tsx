@@ -23,8 +23,7 @@ import type { BadgeProps } from '../../elements/badge'
 import { Icon, IconButton } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
 import { overlayMenuContentVariants } from '../../overlays/shared-overlay-menu/menu.class'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -233,17 +232,12 @@ export namespace SelectT {
     onScrollEnd?: () => void
     /** Distance (px) from the bottom at which onScrollEnd fires. Default: 20. */
     scrollEndThreshold?: number
-
-    /** Slot-based class overrides. */
-    classes?: Classes
-    /** Slot-based style overrides. */
-    styles?: Styles
   }
 
   /**
    * Props for the Select component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

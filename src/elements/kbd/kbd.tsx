@@ -1,8 +1,7 @@
 import type { JSX } from 'solid-js'
 import { For, Match, Show, Switch } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import type { KbdVariantProps } from './kbd.class'
@@ -19,16 +18,6 @@ export namespace KbdT {
    * Base props for the Kbd component.
    */
   export interface Base {
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
     /**
      * Slot between kbds
      */
@@ -48,7 +37,7 @@ export namespace KbdT {
   /**
    * Props for the Kbd component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

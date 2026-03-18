@@ -1,16 +1,9 @@
 import 'uno.css'
 
 import type { Component } from 'solid-js'
-import {
-  Show,
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  lazy,
-  onMount,
-} from 'solid-js'
+import { Show, createEffect, createMemo, createSignal, lazy, onMount } from 'solid-js'
 import { Dynamic, render } from 'solid-js/web'
+import apiIndex from 'virtual:api-doc'
 
 import { Sidebar } from './components/sidebar'
 
@@ -52,24 +45,9 @@ const DEMO_MAP: Record<string, Component> = {
   tooltip: lazy(() => import('./demo/overlay/tooltip-demos')),
 }
 
-interface ComponentApiIndexDoc {
-  components: Array<{ key: string; name: string; category: string }>
-}
-
-async function fetchComponentIndex(): Promise<ComponentApiIndexDoc> {
-  const res = await fetch('/component-api/index.json')
-  if (!res.ok) {
-    throw new Error('Failed to load component api index')
-  }
-  return (await res.json()) as ComponentApiIndexDoc
-}
-
 function App() {
-  const [apiIndex] = createResource(fetchComponentIndex)
-
   const pages = createMemo(() => {
-    const list = apiIndex()?.components ?? []
-    return list
+    return apiIndex.components
       .filter((entry) => entry.key in DEMO_MAP)
       .map((entry) => ({ key: entry.key, label: entry.name, group: entry.category }))
   })

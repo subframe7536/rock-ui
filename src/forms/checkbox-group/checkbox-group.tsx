@@ -1,8 +1,7 @@
 import type { JSX } from 'solid-js'
 import { For, Show, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
 
-import type { SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { Checkbox } from '../checkbox'
 import type { CheckboxProps } from '../checkbox/checkbox'
@@ -128,16 +127,6 @@ export namespace CheckboxGroupT {
      * Callback when the selected values change.
      */
     onChange?: (value: Value[]) => void
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes<TTrue, TFalse>
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
@@ -146,7 +135,8 @@ export namespace CheckboxGroupT {
   export interface Props<TTrue = boolean, TFalse = boolean> extends RockUIProps<
     Base<TTrue, TFalse>,
     Variant,
-    Extend
+    Extend,
+    Slot
   > {}
 }
 

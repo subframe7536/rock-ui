@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { Dialog } from '../../overlays/dialog'
 
 import { CommandPalette } from './command-palette'
-import type { CommandPaletteItem } from './command-palette'
+import type { CommandPaletteT } from './command-palette'
 
 const GROUPS = [
   {
@@ -492,13 +492,13 @@ describe('CommandPalette', () => {
 
   test('requires value in item type contract', () => {
     // @ts-expect-error value is required
-    const item: CommandPaletteItem = { label: 'No value' }
+    const item: CommandPaletteT.Item = { label: 'No value' }
     expect(item).toBeDefined()
   })
 
   test('rejects item classes in type contract', () => {
     // @ts-expect-error item-level classes has been removed
-    const item: CommandPaletteItem = { value: 'x', label: 'Legacy', classes: { item: 'x' } }
+    const item: CommandPaletteT.Item = { value: 'x', label: 'Legacy', classes: { item: 'x' } }
     expect(item).toBeDefined()
   })
 })

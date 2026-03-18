@@ -5,8 +5,7 @@ import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { ModelModifiers } from '../../shared/input-modifiers'
 import { applyInputModifiers } from '../../shared/input-modifiers'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { callHandler, cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -136,16 +135,6 @@ export namespace InputT {
     onFocus?: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent>
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Additional content to render inside the input container.
      */
     children?: JSX.Element
@@ -154,7 +143,7 @@ export namespace InputT {
   /**
    * Props for the Input component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

@@ -4,8 +4,7 @@ import { For, Show, createMemo, mergeProps } from 'solid-js'
 import { Button } from '../../elements/button'
 import { Icon } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import { breadcrumbListVariants } from './breadcrumb.class'
@@ -104,16 +103,6 @@ export namespace BreadcrumbT {
     items?: Items[]
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Icon name for the separator between items.
      * @default 'icon-chevron-right'
      */
@@ -140,7 +129,7 @@ export namespace BreadcrumbT {
   /**
    * Props for the Breadcrumb component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 export interface BreadcrumbItem extends BreadcrumbT.Items {}

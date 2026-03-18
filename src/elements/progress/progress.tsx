@@ -2,8 +2,7 @@ import * as KobalteProgress from '@kobalte/core/progress'
 import type { JSX } from 'solid-js'
 import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 
 import type { ProgressVariantProps } from './progress.class'
 import {
@@ -60,22 +59,13 @@ export namespace ProgressT {
      * Custom render function for each step when `max` is an array.
      */
     renderStep?: (context: ProgressStepRenderContext) => JSX.Element
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   export interface Props extends RockUIProps<
     Base,
     Variant,
     Extend,
+    Slot,
     'indeterminate' | 'minValue' | 'maxValue'
   > {}
 }

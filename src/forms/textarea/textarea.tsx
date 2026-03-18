@@ -3,8 +3,7 @@ import { Show, createEffect, createMemo, mergeProps, on, onMount, splitProps } f
 
 import type { ModelModifiers } from '../../shared/input-modifiers'
 import { applyInputModifiers } from '../../shared/input-modifiers'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { callHandler, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -129,16 +128,6 @@ export namespace TextareaT {
     onFocus?: JSX.FocusEventHandlerUnion<HTMLTextAreaElement, FocusEvent>
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Children elements, rendered inside the root below the textarea.
      */
     children?: JSX.Element
@@ -147,7 +136,7 @@ export namespace TextareaT {
   /**
    * Props for the Textarea component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

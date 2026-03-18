@@ -13,8 +13,7 @@ import {
 import { Icon, IconButton } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
 import { Kbd } from '../../elements/kbd'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 // ─── Public types ─────────────────────────────────────────────────────────────
@@ -108,7 +107,7 @@ export namespace CommandPaletteT {
   /**
    * A grouped collection of items in the command palette.
    */
-  export interface Group {
+  export interface Items {
     /**
      * Unique identifier for the group.
      */
@@ -125,7 +124,6 @@ export namespace CommandPaletteT {
     children?: Item[]
   }
 
-  export interface Items extends Group {}
   export interface Extend {}
 
   export interface Classes extends SlotClasses<Slot> {}
@@ -138,7 +136,7 @@ export namespace CommandPaletteT {
     /**
      * Command groups to display initially.
      */
-    items?: Group[]
+    items?: Items[]
 
     /**
      * Placeholder text for the search input.
@@ -223,24 +221,10 @@ export namespace CommandPaletteT {
      * Content to render at bottom of the palette.
      */
     footer?: JSX.Element
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
-
-export interface CommandPaletteItem extends CommandPaletteT.Item {}
-
-export interface CommandPaletteGroup extends CommandPaletteT.Group {}
 
 /**
  * Props for the CommandPalette component.
@@ -260,7 +244,7 @@ interface NormalizedItem {
   description?: string
   icon?: string
   kbds?: string[]
-  children?: CommandPaletteItem[]
+  children?: CommandPaletteT.Item[]
   onSelect?: () => void
 }
 
@@ -271,7 +255,7 @@ interface NormalizedGroup {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function buildItemLabel(item: CommandPaletteItem): string {
+function buildItemLabel(item: CommandPaletteT.Item): string {
   const text = [item.prefix, item.label, item.suffix]
     .filter((part): part is string => Boolean(part))
     .join(' ')
@@ -280,7 +264,7 @@ function buildItemLabel(item: CommandPaletteItem): string {
 }
 
 function createNormalizedGroups(
-  groups: CommandPaletteGroup[] | undefined,
+  groups: CommandPaletteT.Items[] | undefined,
   warnDuplicateValue: (value: string) => void,
 ): NormalizedGroup[] {
   const seenValues = new Set<string>()
@@ -353,7 +337,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   )
 
   // ── History stack for sub-navigation ──────────────────────────────────────
-  const [history, setHistory] = createSignal<CommandPaletteGroup[]>([])
+  const [history, setHistory] = createSignal<CommandPaletteT.Items[]>([])
 
   // ── Input ref — cleared visually after navigation ─────────────────────────
   let inputRef: HTMLInputElement | undefined
@@ -431,7 +415,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   }
 
   // ── Current groups: last history entry or root ─────────────────────────────
-  const currentGroups = createMemo<CommandPaletteGroup[]>(() => {
+  const currentGroups = createMemo<CommandPaletteT.Items[]>(() => {
     const hist = history()
     return hist.length > 0 ? [hist[hist.length - 1]] : (merged.items ?? [])
   })

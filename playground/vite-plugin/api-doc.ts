@@ -1,23 +1,11 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import process from 'node:process'
 
 import ts from 'typescript'
+import type { Plugin } from 'vite'
 
-type SchemaVersion = '1'
-
-interface PackageInfo {
-  name: string
-  version: string
-}
-
-interface IndexDoc {
-  schemaVersion: SchemaVersion
-  generatedAt: string
-  source: { dtsPath: string }
-  package: PackageInfo
-  components: ComponentIndexEntry[]
-}
+// ── Types ────────────────────────────────────────────────────────────
 
 interface ComponentIndexEntry {
   key: string
@@ -28,10 +16,14 @@ interface ComponentIndexEntry {
   polymorphic: boolean
 }
 
+interface IndexDoc {
+  components: ComponentIndexEntry[]
+}
+
 interface PropDoc {
   name: string
   required: boolean
-  typeText: string
+  type: string
   defaultValue?: string
   description?: string
 }
@@ -42,16 +34,15 @@ interface InheritedGroupDoc {
 }
 
 interface ComponentDoc {
-  schemaVersion: SchemaVersion
-  generatedAt: string
-  source: { dtsPath: string }
-  package: PackageInfo
   component: ComponentIndexEntry
+  slots: string[]
   props: {
     own: PropDoc[]
     inherited: InheritedGroupDoc[]
   }
 }
+
+// ── Helpers ──────────────────────────────────────────────────────────
 
 function toKebabCase(name: string): string {
   return name
@@ -141,15 +132,6 @@ function inferModuleFromFileName(fileName: string): string {
   return pkg
 }
 
-async function exists(filePath: string): Promise<boolean> {
-  try {
-    await readFile(filePath)
-    return true
-  } catch {
-    return false
-  }
-}
-
 async function resolveSourcePath(regionPath: string | undefined): Promise<string | undefined> {
   if (!regionPath) {
     return undefined
@@ -163,11 +145,11 @@ async function resolveSourcePath(regionPath: string | undefined): Promise<string
 
   const base = regionPath.slice(0, -'.d.ts'.length)
   const tsx = `${base}.tsx`
-  if (await exists(tsx)) {
+  if (existsSync(tsx)) {
     return tsx
   }
   const tsFile = `${base}.ts`
-  if (await exists(tsFile)) {
+  if (existsSync(tsFile)) {
     return tsFile
   }
   return regionPath
@@ -199,22 +181,49 @@ function isJsxElementReturn(typeNode: ts.TypeNode | undefined, sourceFile: ts.So
   return text === 'JSX.Element' || text.endsWith('.JSX.Element')
 }
 
-async function main(): Promise<void> {
-  const projectRoot = process.cwd()
-  const dtsRelPath = 'dist/index.d.mts'
-  const dtsPath = path.join(projectRoot, dtsRelPath)
-
-  try {
-    await readFile(dtsPath)
-  } catch {
-    console.error(`[gen:api] 找不到 ${dtsRelPath}，请先运行: bun run build`)
-    process.exitCode = 1
-    return
+function extractSlotNames(node: ts.ModuleDeclaration, sourceFile: ts.SourceFile): string[] {
+  const body = node.body
+  if (!body || !ts.isModuleBlock(body)) {
+    return []
   }
 
-  const pkgRaw = await readFile(path.join(projectRoot, 'package.json'), 'utf8')
-  const pkgJson = JSON.parse(pkgRaw) as { name?: string; version?: string }
-  const pkg: PackageInfo = { name: pkgJson.name ?? 'rock-ui', version: pkgJson.version ?? '0.0.0' }
+  for (const stmt of body.statements) {
+    if (
+      ts.isTypeAliasDeclaration(stmt) &&
+      stmt.name.text === 'Slot' &&
+      ts.isUnionTypeNode(stmt.type)
+    ) {
+      return stmt.type.types
+        .filter((t): t is ts.LiteralTypeNode => ts.isLiteralTypeNode(t))
+        .map((t) => t.literal.getText(sourceFile).replace(/^['"]|['"]$/g, ''))
+    }
+    // Single string literal: type Slot = 'root'
+    if (
+      ts.isTypeAliasDeclaration(stmt) &&
+      stmt.name.text === 'Slot' &&
+      ts.isLiteralTypeNode(stmt.type)
+    ) {
+      return [stmt.type.literal.getText(sourceFile).replace(/^['"]|['"]$/g, '')]
+    }
+  }
+
+  return []
+}
+
+// ── Core Generation ──────────────────────────────────────────────────
+
+interface GenerationResult {
+  indexDoc: IndexDoc
+  componentDocs: Map<string, ComponentDoc>
+}
+
+async function generateApiDoc(projectRoot: string): Promise<GenerationResult | null> {
+  const dtsPath = path.join(projectRoot, 'dist', 'index.d.mts')
+
+  if (!existsSync(dtsPath)) {
+    console.warn(`[api-doc] ${dtsPath} not found, skipping generation`)
+    return null
+  }
 
   const options: ts.CompilerOptions = {
     target: ts.ScriptTarget.ESNext,
@@ -231,13 +240,25 @@ async function main(): Promise<void> {
   const sourceFile = program.getSourceFile(dtsPath)
 
   if (!sourceFile) {
-    console.error(`[gen:api] 无法读取 TypeScript SourceFile: ${dtsRelPath}`)
-    process.exitCode = 1
-    return
+    console.warn(`[api-doc] Failed to parse dist/index.d.mts`)
+    return null
   }
 
   const regionByLine = buildRegionByLine(sourceFile.getFullText())
-  const generatedAt = new Date().toISOString()
+
+  // Collect slot data from namespaces (e.g., declare namespace ButtonT { type Slot = ... })
+  const slotsByComponentName = new Map<string, string[]>()
+  const visitNamespaces = (node: ts.Node) => {
+    if (ts.isModuleDeclaration(node) && node.name.text.endsWith('T')) {
+      const componentName = node.name.text.slice(0, -1) // Remove trailing 'T'
+      const slots = extractSlotNames(node, sourceFile)
+      if (slots.length > 0) {
+        slotsByComponentName.set(componentName, slots)
+      }
+    }
+    ts.forEachChild(node, visitNamespaces)
+  }
+  visitNamespaces(sourceFile)
 
   const pendingSourcePathResolves: Array<Promise<void>> = []
 
@@ -247,6 +268,7 @@ async function main(): Promise<void> {
     description?: string
     sourcePath?: string
     polymorphic: boolean
+    slots: string[]
     props: { own: PropDoc[]; inherited: InheritedGroupDoc[] }
   }> = []
 
@@ -284,9 +306,9 @@ async function main(): Promise<void> {
       const propsParamLocation = param.name
 
       for (const propSymbol of checker.getPropertiesOfType(propsType)) {
-        const propName = propSymbol.getName()
+        const name = propSymbol.getName()
         const propType = checker.getTypeOfSymbolAtLocation(propSymbol, propsParamLocation)
-        const typeText = checker.typeToString(
+        const type = checker.typeToString(
           propType,
           propsParamLocation,
           ts.TypeFormatFlags.NoTruncation,
@@ -302,11 +324,11 @@ async function main(): Promise<void> {
         const defaultValue = defaultTag ? normalizeDefaultTag(defaultTag.text) : undefined
 
         const doc: PropDoc = {
-          name: propName,
+          name,
           required,
-          typeText,
-          ...(defaultValue ? { defaultValue } : {}),
+          type,
           ...(description ? { description } : {}),
+          ...(defaultValue ? { defaultValue } : {}),
         }
 
         const decl = propSymbol.declarations?.[0]
@@ -336,8 +358,8 @@ async function main(): Promise<void> {
         description: componentDescription,
         sourcePath: undefined,
         polymorphic: hasAsProp,
+        slots: slotsByComponentName.get(componentName) ?? [],
         props: { own: ownProps, inherited },
-        // sourcePath filled after resolve promise
       })
 
       pendingSourcePathResolves.push(
@@ -357,19 +379,15 @@ async function main(): Promise<void> {
 
   await Promise.all(pendingSourcePathResolves)
 
-  // De-dupe by key (in case of accidental duplicates)
+  // De-dupe by key
   const byKey = new Map<string, (typeof components)[number]>()
   for (const c of components) {
     byKey.set(c.key, c)
   }
 
-  const finalComponents = [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key))
+  const finalComponents = [...byKey.values()]
 
   const indexDoc: IndexDoc = {
-    schemaVersion: '1',
-    generatedAt,
-    source: { dtsPath: dtsRelPath },
-    package: pkg,
     components: finalComponents.map((c) => {
       const sourcePath = c.sourcePath
       const category = categoryFromSourcePath(sourcePath)
@@ -384,15 +402,7 @@ async function main(): Promise<void> {
     }),
   }
 
-  const outDir = path.join(projectRoot, 'playground/public/component-api')
-  const componentsDir = path.join(outDir, 'components')
-
-  await mkdir(outDir, { recursive: true })
-  await rm(componentsDir, { recursive: true, force: true })
-  await mkdir(componentsDir, { recursive: true })
-
-  await writeFile(path.join(outDir, 'index.json'), `${JSON.stringify(indexDoc, null, 2)}\n`, 'utf8')
-
+  const componentDocs = new Map<string, ComponentDoc>()
   for (const c of finalComponents) {
     const sourcePath = c.sourcePath
     const category = categoryFromSourcePath(sourcePath)
@@ -406,25 +416,81 @@ async function main(): Promise<void> {
       polymorphic: c.polymorphic,
     }
 
-    const doc: ComponentDoc = {
-      schemaVersion: '1',
-      generatedAt,
-      source: { dtsPath: dtsRelPath },
-      package: pkg,
+    componentDocs.set(c.key, {
       component: componentEntry,
+      slots: c.slots,
       props: c.props,
-    }
-
-    await writeFile(
-      path.join(componentsDir, `${c.key}.json`),
-      `${JSON.stringify(doc, null, 2)}\n`,
-      'utf8',
-    )
+    })
   }
 
-  console.log(
-    `[gen:api] 已生成 ${finalComponents.length} 个组件文档到 playground/public/component-api/`,
-  )
+  return { indexDoc, componentDocs }
 }
 
-await main()
+// ── YAML Writing ─────────────────────────────────────────────────────
+
+async function writeJsonFiles(outDir: string, result: GenerationResult): Promise<void> {
+  const componentsDir = path.join(outDir, 'components')
+
+  mkdirSync(outDir, { recursive: true })
+  rmSync(componentsDir, { recursive: true, force: true })
+  mkdirSync(componentsDir, { recursive: true })
+
+  await writeFile(path.join(outDir, 'index.json'), JSON.stringify(result.indexDoc), 'utf8')
+
+  const writes: Promise<void>[] = []
+  for (const [key, doc] of result.componentDocs) {
+    writes.push(writeFile(path.join(componentsDir, `${key}.json`), JSON.stringify(doc), 'utf8'))
+  }
+  await Promise.all(writes)
+
+  console.log(`[api-doc] Generated ${result.componentDocs.size} component api docs to ${outDir}`)
+}
+
+// ── Vite Plugin ──────────────────────────────────────────────────────
+
+const VIRTUAL_INDEX = 'virtual:api-doc'
+const RESOLVED_VIRTUAL_INDEX = `\0${VIRTUAL_INDEX}`
+
+export function componentApiPlugin(): Plugin {
+  let projectRoot: string
+
+  return {
+    name: 'rock-ui-api-doc',
+    enforce: 'pre',
+
+    configResolved(config) {
+      projectRoot = path.resolve(config.root, '..')
+    },
+
+    async buildStart() {
+      const result = await generateApiDoc(projectRoot)
+      if (result) {
+        await writeJsonFiles(path.join(projectRoot, 'playground/api-doc'), result)
+      }
+    },
+
+    resolveId(id) {
+      if (id === VIRTUAL_INDEX) {
+        return RESOLVED_VIRTUAL_INDEX
+      }
+    },
+
+    async load(id) {
+      if (id === RESOLVED_VIRTUAL_INDEX) {
+        const jsonPath = path.join(projectRoot, 'playground/api-doc/index.json')
+        try {
+          const content = readFileSync(jsonPath, 'utf8')
+          const data = JSON.parse(content)
+          return `export default ${JSON.stringify(data)}`
+        } catch {
+          console.warn('[api-doc] index.json not found, serving empty data')
+          return 'export default { components: [] }'
+        }
+      }
+    },
+  }
+}
+
+// Re-export for use by demo-source plugin
+export { generateApiDoc, writeJsonFiles }
+export type { ComponentDoc, IndexDoc, ComponentIndexEntry, PropDoc, InheritedGroupDoc }

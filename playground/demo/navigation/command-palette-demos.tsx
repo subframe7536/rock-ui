@@ -1,11 +1,11 @@
 import { createSignal, onCleanup, onMount } from 'solid-js'
 
 import { Button, CommandPalette, Kbd, Popup } from '../../../src'
-import type { CommandPaletteGroup } from '../../../src'
+import type { CommandPaletteT } from '../../../src'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
-const BASIC_GROUPS: CommandPaletteGroup[] = [
+const BASIC_GROUPS: CommandPaletteT.Items[] = [
   {
     id: 'actions',
     label: 'Actions',
@@ -40,7 +40,7 @@ const BASIC_GROUPS: CommandPaletteGroup[] = [
   },
 ]
 
-const SUB_NAV_GROUPS: CommandPaletteGroup[] = [
+const SUB_NAV_GROUPS: CommandPaletteT.Items[] = [
   {
     id: 'main',
     label: 'Commands',

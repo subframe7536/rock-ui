@@ -3,8 +3,7 @@ import type { JSX } from 'solid-js'
 import { Show, mergeProps, splitProps } from 'solid-js'
 
 import { Kbd } from '../../elements/kbd'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import { tooltipContentVariants } from './tooltip.class'
@@ -33,16 +32,6 @@ export namespace TooltipT {
     kbds?: string[]
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * The reference element that triggers the tooltip.
      */
     children: JSX.Element
@@ -51,7 +40,7 @@ export namespace TooltipT {
   /**
    * Props for the Tooltip component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

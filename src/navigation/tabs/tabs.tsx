@@ -4,8 +4,7 @@ import { For, Show, mergeProps, splitProps } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import {
@@ -79,22 +78,12 @@ export namespace TabsT {
      * Array of tabs to display.
      */
     items?: Items[]
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
    * Props for the Tabs component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

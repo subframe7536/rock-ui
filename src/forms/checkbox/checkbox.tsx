@@ -4,8 +4,7 @@ import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js
 
 import type { IconName } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-options'
@@ -107,16 +106,6 @@ export namespace CheckboxT {
      * @default 'icon-minus'
      */
     indeterminateIcon?: IconName
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
@@ -126,6 +115,7 @@ export namespace CheckboxT {
     Base<TTrue, TFalse>,
     Variant,
     Extend,
+    Slot,
     'ref' | 'indeterminate'
   > {}
 }

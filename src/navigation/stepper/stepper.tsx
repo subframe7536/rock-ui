@@ -4,8 +4,7 @@ import { For, Show, createMemo, mergeProps, onCleanup } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconName } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 
 import type { StepperVariantProps } from './stepper.class'
@@ -113,22 +112,12 @@ export namespace StepperT {
      * @default false
      */
     clickable?: boolean
-
-    /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
   }
 
   /**
    * Props for the Stepper component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**

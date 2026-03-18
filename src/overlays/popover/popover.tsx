@@ -2,8 +2,7 @@ import * as KobaltePopover from '@kobalte/core/popover'
 import type { JSX } from 'solid-js'
 import { Show, createSignal, mergeProps, onCleanup, splitProps } from 'solid-js'
 
-import type { SlotClasses, SlotStyles } from '../../shared/slot'
-import type { RockUIProps } from '../../shared/types'
+import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import { popoverContentVariants } from './popover.class'
@@ -53,16 +52,6 @@ export namespace PopoverT {
     dismissible?: boolean
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * Callback triggered when a dismissal action is prevented.
      */
     onClosePrevent?: () => void
@@ -76,7 +65,7 @@ export namespace PopoverT {
   /**
    * Props for the Popover component.
    */
-  export interface Props extends RockUIProps<Base, Variant, Extend> {}
+  export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
 /**
