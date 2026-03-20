@@ -10,7 +10,7 @@ export default defineConfig({
   },
   plugins: [solid({ hot: false })],
   test: {
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'docs/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     environment: 'jsdom',
     globals: true,
     server: {

@@ -71,6 +71,7 @@ export function IconButton<T extends ValidComponent = 'button'>(
 ): JSX.Element {
   const [localProps, restProps] = splitProps(props as IconButtonProps, [
     'classes',
+    'styles',
     'name',
     'loading',
     'loadingIcon',
@@ -82,6 +83,7 @@ export function IconButton<T extends ValidComponent = 'button'>(
     <KobalteButton.Root
       data-slot="icon-button"
       class={iconButtonVariants({ size: localProps.size }, localProps.classes?.root)}
+      style={localProps.styles?.root}
       aria-busy={localProps.loading || undefined}
       data-loading={localProps.loading ? '' : undefined}
       disabled={localProps.loading || localProps.disabled}

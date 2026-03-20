@@ -77,6 +77,119 @@ describe('InputNumber', () => {
     }
   })
 
+  test('increments once on pointer press and release without hold repeat', async () => {
+    const screen = render(() => <InputNumber defaultValue={0} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+    const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+    await fireEvent.pointerDown(incrementButton, {
+      button: 0,
+      pointerId: 3,
+      pointerType: 'mouse',
+    })
+    await fireEvent.pointerUp(incrementButton, {
+      button: 0,
+      pointerId: 3,
+      pointerType: 'mouse',
+    })
+
+    expect(spinbutton.value).toBe('1')
+  })
+
+  test('does not add extra increment when releasing after hold repeat', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const screen = render(() => <InputNumber defaultValue={0} />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+      await fireEvent.pointerDown(incrementButton, {
+        button: 0,
+        pointerId: 4,
+        pointerType: 'mouse',
+      })
+      await vi.advanceTimersByTimeAsync(620)
+
+      const valueBeforeRelease = Number(spinbutton.value)
+      expect(valueBeforeRelease).toBeGreaterThan(1)
+
+      await fireEvent.pointerUp(incrementButton, {
+        button: 0,
+        pointerId: 4,
+        pointerType: 'mouse',
+      })
+
+      expect(Number(spinbutton.value)).toBe(valueBeforeRelease)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('stops hold repeat on pointer cancel without extra increment', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const screen = render(() => <InputNumber defaultValue={0} />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+      await fireEvent.pointerDown(incrementButton, {
+        button: 0,
+        pointerId: 5,
+        pointerType: 'mouse',
+      })
+      await vi.advanceTimersByTimeAsync(620)
+
+      const valueBeforeCancel = Number(spinbutton.value)
+      expect(valueBeforeCancel).toBeGreaterThan(1)
+
+      await fireEvent.pointerCancel(incrementButton, {
+        button: 0,
+        pointerId: 5,
+        pointerType: 'mouse',
+      })
+
+      await vi.advanceTimersByTimeAsync(240)
+
+      expect(Number(spinbutton.value)).toBe(valueBeforeCancel)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('stops hold repeat on pointer leave without extra increment', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const screen = render(() => <InputNumber defaultValue={0} />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+      await fireEvent.pointerDown(incrementButton, {
+        button: 0,
+        pointerId: 6,
+        pointerType: 'mouse',
+      })
+      await vi.advanceTimersByTimeAsync(620)
+
+      const valueBeforeLeave = Number(spinbutton.value)
+      expect(valueBeforeLeave).toBeGreaterThan(1)
+
+      await fireEvent.pointerLeave(incrementButton, {
+        button: 0,
+        pointerId: 6,
+        pointerType: 'mouse',
+      })
+
+      await vi.advanceTimersByTimeAsync(240)
+
+      expect(Number(spinbutton.value)).toBe(valueBeforeLeave)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   test('keeps controlled value while emitting onRawValueChange', async () => {
     const onRawValueChange = vi.fn()
     const screen = render(() => <InputNumber value={5} onRawValueChange={onRawValueChange} />)

@@ -99,7 +99,9 @@ describe('Avatar', () => {
 
   test('uses fallback icon on error state', async () => {
     outcomesBySrc.set('/broken.png', 'error')
-    const screen = render(() => <Avatar items={[{ src: '/broken.png', fallback: 'i-lucide-user' }]} />)
+    const screen = render(() => (
+      <Avatar items={[{ src: '/broken.png', fallback: 'i-lucide-user' }]} />
+    ))
 
     const root = screen.container.querySelector('[data-slot="root"]')
     const icon = screen.container.querySelector('[data-slot="fallbackIcon"]')

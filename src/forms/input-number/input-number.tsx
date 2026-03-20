@@ -3,6 +3,7 @@ import type { JSX } from 'solid-js'
 import { createMemo, mergeProps, onCleanup, onMount, Show, splitProps } from 'solid-js'
 
 import { Button } from '../../elements/button'
+import type { ButtonT } from '../../elements/button'
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
@@ -22,6 +23,7 @@ import {
 
 const INPUT_NUMBER_HOLD_REPEAT_DELAY = 400
 const INPUT_NUMBER_HOLD_REPEAT_INTERVAL = 60
+type ControlKind = 'increment' | 'decrement'
 
 export namespace InputNumberT {
   export type Slot = 'root' | 'base' | 'increment' | 'decrement'
@@ -178,10 +180,10 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
 
   let inputEl: HTMLInputElement | undefined
   let activeRepeatButton: HTMLButtonElement | undefined
+  let activeRepeatPointerId: number | undefined
   let holdRepeatTimeoutId: ReturnType<typeof setTimeout> | undefined
   let holdRepeatIntervalId: ReturnType<typeof setInterval> | undefined
-  let clearSuppressTrustedClickTimeoutId: ReturnType<typeof setTimeout> | undefined
-  let suppressTrustedClick = false
+  let autofocusTimeoutId: ReturnType<typeof setTimeout> | undefined
   let repeatedDuringPress = false
 
   const resolvedIncrement = createMemo(() => Boolean(controlProps.increment))
@@ -222,11 +224,38 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     }
   }
 
-  function clearSuppressTrustedClickTimeout(): void {
-    if (clearSuppressTrustedClickTimeoutId) {
-      clearTimeout(clearSuppressTrustedClickTimeoutId)
-      clearSuppressTrustedClickTimeoutId = undefined
+  function clearAutofocusTimeout(): void {
+    if (autofocusTimeoutId) {
+      clearTimeout(autofocusTimeoutId)
+      autofocusTimeoutId = undefined
     }
+  }
+
+  function trySetPointerCapture(button: HTMLButtonElement, pointerId: number): void {
+    if (typeof button.setPointerCapture !== 'function') {
+      return
+    }
+
+    try {
+      button.setPointerCapture(pointerId)
+    } catch {}
+  }
+
+  function tryReleasePointerCapture(button: HTMLButtonElement, pointerId: number): void {
+    if (typeof button.releasePointerCapture !== 'function') {
+      return
+    }
+
+    const hasCapture =
+      typeof button.hasPointerCapture !== 'function' || button.hasPointerCapture(pointerId)
+
+    if (!hasCapture) {
+      return
+    }
+
+    try {
+      button.releasePointerCapture(pointerId)
+    } catch {}
   }
 
   function clickActiveRepeatButton(): void {
@@ -239,96 +268,100 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     activeRepeatButton.click()
   }
 
-  function startHoldRepeat(button: HTMLButtonElement): void {
+  function startHoldRepeat(button: HTMLButtonElement, pointerId: number): void {
     if (button.disabled) {
       return
     }
 
-    clearSuppressTrustedClickTimeout()
-    suppressTrustedClick = false
     stopHoldRepeat()
 
     activeRepeatButton = button
+    activeRepeatPointerId = pointerId
     repeatedDuringPress = false
+    trySetPointerCapture(button, pointerId)
+
     holdRepeatTimeoutId = setTimeout(() => {
       clickActiveRepeatButton()
       holdRepeatIntervalId = setInterval(clickActiveRepeatButton, INPUT_NUMBER_HOLD_REPEAT_INTERVAL)
     }, INPUT_NUMBER_HOLD_REPEAT_DELAY)
   }
 
-  function stopHoldRepeat(): void {
-    const shouldSuppressTrustedClick = repeatedDuringPress
+  function stopHoldRepeat(options?: { emitClick?: boolean; pointerId?: number }): void {
+    const button = activeRepeatButton
+    const shouldEmitClick = Boolean(options?.emitClick)
+    const shouldRepeatClick = repeatedDuringPress
 
     clearHoldRepeatTimers()
     activeRepeatButton = undefined
+    activeRepeatPointerId = undefined
     repeatedDuringPress = false
 
-    if (!shouldSuppressTrustedClick) {
+    if (button && options?.pointerId !== undefined) {
+      tryReleasePointerCapture(button, options.pointerId)
+    }
+
+    if (
+      !shouldEmitClick ||
+      shouldRepeatClick ||
+      !button ||
+      button.disabled ||
+      !button.isConnected
+    ) {
       return
     }
 
-    suppressTrustedClick = true
-    clearSuppressTrustedClickTimeout()
-    clearSuppressTrustedClickTimeoutId = setTimeout(() => {
-      suppressTrustedClick = false
-      clearSuppressTrustedClickTimeoutId = undefined
-    }, 0)
+    button.click()
   }
 
-  function onControlPointerDown(
-    event: PointerEvent,
-    handler: JSX.EventHandlerUnion<HTMLButtonElement, PointerEvent> | undefined,
-  ): void {
-    const { defaultPrevented } = callHandler(event, handler)
-
-    if (defaultPrevented || (event.pointerType === 'mouse' && event.button !== 0)) {
+  function onControlPointerDown(event: PointerEvent): void {
+    if ((event.pointerType === 'mouse' && event.button !== 0) || event.defaultPrevented) {
       return
     }
 
-    startHoldRepeat(event.currentTarget as HTMLButtonElement)
+    event.preventDefault()
+    startHoldRepeat(event.currentTarget as HTMLButtonElement, event.pointerId)
   }
 
-  function onControlPointerStop(
-    event: PointerEvent,
-    handler: JSX.EventHandlerUnion<HTMLButtonElement, PointerEvent> | undefined,
-  ): void {
-    callHandler(event, handler)
+  function onControlPointerUp(event: PointerEvent): void {
+    if (activeRepeatPointerId !== undefined && event.pointerId !== activeRepeatPointerId) {
+      return
+    }
+
+    stopHoldRepeat({ emitClick: true, pointerId: event.pointerId })
+  }
+
+  function onControlPointerStop(event: PointerEvent): void {
+    if (activeRepeatPointerId !== undefined && event.pointerId !== activeRepeatPointerId) {
+      return
+    }
+
+    stopHoldRepeat({ emitClick: false, pointerId: event.pointerId })
+  }
+
+  function onControlLostPointerCapture(event: PointerEvent): void {
+    if (activeRepeatButton && activeRepeatButton !== (event.currentTarget as HTMLButtonElement)) {
+      return
+    }
+
     stopHoldRepeat()
   }
 
-  function onControlClickCapture(
-    event: MouseEvent,
-    handler: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent> | undefined,
-  ): void {
-    callHandler(event, handler)
-
-    if (!suppressTrustedClick || !event.isTrusted) {
-      return
-    }
-
-    suppressTrustedClick = false
-    clearSuppressTrustedClickTimeout()
-    event.preventDefault()
-    event.stopPropagation()
-    event.stopImmediatePropagation()
-  }
-
   onCleanup(() => {
-    clearHoldRepeatTimers()
-    clearSuppressTrustedClickTimeout()
+    stopHoldRepeat()
+    clearAutofocusTimeout()
   })
 
   const isBorderless = createMemo(
     () => styleProps.variant === 'ghost' || styleProps.variant === 'none',
   )
 
-  function resolveControlProps(isIncrement: boolean) {
-    const slot = isIncrement ? 'increment' : 'decrement'
+  function resolveControlProps(kind: ControlKind): ButtonT.Props {
+    const isIncrement = kind === 'increment'
     const userOnClick = isIncrement ? controlProps.onIncrementClick : controlProps.onDecrementClick
 
     return {
-      'data-slot': slot,
-      styles: { base: styleProps.styles?.[slot] },
+      slotName: kind,
+      styles: { root: styleProps.styles?.[kind] },
       disabled:
         field.disabled() ||
         (isIncrement ? controlProps.incrementDisabled : controlProps.decrementDisabled),
@@ -337,32 +370,32 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       'aria-label': isIncrement ? 'Increment' : 'Decrement',
       leading: <Icon name={isIncrement ? incrementIcon() : decrementIcon()} />,
       onClick: userOnClick,
-      onPointerDown: (event: PointerEvent) => onControlPointerDown(event, undefined),
-      onPointerUp: (event: PointerEvent) => onControlPointerStop(event, undefined),
-      onPointerLeave: (event: PointerEvent) => onControlPointerStop(event, undefined),
-      onPointerCancel: (event: PointerEvent) => onControlPointerStop(event, undefined),
-      onClickCapture: (event: MouseEvent) => onControlClickCapture(event, undefined),
+      onPointerDown: onControlPointerDown,
+      onPointerUp: onControlPointerUp,
+      onPointerLeave: onControlPointerStop,
+      onPointerCancel: onControlPointerStop,
+      onLostPointerCapture: onControlLostPointerCapture,
       classes: {
-        base: inputNumberControlButtonVariants(
+        root: inputNumberControlButtonVariants(
           {
-            control: slot,
+            control: kind,
             divided: !isIncrement && isVertical() && resolvedIncrement(),
             orientation: resolvedOrientation(),
           },
           isBorderless() && 'b-transparent',
           styleProps.variant === 'none' && 'hover:bg-transparent',
-          isIncrement ? styleProps.classes?.increment : styleProps.classes?.decrement,
+          styleProps.classes?.[kind],
         ),
       },
     } as const
   }
 
   function IncrementControl(): JSX.Element {
-    return <KobalteNumberField.IncrementTrigger as={Button} {...resolveControlProps(true)} />
+    return <KobalteNumberField.IncrementTrigger as={Button} {...resolveControlProps('increment')} />
   }
 
   function DecrementControl(): JSX.Element {
-    return <KobalteNumberField.DecrementTrigger as={Button} {...resolveControlProps(false)} />
+    return <KobalteNumberField.DecrementTrigger as={Button} {...resolveControlProps('decrement')} />
   }
 
   function onRawValueChange(value: number): void {
@@ -387,7 +420,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       return
     }
 
-    setTimeout(() => {
+    autofocusTimeoutId = setTimeout(() => {
       inputEl?.focus()
     }, controlProps.autofocusDelay ?? 0)
   })

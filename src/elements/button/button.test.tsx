@@ -163,14 +163,12 @@ describe('Button', () => {
       <Button
         leading="i-lucide-menu"
         trailing="i-lucide-x"
-        styles={
-          {
-            base: { width: '200px' },
-            leading: { width: '200px' },
-            label: { width: '200px' },
-            trailing: { width: '200px' },
-          } as any
-        }
+        styles={{
+          root: { width: '200px' },
+          leading: { width: '200px' },
+          label: { width: '200px' },
+          trailing: { width: '200px' },
+        }}
       >
         Label
       </Button>

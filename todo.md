@@ -14,6 +14,7 @@
 - [x] select trigger icon position overflow
 - [x] add `collapsibleMin` in resizable, width should be max if no default size setup, redesign collapsible behavior
 - [ ] api-doc also extract `Items`
+- [ ] remove real path in extracted type
 - [ ] unify `<IconButton>` and `<Button><Icon>`
 - [ ] unify docs: preview different variants, options; card / island to shadcn / nuxt-ui like doc ; visually render count
 - [ ] add toast using `solid-toaster`

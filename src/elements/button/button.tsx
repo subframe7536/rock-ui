@@ -29,6 +29,10 @@ export namespace ButtonT {
    */
   export interface Base {
     /**
+     * Root `data-slot` name
+     */
+    slotName?: string
+    /**
      * Controlled loading state.
      * @default false
      */
@@ -104,7 +108,7 @@ function isPromiseLike(value: unknown): value is PromiseLikeWithFinally {
 export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T>): JSX.Element {
   const [styleProps, stateProps, contentProps, restProps] = splitProps(
     props as ButtonProps,
-    ['variant', 'size', 'classes', 'styles'],
+    ['variant', 'size', 'classes', 'styles', 'slotName'],
     ['disabled', 'loading', 'loadingAuto', 'loadingIcon', 'onClick'],
     ['leading', 'trailing', 'children'],
   )
@@ -146,7 +150,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
 
   return (
     <KobalteButton.Root
-      data-slot="base"
+      data-slot={styleProps.slotName || 'base'}
       style={styleProps.styles?.root}
       class={buttonVariants(
         {
