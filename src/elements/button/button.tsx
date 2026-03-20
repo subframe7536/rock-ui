@@ -1,12 +1,13 @@
 import * as KobalteButton from '@kobalte/core/button'
 import type { ElementOf, PolymorphicProps } from '@kobalte/core/polymorphic'
 import type { JSX, ValidComponent } from 'solid-js'
-import { Show, createMemo, createSignal, splitProps } from 'solid-js'
+import { Show, createMemo, splitProps } from 'solid-js'
 
 import type { MaybeRenderProp } from '../../shared/render-prop'
 import { resolveRenderProp } from '../../shared/render-prop'
+import { useLoadingAutoClick } from '../../shared/use-loading-auto'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { callHandler, cn } from '../../shared/utils'
+import { cn } from '../../shared/utils'
 import { Icon } from '../icon'
 import type { IconT } from '../icon'
 
@@ -90,18 +91,6 @@ export namespace ButtonT {
 // NOTE: keep `type` here; `interface extends ...` breaks Solid JSX inference for polymorphic components.
 export type ButtonProps<T extends ValidComponent = 'button'> = ButtonT.Props<T>
 
-type PromiseLikeWithFinally = PromiseLike<unknown> & {
-  then: PromiseLike<unknown>['then']
-}
-
-function isPromiseLike(value: unknown): value is PromiseLikeWithFinally {
-  return (
-    (typeof value === 'object' || typeof value === 'function') &&
-    value !== null &&
-    typeof (value as PromiseLike<unknown>).then === 'function'
-  )
-}
-
 /**
  * Rock UI Button built on top of Kobalte `Button.Root` with polymorphic `as` support.
  */
@@ -113,11 +102,11 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
     ['leading', 'trailing', 'children'],
   )
 
-  const [loadingAutoState, setLoadingAutoState] = createSignal(false)
-
-  const isLoading = createMemo(() =>
-    Boolean(stateProps.loading || (stateProps.loadingAuto && loadingAutoState())),
-  )
+  const { isLoading, onClick } = useLoadingAutoClick<ElementOf<T>, MouseEvent>({
+    loading: () => stateProps.loading,
+    loadingAuto: () => stateProps.loadingAuto,
+    onClick: () => stateProps.onClick,
+  })
 
   const iconSize = createMemo(() =>
     styleProps.size?.startsWith('icon-') ? styleProps.size.replace('icon-', '') : undefined,
@@ -134,19 +123,6 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
 
     return contentProps.leading
   })
-
-  const onClick: JSX.EventHandlerUnion<any, MouseEvent> = (event) => {
-    const { result: handlerResult, defaultPrevented } = callHandler(event, stateProps.onClick)
-
-    if (!stateProps.loadingAuto || defaultPrevented || !isPromiseLike(handlerResult)) {
-      return
-    }
-
-    setLoadingAutoState(true)
-    Promise.resolve(handlerResult).finally(() => {
-      setLoadingAutoState(false)
-    })
-  }
 
   return (
     <KobalteButton.Root

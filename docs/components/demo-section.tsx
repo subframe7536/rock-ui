@@ -1,7 +1,7 @@
 import { Show } from 'solid-js'
 import type { JSX } from 'solid-js'
 
-import { Button, Icon } from '../../src'
+import { IconButton } from '../../src'
 
 // ── DemoSection with source code preview ───────────────────────────────
 
@@ -27,10 +27,12 @@ async function copyCode(html: string): Promise<void> {
       'text/html': new Blob([html], { type: 'text/html' }),
     })
     await navigator.clipboard.write([item])
+    await wait(COPY_SUCCESS_TIMEOUT_MS)
     return
   }
 
-  await navigator.clipboard.writeText(plainText).then(() => wait(COPY_SUCCESS_TIMEOUT_MS))
+  await navigator.clipboard.writeText(plainText)
+  await wait(COPY_SUCCESS_TIMEOUT_MS)
 }
 
 export interface DemoSectionProps {
@@ -53,16 +55,16 @@ export const DemoSection = (props: DemoSectionProps) => {
         <div class="p-6">{props.children}</div>
         <Show when={props.code}>
           <div class="relative">
-            <Button
-              size="icon-md"
-              variant="ghost"
-              classes={{ root: 'absolute end-2 top-2' }}
-              loadingIcon={false}
+            <IconButton
+              name="i-lucide:copy"
+              loadingIcon="i-lucide:check"
+              size="md"
+              classes={{
+                root: 'absolute end-2 top-2 text-zinc-600 hover:(bg-zinc-100 text-zinc-900) p-1.5',
+              }}
               loadingAuto
               onClick={() => copyCode(props.code!)}
-            >
-              {(state) => <Icon name={state.loading ? 'i-lucide:check' : 'i-lucide:copy'} />}
-            </Button>
+            />
 
             {/* eslint-disable-next-line solid/no-innerhtml -- shiki HTML generated at build time */}
             <div

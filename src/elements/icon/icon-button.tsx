@@ -4,14 +4,16 @@ import type { JSX, ValidComponent } from 'solid-js'
 import { splitProps } from 'solid-js'
 
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
+import { useLoadingAutoClick } from '../../shared/use-loading-auto'
 
 import { Icon } from './icon'
 import type { IconT } from './icon'
-import { iconButtonVariants } from './icon-button.class'
+import { iconButtonVariants, iconVariants } from './icon-button.class'
+import type { IconButtonVariantProps } from './icon-button.class'
 
 export namespace IconButtonT {
-  export type Slot = 'root'
-  export interface Variant {}
+  export type Slot = 'root' | 'icon'
+  export interface Variant extends IconButtonVariantProps {}
   export interface Items {}
   export type Extend<T extends ValidComponent = 'button'> = PolymorphicProps<
     T,
@@ -41,10 +43,10 @@ export namespace IconButtonT {
     loadingIcon?: IconT.Name
 
     /**
-     * The size of the button.
-     * @default 'md'
+     * Auto toggles loading while async click handlers are pending.
+     * @default false
      */
-    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    loadingAuto?: boolean
   }
 
   /**
@@ -74,24 +76,35 @@ export function IconButton<T extends ValidComponent = 'button'>(
     'styles',
     'name',
     'loading',
+    'loadingAuto',
     'loadingIcon',
     'disabled',
     'size',
+    'onClick',
   ])
+
+  const { isLoading, onClick } = useLoadingAutoClick<ElementOf<T>, MouseEvent>({
+    loading: () => localProps.loading,
+    loadingAuto: () => localProps.loadingAuto,
+    onClick: () => localProps.onClick,
+  })
 
   return (
     <KobalteButton.Root
       data-slot="icon-button"
       class={iconButtonVariants({ size: localProps.size }, localProps.classes?.root)}
       style={localProps.styles?.root}
-      aria-busy={localProps.loading || undefined}
-      data-loading={localProps.loading ? '' : undefined}
-      disabled={localProps.loading || localProps.disabled}
+      aria-busy={isLoading() || undefined}
+      data-loading={isLoading() ? '' : undefined}
+      disabled={isLoading() || localProps.disabled}
+      onClick={onClick}
       {...restProps}
     >
       <Icon
-        name={localProps.loading ? localProps.loadingIcon || 'icon-loading' : localProps.name}
-        class={localProps.loading ? 'animate-loading' : ''}
+        data-loading={isLoading() ? '' : undefined}
+        name={isLoading() ? (localProps.loadingIcon ?? 'icon-loading') : localProps.name}
+        class={iconVariants({ size: localProps.size }, localProps.classes?.icon)}
+        style={localProps.styles?.icon}
       />
     </KobalteButton.Root>
   )
