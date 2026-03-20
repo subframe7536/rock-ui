@@ -86,6 +86,9 @@ function typeIncludesUndefined(type: ts.Type): boolean {
   return false
 }
 
+const TYPE_FORMAT_FLAGS =
+  ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
+
 function inferModuleFromFileName(fileName: string): string {
   const normalized = fileName.replaceAll('\\', '/')
   const idx = normalized.lastIndexOf('/node_modules/')
@@ -229,7 +232,7 @@ function extractItemsDoc(
 function createPropDoc(checker: ts.TypeChecker, propSymbol: ts.Symbol, location: ts.Node): PropDoc {
   const name = propSymbol.getName()
   const propType = checker.getTypeOfSymbolAtLocation(propSymbol, location)
-  const type = checker.typeToString(propType, location, ts.TypeFormatFlags.NoTruncation)
+  const type = checker.typeToString(propType, location, TYPE_FORMAT_FLAGS)
 
   const optionalFlag = (propSymbol.flags & ts.SymbolFlags.Optional) !== 0
   const required = !(optionalFlag || typeIncludesUndefined(propType))

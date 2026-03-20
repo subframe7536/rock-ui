@@ -71,6 +71,17 @@ interface PropOnlyProps {}
 declare function PropOnly(props: PropOnlyProps): JSX.Element
 `
 
+const D_MTS_EXTERNAL_ALIAS = `
+import type { ExternalProps } from 'opaque-lib'
+
+declare namespace ExternalAliasT {
+  type Slot = 'root'
+}
+
+interface ExternalAliasProps extends ExternalProps {}
+declare function ExternalAlias(props: ExternalAliasProps): JSX.Element
+`
+
 async function createTempProject(): Promise<string> {
   return mkdtemp(path.join(tmpdir(), 'rock-ui-api-doc-'))
 }
@@ -79,6 +90,17 @@ async function writeProjectDts(projectRoot: string, content: string): Promise<vo
   const distDir = path.join(projectRoot, 'dist')
   await mkdir(distDir, { recursive: true })
   await writeFile(path.join(distDir, 'index.d.mts'), content, 'utf8')
+}
+
+async function writeNodeModuleFile(
+  projectRoot: string,
+  moduleName: string,
+  relativePath: string,
+  content: string,
+): Promise<void> {
+  const filePath = path.join(projectRoot, 'node_modules', moduleName, relativePath)
+  await mkdir(path.dirname(filePath), { recursive: true })
+  await writeFile(filePath, content, 'utf8')
 }
 
 afterEach(() => {
@@ -178,6 +200,62 @@ describe('generateApiDoc', () => {
         },
       ],
     })
+
+    await rm(projectRoot, { recursive: true, force: true })
+  })
+
+  test('uses readable type aliases for inherited external types without absolute import paths', async () => {
+    const projectRoot = await createTempProject()
+    await writeProjectDts(projectRoot, D_MTS_EXTERNAL_ALIAS)
+
+    await writeNodeModuleFile(
+      projectRoot,
+      'opaque-lib',
+      'package.json',
+      JSON.stringify({
+        name: 'opaque-lib',
+        version: '1.0.0',
+        types: 'dist/index.d.ts',
+      }),
+    )
+    await writeNodeModuleFile(
+      projectRoot,
+      'opaque-lib',
+      'dist/list.d.ts',
+      `
+export interface KeyboardDelegate {
+  getKey?: (key: string) => string | undefined
+}
+`,
+    )
+    await writeNodeModuleFile(
+      projectRoot,
+      'opaque-lib',
+      'dist/index.d.ts',
+      `
+import { KeyboardDelegate as K } from './list'
+
+export interface ExternalProps {
+  keyboardDelegate?: K
+}
+`,
+    )
+
+    const result = await generateApiDoc(projectRoot)
+    expect(result).not.toBeNull()
+    const data = result!
+
+    const externalDoc = data.componentDocs.get('external-alias')
+    expect(externalDoc).toBeDefined()
+
+    const inheritedGroup = externalDoc!.props.inherited.find((group) => group.from === 'opaque-lib')
+    expect(inheritedGroup).toBeDefined()
+
+    const keyboardDelegateProp = inheritedGroup!.props.find((prop) => prop.name === 'keyboardDelegate')
+    expect(keyboardDelegateProp).toBeDefined()
+    expect(keyboardDelegateProp!.type).toBe('KeyboardDelegate')
+    expect(keyboardDelegateProp!.type).not.toContain('import("')
+    expect(keyboardDelegateProp!.type).not.toContain('/node_modules/')
 
     await rm(projectRoot, { recursive: true, force: true })
   })
