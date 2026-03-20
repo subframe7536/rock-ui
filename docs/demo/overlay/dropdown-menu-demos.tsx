@@ -6,10 +6,10 @@ import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
 const badgeClass =
-  'rounded-md b-1 b-border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 font-medium text-[11px] text-zinc-700'
+  'rounded-md b-1 b-border border-border bg-muted px-1.5 py-0.5 font-medium text-[11px] text-foreground'
 
 const avatarClass =
-  'grid size-4 place-items-center rounded-full bg-linear-to-br from-sky-500 to-violet-500 text-[10px] font-semibold text-white'
+  'grid size-4 place-items-center rounded-full bg-linear-to-br from-primary to-accent text-[10px] font-semibold text-primary-foreground'
 
 export default () => {
   const [lastAction, setLastAction] = createSignal('None')
@@ -366,7 +366,7 @@ export default () => {
           <DropdownMenu items={accountItems}>
             <Button variant="outline">Open account menu</Button>
           </DropdownMenu>
-          <p class="text-sm text-zinc-600">
+          <p class="text-sm text-muted-foreground">
             Last action: <span class="font-medium">{lastAction()}</span>
           </p>
         </div>
@@ -382,7 +382,7 @@ export default () => {
               <Button variant="outline">Editor menu</Button>
             </DropdownMenu>
           </div>
-          <div class="text-sm text-zinc-600 flex flex-wrap gap-4">
+          <div class="text-sm text-muted-foreground flex flex-wrap gap-4">
             <span>
               Line numbers: <span class="font-medium">{String(showLineNumbers())}</span>
             </span>
@@ -410,11 +410,11 @@ export default () => {
           <DropdownMenu items={projectItems}>
             <Button>Project actions</Button>
           </DropdownMenu>
-          <p class="text-sm text-zinc-600">
+          <p class="text-sm text-muted-foreground">
             Tip: use arrow keys to walk the nested “Move To…” and release sections.
           </p>
         </div>
-        <div class="text-sm text-zinc-600">
+        <div class="text-sm text-muted-foreground">
           Last action: <span class="font-medium">{lastAction()}</span>
         </div>
       </DemoSection>

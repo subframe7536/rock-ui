@@ -44,21 +44,21 @@ export const DemoPage = (props: DemoPageProps) => {
   }
 
   return (
-    <main class="text-zinc-900 p-4 min-h-screen w-full sm:p-8">
+    <main class="text-foreground p-4 min-h-screen w-full sm:p-8">
       <div class="mx-auto flex flex-col gap-8 max-w-6xl">
         <header class="text-foreground">
           <div class="flex flex-wrap gap-2 items-center">
             <Show when={component()?.category}>
-              <p class="text-xs text-zinc-500 tracking-[0.16em] font-semibold uppercase">
+              <p class="text-xs text-muted-foreground tracking-[0.16em] font-semibold uppercase">
                 {component()!.category}
               </p>
             </Show>
-            <p class="text-xs text-zinc-500 font-mono">{props.componentKey}</p>
+            <p class="text-xs text-muted-foreground font-mono">{props.componentKey}</p>
             <Show when={component()?.polymorphic}>
-              <span class="text-xs text-zinc-500">•</span>
+              <span class="text-xs text-muted-foreground">•</span>
             </Show>
             <Show when={component()?.polymorphic}>
-              <p class="text-xs text-zinc-600 font-medium">Polymorphic</p>
+              <p class="text-xs text-muted-foreground font-medium">Polymorphic</p>
             </Show>
           </div>
           <h1 class="text-2xl font-semibold mt-3 sm:text-3xl">
@@ -67,12 +67,12 @@ export const DemoPage = (props: DemoPageProps) => {
             </Show>
           </h1>
           <Show when={component()?.description}>
-            <p class="text-sm text-zinc-600 mt-2 max-w-3xl sm:text-base">
+            <p class="text-sm text-muted-foreground mt-2 max-w-3xl sm:text-base">
               {component()!.description}
             </p>
           </Show>
           <Show when={component()?.sourcePath}>
-            <p class="text-xs text-zinc-500 font-mono mt-3">{component()!.sourcePath}</p>
+            <p class="text-xs text-muted-foreground font-mono mt-3">{component()!.sourcePath}</p>
           </Show>
         </header>
 
@@ -80,7 +80,7 @@ export const DemoPage = (props: DemoPageProps) => {
 
         <Show when={slots().length > 0}>
           <section>
-            <h2 class="text-xs text-zinc-500 tracking-[0.16em] font-semibold mb-4 uppercase">
+            <h2 class="text-xs text-muted-foreground tracking-[0.16em] font-semibold mb-4 uppercase">
               Slots
             </h2>
             <div class="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ export const DemoPage = (props: DemoPageProps) => {
 
         <Show when={hasProps()}>
           <section>
-            <h2 class="text-xs text-zinc-500 tracking-[0.16em] font-semibold mb-4 uppercase">
+            <h2 class="text-xs text-muted-foreground tracking-[0.16em] font-semibold mb-4 uppercase">
               Props
             </h2>
             <PropsTable props={propsDoc()} items={itemsDoc()} />

@@ -35,10 +35,10 @@ export default () => {
             classes={{ leading: 'bg-muted p-3' }}
           />
           <Input leading="i-lucide-mail" trailing="i-lucide-check" placeholder="Email" />
-          <Input trailing={<span class="text-xs text-zinc-400">.com</span>} placeholder="Domain" />
+          <Input trailing={<span class="text-xs text-muted-foreground/80">.com</span>} placeholder="Domain" />
           <Input
             leading={
-              <div class="text-zinc-500 flex gap-1 items-center">
+              <div class="text-muted-foreground flex gap-1 items-center">
                 <div class="i-lucide-globe" />
                 https://
               </div>
@@ -85,7 +85,7 @@ export default () => {
             onValueChange={setTextareaValue}
             placeholder="Start typing..."
           />
-          <p class="text-xs text-zinc-500">Characters: {textareaValue().length}</p>
+          <p class="text-xs text-muted-foreground">Characters: {textareaValue().length}</p>
         </div>
       </DemoSection>
 

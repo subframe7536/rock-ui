@@ -40,10 +40,10 @@ function normalizeType(type: string): string {
 
 function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
   return (
-    <div class="b-1 b-zinc-200/80 rounded-lg overflow-x-auto">
+    <div class="b-1 b-border rounded-lg overflow-x-auto">
       <table class="text-sm w-full border-collapse">
         <thead>
-          <tr class="text-xs text-zinc-500 tracking-wider text-left bg-zinc-50 uppercase">
+          <tr class="text-xs text-muted-foreground tracking-wider text-left bg-muted uppercase">
             <th class="font-medium px-3 py-2">Prop</th>
             <th class="font-medium px-3 py-2">Type</th>
             <th class="font-medium px-3 py-2">Default</th>
@@ -53,23 +53,23 @@ function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
         <tbody>
           <For each={tableProps.props}>
             {(prop) => (
-              <tr class="b-t b-zinc-100 hover:bg-zinc-50/50">
+              <tr class="b-t b-border hover:bg-muted/50">
                 <td class="text-xs text-primary font-mono px-3 py-2 whitespace-nowrap">
                   {prop.name}
                   {prop.required ? '*' : ''}
                 </td>
                 <td class="px-3 py-2">
-                  <code class="text-xs text-zinc-600 px-1.5 py-0.5 rounded bg-zinc-100">
+                  <code class="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
                     {normalizeType(prop.type)}
                   </code>
                 </td>
-                <td class="text-xs text-zinc-500 px-3 py-2">
-                  <Show when={prop.defaultValue} fallback={<span class="text-zinc-300">—</span>}>
-                    <code class="px-1.5 py-0.5 rounded bg-zinc-100">{prop.defaultValue}</code>
+                <td class="text-xs text-muted-foreground px-3 py-2">
+                  <Show when={prop.defaultValue} fallback={<span class="text-muted-foreground/80">—</span>}>
+                    <code class="px-1.5 py-0.5 rounded bg-muted">{prop.defaultValue}</code>
                   </Show>
                 </td>
-                <td class="text-zinc-600 px-3 py-2">
-                  <Show when={prop.description} fallback={<span class="text-zinc-300">—</span>}>
+                <td class="text-muted-foreground px-3 py-2">
+                  <Show when={prop.description} fallback={<span class="text-muted-foreground/80">—</span>}>
                     {prop.description}
                   </Show>
                 </td>
@@ -89,7 +89,7 @@ function InheritedGroup(groupProps: { group: InheritedGroupDoc }): JSX.Element {
     <div>
       <button
         type="button"
-        class="text-xs text-zinc-500 flex gap-1.5 cursor-pointer transition-colors items-center hover:text-zinc-700"
+        class="text-xs text-muted-foreground flex gap-1.5 cursor-pointer transition-colors items-center hover:text-foreground"
         onClick={() => setOpen((v) => !v)}
       >
         <span
@@ -98,8 +98,8 @@ function InheritedGroup(groupProps: { group: InheritedGroupDoc }): JSX.Element {
         >
           ▶
         </span>
-        Inherited from <code class="text-zinc-600 font-mono">{groupProps.group.from}</code>
-        <span class="text-zinc-400">({groupProps.group.props.length})</span>
+        Inherited from <code class="text-muted-foreground font-mono">{groupProps.group.from}</code>
+        <span class="text-muted-foreground/80">({groupProps.group.props.length})</span>
       </button>
 
       <Show when={open()}>
@@ -115,9 +115,9 @@ function ItemsBlock(itemsProps: { items: ItemsDoc }): JSX.Element {
   return (
     <div class="flex flex-col gap-2">
       <div class="flex flex-col gap-1">
-        <p class="text-xs text-zinc-500 tracking-wider uppercase">Items</p>
+        <p class="text-xs text-muted-foreground tracking-wider uppercase">Items</p>
         <Show when={itemsProps.items.description}>
-          {(description) => <p class="text-sm text-zinc-600">{description()}</p>}
+          {(description) => <p class="text-sm text-muted-foreground">{description()}</p>}
         </Show>
       </div>
 

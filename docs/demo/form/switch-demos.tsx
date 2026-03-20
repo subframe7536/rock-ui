@@ -99,7 +99,7 @@ export default () => {
             checkedIcon="i-lucide-check-check"
             uncheckedIcon="i-lucide-x"
           />
-          <p class="text-xs text-zinc-600">Current value: {deploymentGuard()}</p>
+          <p class="text-xs text-muted-foreground">Current value: {deploymentGuard()}</p>
         </div>
       </DemoSection>
     </DemoPage>

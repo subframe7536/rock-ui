@@ -1,7 +1,7 @@
 import type { Accessor } from 'solid-js'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 
-import { cn, Input } from '../../src'
+import { cn, Input, Switch } from '../../src'
 
 export interface SidebarPage {
   key: string
@@ -13,6 +13,8 @@ export interface SidebarProps {
   pages: SidebarPage[]
   activePage: Accessor<string>
   setActivePage: (key: string) => void
+  theme: Accessor<'light' | 'dark'>
+  setTheme: (theme: 'light' | 'dark') => void
 }
 
 export const Sidebar = (props: SidebarProps) => {
@@ -39,66 +41,87 @@ export const Sidebar = (props: SidebarProps) => {
   })
 
   return (
-    <aside class="text-zinc-800 p-4 border-e-(1 border) bg-zinc-100 flex shrink-0 flex-col gap-4 h-full w-full overflow-y-auto">
-      <div class="px-2">
-        <div class="text-zinc-700 flex gap-2 items-center justify-between">
-          <div class="flex gap-2 min-w-0 items-center">
-            <img src="/favicon.svg" alt="icon" class="size-6" />
-            <div class="min-w-0">
-              <p class="text-[11px] text-zinc-500 tracking-[0.16em] uppercase">Library Docs</p>
-              <p class="text-sm font-semibold truncate">Rock UI</p>
+    <aside class="text-foreground border-e-(1 border) bg-muted flex shrink-0 flex-col h-full w-full relative overflow-hidden">
+      <div class="p-4 pb-3 border-b border-border bg-muted">
+        <div class="px-2">
+          <div class="text-foreground flex gap-2 items-center justify-between">
+            <div class="flex gap-2 min-w-0 items-center">
+              <img src="/favicon.svg" alt="icon" class="size-6" />
+              <div class="min-w-0">
+                <p class="text-[11px] text-muted-foreground tracking-[0.16em] uppercase">
+                  Library Docs
+                </p>
+                <p class="text-sm font-semibold truncate">Rock UI</p>
+              </div>
             </div>
           </div>
-          <span class="text-xs text-zinc-600">{props.pages.length}</span>
+        </div>
+
+        <div class="mt-4 px-1">
+          <Input
+            type="text"
+            placeholder="Search component..."
+            value={search()}
+            onInput={(e) => setSearch(e.currentTarget.value)}
+            leading="icon-search"
+            classes={{ root: 'bg-background' }}
+          />
         </div>
       </div>
 
-      <div class="px-1">
-        <Input
-          type="text"
-          placeholder="Search component..."
-          value={search()}
-          onInput={(e) => setSearch(e.currentTarget.value)}
-          leading="icon-search"
-          classes={{ root: 'bg-white' }}
-        />
+      <div class="p-4 pb-22 pt-3 flex-1 overflow-y-auto">
+        <nav class="pb-2 flex flex-col gap-4">
+          <For each={grouped()}>
+            {([group, pages]) => (
+              <section>
+                <div class="text-[11px] text-muted-foreground tracking-[0.14em] mb-1.5 px-2 flex uppercase items-center justify-between">
+                  <span class="font-semibold">{group}</span>
+                  <span class="text-muted-foreground">{pages.length}</span>
+                </div>
+
+                <div class="flex flex-col gap-0.5">
+                  <For each={pages}>
+                    {(page) => (
+                      <button
+                        type="button"
+                        class={cn(
+                          'text-sm text-muted-foreground px-2.5 py-1.5 text-left rounded-lg transition-colors',
+                          props.activePage() === page.key
+                            ? 'text-foreground bg-accent/80'
+                            : 'hover:(text-foreground bg-muted)',
+                        )}
+                        onClick={() => props.setActivePage(page.key)}
+                      >
+                        {page.label}
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </section>
+            )}
+          </For>
+
+          <Show when={grouped().length === 0}>
+            <p class="text-xs text-muted-foreground px-2">No results</p>
+          </Show>
+        </nav>
       </div>
 
-      <nav class="pb-2 flex flex-col gap-4">
-        <For each={grouped()}>
-          {([group, pages]) => (
-            <section>
-              <div class="text-[11px] text-zinc-500 tracking-[0.14em] mb-1.5 px-2 flex uppercase items-center justify-between">
-                <span class="font-semibold">{group}</span>
-                <span class="text-zinc-600">{pages.length}</span>
-              </div>
-
-              <div class="flex flex-col gap-0.5">
-                <For each={pages}>
-                  {(page) => (
-                    <button
-                      type="button"
-                      class={cn(
-                        'text-sm text-zinc-600 px-2.5 py-1.5 text-left rounded-lg transition-colors',
-                        props.activePage() === page.key
-                          ? 'text-zinc-900 bg-zinc-300/80'
-                          : 'hover:(text-zinc-800 bg-zinc-200)',
-                      )}
-                      onClick={() => props.setActivePage(page.key)}
-                    >
-                      {page.label}
-                    </button>
-                  )}
-                </For>
-              </div>
-            </section>
-          )}
-        </For>
-
-        <Show when={grouped().length === 0}>
-          <p class="text-xs text-zinc-500 px-2">No results</p>
-        </Show>
-      </nav>
+      <div class="p-3 border-t border-border bg-background/92 inset-x-0 bottom-0 absolute backdrop-blur">
+        <Switch
+          size="sm"
+          checked={props.theme() === 'dark'}
+          onChange={(next) => props.setTheme(next ? 'dark' : 'light')}
+          checkedIcon="i-lucide-moon"
+          uncheckedIcon="i-lucide-sun"
+          label="Dark Mode"
+          classes={{
+            root: 'w-full items-center justify-between',
+            wrapper: 'ms-0',
+            label: 'text-sm text-muted-foreground font-medium',
+          }}
+        />
+      </div>
     </aside>
   )
 }

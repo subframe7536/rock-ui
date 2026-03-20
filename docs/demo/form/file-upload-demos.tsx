@@ -57,7 +57,7 @@ export default () => {
             accept="image/*,.pdf"
             onValueChange={setSingleValue}
           />
-          <p class="text-xs text-zinc-600">Selected file: {fileNames(singleValue())}</p>
+          <p class="text-xs text-muted-foreground">Selected file: {fileNames(singleValue())}</p>
         </div>
       </DemoSection>
 
@@ -76,9 +76,9 @@ export default () => {
             onFileReject={(files) => setRejectedCount(files.length)}
             highlight
           />
-          <p class="text-xs text-zinc-600">Selected count: {fileCount(multiValue())}</p>
-          <p class="text-xs text-zinc-600">Selected names: {fileNames(multiValue())}</p>
-          <p class="text-xs text-zinc-600">Last reject batch size: {rejectedCount()}</p>
+          <p class="text-xs text-muted-foreground">Selected count: {fileCount(multiValue())}</p>
+          <p class="text-xs text-muted-foreground">Selected names: {fileNames(multiValue())}</p>
+          <p class="text-xs text-muted-foreground">Last reject batch size: {rejectedCount()}</p>
         </div>
       </DemoSection>
 
@@ -123,7 +123,7 @@ export default () => {
               <Button type="submit" variant="secondary" size="sm">
                 Validate
               </Button>
-              <p class="text-xs text-zinc-600">
+              <p class="text-xs text-muted-foreground">
                 Current attachment: {formState().attachment?.name ?? 'none'}
               </p>
             </div>

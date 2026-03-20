@@ -40,7 +40,7 @@ export default () => {
               <h3 class="text-sm font-semibold">Scrollable Popup</h3>
               <div class="mt-2 space-y-1">
                 <For each={SCROLLABLE_LINES}>
-                  {(line) => <p class="text-sm text-zinc-700">{line}</p>}
+                  {(line) => <p class="text-sm text-foreground">{line}</p>}
                 </For>
               </div>
             </div>

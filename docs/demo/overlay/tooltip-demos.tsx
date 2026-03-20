@@ -50,10 +50,10 @@ export default () => {
           <Tooltip text="Button trigger">
             <Button>Hover me</Button>
           </Tooltip>
-          <p class="text-sm text-zinc-700">
+          <p class="text-sm text-foreground">
             Hover over this{' '}
             <Tooltip text="Inline tooltip">
-              <span class="font-medium border-b border-zinc-400 border-dashed cursor-help">
+              <span class="font-medium border-b border-border border-dashed cursor-help">
                 underlined text
               </span>
             </Tooltip>{' '}

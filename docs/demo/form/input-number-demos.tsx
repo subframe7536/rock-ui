@@ -18,11 +18,11 @@ export default () => {
       >
         <div class="flex flex-wrap gap-6 items-start">
           <div class="space-y-1">
-            <label class="text-xs text-zinc-500 block">Horizontal</label>
+            <label class="text-xs text-muted-foreground block">Horizontal</label>
             <InputNumber defaultValue={5} minValue={0} maxValue={20} />
           </div>
           <div class="space-y-1">
-            <label class="text-xs text-zinc-500 block">Vertical</label>
+            <label class="text-xs text-muted-foreground block">Vertical</label>
             <InputNumber orientation="vertical" defaultValue={5} minValue={0} maxValue={20} />
           </div>
         </div>
@@ -33,7 +33,7 @@ export default () => {
           <For each={VARIANTS}>
             {(variant) => (
               <div class="space-y-1">
-                <label class="text-xs text-zinc-500 block">{variant}</label>
+                <label class="text-xs text-muted-foreground block">{variant}</label>
                 <InputNumber variant={variant} defaultValue={3} />
               </div>
             )}
@@ -55,7 +55,7 @@ export default () => {
             variant="subtle"
             highlight
           />
-          <p class="text-xs text-zinc-600">Current value: {controlledValue()}</p>
+          <p class="text-xs text-muted-foreground">Current value: {controlledValue()}</p>
         </div>
       </DemoSection>
 
@@ -76,7 +76,7 @@ export default () => {
             step={1}
             variant="subtle"
           />
-          <p class="text-xs text-zinc-600">
+          <p class="text-xs text-muted-foreground">
             Hold <span class="font-medium">+</span> or <span class="font-medium">−</span> to repeat.
             Current value: {pressHoldValue()}
           </p>
@@ -89,11 +89,11 @@ export default () => {
       >
         <div class="flex flex-wrap gap-6 items-start">
           <div class="space-y-1">
-            <label class="text-xs text-zinc-500 block">Step 5 (0–100)</label>
+            <label class="text-xs text-muted-foreground block">Step 5 (0–100)</label>
             <InputNumber defaultValue={25} minValue={0} maxValue={100} step={5} />
           </div>
           <div class="space-y-1">
-            <label class="text-xs text-zinc-500 block">Step 0.1 (0–1)</label>
+            <label class="text-xs text-muted-foreground block">Step 0.1 (0–1)</label>
             <InputNumber defaultValue={0.5} minValue={0} maxValue={1} step={0.1} />
           </div>
         </div>

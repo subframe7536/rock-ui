@@ -46,21 +46,21 @@ export const DemoSection = (props: DemoSectionProps) => {
   return (
     <section class="relative space-y-4">
       <div class="space-y-1">
-        <h2 class="text-xs text-zinc-500 tracking-[0.18em] font-semibold uppercase">
+        <h2 class="text-xs text-muted-foreground tracking-[0.18em] font-semibold uppercase">
           {props.title}
         </h2>
-        <p class="text-sm text-zinc-600">{props.description}</p>
+        <p class="text-sm text-muted-foreground">{props.description}</p>
       </div>
-      <div class="border border-zinc-200 rounded-2xl bg-white shadow-sm overflow-hidden">
+      <div class="border border-border rounded-2xl bg-background shadow-sm overflow-hidden">
         <div class="p-6 flex items-center justify-center">{props.children}</div>
         <Show when={props.code}>
-          <div class="border-t border-zinc-200 bg-zinc-50/70 relative">
+          <div class="border-t border-border bg-muted/70 relative">
             <IconButton
               name="i-lucide:copy"
               loadingIcon="i-lucide:check"
               size="md"
               classes={{
-                root: 'absolute end-2 top-2 z-1 text-zinc-600 hover:(bg-zinc-100 text-zinc-900) p-1.5',
+                root: 'absolute end-2 top-2 z-1 text-muted-foreground hover:(bg-muted text-foreground) p-1.5',
               }}
               loadingAuto
               onClick={() => copyCode(props.code!)}

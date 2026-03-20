@@ -34,11 +34,11 @@ export default () => {
     <div class="mx-auto p-5 max-w-6xl space-y-10 lg:p-10 sm:p-8">
       <section class="py-2">
         <div class="flex flex-col gap-4 max-w-3xl">
-          <p class="text-xs text-zinc-500 tracking-[0.18em] font-semibold uppercase">Rock UI</p>
-          <h1 class="text-3xl text-zinc-900 leading-tight font-semibold sm:text-4xl">
+          <p class="text-xs text-muted-foreground tracking-[0.18em] font-semibold uppercase">Rock UI</p>
+          <h1 class="text-3xl text-foreground leading-tight font-semibold sm:text-4xl">
             SolidJS component library for building production-grade interfaces quickly.
           </h1>
-          <p class="text-zinc-600 max-w-2xl sm:text-lg">
+          <p class="text-muted-foreground max-w-2xl sm:text-lg">
             Inspired by Nuxt UI and shadcn. Rock UI gives you composable primitives, rich variants,
             and form-focused ergonomics with UnoCSS-first styling.
           </p>
@@ -73,7 +73,7 @@ export default () => {
             </span>
           }
         >
-          <p class="text-sm text-zinc-600">
+          <p class="text-sm text-muted-foreground">
             Slot-based APIs with class and style overrides, designed for real product surfaces.
           </p>
         </Card>
@@ -87,7 +87,7 @@ export default () => {
             </span>
           }
         >
-          <p class="text-sm text-zinc-600">
+          <p class="text-sm text-muted-foreground">
             Visual variants, sizes, orientation, and state controls aligned across components.
           </p>
         </Card>
@@ -101,7 +101,7 @@ export default () => {
             </span>
           }
         >
-          <p class="text-sm text-zinc-600">
+          <p class="text-sm text-muted-foreground">
             Keyboard and aria-ready primitives built on top of mature SolidJS foundations.
           </p>
         </Card>
@@ -109,8 +109,8 @@ export default () => {
 
       <section class="space-y-4">
         <div class="space-y-1">
-          <h2 class="text-xl text-zinc-900 font-semibold">Quick Start</h2>
-          <p class="text-sm text-zinc-600">
+          <h2 class="text-xl text-foreground font-semibold">Quick Start</h2>
+          <p class="text-sm text-muted-foreground">
             Install and start exploring component pages from the sidebar.
           </p>
         </div>
@@ -129,7 +129,7 @@ export default () => {
               label: 'bun',
               value: 'bun',
               content: (
-                <pre class="text-sm text-zinc-800 font-mono p-4 bg-zinc-100 overflow-x-auto">
+                <pre class="text-sm text-foreground font-mono p-4 bg-muted overflow-x-auto">
                   <code>bun add @subf/rock-ui</code>
                 </pre>
               ),
@@ -138,7 +138,7 @@ export default () => {
               label: 'pnpm',
               value: 'pnpm',
               content: (
-                <pre class="text-sm text-zinc-800 font-mono p-4 bg-zinc-100 overflow-x-auto">
+                <pre class="text-sm text-foreground font-mono p-4 bg-muted overflow-x-auto">
                   <code>pnpm add @subf/rock-ui</code>
                 </pre>
               ),
@@ -147,7 +147,7 @@ export default () => {
               label: 'npm',
               value: 'npm',
               content: (
-                <pre class="text-sm text-zinc-800 font-mono p-4 bg-zinc-100 overflow-x-auto">
+                <pre class="text-sm text-foreground font-mono p-4 bg-muted overflow-x-auto">
                   <code>npm i @subf/rock-ui</code>
                 </pre>
               ),
@@ -157,7 +157,7 @@ export default () => {
       </section>
 
       <section class="space-y-4">
-        <h2 class="text-xl text-zinc-900 font-semibold">Recommended First Components</h2>
+        <h2 class="text-xl text-foreground font-semibold">Recommended First Components</h2>
         <div class="flex flex-wrap gap-2">
           <For each={starterComponents()}>
             {(component) => (
@@ -171,7 +171,7 @@ export default () => {
 
       <section class="space-y-4">
         <div class="flex flex-wrap gap-2 items-center justify-between">
-          <h2 class="text-xl text-zinc-900 font-semibold">Components</h2>
+          <h2 class="text-xl text-foreground font-semibold">Components</h2>
           <Badge variant="outline">{apiIndex.components.length} components</Badge>
         </div>
 
@@ -185,10 +185,10 @@ export default () => {
                     {(component) => (
                       <a
                         href={`#${component.key}`}
-                        class="p-3 border border-zinc-200 rounded-lg bg-white block transition hover:bg-zinc-50"
+                        class="p-3 border border-border rounded-lg bg-background block transition hover:bg-muted"
                       >
-                        <p class="text-sm text-zinc-800 font-medium">{component.name}</p>
-                        <p class="text-xs text-zinc-500 mt-2">{component.description}</p>
+                        <p class="text-sm text-foreground font-medium">{component.name}</p>
+                        <p class="text-xs text-muted-foreground mt-2">{component.description}</p>
                       </a>
                     )}
                   </For>

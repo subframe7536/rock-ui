@@ -92,21 +92,21 @@ export default () => {
           <div class="flex flex-wrap gap-2">
             <button
               type="button"
-              class="text-sm px-3 py-1.5 b-(1 zinc-300) rounded-md hover:bg-zinc-100"
+              class="text-sm px-3 py-1.5 b-(1 border) rounded-md hover:bg-muted"
               onClick={() => setIndeterminate('indeterminate')}
             >
               Set indeterminate
             </button>
             <button
               type="button"
-              class="text-sm px-3 py-1.5 b-(1 zinc-300) rounded-md hover:bg-zinc-100"
+              class="text-sm px-3 py-1.5 b-(1 border) rounded-md hover:bg-muted"
               onClick={() => setIndeterminate(true)}
             >
               Set checked
             </button>
             <button
               type="button"
-              class="text-sm px-3 py-1.5 b-(1 zinc-300) rounded-md hover:bg-zinc-100"
+              class="text-sm px-3 py-1.5 b-(1 border) rounded-md hover:bg-muted"
               onClick={() => setIndeterminate(false)}
             >
               Set unchecked
@@ -129,10 +129,10 @@ export default () => {
             onChange={setFeatureFlag}
             indicator="end"
           />
-          <p class="text-xs text-zinc-600">Current value: {featureFlag()}</p>
+          <p class="text-xs text-muted-foreground">Current value: {featureFlag()}</p>
 
-          <div class="p-3 b-(1 zinc-200) rounded-lg">
-            <p class="text-xs text-zinc-600 mb-2">Indicator matrix:</p>
+          <div class="p-3 b-(1 border) rounded-lg">
+            <p class="text-xs text-muted-foreground mb-2">Indicator matrix:</p>
             <div class="flex flex-col gap-2">
               <For each={INDICATORS}>
                 {(indicator) => (

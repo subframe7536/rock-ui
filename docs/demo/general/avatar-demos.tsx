@@ -25,13 +25,13 @@ export default () => {
           <Avatar
             items={[{ src: source(), alt: 'Rock UI' }]}
             classes={{
-              root: 'ring-zinc-300',
+              root: 'ring-ring',
             }}
           />
 
           <button
             type="button"
-            class="text-sm px-3 py-2 b-1 b-border border-zinc-300 rounded-md bg-white hover:bg-zinc-50"
+            class="text-sm px-3 py-2 b-1 b-border border-border rounded-md bg-background hover:bg-muted"
             onClick={() => {
               setSource((current) => (current === IMAGE_A ? IMAGE_B : IMAGE_A))
             }}

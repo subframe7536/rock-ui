@@ -40,7 +40,7 @@ export default () => {
             ]}
           />
 
-          <p class="text-xs text-zinc-600">Current open value: {openValue()?.[0] ?? 'none'}</p>
+          <p class="text-xs text-muted-foreground">Current open value: {openValue()?.[0] ?? 'none'}</p>
         </div>
       </DemoSection>
 
@@ -66,9 +66,9 @@ export default () => {
             },
           ]}
           classes={{
-            root: 'max-w-xl rounded-lg b-1 b-border border-zinc-200 bg-white',
+            root: 'max-w-xl rounded-lg b-1 b-border border-border bg-background',
             trigger: 'px-4',
-            content: 'px-4 text-zinc-700',
+            content: 'px-4 text-foreground',
           }}
         />
       </DemoSection>
@@ -93,7 +93,7 @@ export default () => {
                     <li>Configure authentication</li>
                     <li>Enable notifications</li>
                   </ul>
-                  <div class="text-xs text-zinc-600 p-2 rounded-md bg-zinc-100">
+                  <div class="text-xs text-muted-foreground p-2 rounded-md bg-muted">
                     Tip: You can finish the checklist later from Settings.
                   </div>
                 </div>
@@ -122,9 +122,9 @@ export default () => {
             },
           ]}
           classes={{
-            root: 'max-w-xl rounded-lg b-1 b-border border-zinc-200 bg-white',
+            root: 'max-w-xl rounded-lg b-1 b-border border-border bg-background',
             trigger: 'px-3',
-            content: 'px-4 text-zinc-700',
+            content: 'px-4 text-foreground',
           }}
         />
       </DemoSection>

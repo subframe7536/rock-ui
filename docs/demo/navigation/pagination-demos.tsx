@@ -23,7 +23,7 @@ export default () => {
             prevText="上一页"
             nextText="下一页"
           />
-          <p class="text-xs text-zinc-600">Current page: {page()}</p>
+          <p class="text-xs text-muted-foreground">Current page: {page()}</p>
         </div>
       </DemoSection>
 

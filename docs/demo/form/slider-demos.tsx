@@ -46,8 +46,8 @@ export default () => {
             onChange={setSingleCommit}
             highlight
           />
-          <p class="text-xs text-zinc-600">Current value: {formatSliderValue(singleValue())}</p>
-          <p class="text-xs text-zinc-600">
+          <p class="text-xs text-muted-foreground">Current value: {formatSliderValue(singleValue())}</p>
+          <p class="text-xs text-muted-foreground">
             Last committed value: {formatSliderValue(singleCommit())}
           </p>
         </div>
@@ -70,7 +70,7 @@ export default () => {
               }
             }}
           />
-          <p class="text-xs text-zinc-600">
+          <p class="text-xs text-muted-foreground">
             Range: {rangeValue()[0]} - {rangeValue()[1]} ; Min steps between: 10
           </p>
         </div>
@@ -82,11 +82,11 @@ export default () => {
       >
         <div class="gap-8 grid items-start sm:grid-cols-2">
           <div class="space-y-2">
-            <label class="text-xs text-zinc-500 block">Horizontal</label>
+            <label class="text-xs text-muted-foreground block">Horizontal</label>
             <Slider defaultValue={45} />
           </div>
           <div class="space-y-2">
-            <label class="text-xs text-zinc-500 block">Vertical</label>
+            <label class="text-xs text-muted-foreground block">Vertical</label>
             <div class="flex h-48 items-center">
               <Slider orientation="vertical" defaultValue={45} />
             </div>
@@ -99,7 +99,7 @@ export default () => {
           <For each={SIZES}>
             {(size) => (
               <div class="space-y-2">
-                <label class="text-xs text-zinc-500 block uppercase">{size}</label>
+                <label class="text-xs text-muted-foreground block uppercase">{size}</label>
                 <Slider size={size} defaultValue={35} />
               </div>
             )}
@@ -131,7 +131,7 @@ export default () => {
               <Button type="submit" variant="secondary" size="sm">
                 Validate
               </Button>
-              <p class="text-xs text-zinc-600">Current volume: {formState().volume}</p>
+              <p class="text-xs text-muted-foreground">Current volume: {formState().volume}</p>
             </div>
           </div>
         </Form>

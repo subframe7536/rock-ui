@@ -27,13 +27,13 @@ export default () => {
         description="List, card, and table variants for single selection."
       >
         <div class="gap-4 grid lg:grid-cols-3 sm:grid-cols-2">
-          <div class="p-4 b-(1 zinc-200) rounded-lg">
+          <div class="p-4 b-(1 border) rounded-lg">
             <RadioGroup legend="List" items={ITEMS} defaultValue="starter" />
           </div>
-          <div class="p-4 b-(1 zinc-200) rounded-lg">
+          <div class="p-4 b-(1 border) rounded-lg">
             <RadioGroup legend="Card" items={ITEMS} variant="card" defaultValue="pro" />
           </div>
-          <div class="p-4 b-(1 zinc-200) rounded-lg">
+          <div class="p-4 b-(1 border) rounded-lg">
             <RadioGroup
               legend="Table"
               items={ITEMS}
@@ -52,7 +52,7 @@ export default () => {
         <div class="gap-4 grid lg:grid-cols-3 sm:grid-cols-2">
           <For each={INDICATORS}>
             {(indicator) => (
-              <div class="p-4 b-(1 zinc-200) rounded-lg">
+              <div class="p-4 b-(1 border) rounded-lg">
                 <RadioGroup
                   legend={`Indicator ${indicator}`}
                   items={ITEMS}
@@ -74,7 +74,7 @@ export default () => {
           <div class="space-y-3">
             <For each={SIZES}>
               {(size) => (
-                <div class="p-4 b-(1 zinc-200) rounded-lg">
+                <div class="p-4 b-(1 border) rounded-lg">
                   <RadioGroup
                     legend={`Size ${size}`}
                     items={ITEMS}
@@ -86,7 +86,7 @@ export default () => {
             </For>
           </div>
           <div class="space-y-3">
-            <div class="p-4 b-(1 zinc-200) rounded-lg">
+            <div class="p-4 b-(1 border) rounded-lg">
               <RadioGroup
                 legend="Horizontal card"
                 items={ITEMS}
@@ -95,7 +95,7 @@ export default () => {
                 defaultValue="pro"
               />
             </div>
-            <div class="p-4 b-(1 zinc-200) rounded-lg">
+            <div class="p-4 b-(1 border) rounded-lg">
               <RadioGroup
                 legend="Horizontal table"
                 items={ITEMS}
@@ -129,7 +129,7 @@ export default () => {
             variant="table"
             orientation="horizontal"
           />
-          <p class="text-xs text-zinc-600">Current plan: {value()}</p>
+          <p class="text-xs text-muted-foreground">Current plan: {value()}</p>
         </div>
       </DemoSection>
     </DemoPage>

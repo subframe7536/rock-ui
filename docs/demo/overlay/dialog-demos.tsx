@@ -20,7 +20,7 @@ export default () => {
             title="Delete Project"
             description="This action cannot be undone."
             body={
-              <p class="text-sm text-zinc-700">
+              <p class="text-sm text-foreground">
                 The selected project and all related records will be permanently removed.
               </p>
             }
@@ -71,7 +71,7 @@ export default () => {
             body={
               <div class="space-y-1">
                 <For each={SCROLLABLE_LINES}>
-                  {(line) => <p class="text-sm text-zinc-700">{line}</p>}
+                  {(line) => <p class="text-sm text-foreground">{line}</p>}
                 </For>
               </div>
             }
@@ -85,7 +85,7 @@ export default () => {
             onClosePrevent={() => setPreventedCloseCount((value) => value + 1)}
             title="Persistent dialog"
             body={
-              <p class="text-sm text-zinc-700">
+              <p class="text-sm text-foreground">
                 Prevented close attempts: <span class="font-medium">{preventedCloseCount()}</span>
               </p>
             }

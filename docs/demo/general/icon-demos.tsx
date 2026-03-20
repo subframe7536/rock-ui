@@ -30,9 +30,9 @@ export default () => (
       <div class="gap-4 grid grid-cols-4 sm:grid-cols-6">
         <For each={ICON_NAMES}>
           {(name) => (
-            <div class="p-3 b-1 b-border border-zinc-200 rounded-lg flex flex-col gap-2 items-center">
+            <div class="p-3 b-1 b-border border-border rounded-lg flex flex-col gap-2 items-center">
               <Icon name={name} size={24} />
-              <span class="text-[10px] text-zinc-500 truncate">
+              <span class="text-[10px] text-muted-foreground truncate">
                 {name.replace('i-lucide-', '')}
               </span>
             </div>
@@ -47,7 +47,7 @@ export default () => (
           {(size) => (
             <div class="flex flex-col gap-1 items-center">
               <Icon name="i-lucide-star" size={size} />
-              <span class="text-[10px] text-zinc-500">{size}px</span>
+              <span class="text-[10px] text-muted-foreground">{size}px</span>
             </div>
           )}
         </For>
@@ -77,11 +77,11 @@ export default () => (
               </svg>
             }
           />
-          <span class="text-[10px] text-zinc-500">JSX element</span>
+          <span class="text-[10px] text-muted-foreground">JSX element</span>
         </div>
         <div class="flex flex-col gap-1 items-center">
           <Icon name={() => <div class="i-lucide-zap size-6" />} />
-          <span class="text-[10px] text-zinc-500">Render function</span>
+          <span class="text-[10px] text-muted-foreground">Render function</span>
         </div>
       </div>
     </DemoSection>

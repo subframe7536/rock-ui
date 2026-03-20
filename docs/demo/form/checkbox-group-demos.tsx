@@ -23,13 +23,13 @@ export default () => {
         description="List, card, and table variants with shared items data."
       >
         <div class="gap-4 grid lg:grid-cols-3 sm:grid-cols-2">
-          <div class="p-4 b-(1 zinc-200) rounded-lg">
+          <div class="p-4 b-(1 border) rounded-lg">
             <CheckboxGroup legend="List" items={ITEMS} defaultValue={['alpha']} />
           </div>
-          <div class="p-4 b-(1 zinc-200) rounded-lg">
+          <div class="p-4 b-(1 border) rounded-lg">
             <CheckboxGroup legend="Card" items={ITEMS} variant="card" defaultValue={['beta']} />
           </div>
-          <div class="p-4 b-(1 zinc-200) rounded-lg">
+          <div class="p-4 b-(1 border) rounded-lg">
             <CheckboxGroup
               legend="Table"
               items={ITEMS}
@@ -48,8 +48,8 @@ export default () => {
         <div class="gap-4 grid lg:grid-cols-3 sm:grid-cols-2">
           <For each={INDICATORS}>
             {(indicator) => (
-              <div class="p-4 b-(1 zinc-200) rounded-lg space-y-2">
-                <p class="text-xs text-zinc-600">Indicator: {indicator}</p>
+              <div class="p-4 b-(1 border) rounded-lg space-y-2">
+                <p class="text-xs text-muted-foreground">Indicator: {indicator}</p>
                 <CheckboxGroup
                   legend="Vertical"
                   items={ITEMS}
@@ -73,7 +73,7 @@ export default () => {
         <div class="gap-3 grid lg:grid-cols-3 sm:grid-cols-2">
           <For each={SIZES}>
             {(size) => (
-              <div class="p-4 b-(1 zinc-200) rounded-lg">
+              <div class="p-4 b-(1 border) rounded-lg">
                 <CheckboxGroup
                   legend={`Size ${size}`}
                   items={ITEMS}
@@ -103,7 +103,7 @@ export default () => {
             value={value()}
             onChange={setValue}
           />
-          <p class="text-xs text-zinc-600">Selected: {value().join(', ') || 'none'}</p>
+          <p class="text-xs text-muted-foreground">Selected: {value().join(', ') || 'none'}</p>
         </div>
       </DemoSection>
     </DemoPage>

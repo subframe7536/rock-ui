@@ -14,7 +14,7 @@ export default () => (
         <For each={TYPES}>
           {(type) => (
             <div class="space-y-2">
-              <p class="text-xs text-zinc-600 tracking-wider uppercase">{type}</p>
+              <p class="text-xs text-muted-foreground tracking-wider uppercase">{type}</p>
               <Separator type={type} />
             </div>
           )}
@@ -27,7 +27,7 @@ export default () => (
         <For each={SIZES}>
           {(size) => (
             <div class="space-y-2">
-              <p class="text-xs text-zinc-600 tracking-wider uppercase">{size}</p>
+              <p class="text-xs text-muted-foreground tracking-wider uppercase">{size}</p>
               <Separator size={size} />
             </div>
           )}
@@ -41,7 +41,7 @@ export default () => (
     >
       <div class="space-y-6">
         <Separator>
-          <span class="text-xs text-zinc-500">OR</span>
+          <span class="text-xs text-muted-foreground">OR</span>
         </Separator>
 
         <div class="flex gap-4 h-20 items-center">

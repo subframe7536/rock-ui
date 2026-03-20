@@ -75,7 +75,7 @@ export default () => {
         description="Single checkbox states with full-surface card interactions and controlled value."
       >
         <div class="gap-4 grid sm:grid-cols-2">
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <Checkbox
               label="Default list style"
               description="No variant prop, focus ring follows keyboard focus"
@@ -93,7 +93,7 @@ export default () => {
             />
           </div>
 
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <Checkbox
               label="Accept terms"
               description="Required before creating workspace"
@@ -108,7 +108,7 @@ export default () => {
             />
           </div>
 
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <Checkbox
               label="Controlled consent"
               description={`Current: ${agreeChecked() ? 'checked' : 'unchecked'}`}
@@ -136,7 +136,7 @@ export default () => {
         description="Supports object items with card/table variants and controlled arrays."
       >
         <div class="gap-4 grid sm:grid-cols-2">
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <CheckboxGroup
               legend="Uncontrolled channels"
               items={CHECKBOX_GROUP_ITEMS}
@@ -145,7 +145,7 @@ export default () => {
             />
           </div>
 
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <CheckboxGroup
               legend="Controlled channels"
               items={CHECKBOX_GROUP_ITEMS}
@@ -154,7 +154,7 @@ export default () => {
               value={groupValue()}
               onChange={setGroupValue}
             />
-            <p class="text-xs text-zinc-600">Selected: {groupValue().join(', ') || 'none'}</p>
+            <p class="text-xs text-muted-foreground">Selected: {groupValue().join(', ') || 'none'}</p>
           </div>
         </div>
       </DemoSection>
@@ -163,12 +163,12 @@ export default () => {
         title="Radio Group"
         description="Single-selection options with card/table layouts and controlled value."
       >
-        <div class="mb-4 p-4 b-1 b-border border-zinc-200 rounded-lg">
+        <div class="mb-4 p-4 b-1 b-border border-border rounded-lg">
           <RadioGroup legend="Default list plan" items={RADIO_ITEMS} defaultValue="pro" />
         </div>
 
         <div class="gap-4 grid sm:grid-cols-2">
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <RadioGroup
               legend="Uncontrolled plan"
               items={RADIO_ITEMS}
@@ -177,7 +177,7 @@ export default () => {
             />
           </div>
 
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <RadioGroup
               legend="Controlled plan"
               items={RADIO_ITEMS}
@@ -186,7 +186,7 @@ export default () => {
               value={planValue()}
               onChange={setPlanValue}
             />
-            <p class="text-xs text-zinc-600">Current plan: {planValue()}</p>
+            <p class="text-xs text-muted-foreground">Current plan: {planValue()}</p>
           </div>
         </div>
       </DemoSection>
@@ -196,7 +196,7 @@ export default () => {
         description="Toggle states with icon slots and loading lock behavior."
       >
         <div class="gap-4 grid sm:grid-cols-2">
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <Switch
               label="Email alerts"
               description="Uncontrolled state"
@@ -205,7 +205,7 @@ export default () => {
             />
           </div>
 
-          <div class="p-4 b-1 b-border border-zinc-200 rounded-lg space-y-3">
+          <div class="p-4 b-1 b-border border-border rounded-lg space-y-3">
             <Switch
               label="Deploy protection"
               description={`Current: ${switchValue() ? 'enabled' : 'disabled'}`}

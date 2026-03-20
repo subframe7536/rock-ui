@@ -19,7 +19,7 @@ export default () => {
                 side={side}
                 title={`Sheet ${side}`}
                 description={`This sheet opens from ${side}.`}
-                body={<p class="text-sm text-zinc-700">Body content from {side} side.</p>}
+                body={<p class="text-sm text-foreground">Body content from {side} side.</p>}
               >
                 <Button variant="outline" size="sm">
                   {side}
@@ -65,7 +65,7 @@ export default () => {
             onClosePrevent={() => setPreventedCloseCount((value) => value + 1)}
             title="Persistent sheet"
             body={
-              <p class="text-sm text-zinc-700">
+              <p class="text-sm text-foreground">
                 Prevented close attempts: <span class="font-medium">{preventedCloseCount()}</span>
               </p>
             }

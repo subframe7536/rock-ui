@@ -109,7 +109,7 @@ export default defineConfig<PresetWind4Theme>({
   --secondary-foreground: hsl(210 40% 90%);
   --muted: hsl(217.2 32.6% 17.5%);
   --muted-foreground: hsl(215 20.2% 65.1%);
-  --accent: hsl(217.2 32.6% 17.5%);
+  --accent: hsl(217.2 32.6% 32.5%);
   --accent-foreground: hsl(210 40% 98%);
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(210 40% 98%);

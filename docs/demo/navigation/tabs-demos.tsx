@@ -9,19 +9,19 @@ const BASE_ITEMS = [
     label: 'Overview',
     value: 'overview',
     icon: 'i-lucide:layout-dashboard',
-    content: <p class="text-sm text-zinc-700">Overview panel content.</p>,
+    content: <p class="text-sm text-foreground">Overview panel content.</p>,
   },
   {
     label: 'Settings',
     value: 'settings',
     icon: 'i-lucide:settings',
-    content: <p class="text-sm text-zinc-700">Settings panel content.</p>,
+    content: <p class="text-sm text-foreground">Settings panel content.</p>,
   },
   {
     label: 'Billing',
     value: 'billing',
     icon: 'i-lucide:credit-card',
-    content: <p class="text-sm text-zinc-700">Billing panel content.</p>,
+    content: <p class="text-sm text-foreground">Billing panel content.</p>,
   },
 ] as const
 
@@ -62,7 +62,7 @@ export default () => {
           <For each={SIZE_OPTIONS}>
             {(size) => (
               <div class="space-y-1">
-                <p class="text-xs text-zinc-500 tracking-wide uppercase">{size}</p>
+                <p class="text-xs text-muted-foreground tracking-wide uppercase">{size}</p>
                 <Tabs
                   size={size}
                   defaultValue="overview"
@@ -70,17 +70,17 @@ export default () => {
                     {
                       label: 'Overview',
                       value: 'overview',
-                      content: <p class="text-sm text-zinc-700">Overview</p>,
+                      content: <p class="text-sm text-foreground">Overview</p>,
                     },
                     {
                       label: 'Metrics',
                       value: 'metrics',
-                      content: <p class="text-sm text-zinc-700">Metrics</p>,
+                      content: <p class="text-sm text-foreground">Metrics</p>,
                     },
                     {
                       label: 'Activity',
                       value: 'activity',
-                      content: <p class="text-sm text-zinc-700">Activity</p>,
+                      content: <p class="text-sm text-foreground">Activity</p>,
                     },
                   ]}
                 />
@@ -115,24 +115,24 @@ export default () => {
               {
                 label: 'Overview',
                 value: 'overview',
-                content: <p class="text-sm text-zinc-700">Overview section with release status.</p>,
+                content: <p class="text-sm text-foreground">Overview section with release status.</p>,
               },
               {
                 label: 'Settings',
                 value: 'settings',
                 content: (
-                  <p class="text-sm text-zinc-700">Settings section with environment options.</p>
+                  <p class="text-sm text-foreground">Settings section with environment options.</p>
                 ),
               },
               {
                 label: 'Billing (Disabled)',
                 value: 'billing',
                 disabled: true,
-                content: <p class="text-sm text-zinc-700">This panel is intentionally disabled.</p>,
+                content: <p class="text-sm text-foreground">This panel is intentionally disabled.</p>,
               },
             ]}
           />
-          <p class="text-xs text-zinc-600">Current tab value: {value()}</p>
+          <p class="text-xs text-muted-foreground">Current tab value: {value()}</p>
         </div>
       </DemoSection>
     </DemoPage>

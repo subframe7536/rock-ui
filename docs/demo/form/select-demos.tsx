@@ -65,7 +65,7 @@ export default () => {
             placeholder="Pick a fruit..."
             allowClear
           />
-          <p class="text-xs text-zinc-500">Selected: {singleValue() ?? 'none'}</p>
+          <p class="text-xs text-muted-foreground">Selected: {singleValue() ?? 'none'}</p>
         </div>
       </DemoSection>
 
@@ -79,7 +79,7 @@ export default () => {
             placeholder="Pick fruits..."
             allowClear
           />
-          <p class="text-xs text-zinc-500">Selected: {multiValue().join(', ') || 'none'}</p>
+          <p class="text-xs text-muted-foreground">Selected: {multiValue().join(', ') || 'none'}</p>
         </div>
       </DemoSection>
 
@@ -97,7 +97,7 @@ export default () => {
             tokenSeparators={[' ']}
             placeholder="Type text and press Space..."
           />
-          <p class="text-xs text-zinc-500">Tags: {tagValues().join(', ') || 'none'}</p>
+          <p class="text-xs text-muted-foreground">Tags: {tagValues().join(', ') || 'none'}</p>
         </div>
       </DemoSection>
 
@@ -127,7 +127,7 @@ export default () => {
               </div>
             )}
           />
-          <p class="text-xs text-zinc-500">Tags: {createTagValues().join(', ') || 'none'}</p>
+          <p class="text-xs text-muted-foreground">Tags: {createTagValues().join(', ') || 'none'}</p>
         </div>
       </DemoSection>
 
@@ -167,11 +167,11 @@ export default () => {
       >
         <div class="gap-4 grid sm:grid-cols-2">
           <div class="space-y-1">
-            <label class="text-xs text-zinc-500 block">maxCount=2</label>
+            <label class="text-xs text-muted-foreground block">maxCount=2</label>
             <Select multiple options={FRUIT_OPTIONS} maxCount={2} placeholder="Pick up to 2..." />
           </div>
           <div class="space-y-1">
-            <label class="text-xs text-zinc-500 block">maxTagCount=1 (value has 3)</label>
+            <label class="text-xs text-muted-foreground block">maxTagCount=1 (value has 3)</label>
             <Select
               multiple
               options={FRUIT_OPTIONS}
@@ -229,7 +229,7 @@ export default () => {
             loading={loadingMore()}
             placeholder="Scroll to load more..."
           />
-          <p class="text-xs text-zinc-500">Total options: {infiniteOptions().length}</p>
+          <p class="text-xs text-muted-foreground">Total options: {infiniteOptions().length}</p>
         </div>
       </DemoSection>
     </DemoPage>

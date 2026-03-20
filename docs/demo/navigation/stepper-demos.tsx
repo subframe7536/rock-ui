@@ -11,21 +11,21 @@ const createCheckoutSteps = () => [
     description: 'Where should we send the order?',
     icon: 'i-lucide:map-pinned',
     value: 'address',
-    content: <p class="text-sm text-zinc-700">Collect shipping address details.</p>,
+    content: <p class="text-sm text-foreground">Collect shipping address details.</p>,
   },
   {
     title: 'Shipping',
     description: 'Choose a delivery method.',
     icon: 'i-lucide:truck',
     value: 'shipping',
-    content: <p class="text-sm text-zinc-700">Pick standard, express, or local pickup.</p>,
+    content: <p class="text-sm text-foreground">Pick standard, express, or local pickup.</p>,
   },
   {
     title: 'Payment',
     description: 'Confirm billing and payment.',
     icon: 'i-lucide:credit-card',
     value: 'payment',
-    content: <p class="text-sm text-zinc-700">Review billing details and submit payment.</p>,
+    content: <p class="text-sm text-foreground">Review billing details and submit payment.</p>,
   },
 ]
 
@@ -33,17 +33,17 @@ const RELEASE_STEPS = () => [
   {
     title: 'Draft',
     value: 'draft',
-    content: <p class="text-sm text-zinc-700">Prepare release notes.</p>,
+    content: <p class="text-sm text-foreground">Prepare release notes.</p>,
   },
   {
     title: 'Review',
     value: 'review',
-    content: <p class="text-sm text-zinc-700">Collect team approvals.</p>,
+    content: <p class="text-sm text-foreground">Collect team approvals.</p>,
   },
   {
     title: 'Ship',
     value: 'ship',
-    content: <p class="text-sm text-zinc-700">Deploy to production.</p>,
+    content: <p class="text-sm text-foreground">Deploy to production.</p>,
   },
 ]
 
@@ -52,19 +52,19 @@ const PIPELINE_STEPS = () => [
     title: 'Queued',
     description: 'Waiting for worker capacity.',
     value: 'queued',
-    content: <p class="text-sm text-zinc-700">This job is waiting in the queue.</p>,
+    content: <p class="text-sm text-foreground">This job is waiting in the queue.</p>,
   },
   {
     title: 'Building',
     description: 'Compiling and bundling assets.',
     value: 'building',
-    content: <p class="text-sm text-zinc-700">The current build is running.</p>,
+    content: <p class="text-sm text-foreground">The current build is running.</p>,
   },
   {
     title: 'Ready',
     description: 'Artifacts are available.',
     value: 'ready',
-    content: <p class="text-sm text-zinc-700">The deployment artifact is ready to use.</p>,
+    content: <p class="text-sm text-foreground">The deployment artifact is ready to use.</p>,
   },
 ]
 
@@ -83,7 +83,7 @@ export default () => {
           <For each={STEPPER_SIZES}>
             {(size) => (
               <div class="space-y-2">
-                <p class="text-xs text-zinc-500 tracking-wide font-medium uppercase">{size}</p>
+                <p class="text-xs text-muted-foreground tracking-wide font-medium uppercase">{size}</p>
                 <Stepper items={createCheckoutSteps()} defaultValue="shipping" size={size} />
               </div>
             )}
@@ -104,21 +104,21 @@ export default () => {
       >
         <div class="space-y-6">
           <div class="space-y-2">
-            <p class="text-xs text-zinc-500 tracking-wide font-medium uppercase">
+            <p class="text-xs text-muted-foreground tracking-wide font-medium uppercase">
               Default (`linear=true`, `clickable=false`)
             </p>
             <Stepper items={createCheckoutSteps()} defaultValue="address" />
           </div>
 
           <div class="space-y-2">
-            <p class="text-xs text-zinc-500 tracking-wide font-medium uppercase">
+            <p class="text-xs text-muted-foreground tracking-wide font-medium uppercase">
               Click enabled (`linear=true`, `clickable=true`)
             </p>
             <Stepper items={createCheckoutSteps()} defaultValue="address" clickable />
           </div>
 
           <div class="space-y-2">
-            <p class="text-xs text-zinc-500 tracking-wide font-medium uppercase">
+            <p class="text-xs text-muted-foreground tracking-wide font-medium uppercase">
               Non-linear (`linear=false`, `clickable=true`)
             </p>
             <Stepper
@@ -152,7 +152,7 @@ export default () => {
             <Button size="sm" variant="outline" onclick={() => setReleaseStep('ship')}>
               Go to ship
             </Button>
-            <p class="text-xs text-zinc-600">Current step: {releaseStep()}</p>
+            <p class="text-xs text-muted-foreground">Current step: {releaseStep()}</p>
           </div>
         </div>
       </DemoSection>

@@ -22,7 +22,7 @@ export default () => (
     </DemoSection>
 
     <DemoSection title="Shortcut Composition" description="Inline command palette hints.">
-      <p class="text-sm text-zinc-700 flex flex-wrap gap-2 items-center">
+      <p class="text-sm text-foreground flex flex-wrap gap-2 items-center">
         Open command palette
         <Kbd value={['Ctrl', 'K']} between={<div>+</div>} />
       </p>

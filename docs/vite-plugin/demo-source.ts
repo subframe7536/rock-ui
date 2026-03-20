@@ -189,7 +189,7 @@ async function transformDemoSource(
 
 export async function demoSourcePlugin(projectRoot?: string): Promise<Plugin> {
   const highlighter = await createHighlighterCore({
-    themes: [import('shiki/themes/one-light.mjs')],
+    themes: [import('shiki/themes/one-light.mjs'), import('shiki/themes/one-dark-pro.mjs')],
     langs: [import('shiki/langs/tsx.mjs')],
     engine: createJavaScriptRegexEngine(),
   })
@@ -213,7 +213,11 @@ export async function demoSourcePlugin(projectRoot?: string): Promise<Plugin> {
         return transformDemoSource(
           code,
           id,
-          (s) => highlighter.codeToHtml(s, { lang: 'tsx', theme: 'one-light' }),
+          (s) =>
+            highlighter.codeToHtml(s, {
+              lang: 'tsx',
+              themes: { light: 'one-light', dark: 'one-dark-pro' },
+            }),
           resolvedRoot,
         )
       },

@@ -48,7 +48,7 @@ export default () => {
             onValueChange={(next) => setValue(String(next ?? ''))}
             placeholder="Start typing..."
           />
-          <p class="text-xs text-zinc-600">Characters: {value().length}</p>
+          <p class="text-xs text-muted-foreground">Characters: {value().length}</p>
           <Textarea disabled value="Disabled textarea state" rows={2} />
         </div>
       </DemoSection>

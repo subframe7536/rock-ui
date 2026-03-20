@@ -9,6 +9,19 @@ import { Resizable } from '../src/elements/resizable'
 
 import { Sidebar } from './components/sidebar'
 
+type ThemeMode = 'light' | 'dark'
+
+function getInitialTheme(): ThemeMode {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function applyTheme(theme: ThemeMode): void {
+  const isDark = theme === 'dark'
+  const root = document.documentElement
+  root.classList.toggle('dark', isDark)
+  root.style.colorScheme = isDark ? 'dark' : 'light'
+}
+
 const DEMO_MAP: Record<string, Component> = {
   intro: lazy(() => import('./demo/guide/intro')),
   accordion: lazy(() => import('./demo/general/accordion-demos')),
@@ -49,6 +62,8 @@ const DEMO_MAP: Record<string, Component> = {
 }
 
 function App() {
+  const [theme, setTheme] = createSignal<ThemeMode>('light')
+
   const pages = createMemo(() => {
     const componentPages = apiIndex.components
       .filter((entry) => entry.key in DEMO_MAP)
@@ -60,6 +75,10 @@ function App() {
   const [page, setPage] = createSignal(location.hash.slice(1) || 'intro')
 
   onMount(() => {
+    const initialTheme = getInitialTheme()
+    setTheme(initialTheme)
+    applyTheme(initialTheme)
+
     window.addEventListener('hashchange', () => {
       setPage(location.hash.slice(1) || 'button')
     })
@@ -83,13 +102,34 @@ function App() {
     setPage(key)
   }
 
+  const updateTheme = (nextTheme: ThemeMode) => {
+    const run = () => {
+      setTheme(nextTheme)
+      applyTheme(nextTheme)
+    }
+
+    if (typeof document.startViewTransition === 'function') {
+      document.startViewTransition(run)
+      return
+    }
+    run()
+  }
+
   const ActiveDemo = createMemo(() => DEMO_MAP[page()])
 
   return (
     <Resizable
       panels={[
         {
-          content: <Sidebar pages={pages()} activePage={page} setActivePage={navigate} />,
+          content: (
+            <Sidebar
+              pages={pages()}
+              activePage={page}
+              setActivePage={navigate}
+              theme={theme}
+              setTheme={updateTheme}
+            />
+          ),
           defaultSize: '18%',
           min: '15%',
           max: '20%',
@@ -99,7 +139,7 @@ function App() {
             <div class="overflow-y-auto">
               <Show
                 when={ActiveDemo()}
-                fallback={<div class="text-sm text-zinc-500 p-6">Demo not found.</div>}
+                fallback={<div class="text-sm text-muted-foreground p-6">Demo not found.</div>}
               >
                 <Dynamic component={ActiveDemo()!} />
               </Show>

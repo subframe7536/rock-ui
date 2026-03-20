@@ -6,13 +6,13 @@ import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
 const badgeClass =
-  'rounded-md b-1 b-border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 font-medium text-[11px] text-zinc-700'
+  'rounded-md b-1 b-border border-border bg-muted px-1.5 py-0.5 font-medium text-[11px] text-foreground'
 
 const surfaceClass =
-  'flex h-24 w-full items-center justify-center rounded-lg b-1 b-border border-zinc-200 bg-white text-sm text-zinc-700'
+  'flex h-24 w-full items-center justify-center rounded-lg b-1 b-border border-border bg-background text-sm text-foreground'
 
 const panelClass =
-  'flex min-h-28 w-full flex-col justify-between rounded-lg b-1 b-border border-zinc-200 bg-white p-4 text-sm text-zinc-700'
+  'flex min-h-28 w-full flex-col justify-between rounded-lg b-1 b-border border-border bg-background p-4 text-sm text-foreground'
 
 export default () => {
   const [lastAction, setLastAction] = createSignal('None')
@@ -277,15 +277,15 @@ export default () => {
           <div class={panelClass}>
             <div class="flex gap-3 items-center justify-between">
               <div>
-                <div class="text-zinc-900 font-medium">dropdown-menu.tsx</div>
-                <div class="text-xs text-zinc-500">src/overlays/dropdown-menu</div>
+                <div class="text-foreground font-medium">dropdown-menu.tsx</div>
+                <div class="text-xs text-muted-foreground">src/overlays/dropdown-menu</div>
               </div>
               <span class={badgeClass}>Modified</span>
             </div>
-            <div class="text-xs text-zinc-500">Right click this file row</div>
+            <div class="text-xs text-muted-foreground">Right click this file row</div>
           </div>
         </ContextMenu>
-        <p class="text-sm text-zinc-600 mt-3">
+        <p class="text-sm text-muted-foreground mt-3">
           Last action: <span class="font-medium">{lastAction()}</span>
         </p>
       </DemoSection>
@@ -296,13 +296,13 @@ export default () => {
       >
         <ContextMenu items={editorItems()}>
           <div class={panelClass}>
-            <div class="text-xs text-zinc-800 font-mono">
+            <div class="text-xs text-foreground font-mono">
               const motion = resolveOverlayMenuSide(placement)
             </div>
-            <div class="text-xs text-zinc-500">Right click the selected line</div>
+            <div class="text-xs text-muted-foreground">Right click the selected line</div>
           </div>
         </ContextMenu>
-        <div class="text-sm text-zinc-600 mt-3 flex flex-wrap gap-4">
+        <div class="text-sm text-muted-foreground mt-3 flex flex-wrap gap-4">
           <span>
             Minimap: <span class="font-medium">{String(showMinimap())}</span>
           </span>
@@ -346,14 +346,14 @@ export default () => {
           <div class={panelClass}>
             <div class="flex gap-3 items-center justify-between">
               <div>
-                <div class="text-zinc-900 font-medium">
+                <div class="text-foreground font-medium">
                   Improve dropdown/context menu motion polish
                 </div>
-                <div class="text-xs text-zinc-500">Overlay milestone · due this sprint</div>
+                <div class="text-xs text-muted-foreground">Overlay milestone · due this sprint</div>
               </div>
               <span class={badgeClass}>In Review</span>
             </div>
-            <div class="text-xs text-zinc-500">Right click this card</div>
+            <div class="text-xs text-muted-foreground">Right click this card</div>
           </div>
         </ContextMenu>
       </DemoSection>

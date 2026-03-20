@@ -17,15 +17,15 @@ export default () => {
         <Collapsible
           defaultOpen={false}
           classes={{
-            root: 'max-w-xl rounded-lg b-(1 border) bg-white',
+            root: 'max-w-xl rounded-lg b-(1 border) bg-background',
             trigger:
-              'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-zinc-50',
-            content: 'px-4 pb-4 text-sm text-zinc-700',
+              'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-muted',
+            content: 'px-4 pb-4 text-sm text-foreground',
           }}
           trigger={(props) => (
             <>
               <span>Release notes</span>
-              <span class={`text-zinc-500 transition-transform ${props.open ? 'rotate-180' : ''}`}>
+              <span class={`text-muted-foreground transition-transform ${props.open ? 'rotate-180' : ''}`}>
                 <span class="i-lucide-chevron-down" />
               </span>
             </>
@@ -40,7 +40,7 @@ export default () => {
           <div class="flex gap-2">
             <button
               type="button"
-              class="text-sm px-3 py-1.5 b-(1 zinc-300) rounded-md hover:bg-zinc-100"
+              class="text-sm px-3 py-1.5 b-(1 border) rounded-md hover:bg-muted"
               onClick={() => setOpen((value) => !value)}
             >
               Toggle controlled panel
@@ -51,15 +51,15 @@ export default () => {
             open={open()}
             onOpenChange={setOpen}
             classes={{
-              root: 'rounded-lg b-(1 border) bg-white',
+              root: 'rounded-lg b-(1 border) bg-background',
               trigger:
-                'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-zinc-50',
-              content: 'px-4 pb-4 text-sm text-zinc-700',
+                'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-muted',
+              content: 'px-4 pb-4 text-sm text-foreground',
             }}
             trigger={({ open: isOpen }) => (
               <>
                 <span>Controlled state panel</span>
-                <span class={`text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                <span class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>
                   <span class="i-lucide-chevron-down" />
                 </span>
               </>
@@ -79,15 +79,15 @@ export default () => {
             disabled
             defaultOpen
             classes={{
-              root: 'rounded-lg b-(1 border) bg-white',
+              root: 'rounded-lg b-(1 border) bg-background',
               trigger:
                 'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between data-disabled:opacity-60',
-              content: 'px-4 pb-4 text-sm text-zinc-700',
+              content: 'px-4 pb-4 text-sm text-foreground',
             }}
             trigger={({ open: isOpen }) => (
               <>
                 <span>Disabled panel</span>
-                <span class={`text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                <span class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>
                   <span class="i-lucide-chevron-down" />
                 </span>
               </>
@@ -101,15 +101,15 @@ export default () => {
             open={quickPanelOpen()}
             onOpenChange={setQuickPanelOpen}
             classes={{
-              root: 'rounded-lg b-(1 border) bg-white',
+              root: 'rounded-lg b-(1 border) bg-background',
               trigger:
-                'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-zinc-50',
-              content: 'px-4 pb-4 text-sm text-zinc-700',
+                'w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-muted',
+              content: 'px-4 pb-4 text-sm text-foreground',
             }}
             trigger={({ open: isOpen }) => (
               <>
                 <span>Force-mount panel</span>
-                <span class={`text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                <span class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>
                   <span class="i-lucide-chevron-down" />
                 </span>
               </>
@@ -128,18 +128,18 @@ export default () => {
           <Collapsible
             defaultOpen
             classes={{
-              root: 'rounded-lg b-(1 border) bg-white',
+              root: 'rounded-lg b-(1 border) bg-background',
               trigger:
-                'w-full px-3 py-2 text-left text-xs font-semibold tracking-wide flex items-center justify-between hover:bg-zinc-50',
-              content: 'px-3 pb-3 text-sm text-zinc-700',
+                'w-full px-3 py-2 text-left text-xs font-semibold tracking-wide flex items-center justify-between hover:bg-muted',
+              content: 'px-3 pb-3 text-sm text-foreground',
             }}
             trigger={({ open: isOpen }) => (
               <>
-                <span class="text-zinc-600 uppercase">Quick panel</span>
+                <span class="text-muted-foreground uppercase">Quick panel</span>
                 <span
-                  class={`rounded bg-zinc-100 inline-flex size-5 transition-transform items-center justify-center ${isOpen ? 'rotate-180' : ''}`}
+                  class={`rounded bg-muted inline-flex size-5 transition-transform items-center justify-center ${isOpen ? 'rotate-180' : ''}`}
                 >
-                  <span class="i-lucide-chevron-down text-xs text-zinc-600" />
+                  <span class="i-lucide-chevron-down text-xs text-muted-foreground" />
                 </span>
               </>
             )}
