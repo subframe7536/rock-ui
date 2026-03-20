@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 import { For, Show, mergeProps, splitProps } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
@@ -15,8 +15,6 @@ import {
   tabsTriggerVariants,
 } from './tabs.class'
 import type { TabsVariantProps } from './tabs.class'
-
-export type TabsValue = string
 
 export namespace TabsT {
   export type Slot =
@@ -42,13 +40,13 @@ export namespace TabsT {
     /**
      * Icon to display next to the label.
      */
-    icon?: IconName
+    icon?: IconT.Name
 
     /**
      * Unique value for the tab.
      * @default index of the item
      */
-    value?: TabsValue
+    value?: string
 
     /**
      * Content to display when the tab is active.

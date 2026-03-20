@@ -12,11 +12,11 @@ import {
   Select,
   Textarea,
 } from '../../../src'
-import type { SelectOption } from '../../../src/forms/select/select'
+import type { SelectT } from '../../../src/forms/select/select'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
-const ROLE_OPTIONS: SelectOption[] = [
+const ROLE_OPTIONS: SelectT.Items[] = [
   { label: 'Developer', value: 'developer' },
   { label: 'Designer', value: 'designer' },
   { label: 'Manager', value: 'manager' },

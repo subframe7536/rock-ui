@@ -6,7 +6,7 @@ import { splitProps } from 'solid-js'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 
 import { Icon } from './icon'
-import type { IconName } from './icon'
+import type { IconT } from './icon'
 import { iconButtonVariants } from './icon-button.class'
 
 export namespace IconButtonT {
@@ -26,7 +26,7 @@ export namespace IconButtonT {
     /**
      * Icon source. Strings should be Uno icon classes such as `i-lucide-search`.
      */
-    name: IconName
+    name: IconT.Name
 
     /**
      * Controlled loading state.
@@ -38,7 +38,7 @@ export namespace IconButtonT {
      * Optional icon shown when `loading` is active.
      * @default 'icon-loading'
      */
-    loadingIcon?: IconName
+    loadingIcon?: IconT.Name
 
     /**
      * The size of the button.

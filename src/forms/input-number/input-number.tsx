@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 import { createMemo, mergeProps, onCleanup, onMount, Show, splitProps } from 'solid-js'
 
 import { Button } from '../../elements/button'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { callHandler, useId } from '../../shared/utils'
@@ -59,7 +59,7 @@ export namespace InputNumberT {
      * Icon for the increment button.
      * @default orientation === 'vertical' ? 'icon-chevron-up' : 'icon-plus'
      */
-    incrementIcon?: IconName
+    incrementIcon?: IconT.Name
 
     /**
      * Whether the increment button is disabled.
@@ -76,7 +76,7 @@ export namespace InputNumberT {
      * Icon for the decrement button.
      * @default orientation === 'vertical' ? 'icon-chevron-down' : 'icon-minus'
      */
-    decrementIcon?: IconName
+    decrementIcon?: IconT.Name
 
     /**
      * Whether the decrement button is disabled.
@@ -192,7 +192,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     () => controlProps.orientation ?? 'horizontal',
   )
 
-  const incrementIcon = createMemo<IconName>(() => {
+  const incrementIcon = createMemo<IconT.Name>(() => {
     if (controlProps.incrementIcon) {
       return controlProps.incrementIcon
     }
@@ -200,7 +200,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     return resolvedOrientation() === 'vertical' ? 'icon-chevron-up' : 'icon-plus'
   })
 
-  const decrementIcon = createMemo<IconName>(() => {
+  const decrementIcon = createMemo<IconT.Name>(() => {
     if (controlProps.decrementIcon) {
       return controlProps.decrementIcon
     }

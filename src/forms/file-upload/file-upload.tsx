@@ -12,7 +12,7 @@ import {
   splitProps,
 } from 'solid-js'
 
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { useId } from '../../shared/utils'
@@ -115,13 +115,13 @@ export namespace FileUploadT {
      * Icon to show in the upload area.
      * @default 'icon-upload'
      */
-    icon?: IconName
+    icon?: IconT.Name
 
     /**
      * Icon to show for individual files when no preview is available.
      * @default 'icon-file'
      */
-    fileIcon?: IconName
+    fileIcon?: IconT.Name
 
     /**
      * Maximum number of files allowed.
@@ -306,8 +306,8 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       dropzone: true,
       preview: true,
       size: 'md' as const,
-      icon: 'icon-upload' as IconName,
-      fileIcon: 'icon-file' as IconName,
+      icon: 'icon-upload' as IconT.Name,
+      fileIcon: 'icon-file' as IconT.Name,
     },
     props,
   )

@@ -2,7 +2,7 @@ import * as KobalteCheckbox from '@kobalte/core/checkbox'
 import type { JSX } from 'solid-js'
 import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
 
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
@@ -99,13 +99,13 @@ export namespace CheckboxT {
      * Icon to show when checked.
      * @default 'icon-check'
      */
-    checkedIcon?: IconName
+    checkedIcon?: IconT.Name
 
     /**
      * Icon to show when indeterminate.
      * @default 'icon-minus'
      */
-    indeterminateIcon?: IconName
+    indeterminateIcon?: IconT.Name
   }
 
   /**
@@ -137,8 +137,8 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       size: 'md' as const,
       variant: 'list' as const,
       indicator: 'start' as const,
-      checkedIcon: 'icon-check' as IconName,
-      indeterminateIcon: 'icon-minus' as IconName,
+      checkedIcon: 'icon-check' as IconT.Name,
+      indeterminateIcon: 'icon-minus' as IconT.Name,
       formFieldBind: true,
       trueValue: true,
       falseValue: false,

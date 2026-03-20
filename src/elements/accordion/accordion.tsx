@@ -5,7 +5,7 @@ import { For, Show, mergeProps, splitProps } from 'solid-js'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { Icon } from '../icon'
-import type { IconName } from '../icon'
+import type { IconT } from '../icon'
 
 export namespace AccordionT {
   export type Slot =
@@ -38,7 +38,7 @@ export namespace AccordionT {
     /**
      * Leading icon name for the accordion item.
      */
-    leading?: IconName
+    leading?: IconT.Name
 
     /**
      * Content to display when the accordion item is expanded.
@@ -74,7 +74,7 @@ export namespace AccordionT {
      * Trailing icon name for all accordion items.
      * @default 'icon-chevron-down'
      */
-    trailing?: IconName
+    trailing?: IconT.Name
   }
 
   /**
@@ -95,7 +95,7 @@ export function Accordion(props: AccordionProps): JSX.Element {
       multiple: false,
       collapsible: true,
       unmountOnHide: true,
-      trailing: 'icon-chevron-down' as IconName,
+      trailing: 'icon-chevron-down' as IconT.Name,
     },
     props,
   ) as AccordionProps

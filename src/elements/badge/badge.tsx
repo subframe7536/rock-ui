@@ -4,7 +4,7 @@ import { Show, createMemo, mergeProps } from 'solid-js'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { Icon, IconButton } from '../icon'
-import type { IconButtonProps, IconName } from '../icon'
+import type { IconButtonProps, IconT } from '../icon'
 
 import type { BadgeVariantProps } from './badge.class'
 import { badgeVariants } from './badge.class'
@@ -35,12 +35,12 @@ export namespace BadgeT {
     /**
      * Leading icon name.
      */
-    leading?: IconName
+    leading?: IconT.Name
 
     /**
      * Trailing icon name.
      */
-    trailing?: IconName
+    trailing?: IconT.Name
 
     /**
      * Callback when the trailing icon/button is clicked.
@@ -57,12 +57,12 @@ export namespace BadgeT {
    * Props for the Badge component.
    */
   export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
-}
 
-export interface BadgeTrailingButtonProps extends Omit<
-  IconButtonProps,
-  'children' | 'name' | 'onClick' | 'size' | 'loading' | 'loadingIcon' | 'type'
-> {}
+  export interface TrailingButtonProps extends Omit<
+    IconButtonProps,
+    'children' | 'name' | 'onClick' | 'size' | 'loading' | 'loadingIcon' | 'type'
+  > {}
+}
 
 /**
  * Props for the Badge component.
@@ -138,8 +138,8 @@ export function Badge(props: BadgeProps): JSX.Element {
               name={trailing()}
               size={merged.size}
               data-slot="trailing"
-              style={merged.styles?.trailing}
-              class={cn('ms-.5', merged.classes?.trailing)}
+              styles={{ root: merged.styles?.trailing }}
+              classes={{ root: cn('ms-.5', merged.classes?.trailing) }}
               onClick={merged.onTrailingClick}
             />
           </Show>

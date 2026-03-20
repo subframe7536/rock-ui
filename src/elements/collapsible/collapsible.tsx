@@ -12,6 +12,17 @@ export namespace CollapsibleT {
   export type Extend = KobalteCollapsible.CollapsibleRootProps
   export interface Classes extends SlotClasses<Slot> {}
   export interface Styles extends SlotStyles<Slot> {}
+
+  /**
+   * Props passed to the trigger render function.
+   */
+  export interface RenderContext {
+    /**
+     * Whether the collapsible is open.
+     */
+    open: boolean
+  }
+
   /**
    * Base props for the Collapsible component.
    */
@@ -46,7 +57,7 @@ export namespace CollapsibleT {
     /**
      * Custom trigger render function.
      */
-    trigger?: (props: CollapsibleTriggerSlotProps) => JSX.Element
+    trigger?: (props: RenderContext) => JSX.Element
 
     /**
      * Content to render inside the collapsible.
@@ -58,16 +69,6 @@ export namespace CollapsibleT {
    * Props for the Collapsible component.
    */
   export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
-}
-
-/**
- * Props passed to the trigger render function.
- */
-export interface CollapsibleTriggerSlotProps {
-  /**
-   * Whether the collapsible is open.
-   */
-  open: boolean
 }
 
 /**

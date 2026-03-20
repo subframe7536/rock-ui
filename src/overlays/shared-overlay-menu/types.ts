@@ -1,6 +1,6 @@
 import type { JSX } from 'solid-js'
 
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/types'
 
 import type { OverlayMenuItems } from './utils'
@@ -30,7 +30,7 @@ export interface OverlayMenuSharedItem<TColor extends string, TItem> {
   /**
    * Icon name or custom element to display at the start of the item.
    */
-  icon?: IconName | JSX.Element
+  icon?: IconT.Name | JSX.Element
 
   /**
    * Array of keyboard shortcuts to display as keys.

@@ -52,10 +52,10 @@ export default () => {
 
       <DemoSection title="Badge Positions" description="Top/bottom + left/right corner badge.">
         <div class="flex flex-wrap gap-3 items-center">
-          <Avatar text="A" badge="i-lucide-check" badgePosition="top-left" />
-          <Avatar text="B" badge="i-lucide-check" badgePosition="top-right" />
-          <Avatar text="C" badge="i-lucide-check" badgePosition="bottom-left" />
-          <Avatar text="D" badge="i-lucide-check" badgePosition="bottom-right" />
+          <Avatar text="A" icon="i-lucide-check" badgePosition="top-left" />
+          <Avatar text="B" icon="i-lucide-check" badgePosition="top-right" />
+          <Avatar text="C" icon="i-lucide-check" badgePosition="bottom-left" />
+          <Avatar text="D" icon="i-lucide-check" badgePosition="bottom-right" />
         </div>
       </DemoSection>
 
@@ -71,7 +71,7 @@ export default () => {
               { src: IMAGE_A, alt: 'Alpha' },
               { src: IMAGE_B, alt: 'Beta' },
               { text: 'CD' },
-              { text: 'EF', badge: 'i-lucide-flask-conical', badgePosition: 'top-right' },
+              { text: 'EF', icon: 'i-lucide-flask-conical', badgePosition: 'top-right' },
               { alt: 'Echo Foxtrot' },
             ]}
           />

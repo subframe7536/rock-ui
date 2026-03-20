@@ -1,7 +1,7 @@
 import type { JSX } from 'solid-js'
 import { Show, createMemo, mergeProps, onMount, splitProps } from 'solid-js'
 
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { ModelModifiers } from '../../shared/input-modifiers'
 import { applyInputModifiers } from '../../shared/input-modifiers'
@@ -85,12 +85,12 @@ export namespace InputT {
     /**
      * Leading icon name.
      */
-    leading?: IconName
+    leading?: IconT.Name
 
     /**
      * Trailing icon name.
      */
-    trailing?: IconName
+    trailing?: IconT.Name
 
     /**
      * Whether the input is in a loading state.
@@ -102,7 +102,7 @@ export namespace InputT {
      * The icon to show when the input is in a loading state.
      * @default 'icon-loading'
      */
-    loadingIcon?: IconName
+    loadingIcon?: IconT.Name
 
     /**
      * Modifiers for the input value (e.g., trim, lazy).
@@ -159,7 +159,7 @@ export function Input(props: InputProps): JSX.Element {
       autocomplete: 'off' as const,
       autofocusDelay: 0,
       variant: 'outlined' as const,
-      loadingIcon: 'icon-loading' as IconName,
+      loadingIcon: 'icon-loading' as IconT.Name,
     },
     props,
   )
@@ -227,14 +227,14 @@ export function Input(props: InputProps): JSX.Element {
     return 'leading'
   })
 
-  const resolvedLeading = createMemo<IconName | undefined>(() => {
+  const resolvedLeading = createMemo<IconT.Name | undefined>(() => {
     if (styleProps.loading && loadingTarget() === 'leading') {
       return styleProps.loadingIcon
     }
 
     return styleProps.leading
   })
-  const resolvedTrailing = createMemo<IconName | undefined>(() => {
+  const resolvedTrailing = createMemo<IconT.Name | undefined>(() => {
     if (styleProps.loading && loadingTarget() === 'trailing') {
       return styleProps.loadingIcon
     }

@@ -12,7 +12,7 @@ import {
 
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
-import type { IconName } from '../icon'
+import type { IconT } from '../icon'
 import { Icon } from '../icon'
 
 import type { AvatarVariantProps } from './avatar.class'
@@ -26,7 +26,7 @@ import {
   avatarRootVariants,
 } from './avatar.class'
 
-export type AvatarStatus = 'idle' | 'loading' | 'loaded' | 'error'
+type Status = 'idle' | 'loading' | 'loaded' | 'error'
 
 export namespace AvatarT {
   export type Slot =
@@ -39,7 +39,6 @@ export namespace AvatarT {
     | 'groupItem'
     | 'groupCount'
   export type Variant = AvatarVariantProps
-  export type BadgePosition = Exclude<AvatarVariantProps['badgePosition'], undefined>
   export interface Items {
     /**
      * Source URL for the avatar image.
@@ -54,13 +53,13 @@ export namespace AvatarT {
     /**
      * Icon name for the badge.
      */
-    badge?: IconName
+    icon?: IconT.Name
 
     /**
      * Position of the badge.
      * @default 'bottom-right'
      */
-    badgePosition?: BadgePosition
+    badgePosition?: NonNullable<AvatarVariantProps['badgePosition']>
 
     /**
      * Initial text to show if image fails or is missing.
@@ -70,12 +69,12 @@ export namespace AvatarT {
     /**
      * Icon name to show as fallback.
      */
-    fallback?: IconName
+    fallback?: IconT.Name
 
     /**
      * Callback when the loading status of the avatar changes.
      */
-    onStatusChange?: (status: AvatarStatus) => void
+    onStatusChange?: (status: Status) => void
   }
   export interface Extend {}
   export interface Classes extends SlotClasses<Slot> {}
@@ -159,7 +158,7 @@ export function Avatar(props: AvatarProps): JSX.Element {
   const [faceProps, restProps] = splitProps(merged, [
     'src',
     'alt',
-    'badge',
+    'icon',
     'badgePosition',
     'text',
     'fallback',
@@ -185,12 +184,12 @@ export function Avatar(props: AvatarProps): JSX.Element {
   })
 
   function AvatarFace(props: AvatarT.Items & { slot: 'root' | 'groupItem' }): JSX.Element {
-    const [status, setStatusSignal] = createSignal<AvatarStatus>('idle')
+    const [status, setStatusSignal] = createSignal<Status>('idle')
     const [resolvedSrc, setResolvedSrc] = createSignal<string | undefined>(undefined)
 
-    let currentStatus: AvatarStatus = 'idle'
+    let currentStatus: Status = 'idle'
 
-    function setStatus(nextStatus: AvatarStatus): void {
+    function setStatus(nextStatus: Status): void {
       if (currentStatus === nextStatus) {
         return
       }
@@ -304,7 +303,7 @@ export function Avatar(props: AvatarProps): JSX.Element {
           </Show>
         </span>
 
-        <Show when={props.badge}>
+        <Show when={props.icon}>
           {(badge) => (
             <span
               data-slot="badge"

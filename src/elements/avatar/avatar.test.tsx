@@ -94,10 +94,10 @@ describe('Avatar', () => {
   test('renders badge and supports four corner positions', () => {
     const screen = render(() => (
       <>
-        <Avatar badge="i-lucide-check" badgePosition="top-left" />
-        <Avatar badge="i-lucide-check" badgePosition="top-right" />
-        <Avatar badge="i-lucide-check" badgePosition="bottom-left" />
-        <Avatar badge="i-lucide-check" badgePosition="bottom-right" />
+        <Avatar icon="i-lucide-check" badgePosition="top-left" />
+        <Avatar icon="i-lucide-check" badgePosition="top-right" />
+        <Avatar icon="i-lucide-check" badgePosition="bottom-left" />
+        <Avatar icon="i-lucide-check" badgePosition="bottom-right" />
       </>
     ))
 
@@ -114,7 +114,7 @@ describe('Avatar', () => {
   })
 
   test('keeps badge visible by not clipping avatar root overflow', () => {
-    const screen = render(() => <Avatar badge="i-lucide-check" />)
+    const screen = render(() => <Avatar icon="i-lucide-check" />)
     const root = screen.container.querySelector('[data-slot="root"]')
 
     expect(root?.className).toContain('overflow-visible')
@@ -124,8 +124,8 @@ describe('Avatar', () => {
   test('supports xs and xl size variants for single avatars', () => {
     const screen = render(() => (
       <>
-        <Avatar size="xs" fallback="i-lucide-user" badge="i-lucide-check" />
-        <Avatar size="xl" fallback="i-lucide-user" badge="i-lucide-check" />
+        <Avatar size="xs" fallback="i-lucide-user" icon="i-lucide-check" />
+        <Avatar size="xl" fallback="i-lucide-user" icon="i-lucide-check" />
       </>
     ))
 
@@ -257,7 +257,7 @@ describe('Avatar', () => {
       <Avatar
         src="/loading.png"
         text="RK"
-        badge="i-lucide-check"
+        icon="i-lucide-check"
         styles={
           {
             root: { width: '200px' },

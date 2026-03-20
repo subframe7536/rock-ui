@@ -11,7 +11,7 @@ import {
 } from 'solid-js'
 
 import { Icon, IconButton } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { Kbd } from '../../elements/kbd'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
@@ -169,31 +169,31 @@ export namespace CommandPaletteT {
      * Icon name for the search indicator.
      * @default 'icon-search'
      */
-    searchIcon?: IconName
+    searchIcon?: IconT.Name
 
     /**
      * Icon name for the loading state.
      * @default 'icon-loading'
      */
-    loadingIcon?: IconName
+    loadingIcon?: IconT.Name
 
     /**
      * Icon name for items with sub-groups.
      * @default 'icon-chevron-right'
      */
-    childIcon?: IconName
+    childIcon?: IconT.Name
 
     /**
      * Icon name for the group navigation back button.
      * @default 'icon-arrow-left'
      */
-    backIcon?: IconName
+    backIcon?: IconT.Name
 
     /**
      * Icon name for the palette close button.
      * @default 'icon-close'
      */
-    closeIcon?: IconName
+    closeIcon?: IconT.Name
 
     /**
      * Whether to show a close button in the header.
@@ -326,11 +326,11 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
       placeholder: 'Search...',
       autofocus: true,
       close: false,
-      searchIcon: 'icon-search' as IconName,
-      loadingIcon: 'icon-loading' as IconName,
-      childIcon: 'icon-chevron-right' as IconName,
-      backIcon: 'icon-arrow-left' as IconName,
-      closeIcon: 'icon-close' as IconName,
+      searchIcon: 'icon-search' as IconT.Name,
+      loadingIcon: 'icon-loading' as IconT.Name,
+      childIcon: 'icon-chevron-right' as IconT.Name,
+      backIcon: 'icon-arrow-left' as IconT.Name,
+      closeIcon: 'icon-close' as IconT.Name,
       empty: 'No results.',
     },
     props,
@@ -635,10 +635,12 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             <IconButton
               name={merged.searchIcon}
               data-slot="search"
-              style={merged.styles?.search}
+              styles={{ root: merged.styles?.search }}
               loading={merged.loading}
               loadingIcon={merged.loadingIcon}
-              class={cn('text-muted-foreground size-5 pointer-events-none', merged.classes?.search)}
+              classes={{
+                root: ['text-muted-foreground size-5 pointer-events-none', merged.classes?.search],
+              }}
             />
           }
         >
@@ -647,11 +649,13 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             loading={merged.loading}
             loadingIcon={merged.loadingIcon}
             data-slot="back"
-            style={merged.styles?.back}
-            class={cn(
-              'text-muted-foreground outline-none hover:text-foreground',
-              merged.classes?.back,
-            )}
+            styles={{ root: merged.styles?.back }}
+            classes={{
+              root: [
+                'text-muted-foreground outline-none hover:text-foreground',
+                merged.classes?.back,
+              ],
+            }}
             onClick={navigateBack}
             aria-label="Go back"
           />
@@ -675,11 +679,13 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           <IconButton
             name={merged.closeIcon}
             data-slot="close"
-            style={merged.styles?.close}
-            class={cn(
-              'text-muted-foreground outline-none shrink-0 cursor-pointer hover:text-foreground',
-              merged.classes?.close,
-            )}
+            styles={{ root: merged.styles?.close }}
+            classes={{
+              root: [
+                'text-muted-foreground outline-none shrink-0 cursor-pointer hover:text-foreground',
+                merged.classes?.close,
+              ],
+            }}
             onClick={() => merged.onClose?.()}
             aria-label="Close"
           />

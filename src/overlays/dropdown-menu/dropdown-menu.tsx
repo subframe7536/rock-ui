@@ -2,7 +2,7 @@ import * as KobalteDropdownMenu from '@kobalte/core/dropdown-menu'
 import type { JSX } from 'solid-js'
 import { mergeProps, splitProps } from 'solid-js'
 
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { OverlayMenuBaseContent } from '../shared-overlay-menu/menu'
@@ -89,13 +89,13 @@ export namespace DropdownMenuT {
      * Icon name for checked selection states.
      * @default 'icon-check'
      */
-    checkedIcon?: IconName
+    checkedIcon?: IconT.Name
 
     /**
      * Icon name for submenu indicators.
      * @default 'icon-chevron-right'
      */
-    submenuIcon?: IconName
+    submenuIcon?: IconT.Name
 
     /**
      * Custom renderer for individual dropdown menu items.
@@ -134,8 +134,8 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
   const merged = mergeProps(
     {
       size: 'md' as const,
-      checkedIcon: 'icon-check' as IconName,
-      submenuIcon: 'icon-chevron-right' as IconName,
+      checkedIcon: 'icon-check' as IconT.Name,
+      submenuIcon: 'icon-chevron-right' as IconT.Name,
     },
     props,
   ) as DropdownMenuProps

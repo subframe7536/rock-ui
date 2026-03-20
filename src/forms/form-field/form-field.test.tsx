@@ -6,7 +6,7 @@ import { useFormContext } from '../form/form-context'
 import { RadioGroup } from '../radio-group'
 
 import { FormField } from './form-field'
-import type { FormFieldRenderProps } from './form-field'
+import type { FormFieldT } from './form-field'
 import { useFormField } from './form-field-context'
 
 function FieldControl(props: {
@@ -294,7 +294,7 @@ describe('FormField', () => {
 
   test('supports children render prop with error injection', async () => {
     const state = { value: '' }
-    const renderChildren = vi.fn((props: FormFieldRenderProps) => (
+    const renderChildren = vi.fn((props: FormFieldT.RenderContext) => (
       <>
         <output data-testid="field-render-error">{String(props.error ?? '')}</output>
         <FieldControl state={state} />

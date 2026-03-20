@@ -5,9 +5,8 @@ import { Dynamic } from 'solid-js/web'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
-export type IconName = string | JSX.Element | Component<Omit<IconProps, 'name'>>
-
 export namespace IconT {
+  export type Name = string | JSX.Element | Component<Omit<IconProps, 'name'>>
   export type Slot = 'icon'
   export interface Variant {}
   export interface Items {}
@@ -28,7 +27,7 @@ export namespace IconT {
      * or app-config aliases such as `icon-search`.
      * Non-string values can be JSX nodes or render functions.
      */
-    name: IconName
+    name: Name
 
     /**
      * Icon size. Numbers are interpreted as px.

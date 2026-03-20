@@ -10,7 +10,7 @@ import {
   untrack,
 } from 'solid-js'
 
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { OverlayMenuBaseContent } from '../shared-overlay-menu/menu'
@@ -97,13 +97,13 @@ export namespace ContextMenuT {
      * Icon name used for checked menu items.
      * @default 'icon-check'
      */
-    checkedIcon?: IconName
+    checkedIcon?: IconT.Name
 
     /**
      * Icon name used for submenu indicators.
      * @default 'icon-chevron-right'
      */
-    submenuIcon?: IconName
+    submenuIcon?: IconT.Name
 
     /**
      * Custom renderer for individual menu items.
@@ -163,8 +163,8 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   const merged = mergeProps(
     {
       size: 'md' as const,
-      checkedIcon: 'icon-check' as IconName,
-      submenuIcon: 'icon-chevron-right' as IconName,
+      checkedIcon: 'icon-check' as IconT.Name,
+      submenuIcon: 'icon-chevron-right' as IconT.Name,
       placement: 'right-start' as const,
     },
     props,

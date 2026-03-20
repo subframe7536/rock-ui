@@ -8,7 +8,7 @@ import { resolveRenderProp } from '../../shared/render-prop'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { callHandler, cn } from '../../shared/utils'
 import { Icon } from '../icon'
-import type { IconName } from '../icon'
+import type { IconT } from '../icon'
 
 import type { ButtonVariantProps } from './button.class'
 import { buttonVariants } from './button.class'
@@ -44,17 +44,17 @@ export namespace ButtonT {
      * Optional icon shown when `loading` is active.
      * @default 'icon-loading'
      */
-    loadingIcon?: IconName
+    loadingIcon?: IconT.Name
 
     /**
      * Leading visual content, usually an icon.
      */
-    leading?: IconName
+    leading?: IconT.Name
 
     /**
      * Trailing visual content, usually an icon.
      */
-    trailing?: IconName
+    trailing?: IconT.Name
 
     /**
      * Children of the button. Supports render function form.

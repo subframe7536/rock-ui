@@ -50,6 +50,13 @@ Use `bun` for all package management and script execution.
 - **Types:** PascalCase (`CollapsibleProps`, `CollapsibleRoot`).
 - **Private:** Prefix with `_` (`_internalState`, `_handleClick`).
 
+### Public Type Exports
+
+- Component public types must be declared in the component namespace: `<Component>T`.
+- Top-level type export is only allowed for the component props type: `XxxProps` (must match the component name).
+- Do not export other top-level component types such as `*RenderProps`, `*SlotProps`, `*VariantProps`, `*Value`, `*Item`, `*Context`.
+- Prefer consuming component types as namespace members (for example, `SelectT.Option`, `FormT.SubmitEvent`).
+
 ### SolidJS Best Practices
 
 - **Reactivity:** Never destructure props (e.g., `const { variant } = props` breaks reactivity).

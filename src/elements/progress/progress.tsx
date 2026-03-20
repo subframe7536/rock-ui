@@ -14,9 +14,29 @@ import {
   progressStepsVariants,
 } from './progress.class'
 
-type ProgressStepState = ProgressStepRenderContext['state']
-
 export namespace ProgressT {
+  export interface StatusRenderContext {
+    /**
+     * Current progress percentage (0-100).
+     */
+    percent?: number
+  }
+
+  export interface StepRenderContext {
+    /**
+     * The label of the current step.
+     */
+    step: string
+    /**
+     * The index of the current step.
+     */
+    index: number
+    /**
+     * The state of the step relative to the active step.
+     */
+    state: 'active' | 'first' | 'last' | 'other'
+  }
+
   export type Slot = 'root' | 'status' | 'base' | 'indicator' | 'steps' | 'step'
   export type Variant = ProgressVariantProps
   export interface Items {}
@@ -53,12 +73,12 @@ export namespace ProgressT {
     /**
      * Custom render function for the status label.
      */
-    renderStatus?: (context: ProgressStatusRenderContext) => JSX.Element
+    renderStatus?: (context: StatusRenderContext) => JSX.Element
 
     /**
      * Custom render function for each step when `max` is an array.
      */
-    renderStep?: (context: ProgressStepRenderContext) => JSX.Element
+    renderStep?: (context: StepRenderContext) => JSX.Element
   }
 
   export interface Props extends RockUIProps<
@@ -70,27 +90,7 @@ export namespace ProgressT {
   > {}
 }
 
-export interface ProgressStatusRenderContext {
-  /**
-   * Current progress percentage (0-100).
-   */
-  percent?: number
-}
-
-export interface ProgressStepRenderContext {
-  /**
-   * The label of the current step.
-   */
-  step: string
-  /**
-   * The index of the current step.
-   */
-  index: number
-  /**
-   * The state of the step relative to the active step.
-   */
-  state: 'active' | 'first' | 'last' | 'other'
-}
+type ProgressStepState = ProgressT.StepRenderContext['state']
 
 /**
  * Props for the Progress component.

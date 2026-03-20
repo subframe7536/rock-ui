@@ -2,7 +2,7 @@ import * as KobalteSwitch from '@kobalte/core/switch'
 import type { JSX } from 'solid-js'
 import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
 
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
@@ -80,17 +80,17 @@ export namespace SwitchT {
      * Icon shown during loading state.
      * @default 'icon-loading'
      */
-    loadingIcon?: IconName
+    loadingIcon?: IconT.Name
 
     /**
      * Icon shown when the switch is checked.
      */
-    checkedIcon?: IconName
+    checkedIcon?: IconT.Name
 
     /**
      * Icon shown when the switch is unchecked.
      */
-    uncheckedIcon?: IconName
+    uncheckedIcon?: IconT.Name
 
     /**
      * Label for the switch.
@@ -135,7 +135,7 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
     {
       size: 'md' as const,
       loading: false,
-      loadingIcon: 'icon-loading' as IconName,
+      loadingIcon: 'icon-loading' as IconT.Name,
       trueValue: true,
       falseValue: false,
     },
@@ -252,7 +252,7 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
       {...restProps}
     >
       {(state) => {
-        const resolvedIconName = (): IconName | undefined => {
+        const resolvedIconName = (): IconT.Name | undefined => {
           if (displayProps.loading) {
             return displayProps.loadingIcon
           }

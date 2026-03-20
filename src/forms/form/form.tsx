@@ -20,41 +20,42 @@ import type { StandardSchemaV1 } from './standard-schema'
 
 type FormState = object
 
-/**
- * Event emitted when the form is submitted successfully.
- */
-export interface FormSubmitEvent<TState extends FormState = FormState> extends SubmitEvent {
-  /**
-   * The current data of the form.
-   */
-  data?: TState
-}
-
-/**
- * Event emitted when the form submission fails due to validation errors.
- */
-export interface FormErrorEvent extends SubmitEvent {
-  /**
-   * The list of validation errors.
-   */
-  errors: FormValidationError[]
-}
-
-/**
- * Props passed to the form's children when provided as a render function.
- */
-export interface FormRenderProps {
-  /**
-   * The list of current validation errors in the form.
-   */
-  errors: FormValidationError[]
-  /**
-   * Whether the form is currently in a loading state.
-   */
-  loading: boolean
-}
-
 export namespace FormT {
+  /**
+   * Event emitted when the form is submitted successfully.
+   */
+  export interface SubmitEvent<TState extends FormState = FormState>
+    extends globalThis.SubmitEvent {
+    /**
+     * The current data of the form.
+     */
+    data?: TState
+  }
+
+  /**
+   * Event emitted when the form submission fails due to validation errors.
+   */
+  export interface ErrorEvent extends globalThis.SubmitEvent {
+    /**
+     * The list of validation errors.
+     */
+    errors: FormValidationError[]
+  }
+
+  /**
+   * Props passed to the form's children when provided as a render function.
+   */
+  export interface RenderProps {
+    /**
+     * The list of current validation errors in the form.
+     */
+    errors: FormValidationError[]
+    /**
+     * Whether the form is currently in a loading state.
+     */
+    loading: boolean
+  }
+
   export type Slot = 'root'
 
   export interface Variant {}
@@ -116,17 +117,17 @@ export namespace FormT {
     /**
      * Callback when the form is submitted successfully.
      */
-    onSubmit?: (event: FormSubmitEvent<TState>) => void | Promise<void>
+    onSubmit?: (event: SubmitEvent<TState>) => void | Promise<void>
 
     /**
      * Callback when the form submission fails due to validation errors.
      */
-    onError?: (event: FormErrorEvent) => void
+    onError?: (event: ErrorEvent) => void
 
     /**
      * Children of the form, can be a render function.
      */
-    children?: JSX.Element | ((props: FormRenderProps) => JSX.Element)
+    children?: JSX.Element | ((props: RenderProps) => JSX.Element)
   }
 
   /**
@@ -616,7 +617,7 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
   const onSubmit: JSX.EventHandlerUnion<HTMLFormElement, SubmitEvent> = async (event) => {
     event.preventDefault()
 
-    const submitEvent = event as FormSubmitEvent<TState>
+    const submitEvent = event as FormT.SubmitEvent<TState>
     setFormState('loading', Boolean(eventProps.loadingAuto ?? true))
 
     try {
@@ -625,7 +626,7 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
       if (currentErrors.length > 0) {
         const errorEvent = Object.assign(event, {
           errors: currentErrors,
-        }) as FormErrorEvent
+        }) as FormT.ErrorEvent
         eventProps.onError?.(errorEvent)
         return
       }
@@ -666,7 +667,7 @@ export function Form<TState extends FormState = FormState>(props: FormProps<TSta
         onSubmit={onSubmit}
         {...restProps}
       >
-        {resolveRenderProp<FormRenderProps>(renderProps.children, () => ({
+        {resolveRenderProp<FormT.RenderProps>(renderProps.children, () => ({
           errors: formState.errors,
           loading: formState.loading,
         }))}

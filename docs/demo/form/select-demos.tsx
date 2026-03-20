@@ -1,11 +1,11 @@
 import { For, createSignal } from 'solid-js'
 
 import { Select } from '../../../src'
-import type { SelectOption } from '../../../src/forms/select/select'
+import type { SelectT } from '../../../src/forms/select/select'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
 
-const FRUIT_OPTIONS: SelectOption[] = [
+const FRUIT_OPTIONS: SelectT.Items[] = [
   { label: 'Apple', value: 'apple' },
   { label: 'Banana', value: 'banana' },
   { label: 'Cherry', value: 'cherry' },
@@ -14,7 +14,7 @@ const FRUIT_OPTIONS: SelectOption[] = [
   { label: 'Forest', value: 'forest', icon: 'i-lucide:braces' },
 ]
 
-const GROUPED_OPTIONS: SelectOption[] = [
+const GROUPED_OPTIONS: SelectT.Items[] = [
   {
     label: 'Fruits',
     children: [
@@ -36,7 +36,7 @@ const GROUPED_OPTIONS: SelectOption[] = [
 const VARIANTS = ['outline', 'subtle', 'ghost', 'none'] as const
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 
-function makeOptions(count: number, offset = 0): SelectOption[] {
+function makeOptions(count: number, offset = 0): SelectT.Items[] {
   return Array.from({ length: count }, (_, i) => ({
     label: `Option ${offset + i + 1}`,
     value: `opt-${offset + i + 1}`,
@@ -48,7 +48,7 @@ export default () => {
   const [multiValue, setMultiValue] = createSignal<string[]>([])
   const [tagValues, setTagValues] = createSignal<string[]>([])
   const [createTagValues, setCreateTagValues] = createSignal<string[]>([])
-  const [infiniteOptions, setInfiniteOptions] = createSignal<SelectOption[]>(makeOptions(20))
+  const [infiniteOptions, setInfiniteOptions] = createSignal<SelectT.Items[]>(makeOptions(20))
   const [loadingMore, setLoadingMore] = createSignal(false)
 
   return (

@@ -26,6 +26,15 @@ import {
 } from './form-field.class'
 
 export namespace FormFieldT {
+  /**
+   * Props passed to the children of FormField when provided as a render function.
+   */
+  export interface RenderContext {
+    /**
+     * The current error for the field.
+     */
+    error?: boolean | string | JSX.Element
+  }
   export type Slot =
     | 'root'
     | 'wrapper'
@@ -110,23 +119,13 @@ export namespace FormFieldT {
     /**
      * Children of the field, can be a render function.
      */
-    children?: JSX.Element | ((props: FormFieldRenderProps) => JSX.Element)
+    children?: JSX.Element | ((props: RenderContext) => JSX.Element)
   }
 
   /**
    * Props for the FormField component.
    */
   export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
-}
-
-/**
- * Props passed to the children of FormField when provided as a render function.
- */
-export interface FormFieldRenderProps {
-  /**
-   * The current error for the field.
-   */
-  error?: boolean | string | JSX.Element
 }
 
 /**
@@ -383,7 +382,7 @@ export function FormField(props: FormFieldProps): JSX.Element {
               : cn(styleProps.classes?.container)
           }
         >
-          {resolveRenderProp<FormFieldRenderProps>(contentProps.children, () => ({
+          {resolveRenderProp<FormFieldT.RenderContext>(contentProps.children, () => ({
             error: resolvedError(),
           }))}
 

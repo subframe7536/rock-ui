@@ -4,7 +4,7 @@ import { For, Show, createMemo, createSignal, mergeProps, splitProps } from 'sol
 import { Button } from '../../elements/button'
 import type { ButtonProps } from '../../elements/button'
 import { Icon } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { FormFieldSize } from '../../forms/form-field/form-field-context'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
@@ -96,7 +96,7 @@ export namespace PaginationT {
      * Icon name for the previous button.
      * @default 'icon-chevron-left'
      */
-    prevIcon?: IconName
+    prevIcon?: IconT.Name
 
     /**
      * Text to display in the previous button.
@@ -107,7 +107,7 @@ export namespace PaginationT {
      * Icon name for the next button.
      * @default 'icon-chevron-right'
      */
-    nextIcon?: IconName
+    nextIcon?: IconT.Name
 
     /**
      * Text to display in the next button.
@@ -118,7 +118,7 @@ export namespace PaginationT {
      * Icon name for the ellipsis indicator.
      * @default 'icon-ellipsis'
      */
-    ellipsisIcon?: IconName
+    ellipsisIcon?: IconT.Name
 
     /**
      * Function to generate a destination URL for a given page number.
@@ -191,9 +191,9 @@ export function Pagination(props: PaginationProps): JSX.Element {
       variant: 'ghost' as PaginationVariant,
       activeVariant: 'outline' as PaginationVariant,
       controlVariant: 'ghost' as PaginationVariant,
-      prevIcon: 'icon-chevron-left' as IconName,
-      nextIcon: 'icon-chevron-right' as IconName,
-      ellipsisIcon: 'icon-ellipsis' as IconName,
+      prevIcon: 'icon-chevron-left' as IconT.Name,
+      nextIcon: 'icon-chevron-right' as IconT.Name,
+      ellipsisIcon: 'icon-ellipsis' as IconT.Name,
       defaultPage: 1,
     },
     props,
@@ -291,7 +291,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
               variant={styleProps.controlVariant}
               size={getSize(styleProps.size, uiProps.prevText)}
               aria-label="Go to previous page"
-              classes={{ base: uiProps.classes?.prev }}
+              classes={{ root: uiProps.classes?.prev }}
               onClick={() => selectPage(resolvedPage() - 1)}
               {...getControlProps(resolvedPage() - 1, resolvedPage() <= 1, 'prev')}
               leading={<Icon name={uiProps.prevIcon} />}
@@ -330,7 +330,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
                     aria-current={isActive() ? 'page' : undefined}
                     aria-label={isActive() ? `Page ${item}, current page` : `Go to page ${item}`}
                     data-current={isActive() ? '' : undefined}
-                    classes={{ base: ['outline-none', uiProps.classes?.link] }}
+                    classes={{ root: ['outline-none', uiProps.classes?.link] }}
                     onClick={() => selectPage(item)}
                     {...getControlProps(item, false)}
                   >
@@ -350,7 +350,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
               variant={styleProps.controlVariant}
               size={getSize(styleProps.size, uiProps.nextText)}
               aria-label="Go to next page"
-              classes={{ base: uiProps.classes?.next }}
+              classes={{ root: uiProps.classes?.next }}
               onClick={() => selectPage(resolvedPage() + 1)}
               {...getControlProps(resolvedPage() + 1, resolvedPage() >= pageCount(), 'next')}
               trailing={<Icon name={uiProps.nextIcon} />}

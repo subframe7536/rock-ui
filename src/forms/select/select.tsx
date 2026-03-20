@@ -21,7 +21,7 @@ import {
 import { Badge } from '../../elements/badge'
 import type { BadgeProps } from '../../elements/badge'
 import { Icon, IconButton } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { overlayMenuContentVariants } from '../../overlays/shared-overlay-menu/menu.class'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
@@ -48,28 +48,26 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
-export type SelectValue = string | number
-
-export interface SelectOption {
-  /** Label to display for the option. */
-  label?: string | JSX.Element
-  /** Text key used for filtering and matching; set this when `label` is not a string. */
-  key?: string
-  /** Value of the option. */
-  value?: SelectValue
-  /** Whether the option is disabled. */
-  disabled?: boolean
-  /** Description shown below the label. */
-  description?: string | JSX.Element
-  /** Icon shown next to the label. */
-  icon?: IconName
-  /** One-layer child options for grouped select. */
-  children?: SelectOption[]
-}
-
-export type SelectItem = SelectOption
-
 export namespace SelectT {
+  export type Value = string | number
+
+  export interface Items {
+    /** Label to display for the option. */
+    label?: string | JSX.Element
+    /** Text key used for filtering and matching; set this when `label` is not a string. */
+    key?: string
+    /** Value of the option. */
+    value?: Value
+    /** Whether the option is disabled. */
+    disabled?: boolean
+    /** Description shown below the label. */
+    description?: string | JSX.Element
+    /** Icon shown next to the label. */
+    icon?: IconT.Name
+    /** One-layer child options for grouped select. */
+    children?: Items[]
+  }
+
   export interface OptionRenderState {
     /** Whether the option is currently selected. */
     isSelected: boolean
@@ -86,7 +84,7 @@ export namespace SelectT {
     /** Whether the current filter has any matches. */
     hasMatches: boolean
     /** Currently selected values. */
-    selectedValues: SelectValue[]
+    selectedValues: Value[]
     /** Whether the maximum selection count has been reached. */
     isAtMaxCount: boolean
     /** Create a new tag (requires `multiple` and `allowCreate`). Returns true if successfully created. */
@@ -117,8 +115,6 @@ export namespace SelectT {
 
   export type Variant = SelectControlVariantProps
 
-  export type Items = SelectItem
-
   export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
   export interface Classes extends SlotClasses<Slot> {}
   export interface Styles extends SlotStyles<Slot> {}
@@ -129,17 +125,17 @@ export namespace SelectT {
   export interface Base
     extends
       FormIdentityOptions,
-      FormValueOptions<SelectValue | null | SelectValue[]>,
+      FormValueOptions<SelectT.Value | null | SelectT.Value[]>,
       FormRequiredOption,
       FormDisableOption {
-    /** Whether to allow multiple selections. When true, value is `SelectValue[]`. */
+    /** Whether to allow multiple selections. When true, value is `SelectT.Value[]`. */
     multiple?: boolean
 
     /** Available options. */
     options?: Items[]
 
     /** Called when the selection changes. */
-    onChange?: (value: SelectValue | null | SelectValue[]) => void
+    onChange?: (value: SelectT.Value | null | SelectT.Value[]) => void
 
     /** Enable search input. Defaults to `false`. */
     search?: boolean
@@ -157,7 +153,7 @@ export namespace SelectT {
       | 'startsWith'
       | 'endsWith'
       | 'contains'
-      | ((inputValue: string, option: SelectOption) => boolean)
+      | ((inputValue: string, option: SelectT.Items) => boolean)
     /** Controls whether clicking the control opens the menu. */
     openOnClick?: 'control' | 'trigger'
     /** Legacy alias for `openOnClick="trigger"`. */
@@ -181,11 +177,11 @@ export namespace SelectT {
     maxTagCount?: number
 
     /** Custom renderer for each option in the dropdown. */
-    optionRender?: (option: SelectOption & OptionRenderState) => JSX.Element
+    optionRender?: (option: SelectT.Items & OptionRenderState) => JSX.Element
     /** Custom renderer for each selected tag (multiple/tags). */
-    tagRender?: (option: SelectOption & { onClose: () => void }) => JSX.Element
+    tagRender?: (option: SelectT.Items & { onClose: () => void }) => JSX.Element
     /** Custom renderer for the option label text. */
-    labelRender?: (option: SelectOption) => JSX.Element
+    labelRender?: (option: SelectT.Items) => JSX.Element
     /** Custom renderer for the empty state when current filtered result has no matches. */
     emptyRender?: string | ((context: EmptyRenderContext) => JSX.Element)
     /** Whether to highlight the control (e.g., on error). */
@@ -195,13 +191,13 @@ export namespace SelectT {
     /** Whether the select is in a loading state. */
     loading?: boolean
     /** Icon shown during loading state. */
-    loadingIcon?: IconName
+    loadingIcon?: IconT.Name
     /** Icon shown before the input/value area. */
-    leadingIcon?: IconName
+    leadingIcon?: IconT.Name
     /** Icon for the dropdown trigger. Default: 'icon-chevron-down'. */
-    triggerIcon?: IconName
+    triggerIcon?: IconT.Name
     /** Icon shown on the clear button. */
-    closeIcon?: IconName
+    closeIcon?: IconT.Name
 
     /** Called when the user scrolls near the bottom of the listbox. Use for infinite loading. */
     onScrollEnd?: () => void
@@ -229,7 +225,7 @@ interface NormalizedOption {
   label: string | JSX.Element
   key: string
   disabled: boolean
-  raw: SelectOption
+  raw: SelectT.Items
   isGroup?: false
 }
 
@@ -249,7 +245,7 @@ interface SelectControlState {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function normalizeLeafOption(option: SelectOption): NormalizedOption {
+function normalizeLeafOption(option: SelectT.Items): NormalizedOption {
   const value = option.value
   const label = option.label
   const normalizedValue = String(value ?? '')
@@ -265,13 +261,13 @@ function normalizeLeafOption(option: SelectOption): NormalizedOption {
 }
 
 function isSelectOptionGroup(
-  option: SelectOption,
-): option is SelectOption & { children: SelectOption[] } {
+  option: SelectT.Items,
+): option is SelectT.Items & { children: SelectT.Items[] } {
   return Array.isArray(option.children) && option.children.length > 0
 }
 
 function normalizeOptions(
-  options: SelectOption[] | undefined,
+  options: SelectT.Items[] | undefined,
 ): Array<NormalizedOption | NormalizedGroup> {
   return (options ?? []).map((option) => {
     if (isSelectOptionGroup(option)) {
@@ -428,7 +424,7 @@ export function Select(props: SelectProps): JSX.Element {
     if (formProps.value === undefined && formProps.defaultValue !== undefined) {
       const vals = (
         Array.isArray(formProps.defaultValue) ? formProps.defaultValue : [formProps.defaultValue]
-      ) as SelectValue[]
+      ) as SelectT.Value[]
       setSelectedValueSet(new Set(vals.map((v) => String(v))))
     }
   })
@@ -511,7 +507,7 @@ export function Select(props: SelectProps): JSX.Element {
   )
 
   // ---- Value lookup ----
-  function findOptionByValue(val: SelectValue): NormalizedOption | undefined {
+  function findOptionByValue(val: SelectT.Value): NormalizedOption | undefined {
     return allFlatOptions().find((o) => o.value === String(val))
   }
 
@@ -522,7 +518,7 @@ export function Select(props: SelectProps): JSX.Element {
     }
     const values = (
       Array.isArray(formProps.value) ? formProps.value : [formProps.value]
-    ) as SelectValue[]
+    ) as SelectT.Value[]
 
     return values
       .map((v) => findOptionByValue(v))
@@ -542,7 +538,7 @@ export function Select(props: SelectProps): JSX.Element {
     if (formProps.value === null) {
       return null
     }
-    return findOptionByValue(formProps.value as SelectValue) ?? null
+    return findOptionByValue(formProps.value as SelectT.Value) ?? null
   })
 
   const kobalteDefaultValue = createMemo((): any => {
@@ -552,7 +548,7 @@ export function Select(props: SelectProps): JSX.Element {
       }
       const values = (
         Array.isArray(formProps.defaultValue) ? formProps.defaultValue : [formProps.defaultValue]
-      ) as SelectValue[]
+      ) as SelectT.Value[]
       return values
         .map((v) => findOptionByValue(v))
         .filter((o): o is NormalizedOption => o !== undefined)
@@ -560,7 +556,7 @@ export function Select(props: SelectProps): JSX.Element {
     if (formProps.defaultValue === undefined || formProps.defaultValue === null) {
       return undefined
     }
-    return findOptionByValue(formProps.defaultValue as SelectValue)
+    return findOptionByValue(formProps.defaultValue as SelectT.Value)
   })
 
   // ---- onChange bridges ----
@@ -568,7 +564,7 @@ export function Select(props: SelectProps): JSX.Element {
     const nextValue = option ? (option.raw.value ?? option.value) : null
 
     field.setFormValue(nextValue ?? '')
-    formProps.onChange?.(nextValue as SelectValue | null)
+    formProps.onChange?.(nextValue as SelectT.Value | null)
     field.emit('change')
     field.emit('input')
   }
@@ -576,7 +572,7 @@ export function Select(props: SelectProps): JSX.Element {
   function handleMultipleChange(options: NormalizedOption[]): void {
     setSelectedValueSet(new Set(options.map((o) => o.value)))
 
-    const nextValue = options.map((o) => (o.raw.value ?? o.value) as SelectValue)
+    const nextValue = options.map((o) => (o.raw.value ?? o.value) as SelectT.Value)
 
     field.setFormValue(nextValue)
     formProps.onChange?.(nextValue)
@@ -793,9 +789,9 @@ export function Select(props: SelectProps): JSX.Element {
   // unmount-auto-focus.
 
   function SelectOptionRenderNode(props: {
-    option: SelectOption
+    option: SelectT.Items
     state: SelectT.OptionRenderState
-    indicatorIcon: IconName
+    indicatorIcon: IconT.Name
     fallbackLabel: string | JSX.Element
   }): JSX.Element {
     function ItemLabel(): JSX.Element {
@@ -859,7 +855,7 @@ export function Select(props: SelectProps): JSX.Element {
     itemProps,
   ) => {
     const context = useComboboxContext()
-    const raw = (): SelectOption => itemProps.item.rawValue.raw
+    const raw = (): SelectT.Items => itemProps.item.rawValue.raw
     const renderState = createMemo<SelectT.OptionRenderState>(() => {
       const selectionManager = context.listState().selectionManager()
 
@@ -913,10 +909,12 @@ export function Select(props: SelectProps): JSX.Element {
     return (
       <IconButton
         data-slot="trigger"
-        style={merged.styles?.trigger}
+        styles={{ root: merged.styles?.trigger }}
         name={renderDisplayProps.triggerIcon}
         size={field.size()}
-        class={selectTriggerIconVariants({ size: field.size() }, styleProps.classes?.trigger)}
+        classes={{
+          root: selectTriggerIconVariants({ size: field.size() }, styleProps.classes?.trigger),
+        }}
         loading={renderDisplayProps.loading}
         loadingIcon={renderDisplayProps.loadingIcon}
         {...props}
@@ -1151,8 +1149,10 @@ export function Select(props: SelectProps): JSX.Element {
             name="icon-close"
             size={field.size()}
             data-slot="clear"
-            style={merged.styles?.clear}
-            class={selectClearVariants({ size: field.size() }, styleProps.classes?.clear)}
+            styles={{ root: merged.styles?.clear }}
+            classes={{
+              root: selectClearVariants({ size: field.size() }, styleProps.classes?.clear),
+            }}
             tabIndex={-1}
             onClick={(e) => {
               e.stopPropagation()
@@ -1200,7 +1200,7 @@ export function Select(props: SelectProps): JSX.Element {
           selectedValues: [...selectedValueSet()].map((value) => {
             const option = findOptionByValue(value)
             return option ? (option.raw.value ?? option.value) : value
-          }) as SelectValue[],
+          }) as SelectT.Value[],
           isAtMaxCount:
             isMultiple() && searchInteractionProps.maxCount !== undefined
               ? selectedValueSet().size >= searchInteractionProps.maxCount

@@ -3,7 +3,7 @@ import type { JSX } from 'solid-js'
 import { For, Show, createMemo, mergeProps, onCleanup } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 
@@ -20,11 +20,10 @@ import {
   stepperWrapperVariants,
 } from './stepper.class'
 
-export type StepperValue = string
-
 type StepperState = 'inactive' | 'active' | 'completed'
 
 export namespace StepperT {
+  export type Value = string
   export type Slot =
     | 'root'
     | 'header'
@@ -48,7 +47,7 @@ export namespace StepperT {
      * Unique value for the step.
      * @default index of the item
      */
-    value?: StepperValue
+    value?: Value
 
     /**
      * Title of the step.
@@ -64,7 +63,7 @@ export namespace StepperT {
      * Icon to display in the step indicator.
      * @default index + 1
      */
-    icon?: IconName
+    icon?: IconT.Name
 
     /**
      * Content to display when the step is active.
@@ -128,7 +127,7 @@ export interface StepperProps extends StepperT.Props {}
 interface NormalizedStepperItem {
   item: StepperT.Items
   index: number
-  value: StepperValue
+  value: StepperT.Value
 }
 
 /**

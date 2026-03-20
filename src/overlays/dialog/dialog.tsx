@@ -4,7 +4,7 @@ import { Show, mergeProps, splitProps } from 'solid-js'
 
 import { Card } from '../../elements/card'
 import { IconButton } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { Popup } from '../popup'
@@ -100,7 +100,7 @@ export namespace DialogT {
      * Icon name for the close button.
      * @default 'icon-close'
      */
-    closeIcon?: IconName
+    closeIcon?: IconT.Name
 
     /**
      * Whether the dialog can be dismissed by clicking outside or pressing Escape.

@@ -9,9 +9,9 @@ import { useFormField } from '../form-field/form-field-context'
 import { Input } from '../input'
 import { RadioGroup } from '../radio-group'
 import { Select } from '../select'
-import type { SelectOption } from '../select/select'
+import type { SelectT } from '../select/select'
 
-import type { FormRenderProps, FormSubmitEvent } from './form'
+import type { FormT } from './form'
 import { Form } from './form'
 import { useFormContext } from './form-context'
 
@@ -82,7 +82,7 @@ function SetErrorsOnMount() {
 }
 
 describe('Form', () => {
-  const roleOptions: SelectOption[] = [
+  const roleOptions: SelectT.Items[] = [
     { label: 'Developer', value: 'developer' },
     { label: 'Designer', value: 'designer' },
   ]
@@ -167,7 +167,7 @@ describe('Form', () => {
 
   test('passes validated data to submit handler', async () => {
     const state: TestState = { value: 'valid' }
-    const onSubmit = vi.fn((event: FormSubmitEvent) => {
+    const onSubmit = vi.fn((event: FormT.SubmitEvent) => {
       expect(event.data).toEqual(state)
     })
     const onError = vi.fn()
@@ -307,7 +307,7 @@ describe('Form', () => {
 
     const screen = render(() => (
       <Form state={state} validate={validate}>
-        {(props: FormRenderProps) => {
+        {(props: FormT.RenderProps) => {
           snapshots.push({
             loading: props.loading,
             errors: props.errors.map((error) => error.message),
@@ -499,7 +499,7 @@ describe('Form', () => {
     const schema = v.object({
       value: v.pipe(v.string(), v.minLength(1, 'Value is required')),
     })
-    const onSubmit = vi.fn((event: FormSubmitEvent<{ value: string }>) => {
+    const onSubmit = vi.fn((event: FormT.SubmitEvent<{ value: string }>) => {
       expect(event.data).toEqual({ value: 'hello' })
     })
     const onError = vi.fn()

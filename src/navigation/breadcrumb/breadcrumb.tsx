@@ -3,7 +3,7 @@ import { For, Show, createMemo, mergeProps } from 'solid-js'
 
 import { Button } from '../../elements/button'
 import { Icon } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
@@ -26,7 +26,7 @@ export namespace BreadcrumbT {
     /**
      * Icon to display next to the label.
      */
-    icon?: IconName
+    icon?: IconT.Name
 
     /**
      * The destination URL for this item.
@@ -106,7 +106,7 @@ export namespace BreadcrumbT {
      * Icon name for the separator between items.
      * @default 'icon-chevron-right'
      */
-    separator?: IconName
+    separator?: IconT.Name
 
     /**
      * Size of the breadcrumb items and icons.
@@ -132,10 +132,6 @@ export namespace BreadcrumbT {
   export interface Props extends RockUIProps<Base, Variant, Extend, Slot> {}
 }
 
-export interface BreadcrumbItem extends BreadcrumbT.Items {}
-
-export interface BreadcrumbItemRenderContext extends BreadcrumbT.ItemRenderContext {}
-
 /**
  * Props for the Breadcrumb component.
  */
@@ -145,7 +141,7 @@ export interface BreadcrumbProps extends BreadcrumbT.Props {}
 export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
   const merged = mergeProps(
     {
-      separator: 'icon-chevron-right' as IconName,
+      separator: 'icon-chevron-right' as IconT.Name,
       wrap: true,
       size: 'md',
       'aria-label': 'Breadcrumbs',
@@ -212,7 +208,7 @@ export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
                     onClick={item.onClick}
                     leading={item.icon}
                     classes={{
-                      base: [!merged.wrap && 'truncate', merged.classes?.link],
+                      root: [!merged.wrap && 'truncate', merged.classes?.link],
                       leading: merged.classes?.leading,
                       label: merged.classes?.label,
                     }}

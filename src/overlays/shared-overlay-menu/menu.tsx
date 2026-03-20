@@ -15,7 +15,7 @@ import type { Component, JSX } from 'solid-js'
 import { For, Match, Show, Switch } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
-import type { IconName } from '../../elements/icon'
+import type { IconT } from '../../elements/icon'
 import { Kbd } from '../../elements/kbd'
 import { cn } from '../../shared/utils'
 
@@ -41,8 +41,8 @@ export interface OverlayMenuBaseContentProps<
   size?: OverlayMenuSize
   classes?: OverlayMenuSharedClasses
   styles?: OverlayMenuSharedStyles
-  checkedIcon?: IconName
-  submenuIcon?: IconName
+  checkedIcon?: IconT.Name
+  submenuIcon?: IconT.Name
   itemRender?: (context: OverlayMenuSharedItemRenderContext<TItem>) => JSX.Element
   contentTop?: OverlayMenuContentSlot
   contentBottom?: OverlayMenuContentSlot
@@ -87,7 +87,7 @@ export function OverlayMenuBaseContent<
               props.classes?.itemLeading,
             )}
           >
-            <Icon name={contentProps.item.icon as IconName} />
+            <Icon name={contentProps.item.icon as IconT.Name} />
           </span>
         </Show>
 
