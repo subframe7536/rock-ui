@@ -100,7 +100,9 @@ export default () => {
           <div class="b-1 b-border border-border rounded-xl h-48 overflow-hidden">
             <Resizable renderHandle onResize={handleControlledResize} panels={controlledPanels} />
           </div>
-          <p class="text-xs text-muted-foreground">Current sizes: {formatPixelSizes(controlledSizes())}</p>
+          <p class="text-xs text-muted-foreground">
+            Current sizes: {formatPixelSizes(controlledSizes())}
+          </p>
         </div>
       </DemoSection>
 
@@ -138,11 +140,7 @@ export default () => {
                   },
                   {
                     defaultSize: '33%',
-                    content: createPanel(
-                      'Bottom',
-                      'Last panel in the vertical stack.',
-                      'bg-muted',
-                    ),
+                    content: createPanel('Bottom', 'Last panel in the vertical stack.', 'bg-muted'),
                   },
                 ]}
               />
@@ -344,7 +342,9 @@ export default () => {
             />
           </div>
 
-          <p class="text-xs text-muted-foreground">Try: click handle to toggle, drag divider to resize.</p>
+          <p class="text-xs text-muted-foreground">
+            Try: click handle to toggle, drag divider to resize.
+          </p>
           <p class="text-xs text-muted-foreground">Current sizes: {externalPixelSizes()}</p>
         </div>
       </DemoSection>

@@ -1,5 +1,14 @@
 import type { VariantProps } from 'cls-variant'
 
+import {
+  CARD_PADDING_SIZE_VARIANT,
+  CHECKABLE_BASE_SIZE_VARIANT,
+  CHECKABLE_CONTAINER_SIZE_VARIANT,
+  CHECKABLE_INDICATOR_VARIANT,
+  CHECKABLE_WRAPPER_ALIGN_VARIANT,
+  REQUIRED_MARK_VARIANT,
+  TEXT_SIZE_VARIANT,
+} from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const checkboxRootVariants = cva('flex items-start relative data-disabled:effect-dis', {
@@ -10,10 +19,7 @@ export const checkboxRootVariants = cva('flex items-start relative data-disabled
     variant: {
       card: 'b-1 b-border rounded-lg data-checked:b-primary',
     },
-    indicator: {
-      start: 'flex-row',
-      end: 'flex-row-reverse',
-    },
+    indicator: CHECKABLE_INDICATOR_VARIANT,
   },
 })
 
@@ -22,13 +28,7 @@ export const checkboxCardPaddingVariants = cva('p-3.5', {
     size: 'md',
   },
   variants: {
-    size: {
-      xs: 'p-2.5',
-      sm: 'p-3',
-      md: 'p-3.5',
-      lg: 'p-4',
-      xl: 'p-4.5',
-    },
+    size: CARD_PADDING_SIZE_VARIANT,
   },
 })
 
@@ -37,13 +37,7 @@ export const checkboxContainerVariants = cva('flex items-center', {
     size: 'md',
   },
   variants: {
-    size: {
-      xs: 'h-4',
-      sm: 'h-4',
-      md: 'h-5',
-      lg: 'h-5',
-      xl: 'h-6',
-    },
+    size: CHECKABLE_CONTAINER_SIZE_VARIANT,
   },
 })
 
@@ -54,13 +48,7 @@ export const checkboxBaseVariants = cva(
       size: 'md',
     },
     variants: {
-      size: {
-        xs: 'size-3',
-        sm: 'size-3.5',
-        md: 'size-4',
-        lg: 'size-4.5',
-        xl: 'size-5',
-      },
+      size: CHECKABLE_BASE_SIZE_VARIANT,
     },
   },
 )
@@ -86,26 +74,14 @@ export const checkboxWrapperVariants = cva('w-full', {
     size: 'md',
   },
   variants: {
-    indicator: {
-      start: 'ms-2',
-      end: 'me-2',
-      hidden: 'text-center',
-    },
-    size: {
-      xs: 'text-xs',
-      sm: 'text-xs',
-      md: 'text-sm',
-      lg: 'text-sm',
-      xl: 'text-base',
-    },
+    indicator: CHECKABLE_WRAPPER_ALIGN_VARIANT,
+    size: TEXT_SIZE_VARIANT,
   },
 })
 
 export const checkboxLabelVariants = cva('text-foreground font-medium block', {
   variants: {
-    required: {
-      true: "after:(text-destructive ms-0.5 content-['*'])",
-    },
+    required: REQUIRED_MARK_VARIANT,
   },
 })
 

@@ -1,5 +1,15 @@
 import type { VariantProps } from 'cls-variant'
 
+import {
+  CHECKABLE_BASE_SIZE_VARIANT,
+  CHECKABLE_CONTAINER_SIZE_VARIANT,
+  CHECKABLE_INDICATOR_VARIANT,
+  CHECKABLE_WRAPPER_ALIGN_VARIANT,
+  FLEX_ORIENTATION_VARIANT,
+  REQUIRED_MARK_VARIANT,
+  TABLE_EDGE_ORIENTATION_VARIANT,
+  TEXT_SIZE_VARIANT,
+} from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const radioGroupFieldsetVariants = cva('flex', {
@@ -7,10 +17,7 @@ export const radioGroupFieldsetVariants = cva('flex', {
     orientation: 'vertical',
   },
   variants: {
-    orientation: {
-      horizontal: 'flex-row',
-      vertical: 'flex-col',
-    },
+    orientation: FLEX_ORIENTATION_VARIANT,
   },
 })
 
@@ -19,16 +26,8 @@ export const radioGroupLegendVariants = cva('text-foreground font-medium mb-2 bl
     size: 'md',
   },
   variants: {
-    size: {
-      xs: 'text-xs',
-      sm: 'text-xs',
-      md: 'text-sm',
-      lg: 'text-sm',
-      xl: 'text-base',
-    },
-    required: {
-      true: "after:(text-destructive ms-0.5 content-['*'])",
-    },
+    size: TEXT_SIZE_VARIANT,
+    required: REQUIRED_MARK_VARIANT,
   },
 })
 
@@ -38,25 +37,13 @@ export const radioGroupItemVariants = cva('flex items-start data-disabled:effect
     indicator: 'start',
   },
   variants: {
-    size: {
-      xs: 'text-xs',
-      sm: 'text-xs',
-      md: 'text-sm',
-      lg: 'text-sm',
-      xl: 'text-base',
-    },
+    size: TEXT_SIZE_VARIANT,
     variant: {
       card: 'b-(1 border) rounded-lg data-checked:border-primary',
       table: 'b-(1 muted) relative data-checked:(border-primary/50 bg-primary/10 z-1)',
     },
-    indicator: {
-      start: 'flex-row',
-      end: 'flex-row-reverse',
-    },
-    tableOrientation: {
-      horizontal: 'first-of-type:rounded-s-lg last-of-type:rounded-e-lg not-first-of-type:-ms-px',
-      vertical: 'first-of-type:rounded-t-lg last-of-type:rounded-b-lg not-first-of-type:-mt-px',
-    },
+    indicator: CHECKABLE_INDICATOR_VARIANT,
+    tableOrientation: TABLE_EDGE_ORIENTATION_VARIANT,
   },
   compoundVariants: [
     {
@@ -117,13 +104,7 @@ export const radioGroupContainerVariants = cva('flex items-center', {
     size: 'md',
   },
   variants: {
-    size: {
-      xs: 'h-4',
-      sm: 'h-4',
-      md: 'h-5',
-      lg: 'h-5',
-      xl: 'h-6',
-    },
+    size: CHECKABLE_CONTAINER_SIZE_VARIANT,
   },
 })
 
@@ -134,13 +115,7 @@ export const radioGroupBaseVariants = cva(
       size: 'md',
     },
     variants: {
-      size: {
-        xs: 'size-3',
-        sm: 'size-3.5',
-        md: 'size-4',
-        lg: 'size-4.5',
-        xl: 'size-5',
-      },
+      size: CHECKABLE_BASE_SIZE_VARIANT,
     },
   },
 )
@@ -150,11 +125,7 @@ export const radioGroupWrapperVariants = cva('w-full', {
     indicator: 'start',
   },
   variants: {
-    indicator: {
-      start: 'ms-2',
-      end: 'me-2',
-      hidden: 'text-center',
-    },
+    indicator: CHECKABLE_WRAPPER_ALIGN_VARIANT,
   },
 })
 

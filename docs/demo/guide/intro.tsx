@@ -34,7 +34,9 @@ export default () => {
     <div class="mx-auto p-5 max-w-6xl space-y-10 lg:p-10 sm:p-8">
       <section class="py-2">
         <div class="flex flex-col gap-4 max-w-3xl">
-          <p class="text-xs text-muted-foreground tracking-[0.18em] font-semibold uppercase">Rock UI</p>
+          <p class="text-xs text-muted-foreground tracking-[0.18em] font-semibold uppercase">
+            Rock UI
+          </p>
           <h1 class="text-3xl text-foreground leading-tight font-semibold sm:text-4xl">
             SolidJS component library for building production-grade interfaces quickly.
           </h1>

@@ -1,5 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 
+import { CHECKABLE_BASE_SIZE_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const sliderRootVariants = cva(
@@ -70,13 +71,7 @@ export const sliderThumbVariants = cva(
       size: 'md',
     },
     variants: {
-      size: {
-        xs: 'size-3',
-        sm: 'size-3.5',
-        md: 'size-4',
-        lg: 'size-4.5',
-        xl: 'size-5',
-      },
+      size: CHECKABLE_BASE_SIZE_VARIANT,
     },
   },
 )

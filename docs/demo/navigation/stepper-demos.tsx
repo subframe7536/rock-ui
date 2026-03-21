@@ -83,7 +83,9 @@ export default () => {
           <For each={STEPPER_SIZES}>
             {(size) => (
               <div class="space-y-2">
-                <p class="text-xs text-muted-foreground tracking-wide font-medium uppercase">{size}</p>
+                <p class="text-xs text-muted-foreground tracking-wide font-medium uppercase">
+                  {size}
+                </p>
                 <Stepper items={createCheckoutSteps()} defaultValue="shipping" size={size} />
               </div>
             )}

@@ -1,5 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 
+import { TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const progressRootVariants = cva('gap-2 relative', {
@@ -27,13 +28,7 @@ export const progressStatusVariants = cva(
         horizontal: 'flex-row min-w-fit items-center justify-end',
         vertical: 'flex-col min-h-fit justify-end',
       },
-      size: {
-        xs: 'text-xs',
-        sm: 'text-xs',
-        md: 'text-sm',
-        lg: 'text-sm',
-        xl: 'text-base',
-      },
+      size: TEXT_SIZE_VARIANT,
       color: {
         primary: 'text-primary',
         secondary: 'text-secondary',
@@ -150,13 +145,7 @@ export const progressStepsVariants = cva('grid items-end', {
       horizontal: 'w-full',
       vertical: 'ms-2 h-full items-start',
     },
-    size: {
-      xs: 'text-xs',
-      sm: 'text-xs',
-      md: 'text-sm',
-      lg: 'text-sm',
-      xl: 'text-base',
-    },
+    size: TEXT_SIZE_VARIANT,
     color: {
       primary: 'text-primary',
       secondary: 'text-secondary',
@@ -181,13 +170,7 @@ export const progressStepVariants = cva(
         other: 'opacity-0',
         last: 'opacity-100',
       },
-      size: {
-        xs: 'text-xs',
-        sm: 'text-xs',
-        md: 'text-sm',
-        lg: 'text-sm',
-        xl: 'text-base',
-      },
+      size: TEXT_SIZE_VARIANT,
       color: {
         primary: 'text-primary',
         secondary: 'text-secondary',

@@ -154,7 +154,9 @@ export default () => {
               value={groupValue()}
               onChange={setGroupValue}
             />
-            <p class="text-xs text-muted-foreground">Selected: {groupValue().join(', ') || 'none'}</p>
+            <p class="text-xs text-muted-foreground">
+              Selected: {groupValue().join(', ') || 'none'}
+            </p>
           </div>
         </div>
       </DemoSection>

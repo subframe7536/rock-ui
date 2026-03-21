@@ -81,6 +81,23 @@ export const card = cva('p-2 text-sm', {
     expect(output).not.toContain(`${TEST_PREFIX}md`)
   })
 
+  test('prefixes class strings inside standalone *VARIANT constants', async () => {
+    const output = await runTransform(
+      `
+export const SIZE_VARIANT = {
+  sm: 'text-sm',
+  md: 'text-base',
+} as const
+`,
+      'src/example.class.ts',
+    )
+
+    expect(output).toContain(`sm: '${TEST_PREFIX}text-sm'`)
+    expect(output).toContain(`md: '${TEST_PREFIX}text-base'`)
+    expect(output).not.toContain(`${TEST_PREFIX}sm`)
+    expect(output).not.toContain(`${TEST_PREFIX}md`)
+  })
+
   test('prefixes only class operands inside tsx class expressions', async () => {
     const output = await runTransform(
       `

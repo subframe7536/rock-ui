@@ -115,7 +115,9 @@ export default () => {
               {
                 label: 'Overview',
                 value: 'overview',
-                content: <p class="text-sm text-foreground">Overview section with release status.</p>,
+                content: (
+                  <p class="text-sm text-foreground">Overview section with release status.</p>
+                ),
               },
               {
                 label: 'Settings',
@@ -128,7 +130,9 @@ export default () => {
                 label: 'Billing (Disabled)',
                 value: 'billing',
                 disabled: true,
-                content: <p class="text-sm text-foreground">This panel is intentionally disabled.</p>,
+                content: (
+                  <p class="text-sm text-foreground">This panel is intentionally disabled.</p>
+                ),
               },
             ]}
           />

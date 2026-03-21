@@ -25,7 +25,9 @@ export default () => {
           trigger={(props) => (
             <>
               <span>Release notes</span>
-              <span class={`text-muted-foreground transition-transform ${props.open ? 'rotate-180' : ''}`}>
+              <span
+                class={`text-muted-foreground transition-transform ${props.open ? 'rotate-180' : ''}`}
+              >
                 <span class="i-lucide-chevron-down" />
               </span>
             </>
@@ -59,7 +61,9 @@ export default () => {
             trigger={({ open: isOpen }) => (
               <>
                 <span>Controlled state panel</span>
-                <span class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                <span
+                  class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                >
                   <span class="i-lucide-chevron-down" />
                 </span>
               </>
@@ -87,7 +91,9 @@ export default () => {
             trigger={({ open: isOpen }) => (
               <>
                 <span>Disabled panel</span>
-                <span class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                <span
+                  class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                >
                   <span class="i-lucide-chevron-down" />
                 </span>
               </>
@@ -109,7 +115,9 @@ export default () => {
             trigger={({ open: isOpen }) => (
               <>
                 <span>Force-mount panel</span>
-                <span class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                <span
+                  class={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                >
                   <span class="i-lucide-chevron-down" />
                 </span>
               </>

@@ -1,5 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 
+import { REQUIRED_MARK_VARIANT, TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const formFieldSizeVariants = cva('text-sm', {
@@ -7,21 +8,13 @@ export const formFieldSizeVariants = cva('text-sm', {
     size: 'md',
   },
   variants: {
-    size: {
-      xs: 'text-xs',
-      sm: 'text-xs',
-      md: 'text-sm',
-      lg: 'text-sm',
-      xl: 'text-base',
-    },
+    size: TEXT_SIZE_VARIANT,
   },
 })
 
 export const formFieldLabelVariants = cva('text-foreground font-medium block', {
   variants: {
-    required: {
-      true: "after:(text-destructive ms-0.5 content-['*'])",
-    },
+    required: REQUIRED_MARK_VARIANT,
   },
 })
 

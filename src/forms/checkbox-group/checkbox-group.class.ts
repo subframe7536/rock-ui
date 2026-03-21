@@ -1,5 +1,12 @@
 import type { VariantProps } from 'cls-variant'
 
+import {
+  CARD_PADDING_SIZE_VARIANT,
+  FLEX_ORIENTATION_VARIANT,
+  REQUIRED_MARK_VARIANT,
+  TABLE_EDGE_ORIENTATION_VARIANT,
+  TEXT_SIZE_VARIANT,
+} from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const checkboxGroupFieldsetVariants = cva('flex', {
@@ -7,10 +14,7 @@ export const checkboxGroupFieldsetVariants = cva('flex', {
     orientation: 'vertical',
   },
   variants: {
-    orientation: {
-      horizontal: 'flex-row',
-      vertical: 'flex-col',
-    },
+    orientation: FLEX_ORIENTATION_VARIANT,
   },
 })
 
@@ -19,32 +23,15 @@ export const checkboxGroupLegendVariants = cva('text-foreground font-medium mb-1
     size: 'md',
   },
   variants: {
-    size: {
-      xs: 'text-xs',
-      sm: 'text-xs',
-      md: 'text-sm',
-      lg: 'text-sm',
-      xl: 'text-base',
-    },
-    required: {
-      true: "after:(text-destructive ms-0.5 content-['*'])",
-    },
+    size: TEXT_SIZE_VARIANT,
+    required: REQUIRED_MARK_VARIANT,
   },
 })
 
 export const checkboxGroupItemVariants = cva('data-disabled:effect-dis', {
   variants: {
-    tableSize: {
-      xs: 'p-2.5',
-      sm: 'p-3',
-      md: 'p-3.5',
-      lg: 'p-4',
-      xl: 'p-4.5',
-    },
-    tableOrientation: {
-      horizontal: 'first-of-type:rounded-s-lg last-of-type:rounded-e-lg not-first-of-type:-ms-px',
-      vertical: 'first-of-type:rounded-t-lg last-of-type:rounded-b-lg not-first-of-type:-mt-px',
-    },
+    tableSize: CARD_PADDING_SIZE_VARIANT,
+    tableOrientation: TABLE_EDGE_ORIENTATION_VARIANT,
   },
 })
 export type CheckboxGroupVariantProps = VariantProps<typeof checkboxGroupFieldsetVariants> &

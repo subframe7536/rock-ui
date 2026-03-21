@@ -127,7 +127,9 @@ export default () => {
               </div>
             )}
           />
-          <p class="text-xs text-muted-foreground">Tags: {createTagValues().join(', ') || 'none'}</p>
+          <p class="text-xs text-muted-foreground">
+            Tags: {createTagValues().join(', ') || 'none'}
+          </p>
         </div>
       </DemoSection>
 

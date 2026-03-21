@@ -64,12 +64,18 @@ function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
                   </code>
                 </td>
                 <td class="text-xs text-muted-foreground px-3 py-2">
-                  <Show when={prop.defaultValue} fallback={<span class="text-muted-foreground/80">—</span>}>
+                  <Show
+                    when={prop.defaultValue}
+                    fallback={<span class="text-muted-foreground/80">—</span>}
+                  >
                     <code class="px-1.5 py-0.5 rounded bg-muted">{prop.defaultValue}</code>
                   </Show>
                 </td>
                 <td class="text-muted-foreground px-3 py-2">
-                  <Show when={prop.description} fallback={<span class="text-muted-foreground/80">—</span>}>
+                  <Show
+                    when={prop.description}
+                    fallback={<span class="text-muted-foreground/80">—</span>}
+                  >
                     {prop.description}
                   </Show>
                 </td>

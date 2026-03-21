@@ -1,6 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 
-import { TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
+import { CHECKABLE_CONTAINER_SIZE_VARIANT, TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const switchContainerVariants = cva('flex items-center', {
@@ -8,13 +8,7 @@ export const switchContainerVariants = cva('flex items-center', {
     size: 'md',
   },
   variants: {
-    size: {
-      xs: 'h-4',
-      sm: 'h-4',
-      md: 'h-5',
-      lg: 'h-5',
-      xl: 'h-6',
-    },
+    size: CHECKABLE_CONTAINER_SIZE_VARIANT,
   },
 })
 

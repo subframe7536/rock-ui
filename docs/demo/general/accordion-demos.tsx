@@ -40,7 +40,9 @@ export default () => {
             ]}
           />
 
-          <p class="text-xs text-muted-foreground">Current open value: {openValue()?.[0] ?? 'none'}</p>
+          <p class="text-xs text-muted-foreground">
+            Current open value: {openValue()?.[0] ?? 'none'}
+          </p>
         </div>
       </DemoSection>
 

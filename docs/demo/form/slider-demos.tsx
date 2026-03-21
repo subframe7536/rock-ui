@@ -46,7 +46,9 @@ export default () => {
             onChange={setSingleCommit}
             highlight
           />
-          <p class="text-xs text-muted-foreground">Current value: {formatSliderValue(singleValue())}</p>
+          <p class="text-xs text-muted-foreground">
+            Current value: {formatSliderValue(singleValue())}
+          </p>
           <p class="text-xs text-muted-foreground">
             Last committed value: {formatSliderValue(singleCommit())}
           </p>
