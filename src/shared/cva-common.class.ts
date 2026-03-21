@@ -1,4 +1,4 @@
-export const INPUT_VARIANT_CLASSES = {
+export const INPUT_VARIANT = {
   outline: 'b-(1 input) bg-transparent',
   subtle: 'b-(1 input) bg-input/30',
   ghost: 'hover:bg-muted/50 focus-within:bg-muted/50',

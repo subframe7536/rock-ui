@@ -1,6 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 
-import { INPUT_VARIANT_CLASSES } from '../../shared/cva-common.class'
+import { INPUT_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const selectControlVariants = cva(
@@ -18,7 +18,7 @@ export const selectControlVariants = cva(
         lg: 'pe-2.5',
         xl: 'pe-3',
       },
-      variant: INPUT_VARIANT_CLASSES,
+      variant: INPUT_VARIANT,
     },
   },
 )

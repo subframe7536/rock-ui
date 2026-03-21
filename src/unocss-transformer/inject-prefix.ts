@@ -14,6 +14,11 @@ export function prefixClassList(value: string, prefix: string): string {
 
 export interface TransformerInjectPrefixOption {
   prefix: string
+  /**
+   * Custom filter function
+   * @param id file path
+   * @default id => id.includes('node_modules/rock-ui/')
+   */
   idFilter?: (id: string) => boolean
   /**
    * Hooks before inject prefix

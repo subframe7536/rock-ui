@@ -1,6 +1,6 @@
 import type { VariantProps } from 'cls-variant'
 
-import { INPUT_VARIANT_CLASSES, TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
+import { INPUT_VARIANT, TEXT_SIZE_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const textareaRootVariants = cva(
@@ -12,7 +12,7 @@ export const textareaRootVariants = cva(
     },
     variants: {
       size: TEXT_SIZE_VARIANT,
-      variant: INPUT_VARIANT_CLASSES,
+      variant: INPUT_VARIANT,
     },
   },
 )

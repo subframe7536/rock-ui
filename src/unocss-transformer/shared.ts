@@ -36,6 +36,7 @@ export type ReplacementFactory = (
 
 const TSX_SUFFIX = '.tsx'
 const CLASS_TS_SUFFIX = '.class.ts'
+const VARIANT_CONST_SUFFIX = 'VARIANT'
 
 function isClassFile(id: string): boolean {
   return id.endsWith(CLASS_TS_SUFFIX)
@@ -106,6 +107,10 @@ function getPropertyName(key: ObjectProperty['key']): string | undefined {
   }
 
   return undefined
+}
+
+function isVariantConstName(name: string): boolean {
+  return name.endsWith(VARIANT_CONST_SUFFIX)
 }
 
 function getObjectProperty(
@@ -308,6 +313,19 @@ function collectClassFileReplacements(
 ): void {
   walk(program, {
     enter(node) {
+      if (node.type === 'VariableDeclarator' && node.id.type === 'Identifier') {
+        if (!isVariantConstName(node.id.name)) {
+          return
+        }
+
+        const initializer = unwrapExpression(node.init)
+        if (initializer?.type === 'ObjectExpression') {
+          collectVariantLeafClassReplacements(initializer, source, replacements, factory)
+        }
+
+        return
+      }
+
       if (node.type === 'CallExpression' && getCallName(node.callee) === 'cva') {
         collectCvaClassReplacements(node, source, replacements, factory)
       }

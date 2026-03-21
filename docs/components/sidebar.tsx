@@ -43,7 +43,7 @@ export const Sidebar = (props: SidebarProps) => {
   return (
     <aside class="text-foreground border-e-(1 border) bg-muted flex shrink-0 flex-col h-full w-full relative overflow-hidden">
       <div class="p-4 pb-3 border-b border-border bg-muted">
-        <div class="px-2">
+        <div class="px-2 flex items-center justify-between">
           <div class="text-foreground flex gap-2 items-center justify-between">
             <div class="flex gap-2 min-w-0 items-center">
               <img src="/favicon.svg" alt="icon" class="size-6" />
@@ -55,6 +55,13 @@ export const Sidebar = (props: SidebarProps) => {
               </div>
             </div>
           </div>
+          <Switch
+            size="sm"
+            checked={props.theme() === 'dark'}
+            onChange={(next) => props.setTheme(next ? 'dark' : 'light')}
+            checkedIcon="i-lucide-moon"
+            uncheckedIcon="i-lucide-sun"
+          />
         </div>
 
         <div class="mt-4 px-1">
@@ -105,22 +112,6 @@ export const Sidebar = (props: SidebarProps) => {
             <p class="text-xs text-muted-foreground px-2">No results</p>
           </Show>
         </nav>
-      </div>
-
-      <div class="p-3 border-t border-border bg-background/92 inset-x-0 bottom-0 absolute backdrop-blur">
-        <Switch
-          size="sm"
-          checked={props.theme() === 'dark'}
-          onChange={(next) => props.setTheme(next ? 'dark' : 'light')}
-          checkedIcon="i-lucide-moon"
-          uncheckedIcon="i-lucide-sun"
-          label="Dark Mode"
-          classes={{
-            root: 'w-full items-center justify-between',
-            wrapper: 'ms-0',
-            label: 'text-sm text-muted-foreground font-medium',
-          }}
-        />
       </div>
     </aside>
   )
