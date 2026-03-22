@@ -7,6 +7,7 @@ import {
   createSignal,
   mergeProps,
   onCleanup,
+  onMount,
 } from 'solid-js'
 
 import type { RockUIProps, SlotClasses, SlotStyles } from '../../shared/types'
@@ -25,6 +26,7 @@ import {
   normalizePanelSizes,
   resolveKeyboardDelta,
   resolvePanels,
+  resolveSize,
   resizeFromHandle,
   resizePanelToSize,
   toggleHandleNearestPanel,
@@ -164,21 +166,48 @@ export function Resizable(props: ResizableProps): JSX.Element {
   const panelIdPrefix = useId(() => localProps.id, 'resizable')
   const orientation = () => localProps.orientation
 
-  const [rootElement, setRootElement] = createSignal<HTMLDivElement>()
-  const [rootSize, setRootSize] = createSignal(1)
+  let rootRef: HTMLDivElement | undefined = undefined
+  const [rootSize, setRootSize] = createSignal(0)
+  const [transitionReady, setTransitionReady] = createSignal(false)
   const [uncontrolledSizes, setUncontrolledSizes] = createSignal<number[]>([])
   const [interactionResizing, setInteractionResizing] = createSignal(false)
   const panelItems = createMemo(() => localProps.panels ?? EMPTY_PANELS)
+  const layoutReady = createMemo(() => rootSize() > EPSILON)
 
   const resolvedPanels = createMemo(() => resolvePanels(panelItems(), rootSize(), panelIdPrefix()))
   const panelCount = createMemo(() => resolvedPanels().length)
   const panelDefaultSizes = createMemo(() => resolvedPanels().map((p) => p.defaultSize))
+  const panelControlledSizes = createMemo(() => panelItems().map((p) => p.size))
+  const panelMinSizes = createMemo(() => {
+    const panels = resolvedPanels()
+    const controlledSizes = panelControlledSizes()
+    const currentRootSize = layoutReady() ? rootSize() : 1
+
+    return panels.map((panel, index) => {
+      const controlledSize = controlledSizes[index]
+      if (controlledSize === undefined) {
+        return panel.min
+      }
+
+      const resolvedControlledSize = resolveSize(controlledSize, currentRootSize)
+      const shouldUseCollapsibleMin =
+        resolvedControlledSize <= panel.collapsibleMin + EPSILON ||
+        (panel.collapsible && resolvedControlledSize <= panel.min + EPSILON)
+
+      return shouldUseCollapsibleMin ? panel.collapsibleMin : panel.min
+    })
+  })
+  const panelMaxSizes = createMemo(() => resolvedPanels().map((p) => p.max))
 
   function normalizeWithCurrentState(controlledSizes?: Array<ResizableSize | undefined>) {
+    const currentRootSize = layoutReady() ? rootSize() : 1
+
     return normalizePanelSizes({
       panelCount: panelCount(),
-      rootSize: rootSize(),
+      rootSize: currentRootSize,
       panelInitialSizes: panelDefaultSizes(),
+      panelMinSizes: panelMinSizes(),
+      panelMaxSizes: panelMaxSizes(),
       controlledSizes,
     })
   }
@@ -211,33 +240,52 @@ export function Resizable(props: ResizableProps): JSX.Element {
     )
   })
 
+  const updateSize = () => {
+    const rect = rootRef!.getBoundingClientRect()
+    const nextSize = orientation() === 'horizontal' ? rect.width : rect.height
+    setRootSize(nextSize > EPSILON ? nextSize : 0)
+  }
+
   createEffect(() => {
-    const element = rootElement()
-    if (!element) {
+    if (!layoutReady()) {
+      setTransitionReady(false)
       return
     }
 
-    const updateSize = () => {
-      const rect = element.getBoundingClientRect()
-      const value = orientation() === 'horizontal' ? rect.width : rect.height
-      setRootSize(value > EPSILON ? value : 1)
+    if (transitionReady()) {
+      return
     }
 
+    let canceled = false
+    queueMicrotask(() => {
+      if (!canceled) {
+        setTransitionReady(true)
+      }
+    })
+
+    onCleanup(() => {
+      canceled = true
+    })
+  })
+
+  onMount(() => {
     updateSize()
 
-    if (typeof ResizeObserver === 'undefined') {
-      return
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(updateSize)
+      observer.observe(rootRef!)
+      onCleanup(() => observer.disconnect())
     }
-
-    const observer = new ResizeObserver(updateSize)
-    observer.observe(element)
-    onCleanup(() => observer.disconnect())
   })
 
   let prevSizes: number[] = []
   let prevCollapsed: boolean[] = []
 
   createEffect(() => {
+    if (!layoutReady()) {
+      return
+    }
+
     const panels = resolvedPanels()
     const currentSizes = sizes()
 
@@ -476,10 +524,18 @@ export function Resizable(props: ResizableProps): JSX.Element {
   }
 
   function beginResize(nextSizes: number[]): void {
+    if (!layoutReady()) {
+      return
+    }
+
     localProps.onResizeStart?.(resolvePixelSizes(nextSizes))
   }
 
   function endResize(nextSizes: number[]): void {
+    if (!layoutReady()) {
+      return
+    }
+
     localProps.onResizeEnd?.(resolvePixelSizes(nextSizes))
   }
 
@@ -487,6 +543,11 @@ export function Resizable(props: ResizableProps): JSX.Element {
     if (normalizedControlledSizes() === undefined) {
       setUncontrolledSizes(normalizedSizes)
     }
+
+    if (!layoutReady()) {
+      return
+    }
+
     localProps.onResize?.(resolvePixelSizes(normalizedSizes))
   }
 
@@ -618,12 +679,13 @@ export function Resizable(props: ResizableProps): JSX.Element {
 
   return (
     <div
-      ref={setRootElement}
+      ref={rootRef}
       id={localProps.id}
       data-slot="root"
       style={localProps.styles?.root}
       data-resizable-root
       data-orientation={orientation()}
+      data-initializing={!transitionReady() ? '' : undefined}
       class={resizableRootVariants({ orientation: orientation() }, localProps.classes?.root)}
     >
       <Index each={resolvedPanels()}>
@@ -632,13 +694,15 @@ export function Resizable(props: ResizableProps): JSX.Element {
           const size = () => sizes()[index] ?? 0
           const collapsed = () => isPanelCollapsed(size(), panelItem())
           const handleDisabled = createMemo(
-            () => localProps.disable === true || !isHandleResizable(index),
+            () => localProps.disable === true || !layoutReady() || !isHandleResizable(index),
           )
           const handleCollapseAction = createMemo(
-            () => localProps.handleAction === 'collapse' && localProps.disable !== true,
+            () => localProps.handleAction === 'collapse' && localProps.disable !== true && layoutReady(),
           )
           const handleRenderDisabled = createMemo(() =>
-            localProps.handleAction === 'collapse' ? localProps.disable === true : handleDisabled(),
+            localProps.handleAction === 'collapse'
+              ? localProps.disable === true || !layoutReady()
+              : handleDisabled(),
           )
           const collapseState = createMemo(() => resolveNearestCollapsibleState(index))
 
@@ -708,12 +772,15 @@ export function Resizable(props: ResizableProps): JSX.Element {
                 data-expanded={panelItem().collapsible && !collapsed() ? '' : undefined}
                 data-resizing={interactionResizing() ? '' : undefined}
                 class={cn(
-                  'min-h-0 min-w-0 duration-200 ease-out transition-flex-basis overflow-auto data-resizing:duration-0 motion-reduce:transition-none',
+                  'min-h-0 min-w-0 ease-out overflow-auto data-resizing:duration-0 motion-reduce:transition-none',
+                  transitionReady() ? 'transition-flex-grow duration-200' : 'transition-none',
                   localProps.classes?.panel,
                   panelItem().class,
                 )}
                 style={{
-                  'flex-basis': `${size() * 100}%`,
+                  'flex-grow': layoutReady() ? `${size()}` : '1',
+                  'flex-shrink': '1',
+                  'flex-basis': layoutReady() ? '0px' : 'auto',
                   ...localProps.styles?.panel,
                   ...panelItem().style,
                 }}

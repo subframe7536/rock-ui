@@ -270,7 +270,6 @@ export function presetTheme(options?: PresetThemeOptions): Preset {
         'border-destructive ring-3 ring-destructive/20 dark:(border-destructive/50 ring-destructive/40)',
       ],
       ['animate-loading', 'animate-spin'],
-      ['transition-flex-basis', '[transition-property:flex-basis]'],
       ['transition-bg', '[transition-property:background-color]'],
       ['style-placeholder', 'placeholder:(text-muted-foreground select-none)'],
       [

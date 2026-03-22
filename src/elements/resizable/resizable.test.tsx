@@ -36,6 +36,18 @@ function setRect(element: Element, rect: DOMRect): void {
   })
 }
 
+function panelGrowPercent(panel: HTMLDivElement | null | undefined): number {
+  return Number.parseFloat(panel?.style.flexGrow ?? '0') * 100
+}
+
+function expectPanelGrow(panel: HTMLDivElement | null | undefined, percent: number): void {
+  expect(panelGrowPercent(panel)).toBeCloseTo(percent, 3)
+}
+
+async function waitForLayoutInitialization(): Promise<void> {
+  await new Promise<void>((resolve) => queueMicrotask(resolve))
+}
+
 const defaultRect = createRect({ top: 0, right: 1000, bottom: 600, left: 0 })
 const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
 
@@ -310,8 +322,8 @@ describe('Resizable', () => {
     expect(events[2]?.sizes).toEqual(events[1]?.sizes)
 
     const panels = screen.container.querySelectorAll('[data-slot="panel"]')
-    expect((panels[0] as HTMLDivElement).style.flexBasis).toBe('60%')
-    expect((panels[1] as HTMLDivElement).style.flexBasis).toBe('40%')
+    expectPanelGrow(panels[0] as HTMLDivElement, 60)
+    expectPanelGrow(panels[1] as HTMLDivElement, 40)
   })
 
   test('does not emit resize lifecycle when a keyboard interaction cannot change sizes', async () => {
@@ -416,9 +428,29 @@ describe('Resizable', () => {
     const panels = screen.container.querySelectorAll(
       '[data-slot="panel"]',
     ) as NodeListOf<HTMLDivElement>
-    expect(panels[0]?.style.flexBasis).toBe('20%')
-    expect(panels[1]?.style.flexBasis).toBe('30%')
-    expect(panels[2]?.style.flexBasis).toBe('50%')
+    expectPanelGrow(panels[0], 20)
+    expectPanelGrow(panels[1], 30)
+    expectPanelGrow(panels[2], 50)
+  })
+
+  test('uses defaultSize for uncontrolled items in mixed controlled mode and honors min/max', () => {
+    const screen = render(() => (
+      <Resizable
+        panels={[
+          { content: 'A', size: 900, min: '10%', max: '50%' },
+          { content: 'B', defaultSize: '40%', min: '30%', max: '45%' },
+          { content: 'C', min: '20%', max: '35%' },
+        ]}
+      />
+    ))
+
+    const panels = screen.container.querySelectorAll(
+      '[data-slot="panel"]',
+    ) as NodeListOf<HTMLDivElement>
+
+    expectPanelGrow(panels[0], 50)
+    expectPanelGrow(panels[1], 30)
+    expectPanelGrow(panels[2], 20)
   })
 
   test('does not render uncontrolled panels at 0% before defaults are applied', () => {
@@ -434,8 +466,30 @@ describe('Resizable', () => {
     const panels = screen.container.querySelectorAll(
       '[data-slot="panel"]',
     ) as NodeListOf<HTMLDivElement>
-    expect(panels[0]?.style.flexBasis).toBe('30%')
-    expect(panels[1]?.style.flexBasis).toBe('70%')
+    expectPanelGrow(panels[0], 30)
+    expectPanelGrow(panels[1], 70)
+  })
+
+  test('renders panel sizing with flex grow/shrink/basis', () => {
+    const screen = render(() => (
+      <Resizable
+        panels={[
+          { content: 'Left', defaultSize: '30%' },
+          { content: 'Right', defaultSize: '70%' },
+        ]}
+      />
+    ))
+
+    const panels = screen.container.querySelectorAll(
+      '[data-slot="panel"]',
+    ) as NodeListOf<HTMLDivElement>
+
+    expectPanelGrow(panels[0], 30)
+    expect(panels[0]?.style.flexShrink).toBe('1')
+    expect(panels[0]?.style.flexBasis).toBe('0px')
+    expectPanelGrow(panels[1], 70)
+    expect(panels[1]?.style.flexShrink).toBe('1')
+    expect(panels[1]?.style.flexBasis).toBe('0px')
   })
 
   test('does not toggle collapsible panels with Enter by default', async () => {
@@ -464,7 +518,7 @@ describe('Resizable', () => {
     await fireEvent.keyDown(handle, { key: 'Enter' })
 
     expect(onResize).not.toHaveBeenCalled()
-    expect(panels[0]?.style.flexBasis).toBe('30%')
+    expectPanelGrow(panels[0], 30)
     expect(panels[0]?.getAttribute('data-collapsed')).toBeNull()
   })
 
@@ -495,7 +549,7 @@ describe('Resizable', () => {
     await fireEvent.click(handle)
 
     expect(onResize).not.toHaveBeenCalled()
-    expect(panels[0]?.style.flexBasis).toBe('30%')
+    expectPanelGrow(panels[0], 30)
     expect(panels[0]?.getAttribute('data-collapsed')).toBeNull()
   })
 
@@ -521,14 +575,14 @@ describe('Resizable', () => {
       '[data-slot="panel"]',
     ) as NodeListOf<HTMLDivElement>
 
-    expect(panels[0]?.style.flexBasis).toBe('30%')
+    expectPanelGrow(panels[0], 30)
 
     await fireEvent.click(handle)
-    expect(panels[0]?.style.flexBasis).toBe('10%')
+    expectPanelGrow(panels[0], 10)
     expect(panels[0]?.getAttribute('data-collapsed')).toBe('')
 
     await fireEvent.click(handle)
-    expect(panels[0]?.style.flexBasis).toBe('30%')
+    expectPanelGrow(panels[0], 30)
     expect(panels[0]?.getAttribute('data-collapsed')).toBeNull()
   })
 
@@ -559,14 +613,14 @@ describe('Resizable', () => {
     await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
     await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
     await fireEvent.pointerUp(window, { pointerId: 1, clientX: 100, clientY: 0 })
-    expect(panels[0]?.style.flexBasis).toBe('30%')
-    expect(panels[1]?.style.flexBasis).toBe('70%')
+    expectPanelGrow(panels[0], 30)
+    expectPanelGrow(panels[1], 70)
 
     await fireEvent.pointerDown(divider, { pointerId: 1, clientX: 0, clientY: 0 })
     await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
     await fireEvent.pointerUp(window, { pointerId: 1, clientX: 100, clientY: 0 })
-    expect(panels[0]?.style.flexBasis).toBe('40%')
-    expect(panels[1]?.style.flexBasis).toBe('60%')
+    expectPanelGrow(panels[0], 40)
+    expectPanelGrow(panels[1], 60)
   })
 
   test('uses pointer cursor for handle in collapse mode and keeps divider resize cursor', () => {
@@ -634,14 +688,14 @@ describe('Resizable', () => {
       '[data-slot="panel"]',
     ) as NodeListOf<HTMLDivElement>
 
-    expect(panels[0]?.style.flexBasis).toBe('32%')
+    expectPanelGrow(panels[0], 32)
 
     await fireEvent.click(toggle)
-    expect(panels[0]?.style.flexBasis).toBe('10%')
+    expectPanelGrow(panels[0], 10)
     expect(panels[0]?.getAttribute('data-collapsed')).toBe('')
 
     await fireEvent.click(toggle)
-    expect(panels[0]?.style.flexBasis).toBe('32%')
+    expectPanelGrow(panels[0], 32)
   })
 
   test('calls onHandleKeyDown with handle context and keeps keyboard resize behavior', async () => {
@@ -674,8 +728,8 @@ describe('Resizable', () => {
     expect(context.sizes[0]).toBeCloseTo(500, 3)
     expect(context.sizes[1]).toBeCloseTo(500, 3)
     expect(context.event.key).toBe('ArrowRight')
-    expect(panels[0]?.style.flexBasis).toBe('60%')
-    expect(panels[1]?.style.flexBasis).toBe('40%')
+    expectPanelGrow(panels[0], 60)
+    expectPanelGrow(panels[1], 40)
   })
 
   test('skips internal keyboard resize when onHandleKeyDown prevents default', async () => {
@@ -700,8 +754,8 @@ describe('Resizable', () => {
 
     await fireEvent.keyDown(handle, { key: 'ArrowRight' })
 
-    expect(panels[0]?.style.flexBasis).toBe('50%')
-    expect(panels[1]?.style.flexBasis).toBe('50%')
+    expectPanelGrow(panels[0], 50)
+    expectPanelGrow(panels[1], 50)
   })
 
   test('supports dragging when pointer down starts on handle visual area', async () => {
@@ -718,8 +772,8 @@ describe('Resizable', () => {
     await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
     await fireEvent.pointerUp(window, { pointerId: 1, clientX: 100, clientY: 0 })
 
-    expect(panels[0]?.style.flexBasis).toBe('60%')
-    expect(panels[1]?.style.flexBasis).toBe('40%')
+    expectPanelGrow(panels[0], 60)
+    expectPanelGrow(panels[1], 40)
   })
 
   test('snaps expanded size to min when releasing a drag from collapsibleMin state', async () => {
@@ -748,15 +802,15 @@ describe('Resizable', () => {
       '[data-slot="panel"]',
     ) as NodeListOf<HTMLDivElement>
 
-    expect(panels[0]?.style.flexBasis).toBe('10%')
+    expectPanelGrow(panels[0], 10)
     expect(panels[0]?.getAttribute('data-collapsed')).toBe('')
 
     await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
     await fireEvent.pointerMove(window, { pointerId: 1, clientX: 50, clientY: 0 })
-    expect(panels[0]?.style.flexBasis).toBe('15%')
+    expectPanelGrow(panels[0], 15)
 
     await fireEvent.pointerUp(window, { pointerId: 1, clientX: 50, clientY: 0 })
-    expect(panels[0]?.style.flexBasis).toBe('20%')
+    expectPanelGrow(panels[0], 20)
   })
 
   test('marks panel as collapsed when its size equals collapsibleMin', () => {
@@ -791,7 +845,86 @@ describe('Resizable', () => {
     expect(screen.container.querySelectorAll('[data-slot="collapsible"]')).toHaveLength(0)
   })
 
-  test('applies flex-basis transition only during collapse state changes', async () => {
+  test('does not animate while initial root size is stabilizing', async () => {
+    const globalObject = globalThis as Record<string, unknown>
+    const originalResizeObserver = globalObject.ResizeObserver
+    const resizeCallbacks: ResizeObserverCallback[] = []
+    const mutableDefaultRect = defaultRect as { right: number; width: number }
+    const originalRight = mutableDefaultRect.right
+    const originalWidth = mutableDefaultRect.width
+
+    globalObject.ResizeObserver = class {
+      constructor(callback: ResizeObserverCallback) {
+        resizeCallbacks.push(callback)
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+
+    mutableDefaultRect.right = 0
+    mutableDefaultRect.width = 0
+
+    try {
+      const screen = render(() => (
+        <Resizable
+          panels={[
+            { content: 'A', size: 300 },
+            { content: 'B', defaultSize: '40%' },
+            { content: 'C' },
+          ]}
+        />
+      ))
+
+      const root = screen.container.querySelector('[data-slot="root"]') as HTMLDivElement
+      const firstPanel = screen.container.querySelector('[data-slot="panel"]') as HTMLDivElement
+      const divider = screen.container.querySelector('[data-slot="divider"]') as HTMLDivElement
+
+      expect(root.getAttribute('data-initializing')).toBe('')
+      expect(divider.getAttribute('aria-disabled')).toBe('true')
+      expect(divider.getAttribute('tabindex')).toBe('-1')
+      expect(firstPanel.className).toContain('transition-none')
+      expect(firstPanel.className).not.toContain('transition-flex-grow')
+      expect(firstPanel.style.flexBasis).toBe('auto')
+      expect(firstPanel.style.flexGrow).toBe('1')
+
+      mutableDefaultRect.right = 1000
+      mutableDefaultRect.width = 1000
+      resizeCallbacks.forEach((callback) => callback([], {} as ResizeObserver))
+
+      expect(root.getAttribute('data-initializing')).toBe('')
+      expect(divider.getAttribute('aria-disabled')).toBeNull()
+      expect(divider.getAttribute('tabindex')).toBe('0')
+      expect(firstPanel.className).toContain('transition-none')
+      expect(firstPanel.className).not.toContain('transition-flex-grow')
+      expect(firstPanel.style.flexBasis).toBe('0px')
+
+      await waitForLayoutInitialization()
+    } finally {
+      mutableDefaultRect.right = originalRight
+      mutableDefaultRect.width = originalWidth
+      globalObject.ResizeObserver = originalResizeObserver
+    }
+  })
+
+  test('enables flex-grow transition after initialization', async () => {
+    const screen = render(() => (
+      <Resizable panels={[{ content: 'Left', defaultSize: '35%' }, { content: 'Right' }]} />
+    ))
+
+    const root = screen.container.querySelector('[data-slot="root"]') as HTMLDivElement
+    const panel = screen.container.querySelector('[data-slot="panel"]') as HTMLDivElement
+
+    expect(root.getAttribute('data-initializing')).toBe('')
+    expect(panel.className).toContain('transition-none')
+
+    await waitForLayoutInitialization()
+
+    expect(root.getAttribute('data-initializing')).toBeNull()
+    expect(panel.className).toContain('transition-flex-grow')
+  })
+
+  test('applies flex-grow transition only during collapse state changes', async () => {
     const screen = render(() => {
       const [sizes, setSizes] = createSignal<[number, number]>([350, 650])
       const [lastExpandedSize, setLastExpandedSize] = createSignal(350)
@@ -832,18 +965,20 @@ describe('Resizable', () => {
       screen.container.querySelectorAll('[data-slot="panel"]')[0] as HTMLDivElement
     const sidebarBefore = getSidebar()
 
-    expect(getSidebar().className).toContain('transition-flex-basis')
+    await waitForLayoutInitialization()
+
+    expect(getSidebar().className).toContain('transition-flex-grow')
     expect(getSidebar().className).toContain('data-resizing:duration-0')
     expect(getSidebar().getAttribute('data-resizing')).toBeNull()
 
     await fireEvent.click(toggle)
     expect(getSidebar()).toBe(sidebarBefore)
-    expect(getSidebar().style.flexBasis).toBe('0%')
+    expectPanelGrow(getSidebar(), 0)
     expect(getSidebar().getAttribute('data-resizing')).toBeNull()
 
     await fireEvent.click(toggle)
     expect(getSidebar()).toBe(sidebarBefore)
-    expect(getSidebar().style.flexBasis).toBe('35%')
+    expectPanelGrow(getSidebar(), 35)
     expect(getSidebar().getAttribute('data-resizing')).toBeNull()
   })
 

@@ -93,10 +93,134 @@ export function resolveKeyboardDelta(delta: ResizableSize | undefined, rootSize:
   return resolveSize(delta, rootSize)
 }
 
+type SizePriority = 0 | 1 | 2
+
+function clampSize(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function sumSizes(sizes: number[]): number {
+  let total = 0
+  for (const size of sizes) {
+    total += size
+  }
+  return total
+}
+
+function resolvePanelBounds(input: {
+  panelCount: number
+  panelMinSizes?: number[]
+  panelMaxSizes?: number[]
+}): { minSizes: number[]; maxSizes: number[] } {
+  const minSizes: number[] = []
+  const maxSizes: number[] = []
+
+  for (let index = 0; index < input.panelCount; index += 1) {
+    const rawMin = input.panelMinSizes?.[index]
+    const rawMax = input.panelMaxSizes?.[index]
+    const min = isFiniteNumber(rawMin) ? clampSize(rawMin, 0, 1) : 0
+    const maxCandidate = isFiniteNumber(rawMax) ? clampSize(rawMax, 0, 1) : 1
+    const max = Math.max(min, maxCandidate)
+
+    minSizes[index] = min
+    maxSizes[index] = max
+  }
+
+  return { minSizes, maxSizes }
+}
+
+function redistributeByPriority(input: {
+  sizes: number[]
+  minSizes: number[]
+  maxSizes: number[]
+  priorities: SizePriority[]
+}): number[] {
+  const nextSizes = input.sizes.map((size, index) =>
+    clampSize(size, input.minSizes[index] ?? 0, input.maxSizes[index] ?? 1),
+  )
+
+  const priorityOrder: SizePriority[] = [0, 1, 2]
+  let remainder = fixToPrecision(1 - sumSizes(nextSizes))
+  let guard = 0
+
+  while (Math.abs(remainder) > EPSILON && guard < 30) {
+    const shouldGrow = remainder > 0
+    let changed = false
+
+    for (const priority of priorityOrder) {
+      let pending = Math.abs(remainder)
+
+      while (pending > EPSILON) {
+        const candidates: number[] = []
+
+        for (let index = 0; index < nextSizes.length; index += 1) {
+          if ((input.priorities[index] ?? 0) !== priority) {
+            continue
+          }
+
+          const room = shouldGrow
+            ? (input.maxSizes[index] ?? 1) - (nextSizes[index] ?? 0)
+            : (nextSizes[index] ?? 0) - (input.minSizes[index] ?? 0)
+
+          if (room > EPSILON) {
+            candidates.push(index)
+          }
+        }
+
+        if (candidates.length === 0) {
+          break
+        }
+
+        const share = pending / candidates.length
+        let applied = 0
+
+        for (const index of candidates) {
+          const room = shouldGrow
+            ? (input.maxSizes[index] ?? 1) - (nextSizes[index] ?? 0)
+            : (nextSizes[index] ?? 0) - (input.minSizes[index] ?? 0)
+          const delta = Math.min(room, share)
+
+          if (delta <= EPSILON) {
+            continue
+          }
+
+          nextSizes[index] = fixToPrecision(
+            shouldGrow ? (nextSizes[index] ?? 0) + delta : (nextSizes[index] ?? 0) - delta,
+          )
+          applied += delta
+        }
+
+        if (applied <= EPSILON) {
+          break
+        }
+
+        changed = true
+        pending = fixToPrecision(pending - applied)
+      }
+
+      remainder = fixToPrecision(1 - sumSizes(nextSizes))
+      if (Math.abs(remainder) <= EPSILON) {
+        break
+      }
+    }
+
+    if (!changed) {
+      break
+    }
+
+    remainder = fixToPrecision(1 - sumSizes(nextSizes))
+    guard += 1
+  }
+
+  return nextSizes
+}
+
 export function normalizePanelSizes(input: {
   panelCount: number
   rootSize: number
   panelInitialSizes: Array<ResizableSize | undefined>
+  panelMinSizes?: number[]
+  panelMaxSizes?: number[]
   controlledSizes?: Array<ResizableSize | undefined>
 }): number[] {
   const { panelCount, rootSize, panelInitialSizes, controlledSizes } = input
@@ -105,15 +229,33 @@ export function normalizePanelSizes(input: {
     return []
   }
 
+  const { minSizes, maxSizes } = resolvePanelBounds({
+    panelCount,
+    panelMinSizes: input.panelMinSizes,
+    panelMaxSizes: input.panelMaxSizes,
+  })
+  const priorities: SizePriority[] = []
+
   if (controlledSizes && controlledSizes.length > 0) {
     const aligned: number[] = []
-    let definedSum = 0
+    let preferredSum = 0
     let undefinedCount = 0
 
     for (let index = 0; index < panelCount; index += 1) {
       const controlledSize = controlledSizes[index]
       if (controlledSize === undefined) {
+        const defaultSize = panelInitialSizes[index]
+
+        if (defaultSize !== undefined) {
+          const resolvedDefaultSize = resolveSize(defaultSize, rootSize)
+          aligned[index] = Math.max(0, resolvedDefaultSize)
+          priorities[index] = 1
+          preferredSum += aligned[index] ?? 0
+          continue
+        }
+
         aligned[index] = 0
+        priorities[index] = 0
         undefinedCount += 1
         continue
       }
@@ -121,21 +263,27 @@ export function normalizePanelSizes(input: {
       const resolvedControlledSize = resolveSize(controlledSize, rootSize)
       const clampedControlledSize = Math.max(0, resolvedControlledSize)
       aligned[index] = clampedControlledSize
-      definedSum += clampedControlledSize
+      priorities[index] = 2
+      preferredSum += clampedControlledSize
     }
 
     if (undefinedCount > 0) {
-      const remaining = 1 - definedSum
+      const remaining = 1 - preferredSum
       const fallbackSize = remaining > EPSILON ? remaining / undefinedCount : 0
 
       for (let index = 0; index < panelCount; index += 1) {
-        if (controlledSizes[index] === undefined) {
+        if (priorities[index] === 0) {
           aligned[index] = fallbackSize
         }
       }
     }
 
-    return normalizeSizeVector(aligned)
+    return redistributeByPriority({
+      sizes: normalizeSizeVector(aligned),
+      minSizes,
+      maxSizes,
+      priorities,
+    })
   }
 
   const resolved: number[] = []
@@ -146,12 +294,14 @@ export function normalizePanelSizes(input: {
     const panelSize = panelInitialSizes[index]
     if (panelSize === undefined) {
       resolved[index] = 0
+      priorities[index] = 0
       undefinedCount += 1
       continue
     }
 
     const size = resolveSize(panelSize, rootSize)
     resolved[index] = size
+    priorities[index] = 1
     definedSum += size
   }
 
@@ -160,11 +310,16 @@ export function normalizePanelSizes(input: {
     const fallbackSize = remaining > EPSILON ? remaining / undefinedCount : 1 / panelCount
 
     for (let index = 0; index < panelCount; index += 1) {
-      if (resolved[index] === 0 && panelInitialSizes[index] === undefined) {
+      if (priorities[index] === 0) {
         resolved[index] = fallbackSize
       }
     }
   }
 
-  return normalizeSizeVector(resolved)
+  return redistributeByPriority({
+    sizes: normalizeSizeVector(resolved),
+    minSizes,
+    maxSizes,
+    priorities,
+  })
 }

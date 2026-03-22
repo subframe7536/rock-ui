@@ -28,6 +28,8 @@ describe('size', () => {
         panelCount: 3,
         rootSize: ROOT_SIZE,
         panelInitialSizes: [undefined, undefined, undefined],
+        panelMinSizes: [0, 0, 0],
+        panelMaxSizes: [1, 1, 1],
         controlledSizes: [200, undefined, undefined],
       }),
     ).toEqual([0.2, 0.4, 0.4])
@@ -39,8 +41,36 @@ describe('size', () => {
         panelCount: 3,
         rootSize: ROOT_SIZE,
         panelInitialSizes: [undefined, undefined, undefined],
+        panelMinSizes: [0, 0, 0],
+        panelMaxSizes: [1, 1, 1],
         controlledSizes: [800, 600, undefined],
       }),
     ).toEqual([0.571429, 0.428571, 0])
+  })
+
+  test('normalizePanelSizes prefers defaultSize for uncontrolled items in mixed controlled mode', () => {
+    expect(
+      normalizePanelSizes({
+        panelCount: 3,
+        rootSize: ROOT_SIZE,
+        panelInitialSizes: ['30%', '40%', undefined],
+        panelMinSizes: [0, 0, 0],
+        panelMaxSizes: [1, 1, 1],
+        controlledSizes: [200, undefined, undefined],
+      }),
+    ).toEqual([0.2, 0.4, 0.4])
+  })
+
+  test('normalizePanelSizes clamps mixed controlled/default sizes by min and max', () => {
+    expect(
+      normalizePanelSizes({
+        panelCount: 3,
+        rootSize: ROOT_SIZE,
+        panelInitialSizes: ['30%', '40%', undefined],
+        panelMinSizes: [0.1, 0.3, 0.2],
+        panelMaxSizes: [0.5, 0.45, 0.35],
+        controlledSizes: [900, undefined, undefined],
+      }),
+    ).toEqual([0.5, 0.3, 0.2])
   })
 })
