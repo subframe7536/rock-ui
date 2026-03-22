@@ -23,7 +23,7 @@ export default () => {
         title="Determinate"
         description="Standard progress bar with status text and custom status renderer."
       >
-        <div class="max-w-xl space-y-3">
+        <div class="w-xl space-y-3">
           <Progress
             value={value()}
             status
@@ -41,19 +41,19 @@ export default () => {
       </DemoSection>
 
       <DemoSection title="Step Mode" description="String-array max renders named steps.">
-        <Progress value={2} max={STEPS} color="secondary" />
+        <Progress value={2} max={STEPS} />
       </DemoSection>
 
       <DemoSection
         title="Vertical + Indeterminate"
         description="Vertical orientation and unknown-progress loading state."
       >
-        <div class="flex gap-10 items-end">
+        <div class="flex gap-10">
           <div class="h-44">
-            <Progress value={45} orientation="vertical" status animation="swing" />
+            <Progress value={15} orientation="vertical" status animation="swing" />
           </div>
           <div class="h-44">
-            <Progress value={null} orientation="vertical" color="neutral" />
+            <Progress value={null} orientation="vertical" animation="elastic" />
           </div>
         </div>
       </DemoSection>

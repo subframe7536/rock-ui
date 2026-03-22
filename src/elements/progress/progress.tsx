@@ -118,7 +118,6 @@ export function Progress(props: ProgressProps): JSX.Element {
       status: false,
       orientation: 'horizontal' as const,
       animation: 'carousel' as const,
-      color: 'primary' as const,
       size: 'md' as const,
     },
     props,
@@ -128,7 +127,7 @@ export function Progress(props: ProgressProps): JSX.Element {
     merged as ProgressProps,
     ['value', 'max'],
     ['status', 'orientation', 'animation', 'renderStatus', 'renderStep'],
-    ['color', 'size', 'classes'],
+    ['size', 'classes'],
   )
 
   const steps = createMemo<string[]>(() => (Array.isArray(valueProps.max) ? valueProps.max : []))
@@ -169,12 +168,12 @@ export function Progress(props: ProgressProps): JSX.Element {
     })
 
     const statusStyle = createMemo<JSX.CSSProperties>(() => {
-      const styleValue = `${Math.max(percent() ?? 0, 0)}%`
+      const currentPercent = Math.max(percent() ?? 0, 0)
       if (behaviorProps.orientation === 'vertical') {
-        return { height: styleValue }
+        return { height: `${100 - currentPercent}%` }
       }
 
-      return { width: styleValue }
+      return { width: `${currentPercent}%` }
     })
 
     const indicatorStyle = createMemo<JSX.CSSProperties | undefined>(() => {
@@ -186,7 +185,7 @@ export function Progress(props: ProgressProps): JSX.Element {
       const distance = 100 - currentPercent
       if (behaviorProps.orientation === 'vertical') {
         return {
-          transform: `translateY(-${distance}%)`,
+          transform: `translateY(${distance}%)`,
         }
       }
 
@@ -225,7 +224,6 @@ export function Progress(props: ProgressProps): JSX.Element {
               {
                 orientation: behaviorProps.orientation,
                 size: styleProps.size,
-                color: styleProps.color,
               },
               styleProps.classes?.status,
             )}
@@ -234,9 +232,9 @@ export function Progress(props: ProgressProps): JSX.Element {
               ...merged.styles?.status,
             }}
           >
-            <Show when={behaviorProps.renderStatus} fallback={`${percent() ?? 0}%`}>
-              {(renderStatus) => renderStatus()({ percent: percent() })}
-            </Show>
+            {behaviorProps.renderStatus
+              ? behaviorProps.renderStatus({ percent: percent() })
+              : `${percent() ?? 0}%`}
           </div>
         </Show>
 
@@ -255,7 +253,6 @@ export function Progress(props: ProgressProps): JSX.Element {
             data-slot="indicator"
             class={progressIndicatorVariants(
               {
-                color: styleProps.color,
                 orientation: behaviorProps.orientation,
                 animation: behaviorProps.animation,
               },
@@ -276,7 +273,6 @@ export function Progress(props: ProgressProps): JSX.Element {
               {
                 orientation: behaviorProps.orientation,
                 size: styleProps.size,
-                color: styleProps.color,
               },
               styleProps.classes?.steps,
             )}
@@ -290,7 +286,6 @@ export function Progress(props: ProgressProps): JSX.Element {
                     {
                       state: stepState(index()),
                       size: styleProps.size,
-                      color: styleProps.color,
                     },
                     styleProps.classes?.step,
                   )}

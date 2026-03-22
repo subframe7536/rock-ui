@@ -1,4 +1,5 @@
 import { render } from '@solidjs/testing-library'
+import { createSignal } from 'solid-js'
 import { describe, expect, test } from 'vitest'
 
 import { Progress } from './progress'
@@ -40,6 +41,17 @@ describe('Progress', () => {
       <Progress value={25} renderStatus={({ percent }) => `Done ${percent}%`} />
     ))
     expect(withRenderStatus.getByText('Done 25%')).not.toBeNull()
+  })
+
+  test('updates renderStatus content when value changes', () => {
+    const [value, setValue] = createSignal(25)
+    const screen = render(() => (
+      <Progress value={value()} renderStatus={({ percent }) => `Done ${percent}%`} />
+    ))
+
+    expect(screen.getByText('Done 25%')).not.toBeNull()
+    setValue(50)
+    expect(screen.getByText('Done 50%')).not.toBeNull()
   })
 
   test('clamps value using numeric max', () => {
@@ -101,9 +113,9 @@ describe('Progress', () => {
     const indicator = screen.container.querySelector('[data-slot="indicator"]') as HTMLElement
 
     expect(root?.className).toContain('flex-row-reverse')
-    expect(status.style.height).toBe('25%')
+    expect(status.style.height).toBe('75%')
     expect(indicator.className).toContain('animate-swing-vertical')
-    expect(indicator.style.transform).toBe('translateY(-75%)')
+    expect(indicator.style.transform).toBe('translateY(75%)')
   })
 
   test('merges classes overrides into all slots', () => {
@@ -174,9 +186,12 @@ describe('Progress', () => {
     expect(step?.style.width).toBe('200px')
   })
 
-  test('rejects inverted in type contract', () => {
+  test('rejects removed props in type contract', () => {
     // @ts-expect-error inverted has been removed from Progress props
-    const props: ProgressProps = { inverted: true }
-    expect(props).toBeDefined()
+    const invertedProps: ProgressProps = { inverted: true }
+    // @ts-expect-error color has been removed from Progress props
+    const colorProps: ProgressProps = { color: 'secondary' }
+    expect(invertedProps).toBeDefined()
+    expect(colorProps).toBeDefined()
   })
 })

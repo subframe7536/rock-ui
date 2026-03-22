@@ -21,7 +21,6 @@ export const progressStatusVariants = cva(
     defaultVariants: {
       orientation: 'horizontal',
       size: 'md',
-      color: 'primary',
     },
     variants: {
       orientation: {
@@ -29,12 +28,6 @@ export const progressStatusVariants = cva(
         vertical: 'flex-col min-h-fit justify-end',
       },
       size: TEXT_SIZE_VARIANT,
-      color: {
-        primary: 'text-primary',
-        secondary: 'text-secondary',
-        neutral: 'text-muted-foreground',
-        error: 'text-destructive',
-      },
     },
   },
 )
@@ -63,20 +56,13 @@ export const progressBaseVariants = cva(
 )
 
 export const progressIndicatorVariants = cva(
-  'will-change-transform rounded-full size-full transition-transform duration-200 ease-out inset-0 absolute data-indeterminate:animate-(duration-2s ease-in-out iteration-infinite)',
+  'will-change-transform rounded-full bg-primary size-full transition-transform duration-200 ease-out inset-0 absolute data-indeterminate:animate-(duration-2s ease-in-out iteration-infinite)',
   {
     defaultVariants: {
-      color: 'primary',
       orientation: 'horizontal',
       animation: 'carousel',
     },
     variants: {
-      color: {
-        primary: 'bg-primary',
-        secondary: 'bg-secondary',
-        neutral: 'bg-inverted',
-        error: 'bg-destructive',
-      },
       orientation: {
         horizontal: 'origin-left',
         vertical: 'origin-bottom',
@@ -138,7 +124,6 @@ export const progressStepsVariants = cva('grid items-end', {
   defaultVariants: {
     orientation: 'horizontal',
     size: 'md',
-    color: 'primary',
   },
   variants: {
     orientation: {
@@ -146,12 +131,6 @@ export const progressStepsVariants = cva('grid items-end', {
       vertical: 'ms-2 h-full items-start',
     },
     size: TEXT_SIZE_VARIANT,
-    color: {
-      primary: 'text-primary',
-      secondary: 'text-secondary',
-      neutral: 'text-foreground',
-      error: 'text-destructive',
-    },
   },
 })
 
@@ -161,7 +140,6 @@ export const progressStepVariants = cva(
     defaultVariants: {
       state: 'other',
       size: 'md',
-      color: 'primary',
     },
     variants: {
       state: {
@@ -171,12 +149,6 @@ export const progressStepVariants = cva(
         last: 'opacity-100',
       },
       size: TEXT_SIZE_VARIANT,
-      color: {
-        primary: 'text-primary',
-        secondary: 'text-secondary',
-        neutral: 'text-foreground',
-        error: 'text-destructive',
-      },
     },
   },
 )
