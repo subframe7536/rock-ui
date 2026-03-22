@@ -20,8 +20,8 @@ export const resizableHandleVariants = cva(
     },
     variants: {
       orientation: {
-        horizontal: 'w-px cursor-col-resize after:(w-1 inset-y-0 left-1/2 -translate-x-1/2)',
-        vertical: 'h-px w-full cursor-row-resize after:(h-1 inset-x-0 top-1/2 -translate-y-1/2)',
+        horizontal: 'w-px cursor-col-resize after:(w-1.5 inset-y-0 left-1/2 -translate-x-1/2)',
+        vertical: 'h-px w-full cursor-row-resize after:(h-1.5 inset-x-0 top-1/2 -translate-y-1/2)',
       },
     },
   },

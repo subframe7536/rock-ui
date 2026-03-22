@@ -59,6 +59,7 @@ const DEMO_MAP: Record<string, Component> = {
   tabs: lazy(() => import('./demo/navigation/tabs-demos')),
   textarea: lazy(() => import('./demo/form/textarea-demos')),
   tooltip: lazy(() => import('./demo/overlay/tooltip-demos')),
+  toast: lazy(() => import('./demo/overlay/toaster-demos')),
 }
 
 function App() {
@@ -69,7 +70,11 @@ function App() {
       .filter((entry) => entry.key in DEMO_MAP)
       .map((entry) => ({ key: entry.key, label: entry.name, group: entry.category }))
 
-    return [{ key: 'intro', label: 'Introduction', group: 'Guide' }, ...componentPages]
+    return [
+      { key: 'intro', label: 'Introduction', group: 'Guide' },
+      ...componentPages,
+      { key: 'toast', label: 'Toast', group: 'overlays' },
+    ]
   })
 
   const [page, setPage] = createSignal(location.hash.slice(1) || 'intro')
@@ -150,7 +155,7 @@ function App() {
       orientation="horizontal"
       classes={{
         root: 'h-screen',
-        divider: 'after:(transition-all duration-200 ease-out) hover:after:(bg-accent w-1.5)',
+        divider: 'after:(transition duration-200 ease-out) hover:after:(bg-accent w-1.5)',
       }}
     />
   )

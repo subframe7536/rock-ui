@@ -35,7 +35,7 @@ export default () => {
       content: createPanel(
         'Preview',
         'The external store writes callback px values back into panel.size.',
-        'bg-muted',
+        'bg-background',
       ),
     },
   ])
@@ -228,7 +228,7 @@ export default () => {
                             content: createPanel(
                               'Console',
                               'Nested bottom panel with cross drag enabled.',
-                              'bg-muted',
+                              'bg-muted/50',
                             ),
                           },
                         ]}
@@ -278,7 +278,7 @@ export default () => {
                             content: createPanel(
                               'Console',
                               'Nested bottom panel with cross drag disabled.',
-                              'bg-muted',
+                              'bg-muted/50',
                             ),
                           },
                         ]}

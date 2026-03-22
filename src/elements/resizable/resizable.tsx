@@ -147,6 +147,8 @@ interface DragState {
   lastSizes: number[]
 }
 
+const EMPTY_PANELS: ResizablePanelItem[] = []
+
 /** Resizable panel layout with draggable dividers and keyboard support. */
 export function Resizable(props: ResizableProps): JSX.Element {
   const localProps = mergeProps(
@@ -166,10 +168,9 @@ export function Resizable(props: ResizableProps): JSX.Element {
   const [rootSize, setRootSize] = createSignal(1)
   const [uncontrolledSizes, setUncontrolledSizes] = createSignal<number[]>([])
   const [interactionResizing, setInteractionResizing] = createSignal(false)
+  const panelItems = createMemo(() => localProps.panels ?? EMPTY_PANELS)
 
-  const resolvedPanels = createMemo(() =>
-    resolvePanels(localProps.panels ?? [], rootSize(), panelIdPrefix()),
-  )
+  const resolvedPanels = createMemo(() => resolvePanels(panelItems(), rootSize(), panelIdPrefix()))
   const panelCount = createMemo(() => resolvedPanels().length)
   const panelDefaultSizes = createMemo(() => resolvedPanels().map((p) => p.defaultSize))
 
@@ -183,7 +184,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
   }
 
   const normalizedControlledSizes = createMemo(() => {
-    const next = localProps.panels?.map((p) => p.size)
+    const next = panelItems().map((p) => p.size)
     return next?.some((s) => s !== undefined) ? normalizeWithCurrentState(next) : undefined
   })
 
@@ -262,9 +263,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
     prevCollapsed = panels.map((p, i) => isPanelCollapsed(currentSizes[i] ?? 0, p))
   })
 
-  const panelCollapsibleStates = createMemo(() =>
-    (localProps.panels ?? []).map((p) => p.collapsible),
-  )
+  const panelCollapsibleStates = createMemo(() => panelItems().map((p) => p.collapsible))
 
   let prevCollapsibleStates: Array<boolean | undefined> = []
   const lastExpandedSizes: Array<number | undefined> = []
@@ -774,10 +773,12 @@ export function Resizable(props: ResizableProps): JSX.Element {
                       onPointerDown={onHandlePointerDown}
                       onClick={onHandleClick}
                       class={cn(
-                        'rounded flex items-center justify-center z-10 focus-visible:effect-fv',
+                        'rounded flex cursor-inherit items-center justify-center z-10 focus-visible:effect-fv',
                         handleCollapseAction() && 'active:cursor-pointer hover:cursor-pointer',
-                        localProps.renderHandle === true &&
-                          'bg-border/90 flex shrink-0 h-6 w-1 cursor-inherit',
+                        localProps.renderHandle === true && [
+                          'bg-border/90 flex shrink-0',
+                          orientation() === 'vertical' ? 'h-1 w-6' : 'h-6 w-1',
+                        ],
                         localProps.classes?.handle,
                       )}
                     >

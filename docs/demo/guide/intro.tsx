@@ -1,5 +1,6 @@
 import { For, createMemo } from 'solid-js'
 import apiIndex from 'virtual:api-doc'
+import { SourceCode } from 'virtual:demo-source'
 
 import { Badge, Button, Card, Icon, Tabs } from '../../../src'
 
@@ -130,29 +131,17 @@ export default () => {
             {
               label: 'bun',
               value: 'bun',
-              content: (
-                <pre class="text-sm text-foreground font-mono p-4 bg-muted overflow-x-auto">
-                  <code>bun add @subf/rock-ui</code>
-                </pre>
-              ),
+              content: <SourceCode lang="bash">bun add @subf/rock-ui</SourceCode>,
             },
             {
               label: 'pnpm',
               value: 'pnpm',
-              content: (
-                <pre class="text-sm text-foreground font-mono p-4 bg-muted overflow-x-auto">
-                  <code>pnpm add @subf/rock-ui</code>
-                </pre>
-              ),
+              content: <SourceCode lang="bash">pnpm add @subf/rock-ui</SourceCode>,
             },
             {
               label: 'npm',
               value: 'npm',
-              content: (
-                <pre class="text-sm text-foreground font-mono p-4 bg-muted overflow-x-auto">
-                  <code>npm i @subf/rock-ui</code>
-                </pre>
-              ),
+              content: <SourceCode lang="bash">npm i @subf/rock-ui</SourceCode>,
             },
           ]}
         />
