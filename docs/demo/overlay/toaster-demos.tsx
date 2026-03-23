@@ -47,6 +47,7 @@ export default () => {
       loading: `Sync #${nextRun} in progress...`,
       success: (result) => `Sync #${result.run} finished`,
       error: (error) => `Sync failed: ${String(error)}`,
+      duration: 1e6,
     })
   }
 
