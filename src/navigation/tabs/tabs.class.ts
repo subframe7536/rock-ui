@@ -38,11 +38,21 @@ export const tabsIndicatorVariants = cva('rounded-md transition-all duration-200
       vertical: 'h-$kb-tabs-indicator-size translate-y-$kb-tabs-indicator-position top-0',
     },
     variant: {
-      pill: 'bg-background shadow-xs inset-y-1',
+      pill: 'bg-background shadow-xs',
       link: 'bg-primary',
     },
   },
   compoundVariants: [
+    {
+      orientation: 'horizontal',
+      variant: 'pill',
+      class: 'inset-y-1',
+    },
+    {
+      orientation: 'vertical',
+      variant: 'pill',
+      class: 'inset-x-1',
+    },
     {
       orientation: 'horizontal',
       variant: 'link',

@@ -73,6 +73,14 @@ describe('Tabs', () => {
     expect(content?.className).toContain('content-override')
   })
 
+  test('applies vertical pill indicator inset class', () => {
+    const screen = render(() => <Tabs orientation="vertical" items={ITEMS} />)
+
+    const indicator = screen.container.querySelector('[data-slot="indicator"]')
+
+    expect(indicator?.className).toContain('inset-x-1')
+  })
+
   test('renders icon leading', () => {
     const screen = render(() => (
       <Tabs
