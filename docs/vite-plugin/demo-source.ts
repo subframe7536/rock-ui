@@ -6,9 +6,6 @@ import { walk } from 'oxc-walker'
 import { createHighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine-javascript.mjs'
 import type { Plugin } from 'vite'
-
-const VIRTUAL_DEMO_SOURCE = 'virtual:demo-source'
-const RESOLVED_VIRTUAL_DEMO_SOURCE = '\0rock-ui-demo-source'
 const DEMO_DOC_FILE_RE = /[\\/]docs[\\/].*\.tsx$/
 
 const SUPPORTED_LANGUAGES = new Set(['tsx', 'bash'])
@@ -18,7 +15,7 @@ interface DemoCodeInjection {
   propInsertPos: number
 }
 
-interface SourceCodeInjection {
+interface ShikiCodeBlockInjection {
   propInsertPos: number
   childStart: number
   childEnd: number
@@ -49,6 +46,10 @@ interface DemoComponentDeclaration {
 type ProgramNode = ReturnType<typeof parseSync>['program']
 
 function dedentSource(source: string): string {
+  if (!source.includes('\n')) {
+    return source.trimStart()
+  }
+
   const [first, ...lines] = source.split('\n')
   const minIndent = lines
     .filter((line) => line.trim().length > 0)
@@ -60,6 +61,10 @@ function dedentSource(source: string): string {
   return minIndent === Number.POSITIVE_INFINITY
     ? source
     : [first, ...lines.map((line) => line.slice(minIndent))].join('\n')
+}
+
+function trimBoundaryBlankLines(source: string): string {
+  return source.replace(/^\s*\n+|\n+\s*$/g, '')
 }
 
 function loadApiDoc(projectRoot: string, key: string): unknown | null {
@@ -256,7 +261,7 @@ function isJsxIdentifierName(name: unknown, expected: string): boolean {
   )
 }
 
-function extractSourceCodeText(node: unknown, code: string): string | undefined {
+function extractShikiCodeBlockText(node: unknown, code: string): string | undefined {
   if (!node || typeof node !== 'object' || !('children' in node) || !Array.isArray(node.children)) {
     return undefined
   }
@@ -326,9 +331,9 @@ function extractSourceCodeText(node: unknown, code: string): string | undefined 
   return undefined
 }
 
-function resolveSourceCodeBoundaries(
+function resolveShikiCodeBlockBoundaries(
   program: ProgramNode,
-  injections: SourceCodeInjection[],
+  injections: ShikiCodeBlockInjection[],
   code: string,
 ): void {
   if (injections.length === 0) {
@@ -341,7 +346,7 @@ function resolveSourceCodeBoundaries(
         return
       }
       if (
-        !isJsxIdentifierName(node.openingElement.name, 'SourceCode') ||
+        !isJsxIdentifierName(node.openingElement.name, 'ShikiCodeBlock') ||
         node.openingElement.selfClosing
       ) {
         return
@@ -353,7 +358,7 @@ function resolveSourceCodeBoundaries(
       }
 
       injection.childEnd = node.closingElement.start
-      injection.sourceText = extractSourceCodeText(node, code)
+      injection.sourceText = extractShikiCodeBlockText(node, code)
     },
   })
 }
@@ -516,7 +521,7 @@ export async function transformDemoSource(
   const topLevelDemoComponents = collectTopLevelDemoComponents(program, code)
 
   const demoCodeInjections: DemoCodeInjection[] = []
-  const sourceCodeInjections: SourceCodeInjection[] = []
+  const shikiCodeBlockInjections: ShikiCodeBlockInjection[] = []
   const apiDocInjections: ApiDocInjection[] = []
   const extraApiDocsInjections: ExtraApiDocsInjection[] = []
 
@@ -549,12 +554,12 @@ export async function transformDemoSource(
         return
       }
 
-      if (node.name.name === 'SourceCode') {
+      if (node.name.name === 'ShikiCodeBlock') {
         if (hasJsxAttribute(node, 'html') || node.selfClosing) {
           return
         }
 
-        sourceCodeInjections.push({
+        shikiCodeBlockInjections.push({
           propInsertPos: getPropInsertPos(node),
           childStart: node.end,
           childEnd: -1,
@@ -584,9 +589,11 @@ export async function transformDemoSource(
     },
   })
 
-  resolveSourceCodeBoundaries(program, sourceCodeInjections, code)
+  resolveShikiCodeBlockBoundaries(program, shikiCodeBlockInjections, code)
 
-  const validSourceCodeInjections = sourceCodeInjections.filter((item) => item.childEnd > 0)
+  const validShikiCodeBlockInjections = shikiCodeBlockInjections.filter(
+    (item) => item.childEnd > 0,
+  )
   const allInjections: InjectionResult[] = []
 
   for (const injection of demoCodeInjections) {
@@ -604,13 +611,10 @@ export async function transformDemoSource(
     allInjections.push({ pos: injection.propInsertPos, text: ` code={${escaped}}` })
   }
 
-  for (const injection of validSourceCodeInjections) {
-    const rawSource =
-      injection.sourceText ??
-      code
-        .slice(injection.childStart, injection.childEnd)
-        .trim()
-        .replace(/^\n+|\n+$/g, '')
+  for (const injection of validShikiCodeBlockInjections) {
+    const rawSource = trimBoundaryBlankLines(
+      injection.sourceText ?? code.slice(injection.childStart, injection.childEnd),
+    )
 
     const childrenSource = dedentSource(rawSource)
     const html = toHTML(childrenSource, normalizeHighlightLang(injection.lang))
@@ -670,21 +674,6 @@ export async function demoSourcePlugin(projectRoot?: string): Promise<Plugin> {
 
     configResolved(config) {
       resolvedRoot = projectRoot ?? path.resolve(config.root, '..')
-    },
-
-    resolveId(id) {
-      if (id === VIRTUAL_DEMO_SOURCE) {
-        return RESOLVED_VIRTUAL_DEMO_SOURCE
-      }
-      return null
-    },
-
-    load(id) {
-      if (id !== RESOLVED_VIRTUAL_DEMO_SOURCE) {
-        return null
-      }
-      const sourcePath = path.resolve(resolvedRoot, 'docs/components/shiki-code-block.tsx')
-      return `export { SourceCode } from ${JSON.stringify(sourcePath)}`
     },
 
     transform: {

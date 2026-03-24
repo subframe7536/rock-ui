@@ -2,11 +2,11 @@ import 'solid-toaster/style.css'
 
 import { createSignal } from 'solid-js'
 import { Toaster, toast } from 'solid-toaster'
-import { SourceCode } from 'virtual:demo-source'
 
 import { Button } from '../../../src'
 import { DemoPage } from '../../components/demo-page'
 import { DemoSection } from '../../components/demo-section'
+import { ShikiCodeBlock } from '../../components/shiki-code-block'
 
 const TOAST_PAGE_DOC = {
   component: {
@@ -107,8 +107,10 @@ export default () => {
           </p>
         </div>
         <div class="max-w-3xl space-y-3">
-          <SourceCode lang="bash">bun add solid-toaster</SourceCode>
-          <SourceCode lang="tsx">{`import 'solid-toaster/style.css'
+          <ShikiCodeBlock variant="source" lang="bash">
+            bun add solid-toaster
+          </ShikiCodeBlock>
+          <ShikiCodeBlock variant="source" lang="tsx">{`import 'solid-toaster/style.css'
 
 import { Toaster, toast } from 'solid-toaster'
 
@@ -127,7 +129,7 @@ export default function App() {
       />
     </>
   )
-}`}</SourceCode>
+}`}</ShikiCodeBlock>
         </div>
       </section>
 

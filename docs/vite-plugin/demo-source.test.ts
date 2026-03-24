@@ -198,19 +198,21 @@ export default () => <DemoPage componentKey="button"></DemoPage>
     await rm(projectRoot, { recursive: true, force: true })
   })
 
-  test('injects SourceCode html with bash lang and defaults to tsx', async () => {
+  test('injects ShikiCodeBlock html with bash lang and defaults to tsx', async () => {
     const projectRoot = await createTempProject()
     const toHTML = vi.fn(
       (input: string, lang: 'tsx' | 'bash') => `<pre data-lang="${lang}">${input}</pre>`,
     )
 
     const source = `
-import { SourceCode } from 'virtual:demo-source'
+import { ShikiCodeBlock } from '../../components/shiki-code-block'
 
 export default () => (
   <>
-    <SourceCode lang="bash">bun add solid-toaster</SourceCode>
-    <SourceCode>{\`const x = 1\`}</SourceCode>
+    <ShikiCodeBlock lang="bash">
+      bun add solid-toaster
+    </ShikiCodeBlock>
+    <ShikiCodeBlock>{\`const x = 1\`}</ShikiCodeBlock>
   </>
 )
 `

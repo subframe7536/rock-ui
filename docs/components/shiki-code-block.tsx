@@ -37,6 +37,7 @@ export type ShikiCodeBlockVariant = 'plain' | 'source'
 
 export interface ShikiCodeBlockProps {
   html?: string
+  lang?: string
   class?: string
   style?: JSX.CSSProperties
   variant?: ShikiCodeBlockVariant
@@ -91,21 +92,5 @@ export const ShikiCodeBlock = (props: ShikiCodeBlockProps) => {
         )}
       </Show>
     </div>
-  )
-}
-
-export interface SourceCodeProps {
-  lang?: string
-  html?: string
-  class?: string
-  style?: JSX.CSSProperties
-  children: JSX.Element
-}
-
-export const SourceCode = (props: SourceCodeProps) => {
-  return (
-    <ShikiCodeBlock html={props.html} class={props.class} style={props.style} variant="source">
-      {props.children}
-    </ShikiCodeBlock>
   )
 }

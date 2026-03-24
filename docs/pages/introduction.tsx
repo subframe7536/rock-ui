@@ -1,8 +1,8 @@
 import { For, createMemo } from 'solid-js'
 import apiIndex from 'virtual:api-doc'
-import { SourceCode } from 'virtual:demo-source'
 
 import { Badge, Button, Card, Icon, Tabs } from '../../src'
+import { ShikiCodeBlock } from '../components/shiki-code-block'
 
 const STARTER_KEYS = ['button', 'input', 'select', 'dialog', 'form', 'tabs']
 
@@ -129,17 +129,29 @@ export default () => {
             {
               label: 'bun',
               value: 'bun',
-              content: <SourceCode lang="bash">bun add @subf/rock-ui</SourceCode>,
+              content: (
+                <ShikiCodeBlock variant="source" lang="bash">
+                  bun add @subf/rock-ui
+                </ShikiCodeBlock>
+              ),
             },
             {
               label: 'pnpm',
               value: 'pnpm',
-              content: <SourceCode lang="bash">pnpm add @subf/rock-ui</SourceCode>,
+              content: (
+                <ShikiCodeBlock variant="source" lang="bash">
+                  pnpm add @subf/rock-ui
+                </ShikiCodeBlock>
+              ),
             },
             {
               label: 'npm',
               value: 'npm',
-              content: <SourceCode lang="bash">npm i @subf/rock-ui</SourceCode>,
+              content: (
+                <ShikiCodeBlock variant="source" lang="bash">
+                  npm i @subf/rock-ui
+                </ShikiCodeBlock>
+              ),
             },
           ]}
         />
