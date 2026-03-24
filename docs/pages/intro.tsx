@@ -2,7 +2,7 @@ import { For, createMemo } from 'solid-js'
 import apiIndex from 'virtual:api-doc'
 import { SourceCode } from 'virtual:demo-source'
 
-import { Badge, Button, Card, Icon, Tabs } from '../../../src'
+import { Badge, Button, Card, Icon, Tabs } from '../../src'
 
 const STARTER_KEYS = ['button', 'input', 'select', 'dialog', 'form', 'tabs']
 
