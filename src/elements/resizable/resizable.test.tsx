@@ -91,7 +91,7 @@ describe('Resizable', () => {
 
     expect(root?.getAttribute('data-orientation')).toBe('vertical')
     expect(root?.className).toContain('flex-col')
-    expect(handle?.className).toContain('cursor-row-resize')
+    expect(handle?.className).toContain('cursor-ns-resize')
   })
 
   test('keeps dividers visible but disables all interactions from root config', async () => {
@@ -576,14 +576,44 @@ describe('Resizable', () => {
     ) as NodeListOf<HTMLDivElement>
 
     expectPanelGrow(panels[0], 30)
+    expect(panels[0]?.getAttribute('data-transitioning')).toBeNull()
 
     await fireEvent.click(handle)
     expectPanelGrow(panels[0], 10)
     expect(panels[0]?.getAttribute('data-collapsed')).toBe('')
+    expect(panels[0]?.getAttribute('data-transitioning')).toBe('')
 
     await fireEvent.click(handle)
     expectPanelGrow(panels[0], 30)
     expect(panels[0]?.getAttribute('data-collapsed')).toBeNull()
+    expect(panels[0]?.getAttribute('data-transitioning')).toBe('')
+  })
+
+  test('clears transitioning marker on flex-grow transition end', async () => {
+    const screen = render(() => (
+      <Resizable
+        handleAction="collapse"
+        panels={[
+          {
+            content: 'Sidebar',
+            defaultSize: '30%',
+            min: '20%',
+            collapsible: true,
+            collapsibleMin: '10%',
+          },
+          { content: 'Content', defaultSize: '70%', min: '20%' },
+        ]}
+      />
+    ))
+
+    const handle = screen.container.querySelector('[data-slot="handle"]') as HTMLElement
+    const panel = screen.container.querySelectorAll('[data-slot="panel"]')[0] as HTMLDivElement
+
+    await fireEvent.click(handle)
+    expect(panel.getAttribute('data-transitioning')).toBe('')
+
+    await fireEvent.transitionEnd(panel, { propertyName: 'flex-grow' })
+    expect(panel.getAttribute('data-transitioning')).toBeNull()
   })
 
   test('keeps handle drag non-resize in collapse mode while divider drag still resizes', async () => {
@@ -637,7 +667,7 @@ describe('Resizable', () => {
     const divider = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
     const handle = screen.container.querySelector('[data-slot="handle"]') as HTMLElement
 
-    expect(divider.className).toContain('cursor-col-resize')
+    expect(divider.className).toContain('cursor-ew-resize')
     expect(handle.className).toContain('cursor-pointer')
   })
 
@@ -693,9 +723,11 @@ describe('Resizable', () => {
     await fireEvent.click(toggle)
     expectPanelGrow(panels[0], 10)
     expect(panels[0]?.getAttribute('data-collapsed')).toBe('')
+    expect(panels[0]?.getAttribute('data-transitioning')).toBe('')
 
     await fireEvent.click(toggle)
     expectPanelGrow(panels[0], 32)
+    expect(panels[0]?.getAttribute('data-transitioning')).toBe('')
   })
 
   test('calls onHandleKeyDown with handle context and keeps keyboard resize behavior', async () => {
@@ -845,7 +877,7 @@ describe('Resizable', () => {
     expect(screen.container.querySelectorAll('[data-slot="collapsible"]')).toHaveLength(0)
   })
 
-  test('does not animate while initial root size is stabilizing', async () => {
+  test('keeps transition disabled while initial root size is stabilizing', async () => {
     const globalObject = globalThis as Record<string, unknown>
     const originalResizeObserver = globalObject.ResizeObserver
     const resizeCallbacks: ResizeObserverCallback[] = []
@@ -880,11 +912,14 @@ describe('Resizable', () => {
       const firstPanel = screen.container.querySelector('[data-slot="panel"]') as HTMLDivElement
       const divider = screen.container.querySelector('[data-slot="divider"]') as HTMLDivElement
 
-      expect(root.getAttribute('data-initializing')).toBe('')
+      expect(root).toBeTruthy()
       expect(divider.getAttribute('aria-disabled')).toBe('true')
       expect(divider.getAttribute('tabindex')).toBe('-1')
       expect(firstPanel.className).toContain('transition-none')
-      expect(firstPanel.className).not.toContain('transition-flex-grow')
+      expect(firstPanel.className).toContain(
+        'data-transitioning:(transition-flex-grow duration-200)',
+      )
+      expect(firstPanel.getAttribute('data-transitioning')).toBeNull()
       expect(firstPanel.style.flexBasis).toBe('auto')
       expect(firstPanel.style.flexGrow).toBe('1')
 
@@ -892,11 +927,13 @@ describe('Resizable', () => {
       mutableDefaultRect.width = 1000
       resizeCallbacks.forEach((callback) => callback([], {} as ResizeObserver))
 
-      expect(root.getAttribute('data-initializing')).toBe('')
       expect(divider.getAttribute('aria-disabled')).toBeNull()
       expect(divider.getAttribute('tabindex')).toBe('0')
       expect(firstPanel.className).toContain('transition-none')
-      expect(firstPanel.className).not.toContain('transition-flex-grow')
+      expect(firstPanel.className).toContain(
+        'data-transitioning:(transition-flex-grow duration-200)',
+      )
+      expect(firstPanel.getAttribute('data-transitioning')).toBeNull()
       expect(firstPanel.style.flexBasis).toBe('0px')
 
       await waitForLayoutInitialization()
@@ -907,48 +944,36 @@ describe('Resizable', () => {
     }
   })
 
-  test('enables flex-grow transition after initialization', async () => {
+  test('keeps transition disabled after initialization without collapse triggers', async () => {
     const screen = render(() => (
       <Resizable panels={[{ content: 'Left', defaultSize: '35%' }, { content: 'Right' }]} />
     ))
 
-    const root = screen.container.querySelector('[data-slot="root"]') as HTMLDivElement
     const panel = screen.container.querySelector('[data-slot="panel"]') as HTMLDivElement
 
-    expect(root.getAttribute('data-initializing')).toBe('')
     expect(panel.className).toContain('transition-none')
+    expect(panel.className).toContain('data-transitioning:(transition-flex-grow duration-200)')
+    expect(panel.getAttribute('data-transitioning')).toBeNull()
 
     await waitForLayoutInitialization()
 
-    expect(root.getAttribute('data-initializing')).toBeNull()
-    expect(panel.className).toContain('transition-flex-grow')
+    expect(panel.className).toContain('transition-none')
+    expect(panel.className).toContain('data-transitioning:(transition-flex-grow duration-200)')
+    expect(panel.getAttribute('data-transitioning')).toBeNull()
   })
 
-  test('applies flex-grow transition only during collapse state changes', async () => {
+  test('does not mark transition during controlled size updates', async () => {
     const screen = render(() => {
       const [sizes, setSizes] = createSignal<[number, number]>([350, 650])
-      const [lastExpandedSize, setLastExpandedSize] = createSignal(350)
 
-      function toggleSidebar(): void {
-        const currentSizes = sizes()
-        const sidebarSize = currentSizes[0] ?? 0
-        const contentSize = currentSizes[1] ?? 0
-        const total = sidebarSize + contentSize > 0 ? sidebarSize + contentSize : 1000
-
-        if (sidebarSize <= 0) {
-          const restoredSize = Math.min(Math.max(lastExpandedSize(), 1), total)
-          setSizes([restoredSize, Math.max(total - restoredSize, 0)])
-          return
-        }
-
-        setLastExpandedSize(sidebarSize)
-        setSizes([0, total])
+      function resizeSidebar(): void {
+        setSizes([300, 700])
       }
 
       return (
         <div>
-          <button type="button" data-slot="toggle" onClick={toggleSidebar}>
-            Toggle
+          <button type="button" data-slot="resize" onClick={resizeSidebar}>
+            Resize
           </button>
           <Resizable
             panels={[
@@ -960,26 +985,17 @@ describe('Resizable', () => {
       )
     })
 
-    const toggle = screen.container.querySelector('[data-slot="toggle"]') as HTMLButtonElement
+    const resizeButton = screen.container.querySelector('[data-slot="resize"]') as HTMLButtonElement
     const getSidebar = () =>
       screen.container.querySelectorAll('[data-slot="panel"]')[0] as HTMLDivElement
-    const sidebarBefore = getSidebar()
 
     await waitForLayoutInitialization()
 
-    expect(getSidebar().className).toContain('transition-flex-grow')
-    expect(getSidebar().className).toContain('data-resizing:duration-0')
-    expect(getSidebar().getAttribute('data-resizing')).toBeNull()
+    expect(getSidebar().getAttribute('data-transitioning')).toBeNull()
 
-    await fireEvent.click(toggle)
-    expect(getSidebar()).toBe(sidebarBefore)
-    expectPanelGrow(getSidebar(), 0)
-    expect(getSidebar().getAttribute('data-resizing')).toBeNull()
-
-    await fireEvent.click(toggle)
-    expect(getSidebar()).toBe(sidebarBefore)
-    expectPanelGrow(getSidebar(), 35)
-    expect(getSidebar().getAttribute('data-resizing')).toBeNull()
+    await fireEvent.click(resizeButton)
+    expectPanelGrow(getSidebar(), 30)
+    expect(getSidebar().getAttribute('data-transitioning')).toBeNull()
   })
 
   test('supports nested resizable panels and root-level intersection config', async () => {
@@ -1168,6 +1184,7 @@ describe('Resizable', () => {
     expect(handle.getAttribute('data-active')).toBeNull()
     expect(handle.getAttribute('data-dragging')).toBeNull()
     expect(panel.getAttribute('data-resizing')).toBeNull()
+    expect(panel.getAttribute('data-transitioning')).toBeNull()
 
     await fireEvent.mouseEnter(handle)
     expect(handle.getAttribute('data-active')).toBe('')
@@ -1180,10 +1197,12 @@ describe('Resizable', () => {
     expect(handle.getAttribute('data-dragging')).toBe('')
     await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
     expect(panel.getAttribute('data-resizing')).toBe('')
+    expect(panel.getAttribute('data-transitioning')).toBeNull()
 
     await fireEvent.pointerUp(window, { pointerId: 1, clientX: 0, clientY: 0 })
     expect(handle.getAttribute('data-dragging')).toBeNull()
     expect(panel.getAttribute('data-resizing')).toBeNull()
+    expect(panel.getAttribute('data-transitioning')).toBeNull()
   })
 
   test('locks document text selection while dragging from cross target and restores afterwards', async () => {

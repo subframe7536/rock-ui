@@ -34,8 +34,8 @@ export const tabsListVariants = cva('p-1 inline-flex items-center relative', {
 export const tabsIndicatorVariants = cva('rounded-md transition-all duration-200 absolute', {
   variants: {
     orientation: {
-      horizontal: 'w-$kb-tabs-indicator-size translate-x-$kb-tabs-indicator-position left-0',
-      vertical: 'h-$kb-tabs-indicator-size translate-y-$kb-tabs-indicator-position top-0',
+      horizontal: 'left-0',
+      vertical: 'top-0',
     },
     variant: {
       pill: 'bg-background shadow-xs',
