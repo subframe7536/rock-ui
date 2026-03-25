@@ -33,7 +33,7 @@ export const selectInputVariants = cva(
     variants: {
       mode: {
         single: 'mx-$s-p p-1.5',
-        multiSearch: 'ps-$s-p min-w-12',
+        multiSearch: 'leading-$s-m ps-$s-p min-w-12',
         multiHidden: 'sr-only',
       },
       size: {

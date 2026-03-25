@@ -20,8 +20,8 @@
 - [x] add toast using `solid-toaster`
 - [x] style guide docs
 - [x] markdown doc
-- [ ] multiselect line height when from single to multiple line
-- [ ] when trigger-only, cursor should not be pointer
+- [x] multiselect line height when from single to multiple line
+- [ ] when select is trigger-mode, cursor should not be pointer on control
 - [ ] infinity scroll select should trigger load-more instantly
 - [ ] optimize switch spacing and cursor
 - [ ] fix component layer hash strategy style incorrect
