@@ -4,7 +4,7 @@ import { INPUT_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const selectControlVariants = cva(
-  'text-foreground outline-none rounded-md flex w-full cursor-pointer transition items-center focus-within:effect-fv-border data-invalid:effect-invalid data-disabled:effect-dis data-highlight:surface-highlight focus-within:data-invalid:effect-invalid',
+  'text-foreground outline-none rounded-md flex w-full transition items-center focus-within:effect-fv-border data-invalid:effect-invalid data-disabled:effect-dis data-highlight:surface-highlight focus-within:data-invalid:effect-invalid',
   {
     defaultVariants: {
       size: 'md',
@@ -24,7 +24,7 @@ export const selectControlVariants = cva(
 )
 
 export const selectInputVariants = cva(
-  'style-placeholder outline-none bg-transparent flex-1 w-full disabled:effect-dis data-readonly:cursor-pointer',
+  'style-placeholder outline-none bg-transparent flex-1 w-full disabled:effect-dis',
   {
     defaultVariants: {
       mode: 'single',

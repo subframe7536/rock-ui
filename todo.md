@@ -21,7 +21,7 @@
 - [x] style guide docs
 - [x] markdown doc
 - [x] multiselect line height when from single to multiple line
-- [ ] when select is trigger-mode, cursor should not be pointer on control
+- [x] when select is trigger-mode, cursor should not be pointer on control
 - [ ] infinity scroll select should trigger load-more instantly
 - [ ] optimize switch spacing and cursor
 - [ ] fix component layer hash strategy style incorrect

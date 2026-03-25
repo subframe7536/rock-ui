@@ -375,8 +375,15 @@ describe('MultiSelect', () => {
     const screen = render(() => (
       <MultiSelect options={FRUITS} openOnClick="trigger" placeholder="Pick fruits" />
     ))
+    const input = screen.getByRole('combobox') as HTMLInputElement
+    const control = screen.container.querySelector('[data-slot="control"]')
     const tagsContainer = screen.container.querySelector('[data-slot="tagsContainer"]')
     const trigger = screen.container.querySelector('[data-slot="trigger"]') as HTMLElement
+
+    expect(control?.className).toContain('cursor-default')
+    expect(control?.className).not.toContain('cursor-pointer')
+    expect(tagsContainer?.className).toContain('cursor-default')
+    expect(input.className).toContain('data-readonly:cursor-default')
 
     await fireEvent.pointerDown(tagsContainer as HTMLElement, { button: 0 })
     expect(queryBody('[data-slot="content"]')).toBeNull()

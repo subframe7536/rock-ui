@@ -697,7 +697,8 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
           data-slot="tagsContainer"
           style={merged.styles?.tagsContainer}
           class={cn(
-            'p-1.5 flex flex-1 flex-wrap gap-1 max-w-full cursor-pointer select-none items-center',
+            'p-1.5 flex flex-1 flex-wrap gap-1 max-w-full select-none items-center',
+            menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
             styleProps.classes?.tagsContainer,
           )}
           onPointerDown={(e) => {
@@ -763,6 +764,9 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
                 mode: 'multiSearch',
                 size: field.size(),
               },
+              menuControl.opensFromControlClick()
+                ? 'data-readonly:cursor-pointer'
+                : 'data-readonly:cursor-default',
               styleProps.classes?.input,
             )}
             readOnly={!isSearchable()}
@@ -851,12 +855,15 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
     >
       <RenderSelectComboboxFrame<MultiSelectT.Items>
         controlStyle={merged.styles?.control}
-        controlClass={selectControlVariants(
-          {
-            size: field.size(),
-            variant: styleProps.variant,
-          },
-          styleProps.classes?.control,
+        controlClass={cn(
+          selectControlVariants(
+            {
+              size: field.size(),
+              variant: styleProps.variant,
+            },
+            styleProps.classes?.control,
+          ),
+          menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
         )}
         invalid={Boolean(field.invalid())}
         highlight={Boolean(field.highlight())}

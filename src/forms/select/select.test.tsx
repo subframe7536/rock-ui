@@ -144,6 +144,18 @@ describe('Select - single mode', () => {
     })
   })
 
+  test('uses default cursor on control in trigger mode', () => {
+    const screen = render(() => (
+      <Select options={FRUITS} openOnClick="trigger" placeholder="Pick a fruit" />
+    ))
+    const input = screen.getByRole('combobox') as HTMLInputElement
+    const control = screen.container.querySelector('[data-slot="control"]')
+
+    expect(control?.className).toContain('cursor-default')
+    expect(control?.className).not.toContain('cursor-pointer')
+    expect(input.className).toContain('data-readonly:cursor-default')
+  })
+
   test('shows options when opened', () => {
     render(() => <Select options={FRUITS} defaultOpen placeholder="Pick" />)
 

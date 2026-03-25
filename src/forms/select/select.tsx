@@ -353,6 +353,9 @@ export function Select(props: SelectProps): JSX.Element {
               mode: 'single',
               size: field.size(),
             },
+            menuControl.opensFromControlClick()
+              ? 'data-readonly:cursor-pointer'
+              : 'data-readonly:cursor-default',
             styleProps.classes?.input,
           )}
           readOnly={!isSearchable()}
@@ -446,6 +449,7 @@ export function Select(props: SelectProps): JSX.Element {
             size: field.size(),
             variant: styleProps.variant,
           },
+          menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
           styleProps.classes?.control,
         )}
         invalid={Boolean(field.invalid())}
