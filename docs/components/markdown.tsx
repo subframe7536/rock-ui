@@ -83,7 +83,7 @@ export function Markdown(input: RenderExampleMarkdownPageInput) {
       case 'markdown':
         return (
           <div
-            class="max-w-none prose prose-slate prose-headings:(text-foreground font-semibold mb-3 mt-8) prose-p:(text-muted-foreground leading-7) prose-pre:(border border-border rounded-xl bg-muted) dark:(prose-invert)"
+            class="max-w-none prose prose-neutral prose-headings:(text-foreground font-semibold mb-3 mt-8) prose-p:(text-muted-foreground leading-6) prose-pre:(border border-border rounded-xl bg-muted) dark:prose-invert"
             // oxlint-disable-next-line solid/no-innerhtml
             innerHTML={segment.html}
           />

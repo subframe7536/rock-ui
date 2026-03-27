@@ -1,34 +1,51 @@
 import { Button } from '@src/elements/button/button'
 import { createSignal } from 'solid-js'
 
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
 export function LoadingStates() {
-  const [manualLoading, setManualLoading] = createSignal(false)
+  const [controlledLoading, setControlledLoading] = createSignal(false)
+  const [customLoading, setCustomLoading] = createSignal(false)
   const [autoRuns, setAutoRuns] = createSignal(0)
 
-  const runManualLoading = async () => {
-    setManualLoading(true)
+  const runControlledLoading = async () => {
+    setControlledLoading(true)
     await wait(1000)
-    setManualLoading(false)
+    setControlledLoading(false)
   }
 
-  const onClickWait = async () => {
+  const runCustomLoading = async () => {
+    setCustomLoading(true)
+    await wait(1200)
+    setCustomLoading(false)
+  }
+
+  const runAutoLoading = async () => {
     await wait(2000)
     setAutoRuns((value) => value + 1)
   }
 
-  const wait = (ms: number) =>
-    new Promise<void>((resolve) => {
-      setTimeout(resolve, ms)
-    })
-
   return (
     <div class="flex flex-wrap gap-3 items-center">
       <Button
-        loading={manualLoading()}
-        onclick={runManualLoading}
-        leading={<div class="i-lucide:loader-circle animate-loading" />}
+        loading={controlledLoading()}
+        onClick={runControlledLoading}
+        leading="i-lucide:arrow-big-down"
       >
-        {manualLoading() ? 'Processing...' : 'Manual loading'}
+        {controlledLoading() ? 'Processing...' : 'Controlled loading'}
+      </Button>
+
+      <Button
+        loading={customLoading()}
+        loadingIcon="i-lucide:loader-circle"
+        variant="outline"
+        onClick={runCustomLoading}
+      >
+        {customLoading() ? 'Syncing...' : 'Custom loading icon'}
       </Button>
 
       <Button
@@ -36,7 +53,7 @@ export function LoadingStates() {
         variant="outline"
         leading="i-lucide:a-arrow-up"
         trailing="i-lucide:timer"
-        onClick={onClickWait}
+        onClick={runAutoLoading}
       >
         Async auto-loading ({autoRuns()})
       </Button>

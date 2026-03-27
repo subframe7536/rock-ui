@@ -105,16 +105,37 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
     styleProps.size?.startsWith('icon-') ? styleProps.size.replace('icon-', '') : undefined,
   )
 
+  const loadingIconName = createMemo<IconT.Name>(() => stateProps.loadingIcon ?? 'icon-loading')
+
+  const isLeadingLoading = createMemo(
+    () => isLoading() && (contentProps.leading || !contentProps.trailing),
+  )
+  const isTrailingLoading = createMemo(
+    () => isLoading() && !(contentProps.leading && contentProps.trailing),
+  )
+
   const resolvedLeading = createMemo(() => {
     if (!isLoading()) {
       return contentProps.leading
     }
 
-    if (stateProps.loadingIcon || stateProps.loadingAuto) {
-      return stateProps.loadingIcon ?? 'icon-loading'
+    if (contentProps.leading || !contentProps.trailing) {
+      return loadingIconName()
     }
 
-    return contentProps.leading
+    return undefined
+  })
+
+  const resolvedTrailing = createMemo(() => {
+    if (!isLoading()) {
+      return contentProps.trailing
+    }
+
+    if (!contentProps.leading && contentProps.trailing) {
+      return loadingIconName()
+    }
+
+    return contentProps.trailing
   })
 
   return (
@@ -143,9 +164,9 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
             style={styleProps.styles?.leading}
             class={cn(
               styleProps.classes?.leading,
-              isLoading() && ['animate-loading', styleProps.classes?.loading],
+              isLeadingLoading() && ['animate-loading', styleProps.classes?.loading],
             )}
-            aria-hidden={isLoading() ? true : undefined}
+            aria-hidden={isLeadingLoading() ? true : undefined}
           />
         )}
       </Show>
@@ -162,14 +183,17 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
         </span>
       </Show>
 
-      <Show when={contentProps.trailing}>
+      <Show when={resolvedTrailing()}>
         {(trailing) => (
           <Icon
             name={trailing()}
             size={iconSize()}
             slotName="trailing"
             style={styleProps.styles?.trailing}
-            class={cn(styleProps.classes?.trailing)}
+            class={cn(
+              styleProps.classes?.trailing,
+              isTrailingLoading() && ['animate-loading', styleProps.classes?.loading],
+            )}
           />
         )}
       </Show>

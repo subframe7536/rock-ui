@@ -13,10 +13,12 @@ export const buttonVariants = cva(
       variant: {
         default: 'text-primary-foreground bg-primary shadow hover:bg-primary/90',
         secondary: 'text-secondary-foreground bg-secondary hover:bg-secondary/80',
-        outline: 'b-(1 border) bg-background shadow-xs hover:(text-foreground bg-input/30)',
-        ghost: 'hover:(text-accent-foreground bg-accent/50)',
-        link: 'text-primary underline-offset-4 !p-0 hover:underline',
-        destructive: 'text-destructive-foreground bg-destructive hover:bg-destructive/80',
+        outline:
+          'b-(1 border) bg-background shadow-xs hover:text-foreground dark:border-input dark:bg-input/30 hover:bg-muted dark:hover:bg-input/50',
+        ghost: 'hover:(text-foreground bg-muted dark:bg-muted/50)',
+        link: 'text-primary underline-offset-4 hover:underline',
+        destructive:
+          'text-destructive bg-destructive/10 focus-visible:border-destructive/40 dark:bg-destructive/20 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
       },
       size: {
         xs: 'text-xs px-1.5 py-1 rounded-md gap-1 h-6',

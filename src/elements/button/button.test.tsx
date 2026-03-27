@@ -205,13 +205,15 @@ describe('Button', () => {
     expect(leading?.className).toContain('i-lucide-loader-circle')
   })
 
-  test('does not render built-in loading icon', () => {
+  test('renders built-in loading icon by default when loading', () => {
     const screen = render(() => <Button loading>Saving</Button>)
 
     const button = screen.getByRole('button', { name: 'Saving' })
     const leading = button.querySelector('[data-slot="leading"]')
 
-    expect(leading).toBeNull()
+    expect(leading).not.toBeNull()
+    expect(leading?.className).toContain('icon-loading')
+    expect(leading?.className).toContain('animate-loading')
   })
 
   test('supports function children with loading state', () => {
@@ -238,7 +240,7 @@ describe('Button', () => {
     expect(leading?.className).toContain('animate-loading')
   })
 
-  test('keeps trailing content visible when loading', () => {
+  test('uses loading icon in trailing slot when only trailing is provided', () => {
     const screen = render(() => (
       <Button loading trailing={<span data-testid="trailing-icon">T</span>}>
         Saving
@@ -247,12 +249,57 @@ describe('Button', () => {
 
     const button = screen.getByRole('button')
     const leadingSlot = button.querySelector('[data-slot="leading"]')
+    const trailingSlot = button.querySelector('[data-slot="trailing"]')
 
     expect(button.getAttribute('aria-busy')).toBe('true')
     expect(button.hasAttribute('data-loading')).toBe(true)
     expect(button.hasAttribute('disabled')).toBe(true)
-    expect(screen.queryByTestId('trailing-icon')).not.toBeNull()
+    expect(screen.queryByTestId('trailing-icon')).toBeNull()
     expect(leadingSlot).toBeNull()
+    expect(trailingSlot).not.toBeNull()
+    expect(trailingSlot?.className).toContain('icon-loading')
+    expect(trailingSlot?.className).toContain('animate-loading')
+  })
+
+  test('keeps trailing content when loading if leading and trailing are both provided', () => {
+    const screen = render(() => (
+      <Button
+        loading
+        leading={<span data-testid="leading-icon">L</span>}
+        trailing={<span data-testid="trailing-icon">T</span>}
+      >
+        Saving
+      </Button>
+    ))
+
+    const button = screen.getByRole('button')
+    const leadingSlot = button.querySelector('[data-slot="leading"]')
+
+    expect(screen.queryByTestId('leading-icon')).toBeNull()
+    expect(screen.queryByTestId('trailing-icon')).not.toBeNull()
+    expect(leadingSlot?.className).toContain('icon-loading')
+    expect(leadingSlot?.className).toContain('animate-loading')
+  })
+
+  test('applies loading class override when trailing slot is replaced by loading icon', () => {
+    const screen = render(() => (
+      <Button
+        loading
+        trailing="i-lucide:timer"
+        classes={{ loading: 'loading-override', trailing: 'trailing-override' }}
+      >
+        Saving
+      </Button>
+    ))
+
+    const button = screen.getByRole('button', { name: 'Saving' })
+    const trailing = button.querySelector('[data-slot="trailing"]')
+
+    expect(trailing).not.toBeNull()
+    expect(trailing?.className).toContain('icon-loading')
+    expect(trailing?.className).toContain('animate-loading')
+    expect(trailing?.className).toContain('loading-override')
+    expect(trailing?.className).toContain('trailing-override')
   })
 
   test('auto loading follows async onclick lifecycle', async () => {

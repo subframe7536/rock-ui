@@ -14,11 +14,13 @@ apiDocOverride:
 
 ## Setup
 
-Install solid-toaster, import styles, mount one or more Toaster instances.
+Install `solid-toaster`:
 
 :::code-tabs
 package: solid-toaster
 :::
+
+Import styles, mount one or more Toaster instances.
 
 ```tsx
 import 'solid-toaster/style.css'
