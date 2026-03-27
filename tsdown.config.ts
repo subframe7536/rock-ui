@@ -1,3 +1,4 @@
+import lucideIcons from '@iconify-json/lucide/icons.json' with { type: 'json' }
 import type { UnoCSSPluginOptions } from 'rolldown-plugin-unocss'
 import { unocss } from 'rolldown-plugin-unocss'
 import { defineConfig } from 'tsdown'
@@ -17,6 +18,9 @@ const baseUnocssConfig = (wind3: boolean): UnoCSSPluginOptions => {
         wind3 ? presetWind3() : presetWind4({ preflights: { reset: false } }),
         presetIcons({
           scale: 1.2,
+          collections: {
+            lucide: () => lucideIcons,
+          },
         }),
         theme,
       ],

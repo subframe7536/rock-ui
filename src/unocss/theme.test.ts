@@ -1,5 +1,6 @@
+import lucideIcons from '@iconify-json/lucide/icons.json' with { type: 'json' }
 import MagicString from 'magic-string'
-import { createGenerator, presetWind4 } from 'unocss'
+import { createGenerator, presetIcons, presetWind4 } from 'unocss'
 import { describe, expect, test } from 'vitest'
 
 import { presetTheme, resolvePresetThemeOptions } from './theme'
@@ -293,5 +294,26 @@ describe('presetTheme component layer', () => {
     expect(css).toContain('--mo-enter-translate-x:-2.5rem')
     expect(css).toContain('.animate-sheet-side-right')
     expect(css).toContain('--mo-enter-translate-x:2.5rem')
+  })
+
+  test('provides default icon shortcuts when lucide icons are available', async () => {
+    const generator = await createGenerator({
+      presets: [
+        presetWind4(),
+        presetIcons({
+          collections: {
+            lucide: () => lucideIcons,
+          },
+        }),
+        presetTheme(),
+      ],
+    })
+
+    const { css } = await generator.generate(new Set(['icon-close', 'icon-search', 'icon-loading']))
+
+    expect(css).toContain('.icon-close{')
+    expect(css).toContain('.icon-search{')
+    expect(css).toContain('.icon-loading{')
+    expect(css).toContain('--un-icon:url("data:image/svg+xml;utf8,')
   })
 })

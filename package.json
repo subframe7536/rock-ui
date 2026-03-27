@@ -1,13 +1,22 @@
 {
   "name": "moraine",
   "version": "0.0.2",
-  "description": "Opinioned SolidJS component library.",
+  "description": "Comprehensive SolidJS component library with atomic class styling.",
   "homepage": "https://github.com/subframe7536/moraine#readme",
   "bugs": {
     "url": "https://github.com/subframe7536/moraine/issues"
   },
   "license": "MIT",
   "author": "subframe7536",
+  "keywords": [
+    "solidjs",
+    "solid",
+    "ui",
+    "components",
+    "unocss",
+    "tailwindcss",
+    "kobalte"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/subframe7536/moraine.git"

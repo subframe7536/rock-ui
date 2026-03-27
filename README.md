@@ -1,110 +1,76 @@
 # Moraine
 
-Yet another Solid.js UI library.
+Composable SolidJS component library with atomic class styling.
 
-Inspired by the best of Nuxt UI and shadcn, Moraine is a comprehensive SolidJS component library with atomic class styling, offering a fast, consistent, and intuitive user experiences.
+Inspired by Nuxt UI and shadcn, Moraine provides accessible building blocks, consistent slots and variants, and first-class UnoCSS / Tailwind workflows for Solid apps.
 
 > [!important]
-> **Status: Active development**. Api may breaking changed before V1.0. Use at your risk!
+> **Status: pre-alpha.** Breaking changes are allowed before `v1.0.0`.
 
-## Features
+## Before You Start
 
-- **SolidJS First**: Built specifically for SolidJS with reactive primitives
-- **Kobalte Foundation**: Leverages accessible, unstyled primitives from Kobalte
-- **Atomic CSS Classes**: Atomic CSS classes with Tailwind CSS (v3 and v4) and UnoCSS support
-- **TypeScript**: Full TypeScript support with comprehensive type definitions
-- **Accessible**: Built-in accessibility features from Kobalte
-- **Modular**: Tree-shakable components organized by category
+Moraine relies on shadcn-style design tokens such as `--background`, `--primary`, and `--radius`.
+
+Complete your style setup first, then start using components. The full setup reference lives in [`docs/pages/style-setup.md`](./docs/pages/style-setup.md).
 
 ## Installation
 
+Install `moraine` in a Solid project. If your app does not already depend on `solid-js`, install it together.
+
 ```bash
-bun add moraine
+bun add moraine solid-js
 ```
 
-### UnoCSS
+```bash
+pnpm add moraine solid-js
+```
+
+```bash
+npm install moraine solid-js
+```
+
+### Styling Engine Dependencies
+
+Choose one styling path:
+
+- `UnoCSS`: install `unocss`
+- `Tailwind CSS v4`: install `tailwindcss`
+- `Tailwind CSS v3`: install `tailwindcss`
 
 ```bash
 bun add unocss
 ```
 
-- install `oxc-parser` and `oxc-walker` if needed
-
-### Tailwind CSS
+If your UnoCSS setup needs the parser dependencies used by Moraine's source transformers, install them too:
 
 ```bash
-bun add tailwindcss
+bun add -D oxc-parser oxc-walker
 ```
 
 ## Quick Start
+
+After finishing the style setup, you can import components directly from `moraine`.
 
 ```tsx
 import { Button, Input } from 'moraine'
 
 function App() {
   return (
-    <div>
-      <Button variant="primary">Click me</Button>
+    <div class="flex flex-col gap-3">
+      <Button>Save changes</Button>
       <Input placeholder="Enter text" />
     </div>
   )
 }
 ```
 
-## Components
-
-### Elements
-
-- Accordion
-- Avatar
-- Badge
-- Button
-- Card
-- Collapsible
-- Icon
-- Kbd (Keyboard)
-- Progress
-- Resizable
-- Separator
-
-### Forms
-
-- Checkbox & CheckboxGroup
-- FileUpload
-- Form & FormField
-- Input
-- InputNumber
-- RadioGroup
-- Select
-- Slider
-- Switch
-- Textarea
-
-### Navigation
-
-- Breadcrumb
-- CommandPalette
-- Pagination
-- Stepper
-- Tabs
-
-### Overlays
-
-- ContextMenu
-- Dialog
-- DropdownMenu
-- Popover
-- Popup
-- Sheet
-- Tooltip
-
 ## Styling
 
-Moraine uses Shadcn's style system, so you can just reuse Shadcn's theme CSS variables (e.g. https://tweakcn.com)
+Moraine uses shadcn-style CSS variables. Reuse an existing token set or define your own `:root` / `.dark` variables before rendering components.
 
 ### UnoCSS
 
-You can use `presetWind3` or `presetWind4` here. `presetTheme` already includes Moraine's animation utilities, so no extra UnoCSS animation preset is required.
+Use either `presetWind3` or `presetWind4`, then add `presetTheme` from `moraine/unocss`. Built-in component animations are already included.
 
 ```ts
 // unocss.config.ts
@@ -119,14 +85,16 @@ export default defineConfig({
     presetTheme({
       enableComponentLayer: true,
     }),
-    // ... other presets
+    // ...other presets
   ],
 })
 ```
 
+`oxc-parser` and `oxc-walker` are only needed if your UnoCSS environment does not already provide them for Moraine's source transformers.
+
 ### Tailwind CSS v4
 
-Create a CSS config file
+Add Moraine package files to `@source` so Tailwind can detect the utilities used by the library.
 
 ```css
 @import 'tailwindcss';
@@ -135,7 +103,7 @@ Create a CSS config file
 
 ### Tailwind CSS v3
 
-Create a `tailwind.config.js` or `tailwind.config.ts` file:
+Register Moraine in `content`, then include the three Tailwind directives.
 
 ```js
 /** @type {import('tailwindcss').Config} */
@@ -148,19 +116,24 @@ module.exports = {
 }
 ```
 
-Then import the CSS:
-
 ```css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 ```
 
-### Override
+## Components
 
-#### Component Style
+- Elements: Accordion, Avatar, Badge, Button, Card, Collapsible, Icon, Kbd, Progress, Resizable, Separator
+- Forms: Checkbox, CheckboxGroup, FileUpload, Form, FormField, Input, InputNumber, RadioGroup, Select, Slider, Switch, Textarea
+- Navigation: Breadcrumb, CommandPalette, Pagination, Stepper, Tabs
+- Overlays: ContextMenu, Dialog, DropdownMenu, Popover, Popup, Sheet, Tooltip
 
-Almost all component support `classes` and `styles` props, key is the same as `Slot`.
+## Customization
+
+### Component Styles
+
+Most components support `classes` and `styles`. Keys match slot names.
 
 ```tsx
 import { Button } from 'moraine'
@@ -174,9 +147,9 @@ function MyButton() {
 }
 ```
 
-#### Built-in `cn`
+### Built-in `cn`
 
-Builtin `cn` only support concat classes, you can extend it by `extendCN`
+Moraine exports `extendCN` so you can plug in a class merge utility such as `tailwind-merge`.
 
 ```ts
 import { extendCN } from 'moraine'
@@ -203,15 +176,6 @@ bun run docs
 # Run linting and type checking
 bun run qa
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Run quality checks: `bun run qa`
-4. Commit your changes (`git commit -m 'Add some amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
 
 ## License
 
