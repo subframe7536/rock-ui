@@ -1,6 +1,6 @@
 import * as KobalteSlider from '@kobalte/core/slider'
-import type { JSX, ValidComponent } from 'solid-js'
-import { For, createEffect, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
+import type { JSX } from 'solid-js'
+import { For, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { useId } from '../../shared/utils'
@@ -95,7 +95,13 @@ export namespace SliderT {
   /**
    * Props for the Slider component.
    */
-  export interface Props extends BaseProps<Base, Variant, Extend, Slot, 'minValue' | 'maxValue'> {}
+  export interface Props extends BaseProps<
+    Base,
+    Variant,
+    Extend,
+    Slot,
+    'minValue' | 'maxValue' | 'as'
+  > {}
 }
 
 /**
@@ -126,11 +132,22 @@ function createThumbAriaLabel(index: number, total: number): string {
   return `Thumb ${index + 1} of ${total}`
 }
 
+function areEqualValues(a: number[] | undefined, b: number[] | undefined): boolean {
+  if (a === b) {
+    return true
+  }
+
+  if (!a || !b || a.length !== b.length) {
+    return false
+  }
+
+  return a.every((value, index) => value === b[index])
+}
+
 /** Range slider component with single or multi-thumb support and step markers. */
 export function Slider(props: SliderProps): JSX.Element {
   const merged = mergeProps(
     {
-      as: 'div' as ValidComponent,
       min: 0,
       max: 100,
       step: 1,
@@ -167,18 +184,15 @@ export function Slider(props: SliderProps): JSX.Element {
   const kobalteDefaultValue = createMemo(() =>
     normalizeSliderValues(formProps.defaultValue, rangeProps.min!),
   )
-  const [uncontrolledValues, setUncontrolledValues] = createSignal<number[]>([0])
+  let lastInputValues: number[] | undefined
 
   const thumbValues = () => kobalteValue() ?? kobalteDefaultValue() ?? [rangeProps.min!]
   const thumbIndexes = () => Array.from({ length: thumbValues().length }, (_, index) => index)
 
   createEffect(() => {
-    if (formProps.value !== undefined) {
-      return
+    if (areEqualValues(kobalteValue(), lastInputValues)) {
+      lastInputValues = undefined
     }
-
-    const initial = kobalteDefaultValue() ?? [rangeProps.min!]
-    setUncontrolledValues(initial)
   })
 
   function inputIdForIndex(index: number): string {
@@ -197,50 +211,15 @@ export function Slider(props: SliderProps): JSX.Element {
     return values[0] ?? rangeProps.min!
   }
 
-  function resolveThumbPercent(index: number): number {
-    const range = rangeProps.max! - rangeProps.min!
-
-    if (range <= 0) {
-      return 0
-    }
-
-    const visualValues = kobalteValue() ?? uncontrolledValues()
-    const nextValue = visualValues[index] ?? rangeProps.min!
-    const percent = ((nextValue - rangeProps.min!) / range) * 100
-
-    if (!Number.isFinite(percent)) {
-      return 0
-    }
-
-    return Math.max(0, Math.min(100, percent))
-  }
-
-  function thumbStyle(index: number): JSX.CSSProperties {
-    const percent = resolveThumbPercent(index)
-
-    if (rangeProps.orientation === 'vertical') {
-      const startEdge = rangeProps.inverted ? 'top' : 'bottom'
-      const transform = rangeProps.inverted ? 'translateY(-50%)' : 'translateY(50%)'
-
-      return {
-        [startEdge]: `calc(${percent}%)`,
-        transform,
-      } as JSX.CSSProperties
-    }
-
-    const startEdge = rangeProps.inverted ? 'right' : 'left'
-    const transform = rangeProps.inverted ? 'translateX(50%)' : 'translateX(-50%)'
-
-    return {
-      [startEdge]: `calc(${percent}%)`,
-      transform,
-    } as JSX.CSSProperties
-  }
-
   function onValueChange(values: number[]): void {
-    if (formProps.value === undefined) {
-      setUncontrolledValues([...values])
+    if (
+      areEqualValues(values, lastInputValues) ||
+      (lastInputValues !== undefined && areEqualValues(values, kobalteValue()))
+    ) {
+      return
     }
+
+    lastInputValues = [...values]
 
     const nextValue = toPublicValue(values)
     field.setFormValue(nextValue)
@@ -249,11 +228,53 @@ export function Slider(props: SliderProps): JSX.Element {
   }
 
   function onChange(values: number[]): void {
+    lastInputValues = undefined
+
     const nextValue = toPublicValue(values)
 
     field.setFormValue(nextValue)
     formProps.onChange?.(nextValue)
     field.emit('change')
+  }
+
+  function SliderThumb(props: { thumbIndex: number }): JSX.Element {
+    const context = KobalteSlider.useSliderContext()
+
+    const style = createMemo<JSX.CSSProperties>(() => {
+      const percent = context.state.getThumbPercent(props.thumbIndex) * 100
+      const transform =
+        context.state.orientation() === 'vertical'
+          ? context.inverted()
+            ? 'translateY(-50%)'
+            : 'translateY(50%)'
+          : context.inverted()
+            ? 'translateX(50%)'
+            : 'translateX(-50%)'
+
+      return {
+        [context.startEdge()]: `calc(${percent}%)`,
+        transform,
+        ...styleProps.styles?.thumb,
+      }
+    })
+
+    return (
+      <KobalteSlider.Thumb
+        data-slot="thumb"
+        aria-label={createThumbAriaLabel(props.thumbIndex, thumbValues().length)}
+        style={style()}
+        class={sliderThumbVariants(
+          {
+            size: field.size(),
+          },
+          styleProps.classes?.thumb,
+        )}
+        onFocus={() => field.emit('focus')}
+        onBlur={() => field.emit('blur')}
+      >
+        <KobalteSlider.Input id={inputIdForIndex(props.thumbIndex)} {...field.ariaAttrs()} />
+      </KobalteSlider.Thumb>
+    )
   }
 
   return (
@@ -308,25 +329,7 @@ export function Slider(props: SliderProps): JSX.Element {
         />
       </KobalteSlider.Track>
 
-      <For each={thumbIndexes()}>
-        {(thumbIndex) => (
-          <KobalteSlider.Thumb
-            data-slot="thumb"
-            aria-label={createThumbAriaLabel(thumbIndex, thumbValues().length)}
-            style={{ ...thumbStyle(thumbIndex), ...styleProps.styles?.thumb }}
-            class={sliderThumbVariants(
-              {
-                size: field.size(),
-              },
-              styleProps.classes?.thumb,
-            )}
-            onFocus={() => field.emit('focus')}
-            onBlur={() => field.emit('blur')}
-          >
-            <KobalteSlider.Input id={inputIdForIndex(thumbIndex)} {...field.ariaAttrs()} />
-          </KobalteSlider.Thumb>
-        )}
-      </For>
+      <For each={thumbIndexes()}>{(thumbIndex) => <SliderThumb thumbIndex={thumbIndex} />}</For>
     </KobalteSlider.Root>
   )
 }
