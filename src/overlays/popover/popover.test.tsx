@@ -275,14 +275,18 @@ describe('Popover', () => {
     })
 
     const initialContent = document.body.querySelector('[data-slot="content"]')
-    expect(initialContent?.className).toContain('data-expanded:animate-popover-in-from-top')
-    expect(initialContent?.className).not.toContain('data-expanded:animate-popover-in-from-left')
+    expect(initialContent?.className).toContain('data-expanded:animate-popover-in')
+    expect(initialContent?.className).toContain('data-closed:animate-popover-out')
+    expect(initialContent?.className).toContain('animate-popover-side-bottom')
+    expect(initialContent?.className).not.toContain('animate-popover-side-right')
 
     setMockPlacement('right')
     setVersion(1)
 
     const updatedContent = document.body.querySelector('[data-slot="content"]')
-    expect(updatedContent?.className).toContain('data-expanded:animate-popover-in-from-left')
-    expect(updatedContent?.className).not.toContain('data-expanded:animate-popover-in-from-top')
+    expect(updatedContent?.className).toContain('data-expanded:animate-popover-in')
+    expect(updatedContent?.className).toContain('data-closed:animate-popover-out')
+    expect(updatedContent?.className).toContain('animate-popover-side-right')
+    expect(updatedContent?.className).not.toContain('animate-popover-side-bottom')
   })
 })

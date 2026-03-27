@@ -79,12 +79,6 @@ export namespace DialogT {
     scrollable?: boolean
 
     /**
-     * Whether to enable transition animations.
-     * @default true
-     */
-    transition?: boolean
-
-    /**
      * Whether the dialog should take up the full viewport.
      * @default false
      */
@@ -169,16 +163,7 @@ export function Dialog(props: DialogProps): JSX.Element {
   ) as DialogProps
   const [behaviorProps, contentProps, restProps] = splitProps(
     merged,
-    [
-      'overlay',
-      'scrollable',
-      'transition',
-      'fullscreen',
-      'close',
-      'closeIcon',
-      'dismissible',
-      'onClosePrevent',
-    ],
+    ['overlay', 'scrollable', 'fullscreen', 'close', 'closeIcon', 'dismissible', 'onClosePrevent'],
     ['title', 'description', 'header', 'body', 'footer', 'classes', 'children'],
   )
 
@@ -259,7 +244,6 @@ export function Dialog(props: DialogProps): JSX.Element {
     <Popup
       overlay={behaviorProps.overlay}
       scrollable={behaviorProps.scrollable}
-      transition={behaviorProps.transition}
       fullscreen={behaviorProps.fullscreen}
       dismissible={behaviorProps.dismissible}
       onClosePrevent={behaviorProps.onClosePrevent}

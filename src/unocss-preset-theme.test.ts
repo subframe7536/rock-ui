@@ -132,21 +132,28 @@ describe('presetTheme component layer', () => {
     const { css } = await generator.generate(
       new Set([
         'animate-overlay-in',
-        'animate-surface-in',
-        'animate-menu-in-from-top',
-        'animate-sheet-out-to-right',
-        'animate-popover-in-from-left',
-        'animate-surface-out',
+        'animate-popup-in',
+        'animate-menu-in',
+        'animate-menu-side-top',
+        'animate-sheet-out',
+        'animate-sheet-side-right',
+        'animate-popover-in',
+        'animate-popover-side-left',
+        'animate-popup-out',
       ]),
       { preflights: true },
     )
 
     expect(css).toContain('@keyframes moraine-enter')
     expect(css).toContain('@keyframes moraine-exit')
-    expect(css).toContain('.animate-overlay-in{')
-    expect(css).toContain('.animate-surface-in{')
-    expect(css).toContain('.animate-menu-in-from-top{')
-    expect(css).toContain('.animate-sheet-out-to-right{')
+    expect(css).toContain('.animate-overlay-in')
+    expect(css).toContain('.animate-popup-in')
+    expect(css).toContain('.animate-menu-in')
+    expect(css).toContain('.animate-menu-side-top')
+    expect(css).toContain('.animate-sheet-out')
+    expect(css).toContain('.animate-sheet-side-right')
+    expect(css).toContain('.animate-popover-in')
+    expect(css).toContain('.animate-popover-side-left')
     expect(css).toContain(
       'animation:moraine-enter var(--moraine-animation-duration,150ms) ease-in-out 1',
     )
@@ -155,45 +162,57 @@ describe('presetTheme component layer', () => {
     )
     expect(css).toContain('--moraine-enter-opacity:0')
     expect(css).toContain('--moraine-enter-scale:0.9')
-    expect(css).toContain('--moraine-enter-translate-y:-0.5rem')
+    expect(css).toContain('--moraine-enter-translate-y:0.5rem')
     expect(css).toContain('--moraine-exit-translate-x:2.5rem')
     expect(css).toContain('--moraine-exit-scale:0.9')
     expect(css).not.toContain('animation:moraine-enter;}')
     expect(css).not.toContain('animation:moraine-exit;}')
     expect(css).not.toContain('@keyframes surface-in')
-    expect(css).not.toContain('@keyframes menu-in-from-top')
-    expect(css).not.toContain('@keyframes sheet-out-to-right')
+    expect(css).not.toContain('@keyframes menu-in')
+    expect(css).not.toContain('@keyframes sheet-out')
   })
 
-  test('matches old overlay motion combinations for menu, popover, tooltip, and sheet', async () => {
+  test('provides split trigger and side animation utilities for overlays', async () => {
     const generator = await createGenerator({
       presets: [presetWind4(), presetTheme()],
     })
 
     const { css } = await generator.generate(
       new Set([
-        'animate-menu-in-from-left',
-        'animate-menu-out-to-left',
-        'animate-popover-in-from-top',
-        'animate-tooltip-in-from-bottom',
-        'animate-surface-out',
-        'animate-sheet-in-from-right',
-        'animate-sheet-out-to-right',
+        'animate-menu-in',
+        'animate-menu-out',
+        'animate-menu-side-left',
+        'animate-popover-in',
+        'animate-popover-out',
+        'animate-popover-side-top',
+        'animate-tooltip-in',
+        'animate-tooltip-out',
+        'animate-tooltip-side-bottom',
+        'animate-popup-out',
+        'animate-sheet-in',
+        'animate-sheet-out',
+        'animate-sheet-side-right',
       ]),
       { preflights: true },
     )
 
-    expect(css).toContain('.animate-menu-in-from-left{')
+    expect(css).toContain('.animate-menu-in')
+    expect(css).toContain('.animate-menu-out')
+    expect(css).toContain('.animate-menu-side-left')
     expect(css).toContain('--moraine-enter-scale:0.9')
-    expect(css).toContain('--moraine-enter-translate-x:-0.5rem')
-    expect(css).toContain('.animate-menu-out-to-left{')
+    expect(css).toContain('--moraine-enter-translate-x:0.5rem')
     expect(css).toContain('--moraine-exit-scale:0.9')
-    expect(css).toContain('--moraine-exit-translate-x:-0.5rem')
-    expect(css).toContain('.animate-popover-in-from-top{')
-    expect(css).toContain('.animate-tooltip-in-from-bottom{')
-    expect(css).toContain('.animate-surface-out{')
-    expect(css).toContain('.animate-sheet-in-from-right{')
-    expect(css).toContain('.animate-sheet-out-to-right{')
+    expect(css).toContain('--moraine-exit-translate-x:0.5rem')
+    expect(css).toContain('.animate-popover-in')
+    expect(css).toContain('.animate-popover-out')
+    expect(css).toContain('.animate-popover-side-top')
+    expect(css).toContain('.animate-tooltip-in')
+    expect(css).toContain('.animate-tooltip-out')
+    expect(css).toContain('.animate-tooltip-side-bottom')
+    expect(css).toContain('.animate-popup-out')
+    expect(css).toContain('.animate-sheet-in')
+    expect(css).toContain('.animate-sheet-out')
+    expect(css).toContain('.animate-sheet-side-right')
     expect(css).toContain(
       'animation:moraine-enter var(--moraine-animation-duration,150ms) ease-in-out 1',
     )
@@ -202,7 +221,12 @@ describe('presetTheme component layer', () => {
     )
     expect(css).toContain('--moraine-enter-translate-x:2.5rem')
     expect(css).toContain('--moraine-exit-translate-x:2.5rem')
-    expect(css).not.toContain('--moraine-enter-scale:0.9;--moraine-enter-translate-x:2.5rem')
+    expect(css).not.toContain('.animate-menu-in-from-left{')
+    expect(css).not.toContain('.animate-menu-out-to-left{')
+    expect(css).not.toContain('.animate-popover-in-from-top{')
+    expect(css).not.toContain('.animate-tooltip-in-from-bottom{')
+    expect(css).not.toContain('.animate-sheet-in-from-right{')
+    expect(css).not.toContain('.animate-sheet-out-to-right{')
   })
 
   test('removes carousel inverse utilities while keeping base carousel utilities', async () => {
@@ -236,39 +260,38 @@ describe('presetTheme component layer', () => {
     expect(css).not.toContain('@keyframes carousel-inverse-vertical')
   })
 
-  test('matches old preset horizontal direction signs for semantic enter animations', async () => {
+  test('uses semantic side classes with expected horizontal direction signs', async () => {
     const generator = await createGenerator({
       presets: [presetWind4(), presetTheme()],
     })
 
     const { css } = await generator.generate(
       new Set([
-        'animate-menu-in-from-left',
-        'animate-menu-in-from-right',
-        'animate-popover-in-from-left',
-        'animate-popover-in-from-right',
-        'animate-tooltip-in-from-left',
-        'animate-tooltip-in-from-right',
-        'animate-sheet-in-from-left',
-        'animate-sheet-in-from-right',
+        'animate-menu-side-left',
+        'animate-menu-side-right',
+        'animate-popover-side-left',
+        'animate-popover-side-right',
+        'animate-tooltip-side-left',
+        'animate-tooltip-side-right',
+        'animate-sheet-side-left',
+        'animate-sheet-side-right',
       ]),
       { preflights: true },
     )
 
-    expect(css).toContain('.animate-menu-in-from-left,')
-    expect(css).toContain('--moraine-enter-translate-x:-0.5rem')
-    expect(css).toContain('.animate-menu-in-from-right,')
+    expect(css).toContain('.animate-menu-side-left')
+    expect(css).toContain('.animate-menu-side-right')
     expect(css).toContain('--moraine-enter-translate-x:0.5rem')
-    expect(css).toContain('.animate-popover-in-from-left{')
-    expect(css).toContain('.animate-popover-in-from-right{')
-    expect(css).toContain('--moraine-enter-translate-x:-0.25rem')
+    expect(css).toContain('--moraine-enter-translate-x:-0.5rem')
+    expect(css).toContain('.animate-popover-side-left')
+    expect(css).toContain('.animate-popover-side-right')
+    expect(css).toContain('.animate-tooltip-side-left')
+    expect(css).toContain('.animate-tooltip-side-right')
     expect(css).toContain('--moraine-enter-translate-x:0.25rem')
-    expect(css).toContain('.animate-sheet-in-from-left{')
+    expect(css).toContain('--moraine-enter-translate-x:-0.25rem')
+    expect(css).toContain('.animate-sheet-side-left')
     expect(css).toContain('--moraine-enter-translate-x:-2.5rem')
-    expect(css).toContain('.animate-sheet-in-from-right{')
-    expect(css).toContain(
-      'animation:moraine-enter var(--moraine-animation-duration,150ms) ease-in-out 1',
-    )
+    expect(css).toContain('.animate-sheet-side-right')
     expect(css).toContain('--moraine-enter-translate-x:2.5rem')
   })
 })

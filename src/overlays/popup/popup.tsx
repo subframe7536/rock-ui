@@ -7,11 +7,11 @@ import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 import { popupContentVariants, popupOverlayVariants } from './popup.class'
-import type { PopupContentVariantProps } from './popup.class'
+import type { PopupVariantProps } from './popup.class'
 
 export namespace PopupT {
   export type Slot = 'trigger' | 'overlay' | 'content'
-  export type Variant = PopupContentVariantProps
+  export type Variant = PopupVariantProps
   export interface Items {}
   export type Extend = KobalteDialog.DialogRootProps
   export type Classes = SlotClasses<Slot>
@@ -32,12 +32,6 @@ export namespace PopupT {
      * @default false
      */
     scrollable?: boolean
-
-    /**
-     * Whether to enable transition animations.
-     * @default true
-     */
-    transition?: boolean
 
     /**
      * Whether the popup should cover the entire viewport.
@@ -90,7 +84,7 @@ export function Popup(props: PopupProps): JSX.Element {
   ) as PopupProps
   const [behaviorProps, contentProps, restProps] = splitProps(
     merged,
-    ['overlay', 'scrollable', 'transition', 'fullscreen', 'dismissible', 'onClosePrevent'],
+    ['overlay', 'scrollable', 'fullscreen', 'dismissible', 'onClosePrevent'],
     ['content', 'classes', 'children'],
   )
 
@@ -178,7 +172,6 @@ export function Popup(props: PopupProps): JSX.Element {
         class={popupContentVariants(
           {
             layout: contentLayout(),
-            transition: behaviorProps.transition,
           },
           contentProps.classes?.content,
         )}

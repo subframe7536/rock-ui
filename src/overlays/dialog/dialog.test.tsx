@@ -28,7 +28,7 @@ describe('Modal', () => {
 
     expect(card?.className).toContain('bg-background')
     expect(card?.className).toContain('surface-overlay')
-    expect(content?.className).toContain('data-expanded:animate-surface-in')
+    expect(content?.className).toContain('data-expanded:animate-popup-in')
   })
 
   test('composes dialog as popup container + card shell', () => {
@@ -152,33 +152,6 @@ describe('Modal', () => {
 
     expect(overlay).not.toBeNull()
     expect(overlay?.contains(content ?? null)).toBe(true)
-  })
-
-  test('applies fullscreen + transition=false classes', () => {
-    render(() => (
-      <Dialog
-        open
-        fullscreen
-        transition={false}
-        classes={{
-          content: 'content-class',
-        }}
-        body="Body"
-      >
-        <button type="button">Trigger</button>
-      </Dialog>
-    ))
-
-    const content = document.body.querySelector('[data-slot="content"]')
-
-    expect(content?.className).toContain('fixed')
-    expect(content?.className).toContain('inset-0')
-    expect(content?.className).toContain('flex')
-    expect(content?.className).toContain('h-full')
-    expect(content?.className).toContain('max-w-none')
-    expect(content?.className).toContain('flex-col')
-    expect(content?.className).toContain('transition-none')
-    expect(content?.className).toContain('content-class')
   })
 
   test('supports custom close content', () => {

@@ -88,6 +88,7 @@ const MORAINE_HASH_CLASS_PREFIX = 'mrc-'
 const MORAINE_ENTER_ANIMATION_NAME = 'moraine-enter'
 const MORAINE_EXIT_ANIMATION_NAME = 'moraine-exit'
 const MORAINE_ANIMATION_DURATION_VAR = 'var(--moraine-animation-duration,150ms)'
+const ANIMATION_SIDES = ['top', 'right', 'bottom', 'left'] as const
 
 const RE_ATTR = /^(data|aria)-(\w+):/
 const CORE_ANIMATION_KEYFRAMES = {
@@ -132,38 +133,83 @@ for (const name of Object.keys(CORE_ANIMATION_KEYFRAMES)) {
   CORE_ANIMATION_TIMING_FNS[name] = 'ease-in-out'
   CORE_ANIMATION_COUNTS[name] = type === 'looping' ? 'infinite' : '1'
 }
-const SEMANTIC_ANIMATION_SHORTCUTS = {
-  'animate-overlay-in': `animate-${MORAINE_ENTER_ANIMATION_NAME} [--moraine-enter-opacity:0]`,
-  'animate-overlay-out': `animate-${MORAINE_EXIT_ANIMATION_NAME} [--moraine-exit-opacity:0]`,
-  'animate-surface-in': `animate-${MORAINE_ENTER_ANIMATION_NAME} [--moraine-enter-opacity:0] [--moraine-enter-scale:0.9]`,
-  'animate-surface-out': `animate-${MORAINE_EXIT_ANIMATION_NAME} [--moraine-exit-opacity:0] [--moraine-exit-scale:0.9]`,
-  ...Object.fromEntries(
-    (['menu', 'popover', 'tooltip', 'sheet'] as const).flatMap((type) => {
-      const isSheet = type === 'sheet'
-      const offset = isSheet ? '2.5' : type === 'tooltip' ? '0.25' : '0.5'
-      const directions = ['top', 'right', 'bottom', 'left'] as const
-      const signs: Record<string, string> = { top: '-', right: '', bottom: '', left: '-' }
-      const axes: Record<string, string> = { top: 'y', right: 'x', bottom: 'y', left: 'x' }
+type AnimationSide = (typeof ANIMATION_SIDES)[number]
+type SemanticAnimationTarget = 'overlay' | 'popup' | 'menu' | 'popover' | 'tooltip' | 'sheet'
 
-      return directions.flatMap((dir) => {
-        const translateProp = `translate-${axes[dir]}`
-        const val = `${signs[dir]}${offset}rem`
-        const scaleTokens = isSheet ? '' : ' [--moraine-enter-scale:0.9] [--moraine-exit-scale:0.9]'
+const ANIMATION_SIDE_AXES: Record<AnimationSide, 'x' | 'y'> = {
+  top: 'y',
+  right: 'x',
+  bottom: 'y',
+  left: 'x',
+}
 
-        return [
-          [
-            `animate-${type}-in-from-${dir}`,
-            `animate-${MORAINE_ENTER_ANIMATION_NAME} [--moraine-enter-opacity:0]${scaleTokens} [--moraine-enter-${translateProp}:${val}]`,
-          ],
-          [
-            `animate-${type}-out-to-${dir}`,
-            `animate-${MORAINE_EXIT_ANIMATION_NAME} [--moraine-exit-opacity:0]${scaleTokens} [--moraine-exit-${translateProp}:${val}]`,
-          ],
-        ]
-      })
-    }),
-  ),
-} as const
+const ANIMATION_SIDE_SIGNS: Record<AnimationSide, '' | '-'> = {
+  top: '-',
+  right: '',
+  bottom: '',
+  left: '-',
+}
+
+const ANIMATION_SIDE_OPPOSITES: Record<AnimationSide, AnimationSide> = {
+  top: 'bottom',
+  right: 'left',
+  bottom: 'top',
+  left: 'right',
+}
+
+interface SemanticAnimationConfig {
+  offsetRem?: string
+  scale?: string
+  oppositeSide?: boolean
+  withSide?: boolean
+}
+
+const SEMANTIC_ANIMATION_CONFIGS: Record<SemanticAnimationTarget, SemanticAnimationConfig> = {
+  overlay: { withSide: false },
+  popup: { scale: '0.9', withSide: false },
+  menu: { offsetRem: '0.5', scale: '0.9', oppositeSide: true },
+  popover: { offsetRem: '0.5', scale: '0.9', oppositeSide: true },
+  tooltip: { offsetRem: '0.25', scale: '0.9', oppositeSide: true },
+  sheet: { offsetRem: '2.5' },
+}
+
+function createSemanticAnimationShortcuts(
+  name: SemanticAnimationTarget,
+  config: SemanticAnimationConfig,
+): Record<string, string> {
+  const inScale = config.scale ? ` [--moraine-enter-scale:${config.scale}]` : ''
+  const outScale = config.scale ? ` [--moraine-exit-scale:${config.scale}]` : ''
+  const sideShortcuts =
+    config.withSide === false || !config.offsetRem
+      ? {}
+      : Object.fromEntries(
+          ANIMATION_SIDES.map((side) => {
+            const motionSide = config.oppositeSide ? ANIMATION_SIDE_OPPOSITES[side] : side
+            const axis = ANIMATION_SIDE_AXES[motionSide]
+            const sign = ANIMATION_SIDE_SIGNS[motionSide]
+            const value = `${sign}${config.offsetRem}rem`
+            return [
+              `animate-${name}-side-${side}`,
+              `[--moraine-enter-translate-${axis}:${value}] [--moraine-exit-translate-${axis}:${value}]`,
+            ] as const
+          }),
+        )
+
+  return {
+    [`animate-${name}-in`]: `animate-${MORAINE_ENTER_ANIMATION_NAME} [--moraine-enter-opacity:0]${inScale}`,
+    [`animate-${name}-out`]: `animate-${MORAINE_EXIT_ANIMATION_NAME} [--moraine-exit-opacity:0]${outScale}`,
+    ...sideShortcuts,
+  }
+}
+
+const SEMANTIC_ANIMATION_SHORTCUTS: Record<string, string> = {
+  ...createSemanticAnimationShortcuts('overlay', SEMANTIC_ANIMATION_CONFIGS.overlay),
+  ...createSemanticAnimationShortcuts('popup', SEMANTIC_ANIMATION_CONFIGS.popup),
+  ...createSemanticAnimationShortcuts('menu', SEMANTIC_ANIMATION_CONFIGS.menu),
+  ...createSemanticAnimationShortcuts('popover', SEMANTIC_ANIMATION_CONFIGS.popover),
+  ...createSemanticAnimationShortcuts('tooltip', SEMANTIC_ANIMATION_CONFIGS.tooltip),
+  ...createSemanticAnimationShortcuts('sheet', SEMANTIC_ANIMATION_CONFIGS.sheet),
+}
 interface ResolvedPresetThemeOptions {
   wind3: boolean
   icons: Partial<Record<keyof typeof DEFAULT_ICONS, string>>

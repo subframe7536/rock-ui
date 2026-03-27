@@ -77,33 +77,6 @@ describe('Popup', () => {
     expect(document.body.style.overflow).not.toBe('hidden')
   })
 
-  test('applies fullscreen + transition=false classes', () => {
-    render(() => (
-      <Popup
-        open
-        fullscreen
-        transition={false}
-        classes={{
-          content: 'content-class',
-        }}
-        content="Body"
-      >
-        <button type="button">Trigger</button>
-      </Popup>
-    ))
-
-    const content = document.body.querySelector('[data-slot="content"]')
-
-    expect(content?.className).toContain('fixed')
-    expect(content?.className).toContain('inset-0')
-    expect(content?.className).toContain('flex')
-    expect(content?.className).toContain('h-full')
-    expect(content?.className).toContain('max-w-none')
-    expect(content?.className).toContain('flex-col')
-    expect(content?.className).toContain('transition-none')
-    expect(content?.className).toContain('content-class')
-  })
-
   test('applies classes overrides to trigger/content/overlay', () => {
     render(() => (
       <Popup

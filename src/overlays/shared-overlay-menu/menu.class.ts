@@ -12,7 +12,8 @@ export const overlayMenuItemVariants = cva(
     variants: {
       color: {
         default: 'text-foreground',
-        destructive: 'text-destructive data-highlighted:(text-destructive bg-destructive/20)',
+        destructive:
+          'text-destructive data-highlighted:(text-destructive bg-destructive/10 dark:bg-destructive/20)',
       },
       size: {
         sm: 'text-xs min-h-7',
@@ -26,19 +27,17 @@ export const overlayMenuItemVariants = cva(
 export type OverlayMenuItemVariantProps = VariantProps<typeof overlayMenuItemVariants>
 
 export const overlayMenuContentVariants = cva(
-  'text-popover-foreground p-1 outline-none rounded-lg bg-popover flex flex-col min-w-32 surface-overlay shadow-lg origin-$kb-popper-content-transform-origin z-50',
+  'text-popover-foreground p-1 outline-none rounded-lg bg-popover flex flex-col min-w-32 surface-overlay shadow-lg origin-$kb-popper-content-transform-origin z-50 data-closed:animate-menu-out data-expanded:animate-menu-in',
   {
     defaultVariants: {
       side: 'right',
     },
     variants: {
       side: {
-        top: 'mb-$kb-popper-content-overflow-padding data-closed:animate-menu-out-to-bottom data-expanded:animate-menu-in-from-bottom',
-        right:
-          'ml-$kb-popper-content-overflow-padding data-closed:animate-menu-out-to-left data-expanded:animate-menu-in-from-left',
-        bottom:
-          'mt-$kb-popper-content-overflow-padding data-closed:animate-menu-out-to-top data-expanded:animate-menu-in-from-top',
-        left: 'mr-$kb-popper-content-overflow-padding data-closed:animate-menu-out-to-right data-expanded:animate-menu-in-from-right',
+        top: 'mb-$kb-popper-content-overflow-padding animate-menu-side-top',
+        right: 'ml-$kb-popper-content-overflow-padding animate-menu-side-right',
+        bottom: 'mt-$kb-popper-content-overflow-padding animate-menu-side-bottom',
+        left: 'mr-$kb-popper-content-overflow-padding animate-menu-side-left',
       },
     },
   },
