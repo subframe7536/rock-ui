@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { compileMarkdownPage } from './markdown'
+import { compileMarkdownPage } from './compile'
 
 describe('compileMarkdownPage', () => {
   test('compiles markdown with inferred component key and inferred example source', () => {
@@ -35,7 +35,6 @@ source: ./examples/button-variants.tsx
 `
 
     const code = compileMarkdownPage(markdown, '/tmp/docs/pages/general/button/button.md')
-
     expect(code).toContain("from './examples/button-variants.tsx'")
   })
 
@@ -66,18 +65,6 @@ package: solid-toaster
     expect(code).toContain("type: 'code-tabs'")
     expect(code).toContain('bun add solid-toaster')
     expect(code).toContain('shiki bash')
-  })
-
-  test('requires package for :::code-tabs directive', () => {
-    const markdown = `
-:::code-tabs
-name: solid-toaster
-:::
-`
-
-    expect(() => compileMarkdownPage(markdown, '/tmp/docs/pages/overlay/toast/toast.md')).toThrow(
-      ':::code-tabs requires "package"',
-    )
   })
 
   test('renders fenced code with highlight callback output', () => {

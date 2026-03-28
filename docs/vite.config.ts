@@ -5,11 +5,7 @@ import uno from 'unocss/vite'
 import { defineConfig } from 'vite'
 import solid from 'vite-plugin-solid'
 
-import { componentApiPlugin } from './vite-plugin/api-doc'
-import { examplePagesPlugin } from './vite-plugin/example-pages'
-import { exampleSourcePlugin } from './vite-plugin/example-source'
-import { markdownPlugin } from './vite-plugin/markdown'
-import { siteMetaPlugin } from './vite-plugin/site-meta'
+import { docsPlugin, siteMetaPlugin } from './vite-plugin'
 
 export default defineConfig({
   plugins: [
@@ -25,10 +21,7 @@ export default defineConfig({
       imageHeight: 630,
       twitterCard: 'summary_large_image',
     }),
-    componentApiPlugin(),
-    examplePagesPlugin(),
-    exampleSourcePlugin(),
-    markdownPlugin(),
+    docsPlugin(),
     uno({ inspector: false }),
     solid(),
   ],

@@ -22,7 +22,7 @@ export const IntroComponentsWidget = () => {
 
   return (
     <section class="flex flex-col gap-4 relative">
-      <Badge variant="outline" classes={{ root: 'absolute end-0 -top-10' }}>
+      <Badge variant="outline" classes={{ root: 'absolute end-0 -top-12' }}>
         {apiIndex.components.length} components
       </Badge>
 

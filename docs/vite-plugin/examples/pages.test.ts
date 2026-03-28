@@ -4,11 +4,7 @@ import path from 'node:path'
 
 import { describe, expect, test } from 'vitest'
 
-import {
-  buildExamplePageEntries,
-  buildExamplePagesModuleCode,
-  scanExamplePages,
-} from './example-pages'
+import { buildExamplePageEntries, buildExamplePagesModuleCode, scanExamplePages } from './pages'
 
 async function createTempProject(): Promise<string> {
   return mkdtemp(path.join(tmpdir(), 'moraine-example-pages-'))
@@ -28,9 +24,7 @@ describe('scanExamplePages', () => {
     )
     await writeFile(path.join(projectRoot, 'docs/pages/overlay/toast/toast.md'), '# Toast', 'utf8')
 
-    const pages = await scanExamplePages(projectRoot)
-
-    expect(pages).toEqual([
+    expect(await scanExamplePages(projectRoot)).toEqual([
       { key: 'intro', importPath: './pages/intro.md' },
       {
         key: 'input-number',

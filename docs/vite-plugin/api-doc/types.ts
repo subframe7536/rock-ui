@@ -1,0 +1,45 @@
+export interface ComponentIndexEntry {
+  key: string
+  name: string
+  category: string
+  description?: string
+  sourcePath?: string
+  polymorphic: boolean
+}
+
+export interface IndexDoc {
+  components: ComponentIndexEntry[]
+}
+
+export interface PropDoc {
+  name: string
+  required: boolean
+  type: string
+  defaultValue?: string
+  description?: string
+}
+
+export interface InheritedGroupDoc {
+  from: string
+  props: PropDoc[]
+}
+
+export interface ItemsDoc {
+  props: PropDoc[]
+  description?: string
+}
+
+export interface ComponentDoc {
+  component: ComponentIndexEntry
+  slots: string[]
+  props: {
+    own: PropDoc[]
+    inherited: InheritedGroupDoc[]
+  }
+  items?: ItemsDoc
+}
+
+export interface GenerationResult {
+  indexDoc: IndexDoc
+  componentDocs: Map<string, ComponentDoc>
+}

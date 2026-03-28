@@ -1,7 +1,7 @@
 import type { JSX } from 'solid-js'
 import { For, Show, createSignal } from 'solid-js'
 
-import type { ItemsDoc, PropDoc } from '../vite-plugin/api-doc'
+import type { ItemsDoc, PropDoc } from '../vite-plugin/api-doc/types'
 
 export interface PropsTableProps {
   props: ComponentPropsDoc

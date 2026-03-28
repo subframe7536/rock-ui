@@ -3,6 +3,11 @@ import { createJavaScriptRegexEngine } from 'shiki/engine-javascript.mjs'
 
 export type DocsHighlightLang = 'bash' | 'tsx' | 'css' | 'javascript'
 
+export const DOCS_HIGHLIGHT_THEMES = {
+  light: 'one-light',
+  dark: 'one-dark-pro',
+} as const
+
 const DOCS_HIGHLIGHTER_PROMISE = createHighlighterCore({
   themes: [import('shiki/themes/one-light.mjs'), import('shiki/themes/one-dark-pro.mjs')],
   langs: [

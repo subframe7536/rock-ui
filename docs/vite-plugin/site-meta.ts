@@ -164,8 +164,10 @@ export function buildSiteMetaTags(options: DocsSiteMetaOptions): HtmlTagDescript
 export function siteMetaPlugin(options: DocsSiteMetaOptions): Plugin {
   return {
     name: 'moraine-site-meta',
-    transformIndexHtml() {
-      return buildSiteMetaTags(options)
+    transformIndexHtml: {
+      handler() {
+        return buildSiteMetaTags(options)
+      },
     },
   }
 }

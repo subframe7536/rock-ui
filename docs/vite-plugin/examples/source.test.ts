@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 
-import { resolveExampleComponentSource, transformExampleSourceModule } from './example-source'
+import { resolveExampleComponentSource, transformExampleSourceModule } from './source'
 
 describe('resolveExampleComponentSource', () => {
   test('extracts named arrow component declaration', () => {
@@ -8,8 +8,9 @@ describe('resolveExampleComponentSource', () => {
 export const BasicExample = () => <div>basic</div>
 `
 
-    const result = resolveExampleComponentSource(source, 'BasicExample')
-    expect(result).toBe('const BasicExample = () => <div>basic</div>')
+    expect(resolveExampleComponentSource(source, 'BasicExample')).toBe(
+      'const BasicExample = () => <div>basic</div>',
+    )
   })
 
   test('extracts named function component declaration', () => {
@@ -19,8 +20,7 @@ function LoadingExample() {
 }
 `
 
-    const result = resolveExampleComponentSource(source, 'LoadingExample')
-    expect(result).toBe(`function LoadingExample() {
+    expect(resolveExampleComponentSource(source, 'LoadingExample')).toBe(`function LoadingExample() {
   return <div>loading</div>
 }`)
   })
@@ -30,8 +30,7 @@ function LoadingExample() {
 export const BasicExample = () => <div>basic</div>
 `
 
-    const result = resolveExampleComponentSource(source, 'MissingExample')
-    expect(result).toBeNull()
+    expect(resolveExampleComponentSource(source, 'MissingExample')).toBeNull()
   })
 })
 
@@ -40,43 +39,38 @@ describe('transformExampleSourceModule', () => {
     const source = `
 export const BasicExample = () => <div>basic</div>
 `
-    const toHTML = vi.fn((value: string, lang: 'tsx' | 'bash') => `<pre ${lang}>${value}</pre>`)
+    const toHtml = vi.fn((value: string, lang: 'tsx' | 'bash') => `<pre ${lang}>${value}</pre>`)
 
     const transformed = transformExampleSourceModule(
       source,
       '/tmp/docs/examples/button/basic.tsx?example-source&name=BasicExample',
-      toHTML,
+      toHtml,
     )
 
     expect(transformed).toContain('export default ')
-    expect(toHTML).toHaveBeenCalledWith('const BasicExample = () => <div>basic</div>', 'tsx')
+    expect(toHtml).toHaveBeenCalledWith('const BasicExample = () => <div>basic</div>', 'tsx')
   })
 
   test('ignores non source-query modules', () => {
-    const source = `export const BasicExample = () => <div>basic</div>`
-    const toHTML = vi.fn(() => '<pre>code</pre>')
-
     const transformed = transformExampleSourceModule(
-      source,
+      'export const BasicExample = () => <div>basic</div>',
       '/tmp/docs/examples/button/basic.tsx',
-      toHTML,
+      vi.fn(() => '<pre>code</pre>'),
     )
 
     expect(transformed).toBeNull()
-    expect(toHTML).not.toHaveBeenCalled()
   })
 
   test('returns empty html module when component does not exist', () => {
-    const source = `export const BasicExample = () => <div>basic</div>`
-    const toHTML = vi.fn(() => '<pre>code</pre>')
+    const toHtml = vi.fn(() => '<pre>code</pre>')
 
     const transformed = transformExampleSourceModule(
-      source,
+      'export const BasicExample = () => <div>basic</div>',
       '/tmp/docs/examples/button/basic.tsx?example-source&name=MissingExample',
-      toHTML,
+      toHtml,
     )
 
     expect(transformed).toBe('export default ""\n')
-    expect(toHTML).not.toHaveBeenCalled()
+    expect(toHtml).not.toHaveBeenCalled()
   })
 })

@@ -3,7 +3,7 @@ import { For, Show } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
 import { Badge, Tabs } from '../../src'
-import type { ItemsDoc } from '../vite-plugin/api-doc'
+import type { ItemsDoc } from '../vite-plugin/api-doc/types'
 import { docsWidgetMap } from '../widgets'
 
 import { PropsTable } from './props-table'
@@ -143,7 +143,7 @@ export function Markdown(input: RenderExampleMarkdownPageInput) {
   }
 
   return (
-    <main class="text-foreground p-4 min-h-screen w-full sm:p-8">
+    <main class="text-foreground px-4 py-8 min-h-screen w-full sm:(px-8 py-16)">
       <div class="mx-auto flex flex-col gap-4 max-w-4xl">
         <Show when={shouldShowHeader()}>
           <header class="text-foreground">

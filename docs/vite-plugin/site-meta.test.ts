@@ -87,10 +87,19 @@ describe('siteMetaPlugin', () => {
   test('returns a single configured metadata set via transformIndexHtml', () => {
     const plugin = siteMetaPlugin(SITE_META)
     const hook = plugin.transformIndexHtml
+    const context = {
+      meta: {},
+      error: () => {
+        throw new Error('unexpected error')
+      },
+      warn: () => {},
+      debug: () => {},
+      info: () => {},
+    } as never
     const result =
       typeof hook === 'function'
-        ? hook('<html></html>')
-        : hook?.handler('<html></html>')
+        ? hook.call(context, '<html></html>', undefined as never)
+        : hook?.handler.call(context, '<html></html>', undefined as never)
 
     expect(Array.isArray(result)).toBe(true)
     expect(result).toEqual(buildSiteMetaTags(SITE_META))
