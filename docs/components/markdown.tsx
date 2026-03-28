@@ -2,7 +2,7 @@ import type { Component } from 'solid-js'
 import { For, Show, createSignal, onCleanup, onMount } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
-import { Badge, Tabs, cn } from '../../src'
+import { Badge, Button, Tabs, cn } from '../../src'
 import type { ItemsDoc } from '../vite-plugin/api-doc/types'
 import {
   MARKDOWN_ANCHOR_HEADING_CLASS,
@@ -65,10 +65,13 @@ type RenderSegment =
 export interface RenderExampleMarkdownPageInput {
   componentKey?: string
   apiDoc?: ExamplePageApiDoc
+  kobalteHref?: string
   extraApiDocs?: ExamplePageApiDoc[]
   onThisPageEntries?: OnThisPageEntry[]
   segments: RenderSegment[]
 }
+
+const GITHUB_SOURCE_BASE_URL = 'https://github.com/subframe7536/moraine/blob/main'
 
 function toAnchorSlug(value: string): string {
   return (
@@ -199,9 +202,9 @@ export function Markdown(input: RenderExampleMarkdownPageInput) {
 
   const shouldShowHeader = () => Boolean(component() || input.componentKey)
   const pageTitle = () => component()?.name ?? input.componentKey
-  const pageTitleId = () => {
-    const title = pageTitle()
-    return title ? toAnchorSlug(title) || 'overview' : undefined
+  const githubSourceHref = () => {
+    const sourcePath = component()?.sourcePath
+    return sourcePath ? `${GITHUB_SOURCE_BASE_URL}/${sourcePath}` : undefined
   }
 
   const scrollToAnchor = () => {
@@ -364,19 +367,44 @@ export function Markdown(input: RenderExampleMarkdownPageInput) {
                   </Show>
                 </div>
                 <Show when={pageTitle()}>
-                  <h1 id={pageTitleId()} class="text-2xl font-semibold mt-3 sm:text-3xl">
-                    {pageTitle()}
-                  </h1>
+                  <p class="text-2xl font-semibold mt-3 sm:text-3xl">{pageTitle()}</p>
                 </Show>
                 <Show when={component()?.description}>
                   <p class="text-sm text-muted-foreground mt-2 max-w-3xl sm:text-base">
                     {component()!.description}
                   </p>
                 </Show>
-                <Show when={component()?.sourcePath}>
-                  <p class="text-xs text-muted-foreground font-mono mt-3">
-                    {component()!.sourcePath}
-                  </p>
+                <Show when={githubSourceHref() || input.kobalteHref}>
+                  <div class="text-xs mt-3 flex flex-wrap gap-3 items-center">
+                    <Show when={githubSourceHref()}>
+                      {(href) => (
+                        <Button
+                          as="a"
+                          href={href()}
+                          target="_blank"
+                          rel="noreferrer"
+                          variant="outline"
+                          leading="i-lucide:github"
+                        >
+                          GitHub Source
+                        </Button>
+                      )}
+                    </Show>
+                    <Show when={input.kobalteHref}>
+                      {(href) => (
+                        <Button
+                          as="a"
+                          href={href()}
+                          target="_blank"
+                          rel="noreferrer"
+                          variant="outline"
+                          leading="icon-external"
+                        >
+                          Kobalte
+                        </Button>
+                      )}
+                    </Show>
+                  </div>
                 </Show>
               </header>
             </Show>

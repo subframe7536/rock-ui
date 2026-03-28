@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { readFileSync } from 'node:fs'
 
 import MarkdownIt from 'markdown-it'
 
@@ -58,11 +59,15 @@ interface TocInheritedGroup {
 }
 
 interface TocApiDocShape {
-  component: { key: string; name: string }
+  component: { key: string; name: string; sourcePath?: string }
   slots: unknown[]
   props: { own: unknown[]; inherited: TocInheritedGroup[] }
   items?: unknown
 }
+
+const KOBALTE_COMPONENT_DOCS_BASE_URL = 'https://kobalte.dev/docs/core/components'
+const KOBALTE_IGNORED_MODULES = new Set(['popper', 'polymorphic'])
+const KOBALTE_IMPORT_PATTERN = /from\s+['"]@kobalte\/core\/([^'"]+)['"]/g
 
 function normalizeMarkdownLang(value: string): MarkdownHighlightLang | null {
   const key = value.trim().toLowerCase()
@@ -222,11 +227,44 @@ function asTocApiDoc(value: unknown): TocApiDocShape | null {
     })
     .filter((group): group is TocInheritedGroup => Boolean(group))
   return {
-    component: { key: component.key, name: component.name },
+    component: {
+      key: component.key,
+      name: component.name,
+      sourcePath: typeof component.sourcePath === 'string' ? component.sourcePath : undefined,
+    },
     slots: doc.slots,
     props: { own: props.own, inherited },
     items: doc.items,
   }
+}
+
+function inferKobalteComponentDocsHref(
+  projectRoot: string | undefined,
+  sourcePath: string | undefined,
+): string | null {
+  if (!projectRoot || !sourcePath) {
+    return null
+  }
+
+  const absoluteSourcePath = path.join(projectRoot, sourcePath)
+  let sourceCode = ''
+  try {
+    sourceCode = readFileSync(absoluteSourcePath, 'utf8')
+  } catch {
+    return null
+  }
+
+  for (const match of sourceCode.matchAll(KOBALTE_IMPORT_PATTERN)) {
+    const rawModulePath = match[1]
+    const moduleName = rawModulePath?.split('/')[0]
+    if (!moduleName || KOBALTE_IGNORED_MODULES.has(moduleName)) {
+      continue
+    }
+
+    return `${KOBALTE_COMPONENT_DOCS_BASE_URL}/${moduleName}`
+  }
+
+  return null
 }
 
 function createInheritedOnThisPageEntries(
@@ -373,20 +411,13 @@ export function compileMarkdownPage(
     .filter((doc): doc is TocApiDocShape => Boolean(doc))
 
   const shouldExposeComponentKey = Boolean(mergedApiDoc || loadedExtraApiDocs.length > 0)
-  const pageTitle = tocApiDoc?.component.name ?? page.pageKey
+  const kobalteHref = inferKobalteComponentDocsHref(options.projectRoot, tocApiDoc?.component.sourcePath)
   const onThisPageEntries: OnThisPageEntryLiteral[] = []
   const hasMainSlots = Boolean(tocApiDoc?.slots.length)
   const hasMainProps = Boolean(tocApiDoc?.props.own.length)
   const hasMainItems = Boolean(tocApiDoc?.items)
   const hasMainInherited = Boolean(tocApiDoc?.props.inherited.length)
   const hasMainApiReference = hasMainSlots || hasMainProps || hasMainItems || hasMainInherited
-  if (shouldExposeComponentKey) {
-    onThisPageEntries.push({
-      id: toAnchorSlug(pageTitle),
-      label: pageTitle,
-      level: 1,
-    })
-  }
   for (const segment of segmentLiterals) {
     if (segment.onThisPageEntries) {
       onThisPageEntries.push(...segment.onThisPageEntries)
@@ -438,6 +469,7 @@ export function compileMarkdownPage(
   const configFields = [
     shouldExposeComponentKey ? `componentKey: ${JSON.stringify(page.pageKey)}` : '',
     mergedApiDoc ? `apiDoc: ${JSON.stringify(mergedApiDoc)}` : '',
+    kobalteHref ? `kobalteHref: ${JSON.stringify(kobalteHref)}` : '',
     loadedExtraApiDocs.length > 0 ? `extraApiDocs: ${JSON.stringify(loadedExtraApiDocs)}` : '',
     `onThisPageEntries: ${JSON.stringify(onThisPageEntries)}`,
     'segments',

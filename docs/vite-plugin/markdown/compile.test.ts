@@ -59,10 +59,35 @@ name: Variants
     const code = compileMarkdownPage(markdown, '/tmp/docs/pages/form/input/input.md', {
       projectRoot: process.cwd(),
     })
-    expect(code).toContain('"id":"input"')
+    expect(code).not.toContain('"id":"input"')
+    expect(code).toContain('"id":"variants"')
     expect(code).toContain('"id":"api-reference"')
     expect(code).toContain('"id":"api-props"')
     expect(code).toContain('"label":"Props"')
+  })
+
+  test('injects kobalteHref for kobalte-based component pages', () => {
+    const markdown = `
+## Variants
+`
+
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/general/button/button.md', {
+      projectRoot: process.cwd(),
+    })
+
+    expect(code).toContain('kobalteHref: "https://kobalte.dev/docs/core/components/button"')
+  })
+
+  test('does not inject kobalteHref for non-kobalte component pages', () => {
+    const markdown = `
+## Demo
+`
+
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/general/card/card.md', {
+      projectRoot: process.cwd(),
+    })
+
+    expect(code).not.toContain('kobalteHref:')
   })
 
   test('injects conditional api toc entries for slots/items/inherited', () => {

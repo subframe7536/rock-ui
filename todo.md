@@ -26,7 +26,11 @@
 - [x] optimize switch spacing in different size variants and cursor
 - [x] fix component layer hash strategy style incorrect
 - [x] remove `props.highlight`
-- [ ] optmize `surface-outline` and `surface-overlay`, unify text size / line height / spacing / border color , border implement style (directly border or box-shadow)
+- [x] optmize `surface-outline` and `surface-overlay`, unify text size / line height / spacing / border color , border implement style (directly border or box-shadow)
+- [x] GitHub source code link, kobalte link in header
+- [ ] docs: in per page, add Import section before examples, add title "Examples" for all examples
+- [ ] add doc guide: icon, slot-based styling, animation
+- [ ] split icon.css
 
 # V1
 
@@ -35,6 +39,7 @@
 - [ ] DatePicker https://ant.design/components/date-picker.md
 - [ ] Sidebar, shadcn like
 - [ ] Table: tanstack solid table
+- [ ] llm.txt
 
 # Maybe Future
 

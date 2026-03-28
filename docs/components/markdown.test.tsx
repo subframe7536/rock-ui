@@ -67,6 +67,94 @@ afterEach(() => {
 })
 
 describe('Markdown On This Page', () => {
+  test('renders github and kobalte header links with prefix icons', () => {
+    const screen = render(() =>
+      Markdown({
+        componentKey: 'button',
+        kobalteHref: 'https://kobalte.dev/docs/core/components/button',
+        apiDoc: {
+          component: {
+            key: 'button',
+            name: 'Button',
+            category: 'Elements',
+            polymorphic: false,
+            sourcePath: 'src/elements/button/button.tsx',
+          },
+          slots: [],
+          props: {
+            own: [],
+            inherited: [],
+          },
+        },
+        segments: [{ type: 'markdown', html: '<p>Body</p>' }],
+      }),
+    )
+
+    const githubLink = screen.getByRole('link', { name: 'GitHub Source' }) as HTMLAnchorElement
+    const kobalteLink = screen.getByRole('link', { name: 'Kobalte' }) as HTMLAnchorElement
+
+    expect(githubLink.getAttribute('href')).toBe(
+      'https://github.com/subframe7536/moraine/blob/main/src/elements/button/button.tsx',
+    )
+    expect(githubLink.getAttribute('target')).toBe('_blank')
+    expect(githubLink.querySelector('[data-slot="leading"]')?.className).toContain('i-lucide:github')
+    expect(kobalteLink.getAttribute('href')).toBe('https://kobalte.dev/docs/core/components/button')
+    expect(kobalteLink.getAttribute('target')).toBe('_blank')
+    expect(kobalteLink.querySelector('[data-slot="leading"]')?.className).toContain('icon-external')
+  })
+
+  test('renders github header link without kobalte when kobalteHref is absent', () => {
+    const screen = render(() =>
+      Markdown({
+        componentKey: 'card',
+        apiDoc: {
+          component: {
+            key: 'card',
+            name: 'Card',
+            category: 'Elements',
+            polymorphic: false,
+            sourcePath: 'src/elements/card/card.tsx',
+          },
+          slots: [],
+          props: {
+            own: [],
+            inherited: [],
+          },
+        },
+        segments: [{ type: 'markdown', html: '<p>Body</p>' }],
+      }),
+    )
+
+    expect(screen.getByRole('link', { name: 'GitHub Source' })).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Kobalte' })).toBeNull()
+  })
+
+  test('renders page header title without h1', () => {
+    const screen = render(() =>
+      Markdown({
+        componentKey: 'button',
+        apiDoc: {
+          component: {
+            key: 'button',
+            name: 'Button',
+            category: 'Elements',
+            polymorphic: false,
+          },
+          slots: [],
+          props: {
+            own: [],
+            inherited: [],
+          },
+        },
+        segments: [{ type: 'markdown', html: '<p>Body</p>' }],
+      }),
+    )
+
+    const pageTitle = screen.getByText('Button')
+    expect(pageTitle.tagName).toBe('P')
+    expect(screen.queryByRole('heading', { name: 'Button', level: 1 })).toBeNull()
+  })
+
   test('renders toc from compile-time entries', () => {
     const screen = render(() =>
       Markdown({
