@@ -1,4 +1,4 @@
-# Style Setup
+# Styling
 
 Moraine follows the shadcn-style token model. You can reuse existing theme variable sets (for example from tweakcn.com) and apply them with UnoCSS or Tailwind.
 
@@ -24,16 +24,18 @@ export default defineConfig({
 })
 ```
 
-## Tailwind CSS v4
+## Tailwind CSS
+
+### v4
 
 Add Moraine package files to `@source` so utility classes are detected.
 
 ```css
-@import 'tailwindcss';
+@import "tailwindcss";
 @source "./node_modules/moraine/**/*";
 ```
 
-## Tailwind CSS v3
+### v3
 
 Register Moraine in `content`, then include the three Tailwind directives.
 

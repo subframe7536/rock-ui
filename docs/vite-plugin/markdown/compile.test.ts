@@ -24,8 +24,101 @@ name: Variants
     expect(code).toContain("from './examples/variants.tsx'")
     expect(code).toContain('?example-source&name=Variants')
     expect(code).toContain("type: 'markdown'")
+    expect(code).toContain('onThisPageEntries:')
+    expect(code).toContain('"id":"variants"')
+    expect(code).toContain('"label":"Variants"')
+    expect(code).toContain('"level":2')
     expect(code).toContain('id=\\"variants\\"')
     expect(code).toContain('href=\\"#variants\\"')
+  })
+
+  test('collects h1-h5 for toc at compile time', () => {
+    const markdown = `
+# Intro
+## Usage
+### Advanced
+#### Edge Cases
+##### Notes
+`
+
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/introduction.md')
+    expect(code).toContain('onThisPageEntries:')
+    expect(code).toContain('"id":"intro"')
+    expect(code).toContain('"label":"Intro"')
+    expect(code).toContain('"id":"usage"')
+    expect(code).toContain('"id":"advanced"')
+    expect(code).toContain('"id":"edge-cases"')
+    expect(code).toContain('"id":"notes"')
+  })
+
+  test('injects api toc entries from compile-time docs', () => {
+    const markdown = `
+## Variants
+`
+
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/form/input/input.md', {
+      projectRoot: process.cwd(),
+    })
+    expect(code).toContain('"id":"input"')
+    expect(code).toContain('"id":"api-reference"')
+    expect(code).toContain('"id":"api-props"')
+    expect(code).toContain('"label":"Props"')
+  })
+
+  test('injects conditional api toc entries for slots/items/inherited', () => {
+    const markdown = `---
+apiDocOverride:
+  component:
+    key: custom
+    name: Custom
+    category: Form
+    polymorphic: false
+  slots:
+    - root
+  props:
+    own: []
+    inherited:
+      - from: Base
+        props: []
+  items:
+    props: []
+---
+## Demo
+`
+
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/form/custom/custom.md')
+    expect(code).toContain('"id":"api-reference"')
+    expect(code).toContain('"id":"api-slots"')
+    expect(code).toContain('"id":"api-items"')
+    expect(code).toContain('"id":"api-inherited-base"')
+    expect(code).toContain('"label":"Inherited from Base"')
+    expect(code).not.toContain('"id":"api-props"')
+  })
+
+  test('injects inherited toc entries for each source with deduped ids', () => {
+    const markdown = `---
+apiDocOverride:
+  component:
+    key: custom
+    name: Custom
+    category: Form
+    polymorphic: false
+  slots: []
+  props:
+    own: []
+    inherited:
+      - from: BaseItem
+        props: []
+      - from: BaseItem
+        props: []
+---
+## Demo
+`
+
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/form/custom/custom.md')
+    expect(code).toContain('"id":"api-inherited-base-item"')
+    expect(code).toContain('"id":"api-inherited-base-item-2"')
+    expect(code).not.toContain('"id":"api-inherited"')
   })
 
   test('uses explicit source override when provided', () => {
@@ -98,5 +191,7 @@ Some content.
     expect(code).toContain('href=\\"#same-heading\\"')
     expect(code).toContain('id=\\"same-heading-2\\"')
     expect(code).toContain('href=\\"#same-heading-2\\"')
+    expect(code).toContain('"id":"same-heading"')
+    expect(code).toContain('"id":"same-heading-2"')
   })
 })

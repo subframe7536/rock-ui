@@ -102,7 +102,7 @@ function App() {
         },
         {
           content: (
-            <div class="overflow-y-auto">
+            <div class="h-full overflow-y-auto" data-docs-scroll-root="true">
               <Show
                 when={ActiveExample()}
                 fallback={<div class="text-sm text-muted-foreground p-6">Example not found.</div>}

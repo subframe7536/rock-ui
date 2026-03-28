@@ -1,11 +1,17 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createSignal } from 'solid-js'
+import { For, Show } from 'solid-js'
 
-import type { ItemsDoc, PropDoc } from '../vite-plugin/api-doc/types'
+import type { PropDoc } from '../vite-plugin/api-doc/types'
+import {
+  MARKDOWN_ANCHOR_HEADING_CLASS,
+  MARKDOWN_ANCHOR_LINK_CLASS,
+} from '../vite-plugin/markdown/const'
+
+export const API_HEADING_PROSE_CLASS =
+  'max-w-none prose prose-neutral prose-headings:(text-foreground font-semibold mb-1 mt-6) dark:prose-invert'
 
 export interface PropsTableProps {
-  props: ComponentPropsDoc
-  items?: ItemsDoc
+  sections: PropsTableSection[]
 }
 
 export interface InheritedGroupDoc {
@@ -18,16 +24,17 @@ export interface ComponentPropsDoc {
   inherited: InheritedGroupDoc[]
 }
 
+export interface PropsTableSection {
+  id: string
+  heading: string
+  description?: string
+  props: PropDoc[]
+}
+
 export function PropsTable(props: PropsTableProps): JSX.Element {
   return (
     <div class="bg-background flex flex-col gap-4">
-      <Show when={props.props.own.length > 0}>
-        <PropRows props={props.props.own} />
-      </Show>
-
-      <Show when={props.items}>{(items) => <ItemsBlock items={items()} />}</Show>
-
-      <For each={props.props.inherited}>{(group) => <InheritedGroup group={group} />}</For>
+      <For each={props.sections}>{(section) => <SectionTableBlock section={section} />}</For>
     </div>
   )
 }
@@ -41,7 +48,7 @@ function normalizeType(type: string): string {
 function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
   return (
     <div class="b-1 b-border rounded-lg overflow-x-auto">
-      <table class="text-sm w-full border-collapse">
+      <table class="text-sm m-0 w-full border-collapse">
         <thead>
           <tr class="text-xs text-muted-foreground tracking-wider text-left bg-muted uppercase">
             <th class="font-medium px-3 py-2">Prop</th>
@@ -88,48 +95,25 @@ function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
   )
 }
 
-function InheritedGroup(groupProps: { group: InheritedGroupDoc }): JSX.Element {
-  const [open, setOpen] = createSignal(false)
-
+function SectionTableBlock(sectionProps: { section: PropsTableSection }): JSX.Element {
   return (
-    <div>
-      <button
-        type="button"
-        class="text-xs text-muted-foreground flex gap-1.5 cursor-pointer transition-colors items-center hover:text-foreground"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span
-          class="inline-block transition-transform"
-          style={{ transform: open() ? 'rotate(90deg)' : 'rotate(0deg)' }}
+    <div class={API_HEADING_PROSE_CLASS}>
+      <h2 id={sectionProps.section.id} class={MARKDOWN_ANCHOR_HEADING_CLASS}>
+        {sectionProps.section.heading}
+        <a
+          href={`#${sectionProps.section.id}`}
+          class={MARKDOWN_ANCHOR_LINK_CLASS}
+          aria-label={`Link to ${sectionProps.section.heading}`}
         >
-          ▶
-        </span>
-        Inherited from <code class="text-muted-foreground font-mono">{groupProps.group.from}</code>
-        <span class="text-muted-foreground/80">({groupProps.group.props.length})</span>
-      </button>
+          #
+        </a>
+      </h2>
 
-      <Show when={open()}>
-        <div class="mt-2">
-          <PropRows props={groupProps.group.props} />
-        </div>
+      <Show when={sectionProps.section.description}>
+        {(description) => <p class="text-sm text-muted-foreground">{description()}</p>}
       </Show>
-    </div>
-  )
-}
 
-function ItemsBlock(itemsProps: { items: ItemsDoc }): JSX.Element {
-  return (
-    <div class="flex flex-col gap-2">
-      <div class="flex flex-col gap-1">
-        <p class="text-xs text-muted-foreground tracking-wider uppercase">Items</p>
-        <Show when={itemsProps.items.description}>
-          {(description) => <p class="text-sm text-muted-foreground">{description()}</p>}
-        </Show>
-      </div>
-
-      <Show when={itemsProps.items.props.length > 0}>
-        <PropRows props={itemsProps.items.props} />
-      </Show>
+      <PropRows props={sectionProps.section.props} />
     </div>
   )
 }

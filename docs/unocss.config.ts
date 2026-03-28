@@ -20,7 +20,23 @@ export default defineConfig<PresetWind4Theme>({
         lucide: () => lucideIcons,
       },
     }),
-    presetTypography(),
+    presetTypography({
+      compatibility: {
+        noColonIs: true,
+        noColonNot: true,
+        noColonWhere: true,
+      },
+      cssExtend() {
+        return {
+          'code::before': {
+            content: 'none',
+          },
+          'code::after': {
+            content: 'none',
+          },
+        }
+      },
+    }),
     presetTheme({
       enableComponentLayer: {
         strategy: 'prefix',

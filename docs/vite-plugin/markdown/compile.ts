@@ -38,12 +38,30 @@ interface ExampleImport {
 interface SegmentLiteral {
   code: string
   importSpec?: ExampleImport
+  onThisPageEntries?: OnThisPageEntryLiteral[]
 }
 
 interface CodeTabItemLiteral {
   label: string
   value: string
   html: string
+}
+
+interface OnThisPageEntryLiteral {
+  id: string
+  label: string
+  level: number
+}
+
+interface TocInheritedGroup {
+  from: string
+}
+
+interface TocApiDocShape {
+  component: { key: string; name: string }
+  slots: unknown[]
+  props: { own: unknown[]; inherited: TocInheritedGroup[] }
+  items?: unknown
 }
 
 function normalizeMarkdownLang(value: string): MarkdownHighlightLang | null {
@@ -96,6 +114,24 @@ function createMarkdown(
     const inlineToken = tokens[idx + 1]
     const headingText = inlineToken?.type === 'inline' ? inlineToken.content : ''
     const slug = createHeadingSlug(headingText)
+    const level = Number.parseInt(token.tag.replace('h', ''), 10)
+    const onThisPageEntries =
+      typeof env === 'object' && env !== null && 'onThisPageEntries' in env
+        ? (env as { onThisPageEntries?: OnThisPageEntryLiteral[] }).onThisPageEntries
+        : undefined
+    if (
+      Array.isArray(onThisPageEntries) &&
+      Number.isFinite(level) &&
+      level >= 1 &&
+      level <= 5 &&
+      headingText.trim()
+    ) {
+      onThisPageEntries.push({
+        id: slug,
+        label: headingText.trim(),
+        level,
+      })
+    }
 
     token.attrSet('id', slug)
     token.attrJoin('class', MARKDOWN_ANCHOR_HEADING_CLASS)
@@ -154,17 +190,79 @@ function createCodeTabsItems(
   }))
 }
 
+function asTocApiDoc(value: unknown): TocApiDocShape | null {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+  const doc = value as Record<string, unknown>
+  if (!doc.component || typeof doc.component !== 'object') {
+    return null
+  }
+  const component = doc.component as Record<string, unknown>
+  if (typeof component.key !== 'string' || typeof component.name !== 'string') {
+    return null
+  }
+  if (!Array.isArray(doc.slots) || !doc.props || typeof doc.props !== 'object') {
+    return null
+  }
+  const props = doc.props as Record<string, unknown>
+  if (!Array.isArray(props.own) || !Array.isArray(props.inherited)) {
+    return null
+  }
+  const inherited = props.inherited
+    .map((group) => {
+      if (!group || typeof group !== 'object') {
+        return null
+      }
+      const inheritedGroup = group as Record<string, unknown>
+      if (typeof inheritedGroup.from !== 'string') {
+        return null
+      }
+      return { from: inheritedGroup.from }
+    })
+    .filter((group): group is TocInheritedGroup => Boolean(group))
+  return {
+    component: { key: component.key, name: component.name },
+    slots: doc.slots,
+    props: { own: props.own, inherited },
+    items: doc.items,
+  }
+}
+
+function createInheritedOnThisPageEntries(
+  inheritedGroups: TocInheritedGroup[],
+  idPrefix: string,
+): OnThisPageEntryLiteral[] {
+  const entries: OnThisPageEntryLiteral[] = []
+  const slugCounter = new Map<string, number>()
+
+  for (const group of inheritedGroups) {
+    const baseSlug = toAnchorSlug(group.from)
+    const nextCount = (slugCounter.get(baseSlug) ?? 0) + 1
+    slugCounter.set(baseSlug, nextCount)
+    entries.push({
+      id: `${idPrefix}${baseSlug}${nextCount === 1 ? '' : `-${nextCount}`}`,
+      label: `Inherited from ${group.from}`,
+      level: 2,
+    })
+  }
+
+  return entries
+}
+
 function buildSegmentLiterals(
   segments: ParsedSegment[],
-  renderMarkdown: (source: string) => string,
+  renderMarkdown: (source: string) => { html: string; onThisPageEntries: OnThisPageEntryLiteral[] },
   highlightCode?: (source: string, lang: MarkdownHighlightLang) => string | null,
 ): SegmentLiteral[] {
   let exampleIndex = 0
 
   return segments.map((segment) => {
     if (segment.type === 'markdown') {
+      const renderedMarkdown = renderMarkdown(segment.text)
       return {
-        code: `{ type: 'markdown', html: ${JSON.stringify(renderMarkdown(segment.text).trim())} }`,
+        code: `{ type: 'markdown', html: ${JSON.stringify(renderedMarkdown.html.trim())} }`,
+        onThisPageEntries: renderedMarkdown.onThisPageEntries,
       }
     }
 
@@ -210,9 +308,18 @@ export function compileMarkdownPage(
   const parsedFrontmatter = parseFrontmatter(markdownSource)
   const segments = parseSegments(parsedFrontmatter.content, idWithoutQuery)
   const markdown = createMarkdown(options.highlightCode)
+  const hasProps = (data: { own: unknown[]; inherited: unknown[] }, items?: unknown) => {
+    return data.own.length > 0 || data.inherited.length > 0 || Boolean(items)
+  }
   const segmentLiterals = buildSegmentLiterals(
     segments,
-    (source) => markdown.render(source),
+    (source) => {
+      const onThisPageEntries: OnThisPageEntryLiteral[] = []
+      return {
+        html: markdown.render(source, { onThisPageEntries }),
+        onThisPageEntries,
+      }
+    },
     options.highlightCode,
   )
   const runtimePath = toImportPath(idWithoutQuery, path.join(page.docsRoot, 'components/markdown'))
@@ -253,19 +360,86 @@ export function compileMarkdownPage(
     options.projectRoot && extraApiKeys.length > 0
       ? [...new Set(extraApiKeys)]
           .map((key) => loadComponentApiDoc(options.projectRoot!, key))
-          .filter((value) => Boolean(value))
+          .filter((value): value is NonNullable<typeof value> => Boolean(value))
       : []
 
   const mergedApiDoc =
     parsedFrontmatter.data.apiDocOverride && loadedApiDoc
       ? deepMerge(loadedApiDoc, parsedFrontmatter.data.apiDocOverride)
       : (loadedApiDoc ?? parsedFrontmatter.data.apiDocOverride)
+  const tocApiDoc = asTocApiDoc(mergedApiDoc)
+  const tocExtraApiDocs = loadedExtraApiDocs
+    .map((doc) => asTocApiDoc(doc))
+    .filter((doc): doc is TocApiDocShape => Boolean(doc))
 
   const shouldExposeComponentKey = Boolean(mergedApiDoc || loadedExtraApiDocs.length > 0)
+  const pageTitle = tocApiDoc?.component.name ?? page.pageKey
+  const onThisPageEntries: OnThisPageEntryLiteral[] = []
+  const hasMainSlots = Boolean(tocApiDoc?.slots.length)
+  const hasMainProps = Boolean(tocApiDoc?.props.own.length)
+  const hasMainItems = Boolean(tocApiDoc?.items)
+  const hasMainInherited = Boolean(tocApiDoc?.props.inherited.length)
+  const hasMainApiReference = hasMainSlots || hasMainProps || hasMainItems || hasMainInherited
+  if (shouldExposeComponentKey) {
+    onThisPageEntries.push({
+      id: toAnchorSlug(pageTitle),
+      label: pageTitle,
+      level: 1,
+    })
+  }
+  for (const segment of segmentLiterals) {
+    if (segment.onThisPageEntries) {
+      onThisPageEntries.push(...segment.onThisPageEntries)
+    }
+  }
+  if (hasMainApiReference) {
+    onThisPageEntries.push({
+      id: 'api-reference',
+      label: 'API Reference',
+      level: 1,
+    })
+  }
+  if (hasMainSlots) {
+    onThisPageEntries.push({ id: 'api-slots', label: 'Slots', level: 2 })
+  }
+  if (hasMainProps) {
+    onThisPageEntries.push({ id: 'api-props', label: 'Props', level: 2 })
+  }
+  if (hasMainItems) {
+    onThisPageEntries.push({ id: 'api-items', label: 'Items', level: 2 })
+  }
+  if (hasMainInherited) {
+    onThisPageEntries.push(
+      ...createInheritedOnThisPageEntries(tocApiDoc?.props.inherited ?? [], 'api-inherited-'),
+    )
+  }
+  for (const doc of tocExtraApiDocs) {
+    const baseId = toAnchorSlug(doc.component.key || doc.component.name)
+    onThisPageEntries.push({
+      id: `${baseId}-api`,
+      label: `${doc.component.name} API`,
+      level: 2,
+    })
+    if (doc.slots.length > 0) {
+      onThisPageEntries.push({
+        id: `${baseId}-api-slots`,
+        label: `${doc.component.name} Slots`,
+        level: 2,
+      })
+    }
+    if (hasProps(doc.props, doc.items)) {
+      onThisPageEntries.push({
+        id: `${baseId}-api-props`,
+        label: `${doc.component.name} Props`,
+        level: 2,
+      })
+    }
+  }
   const configFields = [
     shouldExposeComponentKey ? `componentKey: ${JSON.stringify(page.pageKey)}` : '',
     mergedApiDoc ? `apiDoc: ${JSON.stringify(mergedApiDoc)}` : '',
     loadedExtraApiDocs.length > 0 ? `extraApiDocs: ${JSON.stringify(loadedExtraApiDocs)}` : '',
+    `onThisPageEntries: ${JSON.stringify(onThisPageEntries)}`,
     'segments',
   ].filter(Boolean)
 

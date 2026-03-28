@@ -181,7 +181,13 @@ export namespace SelectT {
   /**
    * Props for the Select component.
    */
-  export interface Props extends BaseProps<Base, Variant, Extend, Slot, 'multiple'> {}
+  export interface Props extends BaseProps<
+    Base,
+    Variant,
+    Extend,
+    Slot,
+    'multiple' | 'itemComponent' | 'sectionComponent'
+  > {}
 }
 
 /**
