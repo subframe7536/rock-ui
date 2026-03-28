@@ -13,7 +13,7 @@ export const resizableRootVariants = cva('flex h-full min-h-0 min-w-0 w-full', {
 })
 
 export const resizableHandleVariants = cva(
-  'bg-border flex shrink-0 items-center justify-center relative overflow-visible focus-visible:effect-fv aria-disabled:cursor-default after:(content-empty absolute)',
+  'bg-border flex shrink-0 items-center justify-center relative overflow-visible focus-visible:effect-fv aria-disabled:cursor-default data-cross:cursor-move after:(content-empty absolute)',
   {
     defaultVariants: {
       orientation: 'horizontal',
@@ -28,7 +28,7 @@ export const resizableHandleVariants = cva(
 )
 
 export const resizableCrossTargetVariants = cva(
-  'border-0 bg-transparent h-2 w-2 pointer-events-auto absolute z-1 data-cross:cursor-move',
+  'border-0 bg-transparent h-2 w-2 cursor-move pointer-events-auto absolute z-1',
   {
     defaultVariants: {
       orientation: 'horizontal',

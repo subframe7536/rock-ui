@@ -17,6 +17,7 @@ import {
   collapsePanel,
   EPSILON,
   expandPanel,
+  fixToPrecision,
   RESIZABLE_HANDLE_TARGET_END,
   RESIZABLE_HANDLE_TARGET_START,
   RESIZE_FLAG_FOLLOWING,
@@ -168,9 +169,12 @@ export function Resizable(props: ResizableProps): JSX.Element {
 
   let rootRef: HTMLDivElement | undefined = undefined
   const [rootSize, setRootSize] = createSignal(0)
-  const [uncontrolledSizes, setUncontrolledSizes] = createSignal<number[]>([])
+  const [uncontrolledSizes, setUncontrolledSizes] = createSignal<Array<ResizableSize | undefined>>(
+    [],
+  )
   const [interactionResizing, setInteractionResizing] = createSignal(false)
   const [transitioningPanelIndexes, setTransitioningPanelIndexes] = createSignal<number[]>([])
+  let initializedWithMeasuredRootSize = false
   const panelItems = createMemo(() => localProps.panels ?? EMPTY_PANELS)
 
   const resolvedPanels = createMemo(() => resolvePanels(panelItems(), rootSize(), panelIdPrefix()))
@@ -180,10 +184,12 @@ export function Resizable(props: ResizableProps): JSX.Element {
   const panelMinSizes = createMemo(() => {
     const panels = resolvedPanels()
     const controlledSizes = panelControlledSizes()
+    const hasControlledSizes = controlledSizes.some((size) => size !== undefined)
+    const activeSizes = hasControlledSizes ? controlledSizes : uncontrolledSizes()
     const currentRootSize = rootSize()
 
     return panels.map((panel, index) => {
-      const controlledSize = controlledSizes[index]
+      const controlledSize = activeSizes[index]
       if (controlledSize === undefined) {
         return panel.min
       }
@@ -221,7 +227,9 @@ export function Resizable(props: ResizableProps): JSX.Element {
     }
 
     const uncontrolled = uncontrolledSizes()
-    return uncontrolled.length === panelCount() ? uncontrolled : normalizeWithCurrentState()
+    return uncontrolled.length === panelCount()
+      ? normalizeWithCurrentState(uncontrolled)
+      : normalizeWithCurrentState()
   })
 
   createEffect(() => {
@@ -230,10 +238,17 @@ export function Resizable(props: ResizableProps): JSX.Element {
     }
 
     const nextCount = panelCount()
+    const hasMeasuredRootSize = rootSize() > EPSILON
+    const shouldResetToDefaultSizes = hasMeasuredRootSize && !initializedWithMeasuredRootSize
+
+    if (shouldResetToDefaultSizes) {
+      initializedWithMeasuredRootSize = true
+    }
+
     setUncontrolledSizes((prev) =>
-      prev.length === 0 || prev.length !== nextCount
-        ? normalizeWithCurrentState()
-        : normalizeWithCurrentState(prev),
+      prev.length === 0 || prev.length !== nextCount || shouldResetToDefaultSizes
+        ? [...panelDefaultSizes()]
+        : prev,
     )
   })
 
@@ -557,7 +572,9 @@ export function Resizable(props: ResizableProps): JSX.Element {
 
   function emitSizes(normalizedSizes: number[]): void {
     if (normalizedControlledSizes() === undefined) {
-      setUncontrolledSizes(normalizedSizes)
+      setUncontrolledSizes(
+        normalizedSizes.map((size) => `${fixToPrecision(size * 100)}%` as ResizableSize),
+      )
     }
 
     localProps.onResize?.(resolvePixelSizes(normalizedSizes))
@@ -816,6 +833,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
                   style={localProps.styles?.divider}
                   data-orientation={orientation()}
                   data-active={bindings.active() ? '' : undefined}
+                  data-cross={bindings.crossHovered() ? '' : undefined}
                   data-dragging={bindings.dragging() ? '' : undefined}
                   class={resizableHandleVariants(
                     { orientation: orientation() },
@@ -832,7 +850,6 @@ export function Resizable(props: ResizableProps): JSX.Element {
                     <div
                       data-slot="cross-target"
                       data-resizable-handle-start-target
-                      data-cross={bindings.cross() ? '' : undefined}
                       class={resizableCrossTargetVariants(
                         { orientation: orientation(), target: 'start' },
                         localProps.classes?.crossTarget,
@@ -870,7 +887,6 @@ export function Resizable(props: ResizableProps): JSX.Element {
                     <div
                       data-slot="cross-target"
                       data-resizable-handle-end-target
-                      data-cross={bindings.cross() ? '' : undefined}
                       class={resizableCrossTargetVariants(
                         { orientation: orientation(), target: 'end' },
                         localProps.classes?.crossTarget,

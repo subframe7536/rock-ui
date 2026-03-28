@@ -5,11 +5,47 @@ import { beforeAll, afterAll, describe, expect, test, vi } from 'vitest'
 
 import { Resizable } from './resizable'
 
-if (!(globalThis as Record<string, unknown>).ResizeObserver) {
-  ;(globalThis as Record<string, unknown>).ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+type ResizeObserverCallback = (
+  entries: ResizeObserverEntry[],
+  observer: ResizeObserver,
+) => void
+
+class MockResizeObserver {
+  private static readonly instances = new Set<MockResizeObserver>()
+  private readonly observedElements = new Set<Element>()
+  private readonly callback: ResizeObserverCallback
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback
+    MockResizeObserver.instances.add(this)
+  }
+
+  observe(target: Element): void {
+    this.observedElements.add(target)
+  }
+
+  unobserve(target: Element): void {
+    this.observedElements.delete(target)
+  }
+
+  disconnect(): void {
+    this.observedElements.clear()
+    MockResizeObserver.instances.delete(this)
+  }
+
+  static trigger(target: Element): void {
+    const entry = {
+      target,
+      contentRect: target.getBoundingClientRect(),
+    } as ResizeObserverEntry
+
+    for (const observer of MockResizeObserver.instances) {
+      if (!observer.observedElements.has(target)) {
+        continue
+      }
+
+      observer.callback([entry], observer as unknown as ResizeObserver)
+    }
   }
 }
 
@@ -48,10 +84,18 @@ async function waitForLayoutInitialization(): Promise<void> {
   await new Promise<void>((resolve) => queueMicrotask(resolve))
 }
 
+function triggerResizeObserver(target: Element): void {
+  MockResizeObserver.trigger(target)
+}
+
 const defaultRect = createRect({ top: 0, right: 1000, bottom: 600, left: 0 })
 const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+const originalResizeObserver = (globalThis as Record<string, unknown>).ResizeObserver
 
 beforeAll(() => {
+  ;(globalThis as Record<string, unknown>).ResizeObserver =
+    MockResizeObserver as unknown as typeof ResizeObserver
+
   Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
     configurable: true,
     value() {
@@ -61,6 +105,12 @@ beforeAll(() => {
 })
 
 afterAll(() => {
+  if (originalResizeObserver !== undefined) {
+    ;(globalThis as Record<string, unknown>).ResizeObserver = originalResizeObserver
+  } else {
+    delete (globalThis as Record<string, unknown>).ResizeObserver
+  }
+
   Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
     configurable: true,
     value: originalGetBoundingClientRect,
@@ -468,6 +518,87 @@ describe('Resizable', () => {
     ) as NodeListOf<HTMLDivElement>
     expectPanelGrow(panels[0], 30)
     expectPanelGrow(panels[1], 70)
+  })
+
+  test('uses defaultSize on first measured layout when px min and max are provided', async () => {
+    const screen = render(() => (
+      <Resizable
+        panels={[
+          { content: 'Sidebar', defaultSize: '15%', min: 240, max: 400 },
+          { content: 'Content' },
+        ]}
+      />
+    ))
+
+    await waitForLayoutInitialization()
+
+    const panels = screen.container.querySelectorAll(
+      '[data-slot="panel"]',
+    ) as NodeListOf<HTMLDivElement>
+
+    expectPanelGrow(panels[0], 24)
+    expectPanelGrow(panels[1], 76)
+  })
+
+  test('recomputes uncontrolled default percentage on container resize with px min/max', async () => {
+    const screen = render(() => (
+      <Resizable
+        panels={[
+          { content: 'Sidebar', defaultSize: '15%', min: 240, max: 400 },
+          { content: 'Content' },
+        ]}
+      />
+    ))
+
+    await waitForLayoutInitialization()
+
+    const root = screen.container.querySelector('[data-slot="root"]') as HTMLDivElement
+    const panels = screen.container.querySelectorAll(
+      '[data-slot="panel"]',
+    ) as NodeListOf<HTMLDivElement>
+
+    expectPanelGrow(panels[0], 24)
+    expectPanelGrow(panels[1], 76)
+
+    setRect(root, createRect({ top: 0, right: 2000, bottom: 600, left: 0 }))
+    triggerResizeObserver(root)
+    await waitForLayoutInitialization()
+
+    expectPanelGrow(panels[0], 15)
+    expectPanelGrow(panels[1], 85)
+  })
+
+  test('keeps uncontrolled dragged sizes as percentages after container resize', async () => {
+    const screen = render(() => (
+      <Resizable
+        panels={[
+          { content: 'Left', defaultSize: '30%' },
+          { content: 'Right', defaultSize: '70%' },
+        ]}
+      />
+    ))
+
+    await waitForLayoutInitialization()
+
+    const root = screen.container.querySelector('[data-slot="root"]') as HTMLDivElement
+    const handle = screen.container.querySelector('[data-slot="divider"]') as HTMLElement
+    const panels = screen.container.querySelectorAll(
+      '[data-slot="panel"]',
+    ) as NodeListOf<HTMLDivElement>
+
+    await fireEvent.pointerDown(handle, { pointerId: 1, clientX: 0, clientY: 0 })
+    await fireEvent.pointerMove(window, { pointerId: 1, clientX: 100, clientY: 0 })
+    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 100, clientY: 0 })
+
+    expectPanelGrow(panels[0], 40)
+    expectPanelGrow(panels[1], 60)
+
+    setRect(root, createRect({ top: 0, right: 2000, bottom: 600, left: 0 }))
+    triggerResizeObserver(root)
+    await waitForLayoutInitialization()
+
+    expectPanelGrow(panels[0], 40)
+    expectPanelGrow(panels[1], 60)
   })
 
   test('renders panel sizing with flex grow/shrink/basis', () => {
@@ -1191,5 +1322,54 @@ describe('Resizable', () => {
     await fireEvent.pointerMove(window, { pointerId: 1, clientX: 132, clientY: 110 })
     await fireEvent.pointerUp(window, { pointerId: 1, clientX: 132, clientY: 110 })
     expect(document.body.style.userSelect).toBe('text')
+  })
+
+  test('keeps divider in cross-hovered state through press and release on cross target', async () => {
+    const screen = render(() => (
+      <Resizable
+        renderHandle
+        intersection
+        panels={[
+          { content: 'Outer Left' },
+          {
+            content: (
+              <Resizable
+                orientation="vertical"
+                renderHandle
+                intersection
+                panels={[{ content: 'Inner Top' }, { content: 'Inner Bottom' }]}
+              />
+            ),
+          },
+        ]}
+      />
+    ))
+
+    const handles = screen.container.querySelectorAll('[data-slot="divider"]')
+    const [outerHandle, innerHandle] = Array.from(handles) as HTMLDivElement[]
+    setRect(outerHandle, createRect({ top: 0, right: 101, bottom: 200, left: 100 }))
+    setRect(innerHandle, createRect({ top: 80, right: 220, bottom: 81, left: 101 }))
+
+    const { refreshResizableHandleIntersections } = await import('./hook/manager')
+    refreshResizableHandleIntersections()
+    await Promise.resolve()
+
+    const crossTarget = innerHandle.querySelector('[data-slot="cross-target"]') as HTMLElement
+
+    await fireEvent.mouseEnter(crossTarget)
+    expect(innerHandle.getAttribute('data-cross')).toBe('')
+    expect(outerHandle.getAttribute('data-cross')).toBe('')
+
+    await fireEvent.pointerDown(crossTarget, { pointerId: 1, clientX: 102, clientY: 80 })
+    expect(innerHandle.getAttribute('data-cross')).toBe('')
+    expect(outerHandle.getAttribute('data-cross')).toBe('')
+
+    await fireEvent.pointerUp(window, { pointerId: 1, clientX: 102, clientY: 80 })
+    expect(innerHandle.getAttribute('data-cross')).toBe('')
+    expect(outerHandle.getAttribute('data-cross')).toBe('')
+
+    await fireEvent.mouseLeave(crossTarget)
+    expect(innerHandle.getAttribute('data-cross')).toBeNull()
+    expect(outerHandle.getAttribute('data-cross')).toBeNull()
   })
 })

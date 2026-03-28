@@ -45,7 +45,7 @@ export interface ResizableHandleBindings {
   setElement: (element: HTMLDivElement) => void
   startIntersectionVisible: Accessor<boolean>
   endIntersectionVisible: Accessor<boolean>
-  cross: Accessor<boolean>
+  crossHovered: Accessor<boolean>
   dragging: Accessor<boolean>
   active: Accessor<boolean>
   onMouseEnter: (event: MouseEvent) => void
@@ -72,8 +72,8 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
   }
 
   const disabled = createMemo(() => options.disable() === true)
-  const cross = createMemo(
-    () => !disabled() && (startIntersection() !== null || endIntersection() !== null),
+  const crossHovered = createMemo(
+    () => (interactionState() & HANDLE_STATE_CROSS_HOVERED) !== 0,
   )
   const dragging = createMemo(() => (interactionState() & HANDLE_STATE_DRAGGING) !== 0)
   const active = createMemo(() => interactionState() !== 0)
@@ -243,7 +243,7 @@ export function useResizableHandle(options: UseResizableHandleOptions): Resizabl
     setElement,
     startIntersectionVisible: () => !disabled() && startIntersection() !== null,
     endIntersectionVisible: () => !disabled() && endIntersection() !== null,
-    cross,
+    crossHovered,
     dragging,
     active,
     onMouseEnter,
