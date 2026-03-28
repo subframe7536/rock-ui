@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { compileMarkdownPage } from './example-markdown'
+import { compileMarkdownPage } from './markdown'
 
 describe('compileMarkdownPage', () => {
   test('compiles markdown with inferred component key and inferred example source', () => {

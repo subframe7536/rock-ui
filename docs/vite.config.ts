@@ -6,16 +6,29 @@ import { defineConfig } from 'vite'
 import solid from 'vite-plugin-solid'
 
 import { componentApiPlugin } from './vite-plugin/api-doc'
-import { exampleMarkdownPlugin } from './vite-plugin/example-markdown'
 import { examplePagesPlugin } from './vite-plugin/example-pages'
 import { exampleSourcePlugin } from './vite-plugin/example-source'
+import { markdownPlugin } from './vite-plugin/markdown'
+import { siteMetaPlugin } from './vite-plugin/site-meta'
 
 export default defineConfig({
   plugins: [
+    siteMetaPlugin({
+      siteName: 'Moraine',
+      title: 'Moraine Docs',
+      description:
+        'Accessible, composable SolidJS components with atomic class styling for UnoCSS and Tailwind.',
+      siteUrl: 'https://ui.subf.dev/',
+      imagePath: '/og-image.png',
+      imageAlt: 'Moraine Docs brand cover image',
+      imageWidth: 1200,
+      imageHeight: 630,
+      twitterCard: 'summary_large_image',
+    }),
     componentApiPlugin(),
     examplePagesPlugin(),
     exampleSourcePlugin(),
-    exampleMarkdownPlugin(),
+    markdownPlugin(),
     uno({ inspector: false }),
     solid(),
   ],

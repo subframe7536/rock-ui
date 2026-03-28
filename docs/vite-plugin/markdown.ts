@@ -518,7 +518,7 @@ export function compileMarkdownPage(
   ].join('\n')
 }
 
-export function exampleMarkdownPlugin(projectRoot?: string): Plugin {
+export function markdownPlugin(projectRoot?: string): Plugin {
   const highlighterPromise = getDocsHighlighter()
 
   let resolvedRoot = ''

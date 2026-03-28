@@ -1,0 +1,58 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1200"
+  height="630"
+  viewBox="0 0 1200 630"
+  fill="none"
+>
+  <rect width="1200" height="630" fill="hsl(220 20% 38%)" />
+
+  <g transform="translate(600 244)">
+    <image
+      x="-252"
+      y="-50"
+      width="92"
+      height="92"
+      href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzIxMmEzNiIgcng9IjEwMCIgLz4KICA8cGF0aAogICAgc3Ryb2tlPSIjZmZmIgogICAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogICAgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIKICAgIHN0cm9rZS13aWR0aD0iMzIiCiAgICBkPSJNMjg5LjQgMjg4IDE2Mi44IDE0Mi4zYTE4LjIgMTguMiAwIDAgMC0zMS44IDEydjE4My42YTE4IDE4IDAgMCAwIDE4LjIgMTguMmgyMTMuNmExOCAxOCAwIDAgMCAxOC4yLTE4LjJWMjMzLjFhMTguMiAxOC4yIDAgMCAwLTMxLTEzTDIyOC44IDM1NiIKICAvPgo8L3N2Zz4K"
+    />
+    <text
+      x="-128"
+      y="31"
+      fill="hsl(210 40% 98%)"
+      font-family="'Maple Mono NF CN'"
+      font-size="92"
+      font-weight="700"
+      text-anchor="start"
+    >
+      Moraine
+    </text>
+  </g>
+
+  <text
+    x="600"
+    y="382"
+    fill="hsl(210 40% 90%)"
+    font-family="'Maple Mono NF CN'"
+    font-size="38"
+    font-style="italic"
+    font-weight="400"
+    letter-spacing="-1"
+    text-anchor="middle"
+  >
+    Comprehensive SolidJS component library
+  </text>
+
+  <text
+    x="600"
+    y="438"
+    fill="hsl(210 40% 90%)"
+    font-family="'Maple Mono NF CN', 'Maple Mono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace"
+    font-size="38"
+    font-style="italic"
+    font-weight="400"
+    letter-spacing="-1"
+    text-anchor="middle"
+  >
+    with atomic class styling
+  </text>
+</svg>
