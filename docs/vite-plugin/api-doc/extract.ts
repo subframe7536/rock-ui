@@ -132,7 +132,11 @@ function isJsxElementReturn(typeNode: ts.TypeNode | undefined, sourceFile: ts.So
   return text === 'JSX.Element' || text.endsWith('.JSX.Element')
 }
 
-function extractSlotNames(node: ts.ModuleDeclaration, sourceFile: ts.SourceFile): string[] {
+function extractSlotNames(
+  node: ts.ModuleDeclaration,
+  sourceFile: ts.SourceFile,
+  checker: ts.TypeChecker,
+): string[] {
   const body = node.body
   if (!body || !ts.isModuleBlock(body)) {
     return []
@@ -152,8 +156,25 @@ function extractSlotNames(node: ts.ModuleDeclaration, sourceFile: ts.SourceFile)
     if (ts.isLiteralTypeNode(statement.type)) {
       return [statement.type.literal.getText(sourceFile).replace(/^['"]|['"]$/g, '')]
     }
+
+    // Fallback: resolve via type checker (handles alias references like `export type Slot = SomeSharedSlots`)
+    const resolvedType = checker.getTypeFromTypeNode(statement.type)
+    const names = extractStringLiteralsFromType(resolvedType)
+    if (names.length > 0) {
+      return names
+    }
   }
 
+  return []
+}
+
+function extractStringLiteralsFromType(type: ts.Type): string[] {
+  if (type.isStringLiteral()) {
+    return [type.value]
+  }
+  if (type.isUnion()) {
+    return type.types.flatMap(extractStringLiteralsFromType)
+  }
   return []
 }
 
@@ -326,7 +347,7 @@ function collectNamespaceMetadata(
   const visit = (node: ts.Node) => {
     if (ts.isModuleDeclaration(node) && node.name.text.endsWith('T')) {
       const componentName = node.name.text.slice(0, -1)
-      const slotNames = extractSlotNames(node, sourceFile)
+      const slotNames = extractSlotNames(node, sourceFile, checker)
       if (slotNames.length > 0) {
         slots.set(componentName, slotNames)
       }

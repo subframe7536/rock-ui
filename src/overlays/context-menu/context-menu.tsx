@@ -116,16 +116,6 @@ export namespace ContextMenuT {
     contentBottom?: OverlayMenuContentSlot
 
     /**
-     * Slot-based class overrides.
-     */
-    classes?: Classes
-
-    /**
-     * Slot-based style overrides.
-     */
-    styles?: Styles
-
-    /**
      * The element to which the context menu is attached.
      */
     children: JSX.Element
@@ -138,6 +128,7 @@ export namespace ContextMenuT {
     Base,
     Variant,
     Extend,
+    Slot,
     'arrowPadding' | 'getAnchorRect'
   > {}
 }

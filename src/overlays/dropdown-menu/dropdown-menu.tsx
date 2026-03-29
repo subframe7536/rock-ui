@@ -116,7 +116,13 @@ export namespace DropdownMenuT {
   /**
    * Props for the DropdownMenu component.
    */
-  export interface Props extends BaseProps<Base, Variant, Extend, Slot, 'arrowPadding'> {}
+  export interface Props extends BaseProps<
+    Base,
+    Variant,
+    Extend,
+    Slot,
+    'arrowPadding' | 'getAnchorRect'
+  > {}
 }
 
 /**
