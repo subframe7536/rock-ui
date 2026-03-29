@@ -1,58 +1,19 @@
 import type { Preset, SourceCodeTransformer } from 'unocss'
 
+import {
+  getMoraineAnimCounts,
+  getMoraineAnimDurations,
+  getMoraineAnimTimingFns,
+  toUnocssKeyframes,
+} from '../shared/style/animations'
+import { DEFAULT_ICONS, DEFAULT_ICON_SHORTCUTS } from '../shared/style/icons'
+import { MORAINE_COLORS, MORAINE_FONT, MORAINE_RADIUS, MORAINE_SHADOW } from '../shared/style/theme'
+
 import { transformerInjectCompileClass } from './inject-compile-class'
 import { transformerInjectPrefix } from './inject-prefix'
 import type { TransformerInjectPrefixOption } from './inject-prefix'
 
-export const DEFAULT_ICONS = {
-  arrowDown: 'i-lucide-arrow-down',
-  arrowLeft: 'i-lucide-arrow-left',
-  arrowRight: 'i-lucide-arrow-right',
-  arrowUp: 'i-lucide-arrow-up',
-  caution: 'i-lucide-circle-alert',
-  check: 'i-lucide-check',
-  chevronDoubleLeft: 'i-lucide-chevrons-left',
-  chevronDoubleRight: 'i-lucide-chevrons-right',
-  chevronDown: 'i-lucide-chevron-down',
-  chevronLeft: 'i-lucide-chevron-left',
-  chevronRight: 'i-lucide-chevron-right',
-  chevronUp: 'i-lucide-chevron-up',
-  close: 'i-lucide-x',
-  copy: 'i-lucide-copy',
-  copyCheck: 'i-lucide-copy-check',
-  dark: 'i-lucide-moon',
-  drag: 'i-lucide-grip-vertical',
-  ellipsis: 'i-lucide-ellipsis',
-  error: 'i-lucide-circle-x',
-  external: 'i-lucide-arrow-up-right',
-  eye: 'i-lucide-eye',
-  eyeOff: 'i-lucide-eye-off',
-  file: 'i-lucide-file',
-  folder: 'i-lucide-folder',
-  folderOpen: 'i-lucide-folder-open',
-  hash: 'i-lucide-hash',
-  info: 'i-lucide-info',
-  light: 'i-lucide-sun',
-  loading: 'i-lucide-loader-circle',
-  menu: 'i-lucide-menu',
-  minus: 'i-lucide-minus',
-  panelClose: 'i-lucide-panel-left-close',
-  panelOpen: 'i-lucide-panel-left-open',
-  plus: 'i-lucide-plus',
-  reload: 'i-lucide-rotate-ccw',
-  search: 'i-lucide-search',
-  stop: 'i-lucide-square',
-  success: 'i-lucide-circle-check',
-  system: 'i-lucide-monitor',
-  tip: 'i-lucide-lightbulb',
-  upload: 'i-lucide-upload',
-  warning: 'i-lucide-triangle-alert',
-} as const
-
-export const DEFAULT_ICON_SHORTCUTS = Object.entries(DEFAULT_ICONS).map(
-  ([k, v]) =>
-    [`icon-${k.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`, v] as [string, string],
-)
+export { DEFAULT_ICONS, DEFAULT_ICON_SHORTCUTS }
 
 export type ComponentLayerStrategy = 'hash' | 'prefix'
 
@@ -90,55 +51,11 @@ const MORAINE_COMPONENT_LAYER = 'mo-component'
 const DEFAULT_COMPONENT_UTILITY_PREFIX = 'mo-'
 const MORAINE_HASH_TRIGGER = ':uno-mo:'
 const MORAINE_HASH_CLASS_PREFIX = 'moc-'
+const ANIMATION_SIDES = ['top', 'right', 'bottom', 'left'] as const
+type AnimationSide = (typeof ANIMATION_SIDES)[number]
 const MORAINE_ENTER_ANIMATION_NAME = 'mo-enter'
 const MORAINE_EXIT_ANIMATION_NAME = 'mo-exit'
-const MORAINE_ANIMATION_DURATION_VAR = 'var(--mo-anim-duration,150ms)'
-const ANIMATION_SIDES = ['top', 'right', 'bottom', 'left'] as const
-
 const RE_ATTR = /^(data|aria)-(\w+):/
-const CORE_ANIMATION_KEYFRAMES = {
-  [MORAINE_ENTER_ANIMATION_NAME]:
-    '{ from { opacity: var(--mo-enter-opacity, 1); transform: translate3d(var(--mo-enter-translate-x, 0), var(--mo-enter-translate-y, 0), 0) scale(var(--mo-enter-scale, 1)) rotate(var(--mo-enter-rotate, 0)) } }',
-  [MORAINE_EXIT_ANIMATION_NAME]:
-    '{ to { opacity: var(--mo-exit-opacity, 1); transform: translate3d(var(--mo-exit-translate-x, 0), var(--mo-exit-translate-y, 0), 0) scale(var(--mo-exit-scale, 1)) rotate(var(--mo-exit-rotate, 0)) } }',
-  'accordion-down': '{ from { height: 0 } to { height: var(--kb-accordion-content-height) } }',
-  'accordion-up': '{ from { height: var(--kb-accordion-content-height) } to { height: 0 } }',
-  carousel: '{ 0% { transform: translateX(-100%) } 100% { transform: translateX(100%) } }',
-  'carousel-rtl': '{ 0% { transform: translateX(100%) } 100% { transform: translateX(-100%) } }',
-  'carousel-vertical':
-    '{ 0% { transform: translateY(100%) } 100% { transform: translateY(-100%) } }',
-  swing: '{ 0%, 100% { transform: translateX(-60%) } 50% { transform: translateX(60%) } }',
-  'swing-vertical':
-    '{ 0%, 100% { transform: translateY(60%) } 50% { transform: translateY(-60%) } }',
-  elastic:
-    '{ 0% { transform: translateX(-100%) scaleX(0.9) } 45% { transform: translateX(0) scaleX(1) } 100% { transform: translateX(100%) scaleX(0.9) } }',
-  'elastic-vertical':
-    '{ 0% { transform: translateY(100%) scaleY(0.9) } 45% { transform: translateY(0) scaleY(1) } 100% { transform: translateY(-100%) scaleY(0.9) } }',
-} as const
-const LOOPING_PREFIXES = ['carousel', 'swing', 'elastic']
-
-function getAnimType(name: string): 'moraine' | 'looping' | 'default' {
-  if (name === MORAINE_ENTER_ANIMATION_NAME || name === MORAINE_EXIT_ANIMATION_NAME) {
-    return 'moraine'
-  }
-  if (LOOPING_PREFIXES.some((p) => name.startsWith(p))) {
-    return 'looping'
-  }
-  return 'default'
-}
-
-const CORE_ANIMATION_DURATIONS: Record<string, string> = {}
-const CORE_ANIMATION_TIMING_FNS: Record<string, string> = {}
-const CORE_ANIMATION_COUNTS: Record<string, string> = {}
-
-for (const name of Object.keys(CORE_ANIMATION_KEYFRAMES)) {
-  const type = getAnimType(name)
-  CORE_ANIMATION_DURATIONS[name] =
-    type === 'moraine' ? MORAINE_ANIMATION_DURATION_VAR : type === 'looping' ? '2s' : '150ms'
-  CORE_ANIMATION_TIMING_FNS[name] = 'ease-in-out'
-  CORE_ANIMATION_COUNTS[name] = type === 'looping' ? 'infinite' : '1'
-}
-type AnimationSide = (typeof ANIMATION_SIDES)[number]
 type SemanticAnimationTarget = 'overlay' | 'popup' | 'menu' | 'popover' | 'tooltip' | 'sheet'
 
 const ANIMATION_SIDE_AXES: Record<AnimationSide, 'x' | 'y'> = {
@@ -336,64 +253,20 @@ export function presetMoraine(options?: PresetThemeOptions): Preset {
     return `calc(${base} * ${num})`
   }
 
-  const radius = {
-    xs: `calc(var(--radius) * 0.5)`,
-    sm: `calc(var(--radius) * 0.6)`,
-    md: `calc(var(--radius) * 0.8)`,
-    lg: `var(--radius)`,
-    xl: `calc(var(--radius) * 1.4)`,
-    '2xl': `calc(var(--radius) * 1.8)`,
-    '3xl': `calc(var(--radius) * 2.2)`,
-    '4xl': `calc(var(--radius) * 2.6)`,
-  }
-
-  const shadow = {
-    '2xs': 'var(--shadow-2xs)',
-    xs: 'var(--shadow-xs)',
-    sm: 'var(--shadow-sm)',
-    DEFAULT: 'var(--shadow)',
-    md: 'var(--shadow-md)',
-    lg: 'var(--shadow-lg)',
-    xl: 'var(--shadow-xl)',
-    '2xl': 'var(--shadow-2xl)',
-  }
-
-  const font = {
-    sans: 'var(--font-sans)',
-    mono: 'var(--font-mono)',
-    serif: 'var(--font-serif)',
-  }
-
   const themeSpacing = normalized.wind3
-    ? { borderRadius: radius, boxShadow: shadow, fontFamily: font }
-    : { radius, shadow, font }
+    ? { borderRadius: MORAINE_RADIUS, boxShadow: MORAINE_SHADOW, fontFamily: MORAINE_FONT }
+    : { radius: MORAINE_RADIUS, shadow: MORAINE_SHADOW, font: MORAINE_FONT }
 
   return {
     name: 'preset-theme-moraine',
     theme: {
       ...themeSpacing,
-      colors: {
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
-        primary: { DEFAULT: 'var(--primary)', foreground: 'var(--primary-foreground)' },
-        secondary: {
-          DEFAULT: 'var(--secondary)',
-          foreground: 'var(--secondary-foreground)',
-        },
-        card: { DEFAULT: 'var(--card)', foreground: 'var(--card-foreground)' },
-        input: 'var(--input)',
-        ring: 'var(--ring)',
-        border: 'var(--border)',
-        popover: { DEFAULT: 'var(--popover)', foreground: 'var(--popover-foreground)' },
-        muted: { DEFAULT: 'var(--muted)', foreground: 'var(--muted-foreground)' },
-        accent: { DEFAULT: 'var(--accent)', foreground: 'var(--accent-foreground)' },
-        destructive: { DEFAULT: 'var(--destructive)', foreground: 'var(--destructive-foreground)' },
-      },
+      colors: MORAINE_COLORS,
       animation: {
-        keyframes: CORE_ANIMATION_KEYFRAMES,
-        timingFns: CORE_ANIMATION_TIMING_FNS,
-        durations: CORE_ANIMATION_DURATIONS,
-        counts: CORE_ANIMATION_COUNTS,
+        keyframes: toUnocssKeyframes(),
+        timingFns: getMoraineAnimTimingFns(),
+        durations: getMoraineAnimDurations(),
+        counts: getMoraineAnimCounts(),
       },
     },
     layers: {

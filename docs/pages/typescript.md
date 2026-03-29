@@ -64,7 +64,7 @@ Prop callbacks often receive component-specific objects. Type them using the app
 import type { SelectProps } from 'moraine'
 
 const labelRender: SelectProps['labelRender'] = (option) =>
-  typeof option.label === 'string' ? option.label : option.key ?? 'Unknown'
+  typeof option.label === 'string' ? option.label : (option.key ?? 'Unknown')
 ```
 
 ### Slot types
@@ -83,16 +83,16 @@ const overrides: CardT.Classes = {
 
 Each `XxxT` namespace may expose the following members depending on the component:
 
-| Member | Description |
-| --- | --- |
-| `Slot` | Union of slot names used by `classes` and `styles` |
-| `Variant` | Variant options for visual/style customization |
-| `Items` | Data model for list items or option objects |
-| `Value` | Domain type of the component's controlled value |
-| `Classes` | Typed map from slot name to CSS class string |
-| `Styles` | Typed map from slot name to inline style object |
-| `Base` | Component-specific business props (internal) |
-| `Props` | Final public props shape (same as `XxxProps`) |
+| Member    | Description                                        |
+| --------- | -------------------------------------------------- |
+| `Slot`    | Union of slot names used by `classes` and `styles` |
+| `Variant` | Variant options for visual/style customization     |
+| `Items`   | Data model for list items or option objects        |
+| `Value`   | Domain type of the component's controlled value    |
+| `Classes` | Typed map from slot name to CSS class string       |
+| `Styles`  | Typed map from slot name to inline style object    |
+| `Base`    | Component-specific business props (internal)       |
+| `Props`   | Final public props shape (same as `XxxProps`)      |
 
 ## Tips
 

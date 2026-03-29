@@ -14,7 +14,7 @@ async function applyPreTransformers(
   const context = {
     uno: generator,
     tokens: new Set<string>(),
-    invalidate() { },
+    invalidate() {},
   }
 
   for (const transformer of generator.config.transformers || []) {

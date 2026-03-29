@@ -26,27 +26,42 @@ export default defineConfig({
 
 ## Tailwind CSS
 
-### v4
+Moraine ships a first-class Tailwind plugin that injects CSS variable tokens, theme extensions (colors, font families, radius, shadows, keyframes, animations, animation metadata), and `icon-*` utility stubs. It also provides `data-*` and `aria-*` variants for attribute-based styling.
 
-Add Moraine package files to `@source` so utility classes are detected.
+### v4
 
 ```css
 @import 'tailwindcss';
-@source "./node_modules/moraine/**/*";
+
+/* Moraine plugin: tokens, theme, icon stubs */
+@plugin 'moraine/tailwind';
+
+/* Optional: on-demand icon utilities (recommended) */
+@plugin '@iconify/tailwind' {
+  collections: lucide;
+}
+
+/* Scan moraine dist for component utility classes */
+@source './node_modules/moraine/**/*';
+```
+
+Or, for a zero-config icon setup (larger bundle), import the pre-built icon CSS instead:
+
+```css
+@import 'moraine/icon.css';
 ```
 
 ### v3
 
-Register Moraine in `content`, then include the three Tailwind directives.
-
 ```js
 /** @type {import('tailwindcss').Config} */
+const { addIconSelectors } = require('@iconify/tailwind')
 module.exports = {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}', './node_modules/moraine/**/*'],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
+  content: ['./src/**/*.{js,ts,jsx,tsx}', './node_modules/moraine/dist/**/*'],
+  plugins: [
+    require('moraine/tailwind')(),
+    addIconSelectors(['lucide']), // optional, for on-demand icon utilities
+  ],
 }
 ```
 
@@ -54,6 +69,23 @@ module.exports = {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+```
+
+### Icon tiers
+
+| Tier                        | How                                                   | Size              |
+| --------------------------- | ----------------------------------------------------- | ----------------- |
+| **1 — `moraine/icon.css`**  | `@import 'moraine/icon.css'` — zero deps              | ≈ full lucide set |
+| **2 — `@iconify/tailwind`** | Install `@iconify/tailwind`, use per the config above | On-demand ✓       |
+
+### Plugin options
+
+```ts
+import { moraineTailwind } from 'moraine/tailwind'
+
+moraineTailwind({
+  icons: true, // emit icon-* utility stubs (default: true)
+})
 ```
 
 ## Override Component Styles

@@ -11,6 +11,7 @@
       },
       "devDependencies": {
         "@iconify-json/lucide": "^1.2.98",
+        "@iconify/tailwind": "1.2.0",
         "@solidjs/router": "^0.15.4",
         "@solidjs/testing-library": "^0.8.10",
         "@types/bun": "^1.3.10",
@@ -40,14 +41,18 @@
         "yaml": "^2.8.2",
       },
       "peerDependencies": {
+        "@iconify/tailwind": "1.2.0",
         "oxc-parser": "^0.119.0",
         "oxc-walker": "^0.7.0",
         "solid-js": "^1.9.11",
+        "tailwindcss": ">=3.0.0",
         "unocss": "^66.6.6",
       },
       "optionalPeers": [
+        "@iconify/tailwind",
         "oxc-parser",
         "oxc-walker",
+        "tailwindcss",
         "unocss",
       ],
     },
@@ -159,6 +164,8 @@
     "@humanwhocodes/retry": ["@humanwhocodes/retry@0.4.3", "https://registry.npmmirror.com/@humanwhocodes/retry/-/retry-0.4.3.tgz", {}, "sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ=="],
 
     "@iconify-json/lucide": ["@iconify-json/lucide@1.2.98", "https://registry.npmmirror.com/@iconify-json/lucide/-/lucide-1.2.98.tgz", { "dependencies": { "@iconify/types": "*" } }, "sha512-Lx2464W8Tty/QEnZ2UPb73nPdML/HpGCj0J0w37jP3/jx3l4fniZBjDxe1TgHiIL5XW9QO3vlx53ZQZ5JsNpzQ=="],
+
+    "@iconify/tailwind": ["@iconify/tailwind@1.2.0", "https://registry.npmmirror.com/@iconify/tailwind/-/tailwind-1.2.0.tgz", { "dependencies": { "@iconify/types": "^2.0.0" } }, "sha512-KgpIHWOTcRYw1XcoUqyNSrmYyfLLqZYu3AmP8zdfLk0F5TqRO8YerhlvlQmGfn7rJXgPeZN569xPAJnJ53zZxA=="],
 
     "@iconify/types": ["@iconify/types@2.0.0", "https://registry.npmmirror.com/@iconify/types/-/types-2.0.0.tgz", {}, "sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg=="],
 

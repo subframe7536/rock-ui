@@ -1,12 +1,12 @@
 :::widget
 name: docs-header
 props:
-  apiDocOverride:
-    component:
-      key: toast
-      name: Toast
-      category: overlays
-      description: A succinct message that is displayed temporarily.
+apiDocOverride:
+component:
+key: toast
+name: Toast
+category: overlays
+description: A succinct message that is displayed temporarily.
 :::
 
 ## Import

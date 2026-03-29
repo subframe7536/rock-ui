@@ -73,7 +73,11 @@ const baseUnocssConfig = (wind3: boolean): UnoCSSPluginOptions => {
 // export both js and jsx
 export default defineConfig([
   {
-    entry: { index: './src/index.ts', unocss: './src/unocss/index.ts' },
+    entry: {
+      index: './src/index.ts',
+      unocss: './src/unocss/index.ts',
+      tailwind: './src/tailwind/index.ts',
+    },
     // use the solid plugin to handle jsx
     plugins: [
       unocss({
@@ -84,7 +88,7 @@ export default defineConfig([
       solid(),
     ],
     deps: {
-      neverBundle: ['@unocss/core', '@unocss/transformer-compile-class'],
+      neverBundle: ['@unocss/core', '@unocss/transformer-compile-class', 'tailwindcss'],
     },
     dts: true,
   },
@@ -131,6 +135,7 @@ export default defineConfig([
         exports['./tw4.css'] = './dist/tw4.css'
         exports['./icon.css'] = './dist/icon.css'
         exports['./unocss'] = './dist/unocss.mjs'
+        exports['./tailwind'] = './dist/tailwind.mjs'
         return exports
       },
     },
