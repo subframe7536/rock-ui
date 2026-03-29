@@ -2,7 +2,7 @@ import { CommandPalette } from '@src'
 
 export function CustomEmptyState() {
   return (
-    <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
+    <div class="b-1 b-border rounded-lg w-lg shadow-lg overflow-hidden">
       <CommandPalette
         items={[]}
         empty={

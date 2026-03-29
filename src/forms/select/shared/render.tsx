@@ -252,7 +252,6 @@ export function RenderSelectTriggerButton(props: SelectTriggerButtonRenderProps)
           size={props.size as 'xs' | 'sm' | 'md' | 'lg' | 'xl' | undefined}
           classes={{
             root: props.rootClass,
-            icon: 'data-loading:animate-loading',
           }}
           loading={props.loading}
           loadingIcon={props.loadingIcon}

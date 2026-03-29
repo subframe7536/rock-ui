@@ -17,9 +17,8 @@ import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options
 
 import type { SwitchVariantProps } from './switch.class'
 import {
-  switchBaseVariants as switchTrackVariants,
+  switchTrackVariants,
   switchContainerVariants,
-  switchIconClass,
   switchThumbVariants,
   switchWrapperVariants,
 } from './switch.class'
@@ -307,7 +306,10 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
                         data-checked={!displayProps.loading && state.checked() ? '' : undefined}
                         data-unchecked={!displayProps.loading && !state.checked() ? '' : undefined}
                         data-loading={displayProps.loading ? '' : undefined}
-                        class={cn(switchIconClass, styleProps.classes?.icon)}
+                        class={cn(
+                          'text-primary size-10/12 transition-opacity absolute data-unchecked:(text-muted-foreground opacity-90) data-checked:opacity-100 data-loading:effect-loading',
+                          styleProps.classes?.icon,
+                        )}
                       />
                     )}
                   </Show>

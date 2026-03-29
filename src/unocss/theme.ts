@@ -406,12 +406,11 @@ export function presetMoraine(options?: PresetThemeOptions): Preset {
       ['effect-fv', 'outline-none ring-3px ring-ring/30'],
       ['effect-fv-border', 'outline-none border-ring ring-3px ring-ring/30'],
       ['effect-dis', 'opacity-64 pointer-events-none'],
-      ['effect-loading', 'cursor-wait opacity-80'],
+      ['effect-loading', 'cursor-wait opacity-80 animate-spin'],
       [
         'effect-invalid',
         'border-destructive ring-3 ring-destructive/20 dark:(border-destructive/50 ring-destructive/40)',
       ],
-      ['animate-loading', 'animate-spin'],
       ['transition-bg', '[transition-property:background-color]'],
       ['style-placeholder', 'placeholder:(text-muted-foreground select-none)'],
       [

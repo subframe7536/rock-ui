@@ -42,7 +42,7 @@ export function WithCloseButton() {
 
   return (
     <>
-      <div class="b-1 b-border rounded-lg max-w-lg shadow-lg overflow-hidden">
+      <div class="b-1 b-border rounded-lg w-lg shadow-lg overflow-hidden">
         <CommandPalette items={BASIC_GROUPS} close onClose={() => setCloseCount((c) => c + 1)} />
       </div>
       <p class="text-sm text-muted-foreground mt-2">Close clicked: {closeCount()} time(s)</p>

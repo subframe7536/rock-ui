@@ -337,7 +337,7 @@ export function Input(props: InputProps): JSX.Element {
             <Icon
               name={iconName()}
               size={field.size()}
-              class={cn(isLeadingLoading() && 'animate-loading')}
+              class={cn(isLeadingLoading() && 'effect-loading')}
             />
           </span>
         )}
@@ -390,7 +390,7 @@ export function Input(props: InputProps): JSX.Element {
             <Icon
               name={iconName()}
               size={field.size()}
-              class={cn(isTrailingLoading() && 'animate-loading')}
+              class={cn(isTrailingLoading() && 'effect-loading')}
             />
           </span>
         )}

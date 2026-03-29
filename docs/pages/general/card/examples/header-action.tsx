@@ -2,7 +2,7 @@ import { Button, Card } from '@src'
 
 export function HeaderAction() {
   return (
-    <div class="max-w-lg">
+    <div class="w-lg">
       <Card
         title="Meeting Notes"
         description="Transcript summary from the latest client sync."

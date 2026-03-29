@@ -24,11 +24,6 @@ export function LoadingStates() {
     setCustomLoading(false)
   }
 
-  const runAutoLoading = async () => {
-    await wait(2000)
-    setAutoRuns((value) => value + 1)
-  }
-
   return (
     <div class="flex flex-wrap gap-3 items-center">
       <Button
@@ -53,7 +48,11 @@ export function LoadingStates() {
         variant="outline"
         leading="i-lucide:a-arrow-up"
         trailing="i-lucide:timer"
-        onClick={runAutoLoading}
+        onClick={() => {
+          return wait(2000).then(() => {
+            setAutoRuns((value) => value + 1)
+          })
+        }}
       >
         Async auto-loading ({autoRuns()})
       </Button>

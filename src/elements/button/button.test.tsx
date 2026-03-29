@@ -213,7 +213,7 @@ describe('Button', () => {
 
     expect(leading).not.toBeNull()
     expect(leading?.className).toContain('icon-loading')
-    expect(leading?.className).toContain('animate-loading')
+    expect(leading?.className).toContain('effect-loading')
   })
 
   test('supports function children with loading state', () => {
@@ -237,7 +237,7 @@ describe('Button', () => {
 
     expect(leading).not.toBeNull()
     expect(leading?.className).toContain('i-lucide-loader-circle')
-    expect(leading?.className).toContain('animate-loading')
+    expect(leading?.className).toContain('effect-loading')
   })
 
   test('uses loading icon in trailing slot when only trailing is provided', () => {
@@ -258,7 +258,7 @@ describe('Button', () => {
     expect(leadingSlot).toBeNull()
     expect(trailingSlot).not.toBeNull()
     expect(trailingSlot?.className).toContain('icon-loading')
-    expect(trailingSlot?.className).toContain('animate-loading')
+    expect(trailingSlot?.className).toContain('effect-loading')
   })
 
   test('keeps trailing content when loading if leading and trailing are both provided', () => {
@@ -278,7 +278,7 @@ describe('Button', () => {
     expect(screen.queryByTestId('leading-icon')).toBeNull()
     expect(screen.queryByTestId('trailing-icon')).not.toBeNull()
     expect(leadingSlot?.className).toContain('icon-loading')
-    expect(leadingSlot?.className).toContain('animate-loading')
+    expect(leadingSlot?.className).toContain('effect-loading')
   })
 
   test('applies loading class override when trailing slot is replaced by loading icon', () => {
@@ -297,7 +297,7 @@ describe('Button', () => {
 
     expect(trailing).not.toBeNull()
     expect(trailing?.className).toContain('icon-loading')
-    expect(trailing?.className).toContain('animate-loading')
+    expect(trailing?.className).toContain('effect-loading')
     expect(trailing?.className).toContain('loading-override')
     expect(trailing?.className).toContain('trailing-override')
   })

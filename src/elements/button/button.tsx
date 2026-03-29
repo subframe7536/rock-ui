@@ -164,7 +164,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
             style={styleProps.styles?.leading}
             class={cn(
               styleProps.classes?.leading,
-              isLeadingLoading() && ['animate-loading', styleProps.classes?.loading],
+              isLeadingLoading() && ['effect-loading', styleProps.classes?.loading],
             )}
             aria-hidden={isLeadingLoading() ? true : undefined}
           />
@@ -192,7 +192,7 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
             style={styleProps.styles?.trailing}
             class={cn(
               styleProps.classes?.trailing,
-              isTrailingLoading() && ['animate-loading', styleProps.classes?.loading],
+              isTrailingLoading() && ['effect-loading', styleProps.classes?.loading],
             )}
           />
         )}
