@@ -35,6 +35,7 @@ export namespace FormFieldT {
      */
     error?: boolean | string | JSX.Element
   }
+
   export type Slot =
     | 'root'
     | 'wrapper'
@@ -47,13 +48,11 @@ export namespace FormFieldT {
     | 'help'
 
   export type Variant = FormFieldVariantProps
-
-  export interface Items {}
-
-  export type Extend = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
 
+  export interface Items {}
   /**
    * Base props for the FormField component.
    */

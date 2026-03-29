@@ -18,14 +18,11 @@ import { FormProvider } from './form-context'
 import { pathStartsWith, pathToKey, toFieldPath } from './form-path'
 import type { StandardSchemaV1 } from './standard-schema'
 
-type FormState = object
-
 export namespace FormT {
   /**
    * Event emitted when the form is submitted successfully.
    */
-  export interface SubmitEvent<TState extends FormState = FormState>
-    extends globalThis.SubmitEvent {
+  export interface SubmitEvent<TState extends object = object> extends globalThis.SubmitEvent {
     /**
      * The current data of the form.
      */
@@ -58,18 +55,16 @@ export namespace FormT {
 
   export type Slot = 'root'
 
-  export type Variant = {}
-
-  export interface Items {}
-
-  export type Extend = never
+  export type Variant = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
 
+  export interface Items {}
   /**
    * Base props for the Form component.
    */
-  export interface Base<TState extends FormState = FormState> {
+  export interface Base<TState extends object = object> {
     /**
      * Unique identifier for the form.
      */
@@ -133,7 +128,7 @@ export namespace FormT {
   /**
    * Props for the Form component.
    */
-  export interface Props<TState extends FormState = FormState> extends BaseProps<
+  export interface Props<TState extends object = object> extends BaseProps<
     Base<TState>,
     Variant,
     Extend,
@@ -144,7 +139,7 @@ export namespace FormT {
 /**
  * Props for the Form component.
  */
-export interface FormProps<TState extends FormState = FormState> extends FormT.Props<TState> {}
+export interface FormProps<TState extends object = object> extends FormT.Props<TState> {}
 
 interface FormFieldRuntimeEntry {
   touched: boolean
@@ -297,7 +292,7 @@ async function validateStandardSchema(
 }
 
 /** Form container with schema-based validation and submission handling. */
-export function Form<TState extends FormState = FormState>(props: FormProps<TState>): JSX.Element {
+export function Form<TState extends object = object>(props: FormProps<TState>): JSX.Element {
   const [stateProps, eventProps, renderProps, restProps] = splitProps(
     props as FormProps<TState>,
     ['id', 'state', 'schema', 'validate', 'validateOn', 'validateOnInputDelay', 'disabled'],

@@ -40,6 +40,7 @@ export namespace RadioGroupT {
   export type Variant = RadioGroupVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteRadioGroup.RadioGroupRootProps
 
   /**
    * A radio item object.
@@ -65,7 +66,6 @@ export namespace RadioGroupT {
      */
     disabled?: boolean
   }
-  export type Extend = KobalteRadioGroup.RadioGroupRootProps
 
   /**
    * Base props for the RadioGroup component.

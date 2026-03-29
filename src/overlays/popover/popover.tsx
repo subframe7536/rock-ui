@@ -16,10 +16,11 @@ type PopoverMode = 'click' | 'hover'
 export namespace PopoverT {
   export type Slot = 'trigger' | 'content' | 'body'
   export type Variant = PopoverContentVariantProps
-  export interface Items {}
-  export type Extend = KobaltePopover.PopoverRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobaltePopover.PopoverRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Popover component.

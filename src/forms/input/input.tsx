@@ -26,17 +26,17 @@ import {
 } from './input.class'
 
 export namespace InputT {
+  export type Value = string | number | undefined
+
   export type Slot = 'root' | 'input' | 'leading' | 'trailing'
 
   export type Variant = InputVariantProps
 
-  export interface Items {}
-
-  export type Value = string | number | undefined
-
-  export type Extend = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
+
+  export interface Items {}
 
   /**
    * Base props for the Input component.

@@ -12,12 +12,12 @@ export type BaseProps<
   TSlot extends string,
   ExtraOmitKeys extends PropertyKey = never,
 > = B &
-  V &
+  ([V] extends [never] ? {} : V) &
   ([E] extends [never]
     ? {}
     : Omit<
         E,
-        | keyof (B & V)
+        | keyof (B & ([V] extends [never] ? {} : V))
         | 'children'
         | 'class'
         | 'style'

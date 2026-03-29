@@ -23,17 +23,14 @@ import type {
 import type { OverlayMenuContentSlot, OverlayMenuPlacement } from '../shared-overlay-menu/utils'
 import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
 
-type ContextMenuColor = NonNullable<OverlayMenuItemVariantProps['color']>
-type ContextMenuSize = NonNullable<OverlayMenuItemVariantProps['size']>
-
 export namespace ContextMenuT {
   export type Slot = OverlayMenuSharedSlots
-  export type Variant = {}
+  export type Variant = Pick<OverlayMenuItemVariantProps, 'size'>
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-
-  export interface Items extends OverlayMenuSharedItem<ContextMenuColor, Items> {}
   export type Extend = KobalteDropdownMenu.DropdownMenuRootProps
+
+  export interface Items extends OverlayMenuSharedItem<Items> {}
 
   /**
    * Base props for the ContextMenu component.
@@ -70,12 +67,6 @@ export namespace ContextMenuT {
      * Distance in pixels between the menu and the interaction point.
      */
     gutter?: number
-
-    /**
-     * Size of the menu items.
-     * @default 'md'
-     */
-    size?: ContextMenuSize
 
     /**
      * Whether the context menu is disabled.

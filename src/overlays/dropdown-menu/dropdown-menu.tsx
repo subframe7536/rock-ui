@@ -15,17 +15,14 @@ import type {
 import type { OverlayMenuContentSlot, OverlayMenuPlacement } from '../shared-overlay-menu/utils'
 import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
 
-type DropdownMenuColor = NonNullable<OverlayMenuItemVariantProps['color']>
-type DropdownMenuSize = NonNullable<OverlayMenuItemVariantProps['size']>
-
 export namespace DropdownMenuT {
   export type Slot = OverlayMenuSharedSlots
-  export type Variant = {}
+  export type Variant = Pick<OverlayMenuItemVariantProps, 'size'>
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-
-  export interface Items extends OverlayMenuSharedItem<DropdownMenuColor, Items> {}
   export type Extend = KobalteDropdownMenu.DropdownMenuRootProps
+
+  export interface Items extends OverlayMenuSharedItem<Items> {}
 
   /**
    * Base props for the DropdownMenu component.
@@ -62,12 +59,6 @@ export namespace DropdownMenuT {
      * Distance in pixels between the dropdown menu and the trigger.
      */
     gutter?: number
-
-    /**
-     * Size of the dropdown menu items.
-     * @default 'md'
-     */
-    size?: DropdownMenuSize
 
     /**
      * Whether the dropdown menu is disabled.

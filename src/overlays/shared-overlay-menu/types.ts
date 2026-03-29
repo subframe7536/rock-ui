@@ -3,12 +3,14 @@ import type { JSX } from 'solid-js'
 import type { IconT } from '../../elements/icon'
 import type { SlotClasses, SlotStyles } from '../../shared/types'
 
+import type { OverlayMenuItemVariantProps } from './menu.class'
+
 export type OverlayMenuItemType = 'item' | 'separator' | 'checkbox' | 'group'
 
 /**
  * Shared interface for menu items used in overlays like ContextMenu and DropdownMenu.
  */
-export interface OverlayMenuSharedItem<TColor extends string, TItem> {
+export interface OverlayMenuSharedItem<TItem> {
   /**
    * The type of menu item to render.
    * @default 'item'
@@ -38,7 +40,7 @@ export interface OverlayMenuSharedItem<TColor extends string, TItem> {
   /**
    * Color theme variant for the menu item.
    */
-  color?: TColor
+  color?: NonNullable<OverlayMenuItemVariantProps['color']>
 
   /**
    * Whether the item is non-interactive.

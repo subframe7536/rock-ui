@@ -11,8 +11,36 @@ import { breadcrumbListVariants } from './breadcrumb.class'
 import type { BreadcrumbVariantProps } from './breadcrumb.class'
 
 export namespace BreadcrumbT {
+  /**
+   * Context provided to the item secondary renderer.
+   */
+  export interface ItemRenderContext {
+    /**
+     * The original item object.
+     */
+    item: Items
+
+    /**
+     * Index of the item in the list.
+     */
+    index: number
+
+    /**
+     * Whether the item is the current page.
+     */
+    current: boolean
+
+    /**
+     * Whether the item is disabled.
+     */
+    disabled: boolean
+  }
+
   export type Slot = 'root' | 'list' | 'item' | 'link' | 'leading' | 'label' | 'separator'
   export type Variant = BreadcrumbVariantProps
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
+  export type Extend = never
 
   /**
    * An individual item in the breadcrumb trail.
@@ -63,35 +91,6 @@ export namespace BreadcrumbT {
      */
     onClick?: JSX.EventHandler<HTMLAnchorElement, MouseEvent>
   }
-
-  /**
-   * Context provided to the item secondary renderer.
-   */
-  export interface ItemRenderContext {
-    /**
-     * The original item object.
-     */
-    item: Items
-
-    /**
-     * Index of the item in the list.
-     */
-    index: number
-
-    /**
-     * Whether the item is the current page.
-     */
-    current: boolean
-
-    /**
-     * Whether the item is disabled.
-     */
-    disabled: boolean
-  }
-
-  export type Extend = never
-  export type Classes = SlotClasses<Slot>
-  export type Styles = SlotStyles<Slot>
 
   /**
    * Base props for the Breadcrumb component.

@@ -17,7 +17,11 @@ export namespace AccordionT {
     | 'label'
     | 'trailing'
     | 'content'
-  export type Variant = {}
+  export type Variant = never
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteAccordion.AccordionRootProps
+
   export interface Items {
     /**
      * Header label for the accordion item.
@@ -45,10 +49,6 @@ export namespace AccordionT {
      */
     content?: JSX.Element
   }
-  export type Extend = KobalteAccordion.AccordionRootProps
-  export type Classes = SlotClasses<Slot>
-  export type Styles = SlotStyles<Slot>
-
   /**
    * Base props for the Accordion component.
    */

@@ -26,10 +26,11 @@ export namespace DialogT {
     | 'footer'
 
   export type Variant = DialogCardVariantProps
-  export interface Items {}
-  export type Extend = KobalteDialog.DialogRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteDialog.DialogRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Dialog component.

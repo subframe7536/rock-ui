@@ -1,7 +1,7 @@
 import type { JSX } from 'solid-js'
 import { For, Show, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
 
-import type { BaseProps, SlotStyles } from '../../shared/types'
+import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { Checkbox } from '../checkbox'
 import type { CheckboxProps } from '../checkbox/checkbox'
@@ -36,7 +36,8 @@ export namespace CheckboxGroupT {
     | 'description'
 
   export type Variant = CheckboxGroupVariantProps
-
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
   export type Extend = never
 
   export interface Items<TTrue = boolean, TFalse = boolean> {
@@ -69,20 +70,6 @@ export namespace CheckboxGroupT {
      */
     indeterminateIcon?: CheckboxProps<TTrue, TFalse>['indeterminateIcon']
   }
-  /**
-   * Class overrides for CheckboxGroup and its items.
-   */
-  export type Classes<TTrue = boolean, TFalse = boolean> = Omit<
-    NonNullable<CheckboxProps<TTrue, TFalse>['classes']>,
-    'root'
-  > & {
-    root?: string
-    fieldset?: string
-    legend?: string
-    item?: string
-  }
-
-  export type Styles = SlotStyles<Slot>
 
   /**
    * Base props for the CheckboxGroup component.

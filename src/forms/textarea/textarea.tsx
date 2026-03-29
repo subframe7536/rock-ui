@@ -24,18 +24,18 @@ import {
 } from './textarea.class'
 
 export namespace TextareaT {
+  export type Value = string | number | undefined
+  export type ChangeValue = Value | null
+
   export type Slot = 'root' | 'header' | 'input' | 'footer'
 
   export type Variant = Pick<TextareaVariantProps, 'size' | 'variant' | 'autoresize'>
 
-  export interface Items {}
-
-  export type Value = string | number | undefined
-  export type ChangeValue = Value | null
-
-  export type Extend = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
+
+  export interface Items {}
 
   /**
    * Base props for the Textarea component.

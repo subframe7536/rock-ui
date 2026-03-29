@@ -16,12 +16,12 @@ export namespace IconButtonT {
   export type Variant = IconButtonVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-
-  export interface Items {}
   export type Extend = Omit<
     PolymorphicProps<'button', KobalteButton.ButtonRootProps<ElementOf<'button'>>>,
     'as'
   >
+
+  export interface Items {}
   /**
    * Base props for the IconButton component.
    */

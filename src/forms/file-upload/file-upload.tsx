@@ -42,6 +42,8 @@ import {
 } from './file-upload.class'
 
 export namespace FileUploadT {
+  export type Value = File | File[] | null
+
   export type Slot =
     | 'root'
     | 'control'
@@ -58,14 +60,11 @@ export namespace FileUploadT {
     | 'fileRemove'
 
   export type Variant = FileUploadVariantProps
-
-  export interface Items {}
-
-  export type Value = File | File[] | null
-
-  export type Extend = KobalteFileField.FileFieldRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteFileField.FileFieldRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the FileUpload component.

@@ -7,14 +7,14 @@ import { cn } from '../../shared/utils'
 
 export namespace IconT {
   export type Name = string | JSX.Element | Component<Omit<IconProps, 'name'>>
-  export type Slot = 'icon'
-  export type Variant = {}
-  export interface Items {}
-  export type Extend = never
 
+  export type Slot = 'icon'
+  export type Variant = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
 
+  export interface Items {}
   /**
    * Base props for the Icon component.
    */

@@ -35,12 +35,11 @@ export namespace SwitchT {
     | 'description'
 
   export type Variant = SwitchVariantProps
-
-  export interface Items {}
-
-  export type Extend = KobalteSwitch.SwitchRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteSwitch.SwitchRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Switch component.

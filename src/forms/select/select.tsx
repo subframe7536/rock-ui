@@ -72,6 +72,7 @@ export namespace SelectT {
     /** Close the dropdown menu. */
     close: () => void
   }
+
   export type Slot =
     | 'root'
     | 'control'
@@ -92,6 +93,7 @@ export namespace SelectT {
   export type Variant = SelectControlVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
 
   export interface Items {
     /** Label to display for the option. */
@@ -109,7 +111,6 @@ export namespace SelectT {
     /** One-layer child options for grouped select. */
     children?: Items[]
   }
-  export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
 
   /**
    * Base props for the Select component.

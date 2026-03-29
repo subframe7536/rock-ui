@@ -30,6 +30,10 @@ export namespace AvatarT {
     | 'groupItem'
     | 'groupCount'
   export type Variant = AvatarVariantProps
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
+  export type Extend = never
+
   export interface Items {
     /**
      * Source URL for the avatar image.
@@ -67,10 +71,6 @@ export namespace AvatarT {
      */
     onStatusChange?: (status: Status) => void
   }
-  export type Extend = never
-  export type Classes = SlotClasses<Slot>
-  export type Styles = SlotStyles<Slot>
-
   /**
    * Base props for the Avatar component.
    */

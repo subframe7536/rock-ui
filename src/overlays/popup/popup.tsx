@@ -12,10 +12,11 @@ import type { PopupVariantProps } from './popup.class'
 export namespace PopupT {
   export type Slot = 'trigger' | 'overlay' | 'content'
   export type Variant = PopupVariantProps
-  export interface Items {}
-  export type Extend = KobalteDialog.DialogRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteDialog.DialogRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Popup component.

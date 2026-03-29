@@ -58,23 +58,6 @@ import type {
 export namespace MultiSelectT {
   export type Value = string | number
 
-  export interface Items {
-    /** Label to display for the option. */
-    label?: string | JSX.Element
-    /** Text key used for filtering and matching; set this when `label` is not a string. */
-    key?: string
-    /** Value of the option. */
-    value?: Value
-    /** Whether the option is disabled. */
-    disabled?: boolean
-    /** Description shown below the label. */
-    description?: string | JSX.Element
-    /** Icon shown next to the label. */
-    icon?: IconT.Name
-    /** One-layer child options for grouped select. */
-    children?: Items[]
-  }
-
   export interface OptionRenderState {
     /** Whether the option is currently selected. */
     isSelected: boolean
@@ -97,6 +80,7 @@ export namespace MultiSelectT {
     /** Close the dropdown menu. */
     close: () => void
   }
+
   export type Slot =
     | 'root'
     | 'control'
@@ -119,10 +103,26 @@ export namespace MultiSelectT {
     | 'empty'
 
   export type Variant = SelectControlVariantProps
-
-  export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
+
+  export interface Items {
+    /** Label to display for the option. */
+    label?: string | JSX.Element
+    /** Text key used for filtering and matching; set this when `label` is not a string. */
+    key?: string
+    /** Value of the option. */
+    value?: Value
+    /** Whether the option is disabled. */
+    disabled?: boolean
+    /** Description shown below the label. */
+    description?: string | JSX.Element
+    /** Icon shown next to the label. */
+    icon?: IconT.Name
+    /** One-layer child options for grouped select. */
+    children?: Items[]
+  }
 
   /**
    * Base props for the MultiSelect component.

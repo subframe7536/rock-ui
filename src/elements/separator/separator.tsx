@@ -14,10 +14,11 @@ import {
 export namespace SeparatorT {
   export type Slot = 'root' | 'border' | 'container'
   export type Variant = SeparatorVariantProps
-  export interface Items {}
-  export type Extend = KobalteSeparator.SeparatorRootProps<HTMLDivElement>
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteSeparator.SeparatorRootProps<HTMLDivElement>
+
+  export interface Items {}
   /**
    * Base props for the Separator component.
    */

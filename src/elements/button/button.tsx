@@ -19,13 +19,12 @@ export namespace ButtonT {
   export type Variant = ButtonVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-
-  export interface Items {}
   export type Extend<T extends ValidComponent = 'button'> = PolymorphicProps<
     T,
     KobalteButton.ButtonRootProps<ElementOf<T>>
   >
 
+  export interface Items {}
   /**
    * Base props for the Button component.
    */

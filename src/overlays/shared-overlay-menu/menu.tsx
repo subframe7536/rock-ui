@@ -30,15 +30,10 @@ import type {
 import { getOverlayMenuTextValue, resolveMenuGroups } from './utils'
 import type { OverlayMenuContentSlot, OverlayMenuSide } from './utils'
 
-type OverlayMenuColor = NonNullable<OverlayMenuItemVariantProps['color']>
-type OverlayMenuSize = NonNullable<OverlayMenuItemVariantProps['size']>
-
-export interface OverlayMenuBaseContentProps<
-  TItem extends OverlayMenuSharedItem<OverlayMenuColor, TItem>,
-> {
+export interface OverlayMenuBaseContentProps<TItem extends OverlayMenuSharedItem<TItem>> {
   content: Component<any>
   items?: TItem[]
-  size?: OverlayMenuSize
+  size?: NonNullable<OverlayMenuItemVariantProps['size']>
   classes?: OverlayMenuSharedClasses
   styles?: OverlayMenuSharedStyles
   checkedIcon?: IconT.Name
@@ -49,9 +44,9 @@ export interface OverlayMenuBaseContentProps<
   rootSide: OverlayMenuSide
 }
 
-export function OverlayMenuBaseContent<
-  TItem extends OverlayMenuSharedItem<OverlayMenuColor, TItem>,
->(props: OverlayMenuBaseContentProps<TItem>): JSX.Element {
+export function OverlayMenuBaseContent<TItem extends OverlayMenuSharedItem<TItem>>(
+  props: OverlayMenuBaseContentProps<TItem>,
+): JSX.Element {
   function getItemClass(item: TItem, ...cls: ClassValueArray): string {
     return overlayMenuItemVariants(
       {

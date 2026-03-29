@@ -15,10 +15,11 @@ import type { TooltipVariantProps } from './tooltip.class'
 export namespace TooltipT {
   export type Slot = 'content' | 'trigger' | 'text' | 'kbds' | 'kbd'
   export type Variant = TooltipVariantProps
-  export interface Items {}
-  export type Extend = KobalteTooltip.TooltipRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteTooltip.TooltipRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Tooltip component.

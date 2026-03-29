@@ -10,10 +10,11 @@ import { kbdItemVariants } from './kbd.class'
 export namespace KbdT {
   export type Slot = 'root' | 'item'
   export type Variant = KbdVariantProps
-  export interface Items {}
-  export type Extend = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
+
+  export interface Items {}
   /**
    * Base props for the Kbd component.
    */

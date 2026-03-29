@@ -42,12 +42,6 @@ import {
 import type { ResizableVariantProps } from './resizable.class'
 
 export namespace ResizableT {
-  export type Slot = 'root' | 'panel' | 'divider' | 'handle' | 'crossTarget'
-  export type Variant = ResizableVariantProps
-  export interface Items extends ResizablePanelItem {}
-  export type Extend = never
-  export type Classes = SlotClasses<Slot>
-  export type Styles = SlotStyles<Slot>
   export interface HandleState {
     orientation: ResizableOrientation
     disabled: boolean
@@ -57,6 +51,14 @@ export namespace ResizableT {
     canCollapse: boolean
     collapsed: boolean
   }
+
+  export type Slot = 'root' | 'panel' | 'divider' | 'handle' | 'crossTarget'
+  export type Variant = ResizableVariantProps
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
+  export type Extend = never
+
+  export interface Items extends ResizablePanelItem {}
   /**
    * Base props for the Resizable component.
    */

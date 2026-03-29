@@ -13,11 +13,12 @@ type PaginationVariant = ButtonProps['variant']
 
 export namespace PaginationT {
   export type Slot = 'root' | 'list' | 'item' | 'link' | 'prev' | 'next' | 'ellipsis'
-  export type Variant = {}
-  export interface Items {}
-  export type Extend = never
+  export type Variant = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
+
+  export interface Items {}
 
   /**
    * Base props for the Pagination component.

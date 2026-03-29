@@ -19,30 +19,6 @@ import { cn } from '../../shared/utils'
 // ─── Public types ─────────────────────────────────────────────────────────────
 
 export namespace CommandPaletteT {
-  export type Slot =
-    | 'root'
-    | 'inputWrapper'
-    | 'input'
-    | 'listbox'
-    | 'footer'
-    | 'group'
-    | 'label'
-    | 'item'
-    | 'itemLeading'
-    | 'itemWrapper'
-    | 'itemLabel'
-    | 'itemLabelBase'
-    | 'itemLabelPrefix'
-    | 'itemLabelSuffix'
-    | 'itemDescription'
-    | 'itemTrailing'
-    | 'itemTrailingKbds'
-    | 'itemTrailingKbd'
-    | 'search'
-    | 'back'
-    | 'close'
-    | 'empty'
-  export type Variant = {}
   /**
    * An individual item in the command palette.
    */
@@ -104,6 +80,34 @@ export namespace CommandPaletteT {
     onSelect?: () => void
   }
 
+  export type Slot =
+    | 'root'
+    | 'inputWrapper'
+    | 'input'
+    | 'listbox'
+    | 'footer'
+    | 'group'
+    | 'label'
+    | 'item'
+    | 'itemLeading'
+    | 'itemWrapper'
+    | 'itemLabel'
+    | 'itemLabelBase'
+    | 'itemLabelPrefix'
+    | 'itemLabelSuffix'
+    | 'itemDescription'
+    | 'itemTrailing'
+    | 'itemTrailingKbds'
+    | 'itemTrailingKbd'
+    | 'search'
+    | 'back'
+    | 'close'
+    | 'empty'
+  export type Variant = never
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
+  export type Extend = never
+
   /**
    * A grouped collection of items in the command palette.
    */
@@ -123,11 +127,6 @@ export namespace CommandPaletteT {
      */
     children?: Item[]
   }
-
-  export type Extend = never
-
-  export type Classes = SlotClasses<Slot>
-  export type Styles = SlotStyles<Slot>
 
   /**
    * Base props for the CommandPalette component.

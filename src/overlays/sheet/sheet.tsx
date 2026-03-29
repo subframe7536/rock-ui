@@ -25,10 +25,11 @@ export namespace SheetT {
     | 'footer'
 
   export type Variant = SheetVariantProps
-  export interface Items {}
-  export type Extend = KobalteDialog.DialogRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteDialog.DialogRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Sheet component.

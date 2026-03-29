@@ -23,17 +23,17 @@ import {
 } from './slider.class'
 
 export namespace SliderT {
+  export type Value = number | number[]
+
   export type Slot = 'root' | 'track' | 'range' | 'thumb'
 
   export type Variant = SliderVariantProps
 
-  export interface Items {}
-
-  export type Value = number | number[]
-
-  export type Extend = KobalteSlider.SliderRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteSlider.SliderRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Slider component.

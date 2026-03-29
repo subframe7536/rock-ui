@@ -27,6 +27,9 @@ export namespace TabsT {
     | 'trailing'
     | 'content'
   export type Variant = TabsVariantProps
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteTabs.TabsRootProps
 
   /**
    * An individual tab in the tabs component.
@@ -64,9 +67,6 @@ export namespace TabsT {
      */
     class?: string
   }
-  export type Extend = KobalteTabs.TabsRootProps
-  export type Classes = SlotClasses<Slot>
-  export type Styles = SlotStyles<Slot>
 
   /**
    * Base props for the Tabs component.

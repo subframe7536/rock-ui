@@ -10,13 +10,18 @@ import type { BadgeVariantProps } from './badge.class'
 import { badgeVariants } from './badge.class'
 
 export namespace BadgeT {
+  export interface TrailingButtonProps extends Omit<
+    IconButtonProps,
+    'children' | 'name' | 'onClick' | 'size' | 'loading' | 'loadingIcon' | 'type'
+  > {}
+
   export type Slot = 'root' | 'leading' | 'label' | 'trailing'
   export type Variant = BadgeVariantProps
-  export interface Items {}
-  export type Extend = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = never
 
+  export interface Items {}
   /**
    * Base props for the Badge component.
    */
@@ -57,11 +62,6 @@ export namespace BadgeT {
    * Props for the Badge component.
    */
   export interface Props extends BaseProps<Base, Variant, Extend, Slot> {}
-
-  export interface TrailingButtonProps extends Omit<
-    IconButtonProps,
-    'children' | 'name' | 'onClick' | 'size' | 'loading' | 'loadingIcon' | 'type'
-  > {}
 }
 
 /**

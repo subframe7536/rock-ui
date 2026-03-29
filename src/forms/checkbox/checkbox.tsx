@@ -33,12 +33,11 @@ export namespace CheckboxT {
     | 'description'
 
   export type Variant = CheckboxVariantProps
-
-  export interface Items {}
-
-  export type Extend = KobalteCheckbox.CheckboxRootProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteCheckbox.CheckboxRootProps
+
+  export interface Items {}
 
   /**
    * Base props for the Checkbox component.

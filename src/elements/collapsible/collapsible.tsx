@@ -6,13 +6,6 @@ import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
 export namespace CollapsibleT {
-  export type Slot = 'root' | 'trigger' | 'content'
-  export type Variant = {}
-  export interface Items {}
-  export type Extend = KobalteCollapsible.CollapsibleRootProps
-  export type Classes = SlotClasses<Slot>
-  export type Styles = SlotStyles<Slot>
-
   /**
    * Props passed to the trigger render function.
    */
@@ -23,6 +16,13 @@ export namespace CollapsibleT {
     open: boolean
   }
 
+  export type Slot = 'root' | 'trigger' | 'content'
+  export type Variant = never
+  export type Classes = SlotClasses<Slot>
+  export type Styles = SlotStyles<Slot>
+  export type Extend = KobalteCollapsible.CollapsibleRootProps
+
+  export interface Items {}
   /**
    * Base props for the Collapsible component.
    */
