@@ -1,17 +1,12 @@
 :::widget
 name: docs-header
 props:
-apiDocOverride:
-component:
-key: toast
-name: Toast
-category: overlays
-description: solid-toaster integration guide with real runtime examples, including promise and scoped instances.
-polymorphic: false
-slots: []
-props:
-own: []
-inherited: []
+  apiDocOverride:
+    component:
+      key: toast
+      name: Toast
+      category: overlays
+      description: A succinct message that is displayed temporarily.
 :::
 
 ## Import
