@@ -43,12 +43,9 @@ export interface SelectControlState<TItems> {
   clear: () => void
 }
 
-export const SELECT_SPLIT_FORM_KEYS = [
+export const SELECT_SPLIT_KEYS = [
   ...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS,
   'onChange',
-] as const
-
-export const SELECT_SPLIT_COMMON_KEYS = [
   'search',
   'searchValue',
   'defaultSearchValue',
@@ -72,29 +69,19 @@ export const SELECT_SPLIT_COMMON_KEYS = [
   'leadingIcon',
   'triggerIcon',
   'closeIcon',
+  'size',
+  'variant',
+  'classes',
 ] as const
 
-export const SELECT_SPLIT_STYLE_KEYS = ['size', 'variant', 'classes'] as const
-
-export const MULTI_SELECT_SPLIT_EXTRA_KEYS = [
+export const MULTI_SELECT_SPLIT_KEYS = [
+  ...SELECT_SPLIT_KEYS,
   'tokenSeparators',
   'allowCreate',
   'maxCount',
   'maxTagCount',
   'tagRender',
   'tagVariant',
-] as const
-
-export const SELECT_SPLIT_PROP_GROUPS = [
-  SELECT_SPLIT_FORM_KEYS,
-  SELECT_SPLIT_COMMON_KEYS,
-  SELECT_SPLIT_STYLE_KEYS,
-] as const
-
-export const MULTI_SELECT_SPLIT_PROP_GROUPS = [
-  SELECT_SPLIT_FORM_KEYS,
-  [...SELECT_SPLIT_COMMON_KEYS, ...MULTI_SELECT_SPLIT_EXTRA_KEYS] as const,
-  SELECT_SPLIT_STYLE_KEYS,
 ] as const
 
 export const SELECT_COMMON_DEFAULT_PROPS = {

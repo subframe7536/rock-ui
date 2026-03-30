@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { Show, createEffect, createMemo, mergeProps, on, onMount, splitProps } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps, on, onMount } from 'solid-js'
 
 import type { ModelModifiers } from '../../shared/input-modifiers'
 import { applyInputModifiers } from '../../shared/input-modifiers'
@@ -13,7 +13,6 @@ import type {
   FormRequiredOption,
   FormValueOptions,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_DISABLED_KEYS, FORM_INPUT_INTERACTION_KEYS } from '../form-field/form-options'
 
 import type { TextareaVariantProps } from './textarea.class'
 import {
@@ -156,85 +155,57 @@ export function Textarea(props: TextareaProps): JSX.Element {
       autoresize: false,
     },
     props,
-  )
+  ) as TextareaProps
 
-  const [formProps, layoutProps, styleProps] = splitProps(
-    merged as TextareaProps,
-    [
-      ...FORM_ID_NAME_DISABLED_KEYS,
-      'value',
-      'required',
-      'readOnly',
-      'modelModifiers',
-      'onValueChange',
-      'onInput',
-      'onChange',
-      ...FORM_INPUT_INTERACTION_KEYS,
-    ],
-    [
-      'placeholder',
-      'rows',
-      'maxrows',
-      'autoresize',
-      'autoresizeDelay',
-      'autofocus',
-      'autofocusDelay',
-      'maxLength',
-      'header',
-      'footer',
-      'children',
-    ],
-  )
-
-  const generatedId = useId(() => formProps.id, 'textarea')
+  const generatedId = useId(() => merged.id, 'textarea')
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
       deferInputValidation: true,
       defaultId: generatedId(),
       defaultSize: 'md',
-      initialValue: styleProps.defaultValue ?? '',
+      initialValue: merged.defaultValue ?? '',
     }),
   )
 
   let textareaEl: HTMLTextAreaElement | undefined
 
-  const isLazy = createMemo(() => Boolean(formProps.modelModifiers?.lazy))
+  const isLazy = createMemo(() => Boolean(merged.modelModifiers?.lazy))
 
   const textareaValueProps = createMemo<{
     value?: TextareaT.Value
     defaultValue?: TextareaT.Value
   }>(() => {
-    if (formProps.value !== undefined) {
-      return { value: formProps.value }
+    if (merged.value !== undefined) {
+      return { value: merged.value }
     }
 
-    if (styleProps.defaultValue !== undefined) {
-      return { defaultValue: styleProps.defaultValue }
+    if (merged.defaultValue !== undefined) {
+      return { defaultValue: merged.defaultValue }
     }
 
     return {}
   })
 
   function updateInputValue(value: string | null | undefined): void {
-    const nextValue = applyInputModifiers<TextareaT.ChangeValue>(value, formProps.modelModifiers)
+    const nextValue = applyInputModifiers<TextareaT.ChangeValue>(value, merged.modelModifiers)
 
     field.setFormValue(nextValue)
-    formProps.onValueChange?.(nextValue)
+    merged.onValueChange?.(nextValue)
     field.emit('input')
   }
 
   function autoResize(): void {
-    if (!layoutProps.autoresize || !textareaEl) {
+    if (!merged.autoresize || !textareaEl) {
       return
     }
 
-    const rows = layoutProps.rows ?? 3
+    const rows = merged.rows ?? 3
     textareaEl.rows = rows
 
     const previousOverflow = textareaEl.style.overflow
@@ -252,7 +223,7 @@ export function Textarea(props: TextareaProps): JSX.Element {
 
     const nextRows = Math.ceil((textareaEl.scrollHeight - padding) / lineHeight)
     if (nextRows > rows) {
-      textareaEl.rows = layoutProps.maxrows ? Math.min(nextRows, layoutProps.maxrows) : nextRows
+      textareaEl.rows = merged.maxrows ? Math.min(nextRows, merged.maxrows) : nextRows
     }
 
     textareaEl.style.overflow = previousOverflow
@@ -260,7 +231,7 @@ export function Textarea(props: TextareaProps): JSX.Element {
 
   const onInput: JSX.EventHandlerUnion<HTMLTextAreaElement, InputEvent> = (event) => {
     autoResize()
-    callHandler(event, formProps.onInput as JSX.EventHandlerUnion<HTMLTextAreaElement, InputEvent>)
+    callHandler(event, merged.onInput as JSX.EventHandlerUnion<HTMLTextAreaElement, InputEvent>)
 
     if (!isLazy()) {
       updateInputValue(event.currentTarget.value)
@@ -274,22 +245,22 @@ export function Textarea(props: TextareaProps): JSX.Element {
       updateInputValue(value)
     }
 
-    if (formProps.modelModifiers?.trim) {
+    if (merged.modelModifiers?.trim) {
       event.currentTarget.value = value.trim()
     }
 
     field.emit('change')
-    callHandler(event, formProps.onChange as JSX.EventHandlerUnion<HTMLTextAreaElement, Event>)
+    callHandler(event, merged.onChange as JSX.EventHandlerUnion<HTMLTextAreaElement, Event>)
   }
 
   const onBlur: JSX.FocusEventHandlerUnion<HTMLTextAreaElement, FocusEvent> = (event) => {
     field.emit('blur')
-    callHandler(event, formProps.onBlur as any)
+    callHandler(event, merged.onBlur as any)
   }
 
   const onFocus: JSX.FocusEventHandlerUnion<HTMLTextAreaElement, FocusEvent> = (event) => {
     field.emit('focus')
-    callHandler(event, formProps.onFocus as any)
+    callHandler(event, merged.onFocus as any)
   }
 
   const onRootPointerDown: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (event) => {
@@ -307,8 +278,8 @@ export function Textarea(props: TextareaProps): JSX.Element {
 
   createEffect(
     on(
-      () => formProps.value,
-      (_value) => {
+      () => merged.value,
+      () => {
         // oxlint-disable-next-line solid/reactivity
         queueMicrotask(() => {
           autoResize()
@@ -319,14 +290,14 @@ export function Textarea(props: TextareaProps): JSX.Element {
 
   onMount(() => {
     setTimeout(() => {
-      if (layoutProps.autofocus) {
+      if (merged.autofocus) {
         textareaEl?.focus()
       }
-    }, layoutProps.autofocusDelay ?? 0)
+    }, merged.autofocusDelay ?? 0)
 
     setTimeout(() => {
       autoResize()
-    }, layoutProps.autoresizeDelay ?? 0)
+    }, merged.autoresizeDelay ?? 0)
   })
 
   return (
@@ -338,13 +309,13 @@ export function Textarea(props: TextareaProps): JSX.Element {
       class={textareaRootVariants(
         {
           size: field.size(),
-          variant: styleProps.variant,
+          variant: merged.variant,
         },
-        styleProps.classes?.root,
+        merged.classes?.root,
       )}
       onPointerDown={onRootPointerDown}
     >
-      <Show when={layoutProps.header}>
+      <Show when={merged.header}>
         <div
           data-slot="header"
           style={merged.styles?.header}
@@ -352,10 +323,10 @@ export function Textarea(props: TextareaProps): JSX.Element {
             {
               size: field.size(),
             },
-            styleProps.classes?.header,
+            merged.classes?.header,
           )}
         >
-          {layoutProps.header}
+          {merged.header}
         </div>
       </Show>
 
@@ -363,20 +334,20 @@ export function Textarea(props: TextareaProps): JSX.Element {
         id={field.id()}
         ref={(element) => (textareaEl = element)}
         name={field.name()}
-        rows={layoutProps.rows ?? 3}
-        placeholder={layoutProps.placeholder}
-        required={formProps.required}
+        rows={merged.rows ?? 3}
+        placeholder={merged.placeholder}
+        required={merged.required}
         disabled={field.disabled()}
-        readOnly={formProps.readOnly}
-        maxLength={layoutProps.maxLength}
+        readOnly={merged.readOnly}
+        maxLength={merged.maxLength}
         data-slot="input"
         style={merged.styles?.input}
         class={textareaBaseVariants(
           {
             size: field.size(),
-            autoresize: layoutProps.autoresize,
+            autoresize: merged.autoresize,
           },
-          styleProps.classes?.input,
+          merged.classes?.input,
         )}
         onInput={onInput}
         onChange={onChange}
@@ -386,9 +357,9 @@ export function Textarea(props: TextareaProps): JSX.Element {
         {...textareaValueProps()}
       />
 
-      {layoutProps.children}
+      {merged.children}
 
-      <Show when={layoutProps.footer}>
+      <Show when={merged.footer}>
         <div
           data-slot="footer"
           style={merged.styles?.footer}
@@ -396,10 +367,10 @@ export function Textarea(props: TextareaProps): JSX.Element {
             {
               size: field.size(),
             },
-            styleProps.classes?.footer,
+            merged.classes?.footer,
           )}
         >
-          {layoutProps.footer}
+          {merged.footer}
         </div>
       </Show>
     </div>

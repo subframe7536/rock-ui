@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createMemo, createSignal, mergeProps } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
@@ -12,7 +12,6 @@ import type {
   FormRequiredOption,
   FormValueOptions,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-options'
 
 import type { CheckboxGroupVariantProps } from './checkbox-group.class'
 import {
@@ -151,37 +150,31 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
     props,
   )
 
-  const [formProps, collectionProps, styleProps] = splitProps(
-    merged as CheckboxGroupProps<TTrue, TFalse>,
-    [...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS, 'onChange'],
-    ['legend', 'items'],
-  )
-
-  const groupId = useId(() => formProps.id, 'checkbox-group')
+  const groupId = useId(() => merged.id, 'checkbox-group')
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
       bind: false,
       defaultId: groupId(),
       defaultSize: 'md',
-      initialValue: formProps.defaultValue || [],
+      initialValue: merged.defaultValue || [],
     }),
   )
 
   const [uncontrolledValue, setUncontrolledValue] = createSignal<string[]>(
-    formProps.defaultValue ?? [],
+    merged.defaultValue ?? [],
   )
 
-  const selectedValues = createMemo(() => formProps.value ?? uncontrolledValue())
+  const selectedValues = createMemo(() => merged.value ?? uncontrolledValue())
   const legendId = createMemo(() => `${groupId()}-legend`)
 
   const normalizedItems = createMemo<NormalizedCheckboxGroupItem<TTrue, TFalse>[]>(() => {
-    const items = collectionProps.items ?? []
+    const items = merged.items ?? []
 
     return items.map((item, index) => {
       if (typeof item === 'string') {
@@ -215,12 +208,12 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
         : [...selectedValues(), value]
       : selectedValues().filter((itemValue) => itemValue !== value)
 
-    if (formProps.value === undefined) {
+    if (merged.value === undefined) {
       setUncontrolledValue(nextValues)
     }
 
     field.setFormValue(nextValues)
-    formProps.onChange?.(nextValues)
+    merged.onChange?.(nextValues)
     field.emit('change')
     field.emit('input')
   }
@@ -230,23 +223,23 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
       id={`${groupId()}-root`}
       data-slot="root"
       style={merged.styles?.root}
-      class={cn('relative', styleProps.classes?.root)}
+      class={cn('relative', merged.classes?.root)}
     >
       <fieldset
         id={groupId()}
         data-slot="fieldset"
         style={merged.styles?.fieldset}
-        aria-labelledby={collectionProps.legend ? legendId() : undefined}
+        aria-labelledby={merged.legend ? legendId() : undefined}
         class={checkboxGroupFieldsetVariants(
           {
-            orientation: styleProps.orientation,
+            orientation: merged.orientation,
           },
-          styleProps.variant !== 'table' && 'gap-2',
-          styleProps.classes?.fieldset,
+          merged.variant !== 'table' && 'gap-2',
+          merged.classes?.fieldset,
         )}
         {...field.ariaAttrs()}
       >
-        <Show when={collectionProps.legend}>
+        <Show when={merged.legend}>
           <legend
             id={legendId()}
             data-slot="legend"
@@ -254,12 +247,12 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
             class={checkboxGroupLegendVariants(
               {
                 size: field.size(),
-                required: formProps.required,
+                required: merged.required,
               },
-              styleProps.classes?.legend,
+              merged.classes?.legend,
             )}
           >
-            {collectionProps.legend}
+            {merged.legend}
           </legend>
         </Show>
 
@@ -275,26 +268,25 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
               description={item.description}
               disabled={item.disabled || field.disabled()}
               indeterminate={item.indeterminate}
-              required={formProps.required}
+              required={merged.required}
               size={field.size()}
-              variant={styleProps.variant === 'list' ? 'list' : 'card'}
-              indicator={styleProps.indicator}
-              checkedIcon={item.checkedIcon ?? styleProps.checkedIcon}
-              indeterminateIcon={item.indeterminateIcon ?? styleProps.indeterminateIcon}
+              variant={merged.variant === 'list' ? 'list' : 'card'}
+              indicator={merged.indicator}
+              checkedIcon={item.checkedIcon ?? merged.checkedIcon}
+              indeterminateIcon={item.indeterminateIcon ?? merged.indeterminateIcon}
               classes={{
                 root: checkboxGroupItemVariants(
                   {
-                    tableSize: styleProps.variant === 'table' ? field.size() : undefined,
-                    tableOrientation:
-                      styleProps.variant === 'table' ? styleProps.orientation : undefined,
+                    tableSize: merged.variant === 'table' ? field.size() : undefined,
+                    tableOrientation: merged.variant === 'table' ? merged.orientation : undefined,
                   },
-                  styleProps.variant === 'table' &&
+                  merged.variant === 'table' &&
                     'relative rounded-none b-(1 muted) data-checked:(bg-primary/10 border-primary/50) data-checked:z-1',
-                  styleProps.classes?.item,
+                  merged.classes?.item,
                 ),
-                ...styleProps.classes,
+                ...merged.classes,
               }}
-              styles={styleProps.styles}
+              styles={merged.styles}
               onChange={(checked) => onItemCheckedChange(item.value, Boolean(checked))}
             />
           )}

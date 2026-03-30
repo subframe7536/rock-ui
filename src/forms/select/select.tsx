@@ -33,7 +33,7 @@ import {
   RenderSelectClearButton,
   SELECT_COMMON_COMBOBOX_PROPS,
   SELECT_COMMON_DEFAULT_PROPS,
-  SELECT_SPLIT_PROP_GROUPS,
+  SELECT_SPLIT_KEYS,
   RenderSelectTriggerButton,
   RenderSelectEmptyNode,
   syncSelectSearchInputValue,
@@ -204,27 +204,24 @@ type SelectControlState = SharedSelectControlState<SelectT.Items>
 export function Select(props: SelectProps): JSX.Element {
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
 
-  const [formProps, commonProps, styleProps, restProps] = splitProps(
-    merged,
-    ...SELECT_SPLIT_PROP_GROUPS,
-  )
+  const [local, rest] = splitProps(merged, SELECT_SPLIT_KEYS)
 
   const field = useSelectField(() => ({
-    id: formProps.id,
-    name: formProps.name,
-    size: styleProps.size,
-    disabled: formProps.disabled,
-    initialValue: formProps.defaultValue ?? '',
+    id: local.id,
+    name: local.name,
+    size: local.size,
+    disabled: local.disabled,
+    initialValue: local.defaultValue ?? '',
   }))
   const menuControl = useSelectMenuControl(() => ({
-    openOnClick: commonProps.openOnClick,
-    preventAutoOpen: commonProps.preventAutoOpen,
+    openOnClick: local.openOnClick,
+    preventAutoOpen: local.preventAutoOpen,
   }))
 
-  const isSearchable = createMemo(() => Boolean(commonProps.search))
+  const isSearchable = createMemo(() => Boolean(local.search))
 
   // ---- Normalize options for Kobalte ----
-  const normalizedOptions = createMemo(() => normalizeOptions(commonProps.options))
+  const normalizedOptions = createMemo(() => normalizeOptions(local.options))
 
   const hasGroups = createMemo(() => normalizedOptions().some((item) => item.isGroup === true))
 
@@ -237,14 +234,14 @@ export function Select(props: SelectProps): JSX.Element {
   const [currentInputText, setCurrentInputText] = createSignal('')
 
   syncSelectSearchInputValue(
-    commonProps,
+    local,
     () => inputRef,
     (searchValue) => setCurrentInputText(searchValue),
   )
 
   const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Items>({
     isSearchable,
-    filterOption: () => commonProps.filterOption,
+    filterOption: () => local.filterOption,
     allOptions: allFlatOptions,
     inputValue: currentInputText,
   })
@@ -254,20 +251,20 @@ export function Select(props: SelectProps): JSX.Element {
 
   // ---- Value conversion memos ----
   const kobalteValue = createMemo(() => {
-    if (formProps.value === undefined) {
+    if (local.value === undefined) {
       return undefined
     }
-    if (formProps.value === null) {
+    if (local.value === null) {
       return null
     }
-    return findOptionByValue(formProps.value as SelectT.Value) ?? null
+    return findOptionByValue(local.value as SelectT.Value) ?? null
   })
 
   const kobalteDefaultValue = createMemo(() => {
-    if (formProps.defaultValue === undefined || formProps.defaultValue === null) {
+    if (local.defaultValue === undefined || local.defaultValue === null) {
       return undefined
     }
-    return findOptionByValue(formProps.defaultValue as SelectT.Value)
+    return findOptionByValue(local.defaultValue as SelectT.Value)
   })
 
   // ---- onChange bridges ----
@@ -275,7 +272,7 @@ export function Select(props: SelectProps): JSX.Element {
     const nextValue = option ? mapNormalizedToRawValue(option) : null
 
     field.setFormValue(nextValue ?? '')
-    formProps.onChange?.(nextValue)
+    local.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
@@ -286,7 +283,7 @@ export function Select(props: SelectProps): JSX.Element {
       setCurrentInputText(inputValue)
     }
 
-    commonProps.onSearch?.(inputValue)
+    local.onSearch?.(inputValue)
   }
 
   // ---- Trigger mode ----
@@ -302,9 +299,9 @@ export function Select(props: SelectProps): JSX.Element {
   >({
     styles: () => merged.styles,
     size: field.size,
-    classes: () => styleProps.classes,
-    optionRender: () => commonProps.optionRender,
-    labelRender: () => commonProps.labelRender,
+    classes: () => local.classes,
+    optionRender: () => local.optionRender,
+    labelRender: () => local.labelRender,
   })
 
   function SelectTriggerContent(props: SelectControlState): JSX.Element {
@@ -321,14 +318,14 @@ export function Select(props: SelectProps): JSX.Element {
     return (
       <>
         {/* Leading icon */}
-        <Show when={commonProps.leadingIcon}>
+        <Show when={local.leadingIcon}>
           {(icon) => (
             <Icon
               name={icon()}
               size={field.size()}
               slotName="leading"
               style={merged.styles?.leading}
-              class={selectLeadingIconVariants({ size: field.size() }, styleProps.classes?.leading)}
+              class={selectLeadingIconVariants({ size: field.size() }, local.classes?.leading)}
             />
           )}
         </Show>
@@ -348,31 +345,31 @@ export function Select(props: SelectProps): JSX.Element {
             menuControl.opensFromControlClick()
               ? 'data-readonly:cursor-pointer'
               : 'data-readonly:cursor-default',
-            styleProps.classes?.input,
+            local.classes?.input,
           )}
           readOnly={!isSearchable()}
-          maxLength={commonProps.searchMaxLength}
+          maxLength={local.searchMaxLength}
           {...inputHandlers}
         />
 
         <RenderSelectClearButton
-          show={Boolean(commonProps.allowClear && props.selectedOptions().length > 0)}
+          show={Boolean(local.allowClear && props.selectedOptions().length > 0)}
           size={field.size()}
           style={merged.styles?.clear}
-          rootClass={selectClearVariants({ size: field.size() }, styleProps.classes?.clear)}
+          rootClass={selectClearVariants({ size: field.size() }, local.classes?.clear)}
           onClick={(event) => {
             event.stopPropagation()
-            field.handleClear(props.clear, commonProps.onClear)
+            field.handleClear(props.clear, local.onClear)
           }}
         />
 
         <RenderSelectTriggerButton
           style={merged.styles?.trigger}
-          name={commonProps.triggerIcon}
+          name={local.triggerIcon}
           size={field.size()}
-          rootClass={selectTriggerIconVariants({ size: field.size() }, styleProps.classes?.trigger)}
-          loading={commonProps.loading}
-          loadingIcon={commonProps.loadingIcon}
+          rootClass={selectTriggerIconVariants({ size: field.size() }, local.classes?.trigger)}
+          loading={local.loading}
+          loadingIcon={local.loadingIcon}
           onClick={(event) => menuControl.onTriggerClickFallback(event, context)}
         />
       </>
@@ -384,9 +381,9 @@ export function Select(props: SelectProps): JSX.Element {
 
     return (
       <RenderSelectEmptyNode<SelectT.EmptyRenderContext>
-        emptyRender={commonProps.emptyRender}
+        emptyRender={local.emptyRender}
         style={merged.styles?.empty}
-        class={styleProps.classes?.empty}
+        class={local.classes?.empty}
         context={() => ({
           inputValue: currentInputText(),
           hasMatches: hasMatches(),
@@ -418,46 +415,46 @@ export function Select(props: SelectProps): JSX.Element {
       options={normalizedOptions()}
       {...SELECT_COMMON_COMBOBOX_PROPS}
       optionGroupChildren={hasGroups() ? 'options' : undefined}
-      placeholder={commonProps.placeholder}
+      placeholder={local.placeholder}
       onInputChange={handleInputChange}
       defaultFilter={kobalteFilter()}
       disabled={field.disabled()}
-      required={formProps.required}
+      required={local.required}
       validationState={field.invalid() ? 'invalid' : 'valid'}
-      virtualized={commonProps.virtualized}
-      itemComponent={commonProps.virtualized ? undefined : ItemComponent}
-      sectionComponent={commonProps.virtualized ? undefined : SectionComponent}
+      virtualized={local.virtualized}
+      itemComponent={local.virtualized ? undefined : ItemComponent}
+      sectionComponent={local.virtualized ? undefined : SectionComponent}
       {...singleSelectionProps()}
       closeOnSelection={true}
       style={merged.styles?.root}
-      class={cn('inline-flex h-fit w-full relative', styleProps.classes?.root)}
+      class={cn('inline-flex h-fit w-full relative', local.classes?.root)}
       {...field.ariaAttrs()}
-      {...restProps}
+      {...rest}
     >
       <RenderSelectComboboxFrame<SelectT.Items>
         controlStyle={merged.styles?.control}
         controlClass={selectControlVariants(
           {
             size: field.size(),
-            variant: styleProps.variant,
+            variant: local.variant,
           },
           menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-          styleProps.classes?.control,
+          local.classes?.control,
         )}
         invalid={Boolean(field.invalid())}
         disabled={Boolean(field.disabled())}
         renderTriggerContent={(state) => <SelectTriggerContent {...state} />}
         hasMatches={hasMatches}
         emptyNode={<SelectEmptyNode />}
-        virtualized={Boolean(commonProps.virtualized)}
+        virtualized={Boolean(local.virtualized)}
         contentStyle={merged.styles?.content}
-        contentClass={styleProps.classes?.content}
+        contentClass={local.classes?.content}
         listboxStyle={merged.styles?.listbox}
-        listboxClass={styleProps.classes?.listbox}
+        listboxClass={local.classes?.listbox}
         onContentInteractOutside={menuControl.onContentInteractOutside}
         onContentCloseAutoFocus={menuControl.onContentCloseAutoFocus}
-        onListboxScrollBottom={commonProps.onScrollBottom}
-        scrollBottomThreshold={commonProps.scrollBottomThreshold}
+        onListboxScrollBottom={local.onScrollBottom}
+        scrollBottomThreshold={local.scrollBottomThreshold}
         sectionComponent={SectionComponent}
         itemComponent={ItemComponent}
       />

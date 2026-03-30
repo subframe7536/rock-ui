@@ -65,11 +65,15 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     },
     props,
   ) as TooltipProps
-  const [behaviorProps, contentProps, restProps] = splitProps(
-    merged,
-    ['side', 'invert'],
-    ['text', 'kbds', 'classes', 'styles', 'children'],
-  )
+  const [local, rest] = splitProps(merged, [
+    'side',
+    'invert',
+    'text',
+    'kbds',
+    'classes',
+    'styles',
+    'children',
+  ])
 
   function Content(): JSX.Element {
     const popperContext = usePopperContext()
@@ -80,39 +84,39 @@ export function Tooltip(props: TooltipProps): JSX.Element {
         return resolveOverlayMenuSide(runtimePlacement)
       }
 
-      if (behaviorProps.side) {
-        return behaviorProps.side
+      if (local.side) {
+        return local.side
       }
 
-      return resolveOverlayMenuSide(restProps.placement)
+      return resolveOverlayMenuSide(rest.placement)
     })
 
     return (
       <KobalteTooltip.Content
         data-slot="content"
-        style={contentProps.styles?.content}
+        style={local.styles?.content}
         class={tooltipContentVariants(
-          { side: resolvedSide(), invert: behaviorProps.invert },
-          contentProps.classes?.content,
+          { side: resolvedSide(), invert: local.invert },
+          local.classes?.content,
         )}
       >
-        <Show when={typeof contentProps.text === 'string'} fallback={contentProps.text}>
+        <Show when={typeof local.text === 'string'} fallback={local.text}>
           <span
             data-slot="text"
-            style={contentProps.styles?.text}
-            class={cn('leading-4 text-pretty', contentProps.classes?.text)}
+            style={local.styles?.text}
+            class={cn('leading-4 text-pretty', local.classes?.text)}
           >
-            {contentProps.text}
+            {local.text}
           </span>
         </Show>
 
         <Kbd
-          variant={behaviorProps.invert ? 'invert' : undefined}
+          variant={local.invert ? 'invert' : undefined}
           size="sm"
-          value={contentProps.kbds}
+          value={local.kbds}
           classes={{
-            root: [contentProps.text && 'ms-1', contentProps.classes?.kbds],
-            item: contentProps.classes?.kbd,
+            root: [local.text && 'ms-1', local.classes?.kbds],
+            item: local.classes?.kbd,
           }}
         />
       </KobalteTooltip.Content>
@@ -120,15 +124,15 @@ export function Tooltip(props: TooltipProps): JSX.Element {
   }
 
   return (
-    <KobalteTooltip.Root overflowPadding={4} placement={behaviorProps.side} {...restProps}>
+    <KobalteTooltip.Root overflowPadding={4} placement={local.side} {...rest}>
       <KobalteTooltip.Trigger
         as="span"
         tabIndex={-1}
         data-slot="trigger"
-        style={contentProps.styles?.trigger}
-        class={cn('outline-none', contentProps.classes?.trigger)}
+        style={local.styles?.trigger}
+        class={cn('outline-none', local.classes?.trigger)}
       >
-        {contentProps.children}
+        {local.children}
       </KobalteTooltip.Trigger>
 
       <KobalteTooltip.Portal>

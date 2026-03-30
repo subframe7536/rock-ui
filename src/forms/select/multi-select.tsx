@@ -32,7 +32,7 @@ import {
   flattenOptions,
   mapNormalizedListToRawValues,
   mapNormalizedToRawValue,
-  MULTI_SELECT_SPLIT_PROP_GROUPS,
+  MULTI_SELECT_SPLIT_KEYS,
   normalizeOptions,
   RenderSelectComboboxFrame,
   RenderSelectClearButton,
@@ -236,34 +236,31 @@ function escapeRegex(str: string): string {
 export function MultiSelect(props: MultiSelectProps): JSX.Element {
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
 
-  const [formProps, commonProps, styleProps, restProps] = splitProps(
-    merged as MultiSelectProps,
-    ...MULTI_SELECT_SPLIT_PROP_GROUPS,
-  )
+  const [local, rest] = splitProps(merged as MultiSelectProps, MULTI_SELECT_SPLIT_KEYS)
 
   const field = useSelectField(() => ({
-    id: formProps.id,
-    name: formProps.name,
-    size: styleProps.size,
-    disabled: formProps.disabled,
-    initialValue: formProps.defaultValue ?? [],
+    id: local.id,
+    name: local.name,
+    size: local.size,
+    disabled: local.disabled,
+    initialValue: local.defaultValue ?? [],
   }))
   const menuControl = useSelectMenuControl(() => ({
-    openOnClick: commonProps.openOnClick,
-    preventAutoOpen: commonProps.preventAutoOpen,
+    openOnClick: local.openOnClick,
+    preventAutoOpen: local.preventAutoOpen,
   }))
 
   // ---- Mode-derived booleans ----
-  const isSearchable = () => Boolean(commonProps.search)
+  const isSearchable = () => Boolean(local.search)
 
   // ---- Dynamically created options (allowCreate) ----
   const [createdTags, setCreatedTags] = createSignal<NormalizedOption[]>([])
 
   // ---- Normalize options for Kobalte ----
   const normalizedOptions = createMemo(() => {
-    const base = normalizeOptions(commonProps.options)
+    const base = normalizeOptions(local.options)
 
-    if (commonProps.allowCreate || Boolean(commonProps.tokenSeparators?.length)) {
+    if (local.allowCreate || Boolean(local.tokenSeparators?.length)) {
       const existingValues = new Set(flattenOptions(base).map((o) => o.value))
       const newTags = createdTags().filter((t) => !existingValues.has(t.value))
 
@@ -288,20 +285,20 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       return
     }
 
-    if (formProps.value === undefined && formProps.defaultValue !== undefined) {
-      setSelectedValueSet(new Set(formProps.defaultValue.map((v) => String(v))))
+    if (local.value === undefined && local.defaultValue !== undefined) {
+      setSelectedValueSet(new Set(local.defaultValue.map((v) => String(v))))
     }
   })
 
   // Options with maxCount enforcement: disable unselected items when at the limit
   const effectiveOptions = createMemo(() => {
     const base = normalizedOptions()
-    if (commonProps.maxCount === undefined) {
+    if (local.maxCount === undefined) {
       return base
     }
 
     const selected = selectedValueSet()
-    if (selected.size < commonProps.maxCount!) {
+    if (selected.size < local.maxCount!) {
       return base
     }
 
@@ -331,14 +328,14 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
   const [currentInputText, setCurrentInputText] = createSignal('')
 
   syncSelectSearchInputValue(
-    commonProps,
+    local,
     () => inputRef,
     (searchValue) => setCurrentInputText(searchValue),
   )
 
   const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, MultiSelectT.Items>({
     isSearchable,
-    filterOption: () => commonProps.filterOption,
+    filterOption: () => local.filterOption,
     allOptions: allFlatOptions,
     inputValue: currentInputText,
   })
@@ -348,10 +345,10 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
 
   // ---- Value conversion memos ----
   const multiKobalteValue = createMemo(() => {
-    if (formProps.value === undefined) {
+    if (local.value === undefined) {
       return undefined
     }
-    const values = formProps.value
+    const values = local.value
 
     return values
       .map((v) => findOptionByValue(v))
@@ -359,11 +356,11 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
   })
 
   const kobalteDefaultValue = createMemo(() => {
-    if (formProps.defaultValue === undefined) {
+    if (local.defaultValue === undefined) {
       return undefined
     }
 
-    return formProps.defaultValue
+    return local.defaultValue
       .map((v) => findOptionByValue(v))
       .filter((o): o is NormalizedOption => o !== undefined)
   })
@@ -373,7 +370,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
     setSelectedValueSet(new Set(options.map((o) => o.value)))
 
     const nextValue = mapNormalizedListToRawValues(options)
-    emitSelectValueChange(field, nextValue, formProps.onChange)
+    emitSelectValueChange(field, nextValue, local.onChange)
   }
 
   const selectedOptions = createMemo(() =>
@@ -381,11 +378,11 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
   )
 
   const isAtMaxCount = () => {
-    if (commonProps.maxCount === undefined) {
+    if (local.maxCount === undefined) {
       return false
     }
 
-    return selectedValueSet().size >= commonProps.maxCount
+    return selectedValueSet().size >= local.maxCount
   }
 
   function appendOptionIfAllowed(
@@ -405,7 +402,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       return { next: current, appended: false, blockedByMaxCount: false, blockedByDisabled: true }
     }
 
-    if (commonProps.maxCount !== undefined && current.length >= commonProps.maxCount) {
+    if (local.maxCount !== undefined && current.length >= local.maxCount) {
       return { next: current, appended: false, blockedByMaxCount: true, blockedByDisabled: false }
     }
 
@@ -426,7 +423,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       return { option: existing, blockedByMaxCount: false }
     }
 
-    if (commonProps.maxCount !== undefined && current.length >= commonProps.maxCount) {
+    if (local.maxCount !== undefined && current.length >= local.maxCount) {
       return { blockedByMaxCount: true }
     }
 
@@ -436,8 +433,8 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
   // ---- Input change handler ----
   function handleInputChange(inputValue: string): void {
     // Token separator check for tags mode
-    if (commonProps.tokenSeparators?.length) {
-      const sepRegex = new RegExp(`[${escapeRegex(commonProps.tokenSeparators.join(''))}]`)
+    if (local.tokenSeparators?.length) {
+      const sepRegex = new RegExp(`[${escapeRegex(local.tokenSeparators.join(''))}]`)
 
       if (sepRegex.test(inputValue)) {
         const trailingInput = inputValue.split(sepRegex).at(-1) ?? ''
@@ -487,7 +484,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
           setCurrentInputText(remainder)
         }
 
-        commonProps.onSearch?.(remainder)
+        local.onSearch?.(remainder)
         return
       }
     }
@@ -496,7 +493,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       setCurrentInputText(inputValue)
     }
 
-    commonProps.onSearch?.(inputValue)
+    local.onSearch?.(inputValue)
   }
 
   function addTag(text: string): NormalizedOption | undefined {
@@ -538,7 +535,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
   }
 
   function createTag(value?: string): boolean {
-    if (!commonProps.allowCreate) {
+    if (!local.allowCreate) {
       return false
     }
 
@@ -572,7 +569,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
     }
 
     setCurrentInputText('')
-    commonProps.onSearch?.('')
+    local.onSearch?.('')
     return true
   }
 
@@ -589,9 +586,9 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
   >({
     styles: () => merged.styles,
     size: field.size,
-    classes: () => styleProps.classes,
-    optionRender: () => commonProps.optionRender,
-    labelRender: () => commonProps.labelRender,
+    classes: () => local.classes,
+    optionRender: () => local.optionRender,
+    labelRender: () => local.labelRender,
   })
 
   function SelectTriggerContent(props: SelectControlState): JSX.Element {
@@ -634,7 +631,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
               handleInputChange('')
             }
           }
-        } else if (commonProps.allowCreate) {
+        } else if (local.allowCreate) {
           createTag(text)
         }
 
@@ -645,33 +642,33 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
     const visibleTags = (): NormalizedOption[] => {
       const selected = props.selectedOptions()
 
-      if (commonProps.maxTagCount === undefined) {
+      if (local.maxTagCount === undefined) {
         return selected
       }
 
-      return selected.slice(0, commonProps.maxTagCount)
+      return selected.slice(0, local.maxTagCount)
     }
 
     const overflowCount = (): number => {
-      if (commonProps.maxTagCount === undefined) {
+      if (local.maxTagCount === undefined) {
         return 0
       }
       const total = props.selectedOptions().length
 
-      return Math.max(0, total - commonProps.maxTagCount!)
+      return Math.max(0, total - local.maxTagCount!)
     }
 
     return (
       <>
         {/* Leading icon */}
-        <Show when={commonProps.leadingIcon}>
+        <Show when={local.leadingIcon}>
           {(icon) => (
             <Icon
               name={icon()}
               size={field.size()}
               slotName="leading"
               style={merged.styles?.leading}
-              class={selectLeadingIconVariants({ size: field.size() }, styleProps.classes?.leading)}
+              class={selectLeadingIconVariants({ size: field.size() }, local.classes?.leading)}
             />
           )}
         </Show>
@@ -682,7 +679,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
           class={cn(
             'p-1.5 flex flex-1 flex-wrap gap-1 max-w-full select-none items-center',
             menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-            styleProps.classes?.tagsContainer,
+            local.classes?.tagsContainer,
           )}
           onPointerDown={(e) => {
             e.preventDefault()
@@ -699,20 +696,20 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
               const onClose = () => props.remove(option)
               return (
                 <Show
-                  when={!commonProps.tagRender}
-                  fallback={commonProps.tagRender!({ ...option.raw, onClose })}
+                  when={!local.tagRender}
+                  fallback={local.tagRender!({ ...option.raw, onClose })}
                 >
                   <Badge
                     slotName="tag"
                     size={field.size()}
                     title={option.key}
-                    variant={commonProps.tagVariant}
+                    variant={local.tagVariant}
                     styles={{ root: merged.styles?.tag }}
                     classes={{
-                      root: ['max-w-50% pe-0', styleProps.classes?.tag],
-                      trailing: ['rounded hover:bg-accent scale-85', styleProps.classes?.tagRemove],
+                      root: ['max-w-50% pe-0', local.classes?.tag],
+                      trailing: ['rounded hover:bg-accent scale-85', local.classes?.tagRemove],
                     }}
-                    trailing={commonProps.closeIcon ?? 'icon-close'}
+                    trailing={local.closeIcon ?? 'icon-close'}
                     onTrailingClick={(e) => {
                       e.stopPropagation()
                       onClose()
@@ -750,10 +747,10 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
               menuControl.opensFromControlClick()
                 ? 'data-readonly:cursor-pointer'
                 : 'data-readonly:cursor-default',
-              styleProps.classes?.input,
+              local.classes?.input,
             )}
             readOnly={!isSearchable()}
-            maxLength={commonProps.searchMaxLength}
+            maxLength={local.searchMaxLength}
             onPointerDown={(e: PointerEvent) => {
               e.stopPropagation()
             }}
@@ -762,23 +759,23 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
         </div>
 
         <RenderSelectClearButton
-          show={Boolean(commonProps.allowClear && props.selectedOptions().length > 0)}
+          show={Boolean(local.allowClear && props.selectedOptions().length > 0)}
           size={field.size()}
           style={merged.styles?.clear}
-          rootClass={selectClearVariants({ size: field.size() }, styleProps.classes?.clear)}
+          rootClass={selectClearVariants({ size: field.size() }, local.classes?.clear)}
           onClick={(event) => {
             event.stopPropagation()
-            field.handleClear(props.clear, commonProps.onClear)
+            field.handleClear(props.clear, local.onClear)
           }}
         />
 
         <RenderSelectTriggerButton
           style={merged.styles?.trigger}
-          name={commonProps.triggerIcon}
+          name={local.triggerIcon}
           size={field.size()}
-          rootClass={selectTriggerIconVariants({ size: field.size() }, styleProps.classes?.trigger)}
-          loading={commonProps.loading}
-          loadingIcon={commonProps.loadingIcon}
+          rootClass={selectTriggerIconVariants({ size: field.size() }, local.classes?.trigger)}
+          loading={local.loading}
+          loadingIcon={local.loadingIcon}
           onClick={(event) => menuControl.onTriggerClickFallback(event, context)}
         />
       </>
@@ -790,9 +787,9 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
 
     return (
       <RenderSelectEmptyNode<MultiSelectT.EmptyRenderContext>
-        emptyRender={commonProps.emptyRender}
+        emptyRender={local.emptyRender}
         style={merged.styles?.empty}
-        class={styleProps.classes?.empty}
+        class={local.classes?.empty}
         context={() => ({
           inputValue: currentInputText(),
           hasMatches: hasMatches(),
@@ -816,15 +813,15 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       options={effectiveOptions()}
       {...SELECT_COMMON_COMBOBOX_PROPS}
       optionGroupChildren={hasGroups() ? 'options' : undefined}
-      placeholder={selectedValueSet().size > 0 ? '' : commonProps.placeholder}
+      placeholder={selectedValueSet().size > 0 ? '' : local.placeholder}
       onInputChange={handleInputChange}
       defaultFilter={kobalteFilter()}
       disabled={field.disabled()}
-      required={formProps.required}
+      required={local.required}
       validationState={field.invalid() ? 'invalid' : 'valid'}
-      virtualized={commonProps.virtualized}
-      itemComponent={commonProps.virtualized ? undefined : ItemComponent}
-      sectionComponent={commonProps.virtualized ? undefined : SectionComponent}
+      virtualized={local.virtualized}
+      itemComponent={local.virtualized ? undefined : ItemComponent}
+      sectionComponent={local.virtualized ? undefined : SectionComponent}
       multiple={true}
       value={multiKobalteValue()}
       defaultValue={kobalteDefaultValue()}
@@ -832,9 +829,9 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       closeOnSelection={false}
       removeOnBackspace={true}
       style={merged.styles?.root}
-      class={cn('inline-flex h-fit w-full relative', styleProps.classes?.root)}
+      class={cn('inline-flex h-fit w-full relative', local.classes?.root)}
       {...field.ariaAttrs()}
-      {...restProps}
+      {...rest}
     >
       <RenderSelectComboboxFrame<MultiSelectT.Items>
         controlStyle={merged.styles?.control}
@@ -842,9 +839,9 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
           selectControlVariants(
             {
               size: field.size(),
-              variant: styleProps.variant,
+              variant: local.variant,
             },
-            styleProps.classes?.control,
+            local.classes?.control,
           ),
           menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
         )}
@@ -853,15 +850,15 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
         renderTriggerContent={(state) => <SelectTriggerContent {...state} />}
         hasMatches={hasMatches}
         emptyNode={<SelectEmptyNode />}
-        virtualized={Boolean(commonProps.virtualized)}
+        virtualized={Boolean(local.virtualized)}
         contentStyle={merged.styles?.content}
-        contentClass={styleProps.classes?.content}
+        contentClass={local.classes?.content}
         listboxStyle={merged.styles?.listbox}
-        listboxClass={styleProps.classes?.listbox}
+        listboxClass={local.classes?.listbox}
         onContentInteractOutside={menuControl.onContentInteractOutside}
         onContentCloseAutoFocus={menuControl.onContentCloseAutoFocus}
-        onListboxScrollBottom={commonProps.onScrollBottom}
-        scrollBottomThreshold={commonProps.scrollBottomThreshold}
+        onListboxScrollBottom={local.onScrollBottom}
+        scrollBottomThreshold={local.scrollBottomThreshold}
         sectionComponent={SectionComponent}
         itemComponent={ItemComponent}
       />

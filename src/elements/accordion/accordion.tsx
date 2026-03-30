@@ -100,76 +100,72 @@ export function Accordion(props: AccordionProps): JSX.Element {
     props,
   ) as AccordionProps
 
-  const [behaviorProps, renderProps, restProps] = splitProps(
-    merged,
-    ['disabled', 'unmountOnHide'],
-    ['items', 'trailing', 'classes', 'styles'],
-  )
+  const [local, rest] = splitProps(merged, [
+    'disabled',
+    'unmountOnHide',
+    'items',
+    'trailing',
+    'classes',
+    'styles',
+  ])
 
   return (
     <KobalteAccordion.Root
       data-slot="root"
-      style={renderProps.styles?.root}
-      class={cn(
-        'flex flex-col w-full',
-        behaviorProps.disabled && 'effect-dis',
-        renderProps.classes?.root,
-      )}
-      {...restProps}
+      style={local.styles?.root}
+      class={cn('flex flex-col w-full', local.disabled && 'effect-dis', local.classes?.root)}
+      {...rest}
     >
-      <For each={renderProps.items}>
+      <For each={local.items}>
         {(item, index) => (
           <KobalteAccordion.Item
             value={item.value ?? String(index())}
-            disabled={Boolean(behaviorProps.disabled || item.disabled)}
-            forceMount={!behaviorProps.unmountOnHide}
+            disabled={Boolean(local.disabled || item.disabled)}
+            forceMount={!local.unmountOnHide}
             data-slot="item"
-            style={renderProps.styles?.item}
-            class={cn(
-              'not-last:b-(b b-border) data-disabled:effect-dis',
-              renderProps.classes?.item,
-            )}
+            style={local.styles?.item}
+            class={cn('not-last:b-(b b-border) data-disabled:effect-dis', local.classes?.item)}
           >
             <KobalteAccordion.Header
               data-slot="header"
-              style={renderProps.styles?.header}
-              class={cn('flex', renderProps.classes?.header)}
+              style={local.styles?.header}
+              class={cn('flex', local.classes?.header)}
             >
               <KobalteAccordion.Trigger
                 data-slot="trigger"
-                style={renderProps.styles?.trigger}
+                style={local.styles?.trigger}
                 class={cn(
                   'group text-sm font-medium py-2.5 text-left outline-none b-1 b-transparent rounded-lg flex flex-1 gap-1.5 min-w-0 w-full transition items-center justify-between relative focus-visible:effect-fv-border disabled:effect-dis hover:underline',
-                  renderProps.classes?.trigger,
+                  local.classes?.trigger,
                 )}
               >
                 <Show when={item.leading}>
                   <Icon
                     name={item.leading}
                     slotName="leading"
-                    style={renderProps.styles?.leading}
-                    class={cn('shrink-0 size-5', renderProps.classes?.leading)}
+                    style={local.styles?.leading}
+                    class={cn('shrink-0 size-5', local.classes?.leading)}
                   />
                 </Show>
 
                 <Show when={item.label}>
                   <span
                     data-slot="label"
-                    style={renderProps.styles?.label}
-                    class={cn('text-start break-words', renderProps.classes?.label)}
+                    style={local.styles?.label}
+                    class={cn('text-start break-words', local.classes?.label)}
                   >
                     {item.label}
                   </span>
                 </Show>
 
-                <Show when={renderProps.trailing}>
+                <Show when={local.trailing}>
                   <Icon
-                    name={renderProps.trailing}
+                    name={local.trailing}
                     slotName="trailing"
-                    style={renderProps.styles?.trailing}
+                    style={local.styles?.trailing}
                     class={cn(
                       'text-muted-foreground ml-auto shrink-0 size-4 pointer-events-none duration-150 group-aria-expanded:rotate-180',
-                      renderProps.classes?.trailing,
+                      local.classes?.trailing,
                     )}
                   />
                 </Show>
@@ -180,10 +176,10 @@ export function Accordion(props: AccordionProps): JSX.Element {
               <Show when={item.content}>
                 <div
                   data-slot="content"
-                  style={renderProps.styles?.content}
+                  style={local.styles?.content}
                   class={cn(
                     'style-accordion-content pb-2.5 h-$kb-collapsible-content-height',
-                    renderProps.classes?.content,
+                    local.classes?.content,
                   )}
                 >
                   {item.content}

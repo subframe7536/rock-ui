@@ -65,7 +65,9 @@ export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
               let bestTop = Number.POSITIVE_INFINITY
 
               for (const entry of intersectingEntries) {
-                if (!entry.isIntersecting) continue
+                if (!entry.isIntersecting) {
+                  continue
+                }
                 const top = entry.boundingClientRect.top
                 if (top < bestTop) {
                   bestTop = top

@@ -293,14 +293,23 @@ async function validateStandardSchema(
 
 /** Form container with schema-based validation and submission handling. */
 export function Form<TState extends object = object>(props: FormProps<TState>): JSX.Element {
-  const [stateProps, eventProps, renderProps, restProps] = splitProps(
-    props as FormProps<TState>,
-    ['id', 'state', 'schema', 'validate', 'validateOn', 'validateOnInputDelay', 'disabled'],
-    ['loadingAuto', 'onSubmit', 'onError'],
-    ['classes', 'styles', 'children'],
-  )
+  const [local, rest] = splitProps(props as FormProps<TState>, [
+    'id',
+    'state',
+    'schema',
+    'validate',
+    'validateOn',
+    'validateOnInputDelay',
+    'disabled',
+    'loadingAuto',
+    'onSubmit',
+    'onError',
+    'classes',
+    'styles',
+    'children',
+  ])
 
-  const formId = useId(() => stateProps.id, 'form')
+  const formId = useId(() => local.id, 'form')
   const [formState, setFormState] = createStore<FormRuntimeStore>({
     loading: false,
     errors: [],
@@ -308,8 +317,8 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
   })
 
   function buildValidationState(): TState | undefined {
-    if (stateProps.state !== undefined) {
-      return stateProps.state
+    if (local.state !== undefined) {
+      return local.state
     }
 
     const result: Record<string, unknown> = {}
@@ -422,7 +431,7 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
 
   async function handleInputEvent(event: FormInputEvent): Promise<void> {
     const identity = toFieldIdentity(event.name)
-    const shouldValidate = (stateProps.validateOn ?? DEFAULT_VALIDATE_ON).includes(event.type)
+    const shouldValidate = (local.validateOn ?? DEFAULT_VALIDATE_ON).includes(event.type)
 
     if (shouldValidate && !formState.loading && identity) {
       if (event.type === 'input') {
@@ -500,10 +509,10 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
 
   async function getErrors(): Promise<FormValidationError[]> {
     const validationState = buildValidationState()
-    const schemaErrors = stateProps.schema
-      ? await validateStandardSchema(validationState, stateProps.schema)
+    const schemaErrors = local.schema
+      ? await validateStandardSchema(validationState, local.schema)
       : []
-    const validationErrors = (await stateProps.validate?.(validationState)) ?? []
+    const validationErrors = (await local.validate?.(validationState)) ?? []
 
     const allErrors = [...schemaErrors, ...validationErrors]
     return resolveErrorIds(allErrors)
@@ -542,7 +551,7 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
 
   const contextValue: FormContextValue = {
     get disabled() {
-      return stateProps.disabled ?? false
+      return local.disabled ?? false
     },
     get loading() {
       return formState.loading
@@ -551,10 +560,10 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
       return formState.errors
     },
     get validateOn() {
-      return stateProps.validateOn ?? DEFAULT_VALIDATE_ON
+      return local.validateOn ?? DEFAULT_VALIDATE_ON
     },
     get validateOnInputDelay() {
-      return stateProps.validateOnInputDelay ?? 300
+      return local.validateOnInputDelay ?? 300
     },
     registerInput,
     unregisterInput,
@@ -570,7 +579,7 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
         return fieldValue
       }
 
-      return getValueAtPath(stateProps.state, identity.path)
+      return getValueAtPath(local.state, identity.path)
     },
     getFieldState: (name) => {
       const identity = toFieldIdentity(name)
@@ -586,8 +595,8 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
         return
       }
 
-      if (stateProps.state !== undefined) {
-        setValueAtPath(stateProps.state, path, value)
+      if (local.state !== undefined) {
+        setValueAtPath(local.state, path, value)
       }
 
       const key = pathToKey(path)
@@ -613,7 +622,7 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
     event.preventDefault()
 
     const submitEvent = event as FormT.SubmitEvent<TState>
-    setFormState('loading', Boolean(eventProps.loadingAuto ?? true))
+    setFormState('loading', Boolean(local.loadingAuto ?? true))
 
     try {
       const currentErrors = await runValidation()
@@ -622,12 +631,12 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
         const errorEvent = Object.assign(event, {
           errors: currentErrors,
         }) as FormT.ErrorEvent
-        eventProps.onError?.(errorEvent)
+        local.onError?.(errorEvent)
         return
       }
 
       submitEvent.data = buildValidationState()
-      await eventProps.onSubmit?.(submitEvent)
+      await local.onSubmit?.(submitEvent)
       setFormState(
         'fields',
         produce((currentFields) => {
@@ -656,13 +665,13 @@ export function Form<TState extends object = object>(props: FormProps<TState>): 
     <FormProvider value={contextValue}>
       <form
         id={formId()}
-        style={renderProps.styles?.root}
-        class={cn('w-full data-loading:opacity-80', renderProps.classes?.root)}
+        style={local.styles?.root}
+        class={cn('w-full data-loading:opacity-80', local.classes?.root)}
         data-loading={formState.loading ? '' : undefined}
         onSubmit={onSubmit}
-        {...restProps}
+        {...rest}
       >
-        {resolveRenderProp<FormT.RenderProps>(renderProps.children, () => ({
+        {resolveRenderProp<FormT.RenderProps>(local.children, () => ({
           errors: formState.errors,
           loading: formState.loading,
         }))}

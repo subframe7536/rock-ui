@@ -140,43 +140,45 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
     props,
   )
 
-  const [formProps, displayProps, styleProps, restProps] = splitProps(
-    merged as SwitchProps<TTrue, TFalse>,
-    [
-      ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
-      'checked',
-      'defaultChecked',
-      'trueValue',
-      'falseValue',
-    ],
-    ['loading', 'loadingIcon', 'checkedIcon', 'uncheckedIcon', 'label', 'description'],
-    ['size', 'classes'],
-  )
+  const [local, rest] = splitProps(merged as SwitchProps<TTrue, TFalse>, [
+    ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
+    'checked',
+    'defaultChecked',
+    'trueValue',
+    'falseValue',
+    'loading',
+    'loadingIcon',
+    'checkedIcon',
+    'uncheckedIcon',
+    'label',
+    'description',
+    'size',
+    'classes',
+  ])
 
-  const generatedId = useId(() => formProps.id, 'switch')
+  const generatedId = useId(() => local.id, 'switch')
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled || displayProps.loading,
+      id: local.id,
+      name: local.name,
+      size: local.size,
+      disabled: local.disabled || local.loading,
     }),
     () => ({
       defaultId: generatedId(),
       defaultSize: 'md',
       initialValue:
-        normalizeFieldValue(
-          formProps.checked !== undefined ? formProps.checked : formProps.defaultChecked,
-        ) ?? formProps.falseValue,
+        normalizeFieldValue(local.checked !== undefined ? local.checked : local.defaultChecked) ??
+        local.falseValue,
     }),
   )
 
   function toCheckedState(value: unknown): boolean {
-    if (value === formProps.trueValue) {
+    if (value === local.trueValue) {
       return true
     }
 
-    if (value === formProps.falseValue) {
+    if (value === local.falseValue) {
       return false
     }
 
@@ -188,24 +190,24 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
       return value
     }
 
-    if (value === formProps.trueValue || value === formProps.falseValue) {
+    if (value === local.trueValue || value === local.falseValue) {
       return value
     }
 
     if (typeof value === 'boolean') {
-      return value ? formProps.trueValue : formProps.falseValue
+      return value ? local.trueValue : local.falseValue
     }
 
     return value
   }
 
   function toChangeValue(nextChecked: boolean): TTrue | TFalse {
-    return nextChecked ? (formProps.trueValue as TTrue) : (formProps.falseValue as TFalse)
+    return nextChecked ? (local.trueValue as TTrue) : (local.falseValue as TFalse)
   }
 
   const checked = createMemo<boolean | undefined>(() => {
-    if (formProps.checked !== undefined) {
-      return toCheckedState(formProps.checked)
+    if (local.checked !== undefined) {
+      return toCheckedState(local.checked)
     }
 
     if (field.value() !== undefined) {
@@ -216,18 +218,18 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
   })
 
   createEffect(() => {
-    if (formProps.checked === undefined) {
+    if (local.checked === undefined) {
       return
     }
 
-    field.setFormValue(normalizeFieldValue(formProps.checked))
+    field.setFormValue(normalizeFieldValue(local.checked))
   })
 
   function onChange(nextChecked: boolean): void {
     const nextValue = toChangeValue(nextChecked)
 
     field.setFormValue(nextValue)
-    formProps.onChange?.(nextValue)
+    local.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
@@ -238,24 +240,20 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
       name={field.name()}
       disabled={field.disabled()}
       checked={checked()}
-      defaultChecked={formProps.defaultChecked}
+      defaultChecked={local.defaultChecked}
       onChange={onChange}
       data-slot="root"
       style={merged.styles?.root}
-      class={cn(
-        'flex items-start relative',
-        field.disabled() && 'effect-dis',
-        styleProps.classes?.root,
-      )}
-      {...restProps}
+      class={cn('flex items-start relative', field.disabled() && 'effect-dis', local.classes?.root)}
+      {...rest}
     >
       {(state) => {
         const resolvedIconName = (): IconT.Name | undefined => {
-          if (displayProps.loading) {
-            return displayProps.loadingIcon
+          if (local.loading) {
+            return local.loadingIcon
           }
 
-          return state.checked() ? displayProps.checkedIcon : displayProps.uncheckedIcon
+          return state.checked() ? local.checkedIcon : local.uncheckedIcon
         }
 
         return (
@@ -267,7 +265,7 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
                 {
                   size: field.size(),
                 },
-                styleProps.classes?.container,
+                local.classes?.container,
               )}
             >
               <KobalteSwitch.Input
@@ -285,7 +283,7 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
                   {
                     size: field.size(),
                   },
-                  styleProps.classes?.track,
+                  local.classes?.track,
                 )}
               >
                 <KobalteSwitch.Thumb
@@ -295,19 +293,19 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
                     {
                       size: field.size(),
                     },
-                    styleProps.classes?.thumb,
+                    local.classes?.thumb,
                   )}
                 >
                   <Show when={resolvedIconName()} keyed>
                     {(iconName) => (
                       <Icon
                         name={iconName}
-                        data-checked={!displayProps.loading && state.checked() ? '' : undefined}
-                        data-unchecked={!displayProps.loading && !state.checked() ? '' : undefined}
-                        data-loading={displayProps.loading ? '' : undefined}
+                        data-checked={!local.loading && state.checked() ? '' : undefined}
+                        data-unchecked={!local.loading && !state.checked() ? '' : undefined}
+                        data-loading={local.loading ? '' : undefined}
                         class={cn(
                           'text-primary size-10/12 transition-opacity absolute data-unchecked:(text-muted-foreground opacity-90) data-checked:opacity-100 data-loading:effect-loading',
-                          styleProps.classes?.icon,
+                          local.classes?.icon,
                         )}
                       />
                     )}
@@ -316,7 +314,7 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
               </KobalteSwitch.Control>
             </div>
 
-            <Show when={displayProps.label || displayProps.description}>
+            <Show when={local.label || local.description}>
               <div
                 data-slot="wrapper"
                 style={merged.styles?.wrapper}
@@ -324,31 +322,31 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
                   {
                     size: field.size(),
                   },
-                  styleProps.classes?.wrapper,
+                  local.classes?.wrapper,
                 )}
               >
-                <Show when={displayProps.label}>
+                <Show when={local.label}>
                   <label
                     for={field.id()}
                     data-slot="label"
                     style={merged.styles?.label}
                     class={cn(
                       'text-foreground font-medium block cursor-pointer',
-                      restProps.required && "after:(text-destructive ms-0.5 content-['*'])",
-                      styleProps.classes?.label,
+                      rest.required && "after:(text-destructive ms-0.5 content-['*'])",
+                      local.classes?.label,
                     )}
                   >
-                    {displayProps.label}
+                    {local.label}
                   </label>
                 </Show>
 
-                <Show when={displayProps.description}>
+                <Show when={local.description}>
                   <p
                     data-slot="description"
                     style={merged.styles?.description}
-                    class={cn('text-muted-foreground', styleProps.classes?.description)}
+                    class={cn('text-muted-foreground', local.classes?.description)}
                   >
-                    {displayProps.description}
+                    {local.description}
                   </p>
                 </Show>
               </div>

@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { Show, createMemo, mergeProps, onMount, splitProps } from 'solid-js'
+import { Show, createMemo, mergeProps, onMount } from 'solid-js'
 
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
@@ -15,7 +15,6 @@ import type {
   FormRequiredOption,
   FormValueOptions,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_DISABLED_KEYS, FORM_INPUT_INTERACTION_KEYS } from '../form-field/form-options'
 
 import type { InputVariantProps } from './input.class'
 import {
@@ -162,64 +161,48 @@ export function Input(props: InputProps): JSX.Element {
       loadingIcon: 'icon-loading' as IconT.Name,
     },
     props,
-  )
+  ) as InputProps
 
-  const [formProps, baseProps, styleProps] = splitProps(
-    merged as InputProps,
-    [
-      ...FORM_ID_NAME_DISABLED_KEYS,
-      'value',
-      'required',
-      'readOnly',
-      'modelModifiers',
-      'onValueChange',
-      'onInput',
-      'onChange',
-      ...FORM_INPUT_INTERACTION_KEYS,
-    ],
-    ['type', 'placeholder', 'autocomplete', 'autofocus', 'autofocusDelay', 'maxLength', 'children'],
-  )
-
-  const generatedId = useId(() => formProps.id, 'input')
+  const generatedId = useId(() => merged.id, 'input')
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
       deferInputValidation: true,
       defaultId: generatedId(),
       defaultSize: 'md',
-      initialValue: styleProps.defaultValue ?? '',
+      initialValue: merged.defaultValue ?? '',
     }),
   )
 
   let inputEl: HTMLInputElement | undefined
 
-  const isLazy = createMemo(() => Boolean(formProps.modelModifiers?.lazy))
+  const isLazy = createMemo(() => Boolean(merged.modelModifiers?.lazy))
 
   const inputValueProps = createMemo<{
     value?: InputT.Value
     defaultValue?: InputT.Value
   }>(() => {
-    if (formProps.value !== undefined) {
-      return { value: formProps.value }
+    if (merged.value !== undefined) {
+      return { value: merged.value }
     }
 
-    if (styleProps.defaultValue !== undefined) {
-      return { defaultValue: styleProps.defaultValue }
+    if (merged.defaultValue !== undefined) {
+      return { defaultValue: merged.defaultValue }
     }
 
     return {}
   })
   const loadingTarget = createMemo<'leading' | 'trailing'>(() => {
-    if (styleProps.leading) {
+    if (merged.leading) {
       return 'leading'
     }
 
-    if (styleProps.trailing) {
+    if (merged.trailing) {
       return 'trailing'
     }
 
@@ -227,37 +210,37 @@ export function Input(props: InputProps): JSX.Element {
   })
 
   const resolvedLeading = createMemo<IconT.Name | undefined>(() => {
-    if (styleProps.loading && loadingTarget() === 'leading') {
-      return styleProps.loadingIcon
+    if (merged.loading && loadingTarget() === 'leading') {
+      return merged.loadingIcon
     }
 
-    return styleProps.leading
+    return merged.leading
   })
   const resolvedTrailing = createMemo<IconT.Name | undefined>(() => {
-    if (styleProps.loading && loadingTarget() === 'trailing') {
-      return styleProps.loadingIcon
+    if (merged.loading && loadingTarget() === 'trailing') {
+      return merged.loadingIcon
     }
 
-    return styleProps.trailing
+    return merged.trailing
   })
 
   const isLeadingLoading = createMemo(() =>
-    Boolean(styleProps.loading && loadingTarget() === 'leading'),
+    Boolean(merged.loading && loadingTarget() === 'leading'),
   )
   const isTrailingLoading = createMemo(() =>
-    Boolean(styleProps.loading && loadingTarget() === 'trailing'),
+    Boolean(merged.loading && loadingTarget() === 'trailing'),
   )
 
   function updateInputValue(value: string | null | undefined): void {
-    const nextValue = applyInputModifiers<InputT.Value>(value, formProps.modelModifiers)
+    const nextValue = applyInputModifiers<InputT.Value>(value, merged.modelModifiers)
 
     field.setFormValue(nextValue)
-    formProps.onValueChange?.(nextValue)
+    merged.onValueChange?.(nextValue)
     field.emit('input')
   }
 
   const onInput: JSX.EventHandlerUnion<HTMLInputElement, InputEvent> = (event) => {
-    callHandler(event, formProps.onInput as JSX.EventHandlerUnion<HTMLInputElement, InputEvent>)
+    callHandler(event, merged.onInput as JSX.EventHandlerUnion<HTMLInputElement, InputEvent>)
 
     if (!isLazy()) {
       updateInputValue(event.currentTarget.value)
@@ -271,22 +254,22 @@ export function Input(props: InputProps): JSX.Element {
       updateInputValue(value)
     }
 
-    if (formProps.modelModifiers?.trim) {
+    if (merged.modelModifiers?.trim) {
       event.currentTarget.value = value.trim()
     }
 
     field.emit('change')
-    callHandler(event, formProps.onChange as JSX.EventHandlerUnion<HTMLInputElement, Event>)
+    callHandler(event, merged.onChange as JSX.EventHandlerUnion<HTMLInputElement, Event>)
   }
 
   const onBlur: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
     field.emit('blur')
-    callHandler(event, formProps.onBlur as any)
+    callHandler(event, merged.onBlur as any)
   }
 
   const onFocus: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
     field.emit('focus')
-    callHandler(event, formProps.onFocus as any)
+    callHandler(event, merged.onFocus as any)
   }
 
   const onRootPointerDown: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (event) => {
@@ -298,13 +281,13 @@ export function Input(props: InputProps): JSX.Element {
   }
 
   onMount(() => {
-    if (!baseProps.autofocus) {
+    if (!merged.autofocus) {
       return
     }
 
     setTimeout(() => {
       inputEl?.focus()
-    }, baseProps.autofocusDelay ?? 0)
+    }, merged.autofocusDelay ?? 0)
   })
 
   return (
@@ -316,9 +299,9 @@ export function Input(props: InputProps): JSX.Element {
       class={inputRootVariants(
         {
           size: field.size(),
-          variant: styleProps.variant,
+          variant: merged.variant,
         },
-        styleProps.classes?.root,
+        merged.classes?.root,
       )}
       onPointerDown={onRootPointerDown}
     >
@@ -331,7 +314,7 @@ export function Input(props: InputProps): JSX.Element {
               {
                 size: field.size(),
               },
-              styleProps.classes?.leading,
+              merged.classes?.leading,
             )}
           >
             <Icon
@@ -346,24 +329,24 @@ export function Input(props: InputProps): JSX.Element {
       <input
         id={field.id()}
         ref={(element) => (inputEl = element)}
-        type={baseProps.type}
+        type={merged.type}
         name={field.name()}
-        placeholder={baseProps.placeholder}
-        required={formProps.required}
+        placeholder={merged.placeholder}
+        required={merged.required}
         disabled={field.disabled()}
-        readOnly={formProps.readOnly}
-        autocomplete={baseProps.autocomplete}
-        maxLength={baseProps.maxLength}
+        readOnly={merged.readOnly}
+        autocomplete={merged.autocomplete}
+        maxLength={merged.maxLength}
         data-slot="input"
         style={merged.styles?.input}
         class={inputInputVariants(
           {
-            type: baseProps.type === 'file' ? 'file' : undefined,
+            type: merged.type === 'file' ? 'file' : undefined,
             hasLeading: Boolean(resolvedLeading()),
             hasTrailing: Boolean(resolvedTrailing()),
-            size: styleProps.size,
+            size: merged.size,
           },
-          styleProps.classes?.input,
+          merged.classes?.input,
         )}
         onInput={onInput}
         onChange={onChange}
@@ -373,7 +356,7 @@ export function Input(props: InputProps): JSX.Element {
         {...inputValueProps()}
       />
 
-      {baseProps.children}
+      {merged.children}
 
       <Show when={resolvedTrailing()}>
         {(iconName) => (
@@ -384,7 +367,7 @@ export function Input(props: InputProps): JSX.Element {
               {
                 size: field.size(),
               },
-              styleProps.classes?.trailing,
+              merged.classes?.trailing,
             )}
           >
             <Icon

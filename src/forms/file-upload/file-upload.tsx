@@ -311,29 +311,32 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
     props,
   )
 
-  const [formProps, displayProps, styleProps, restProps] = splitProps(
-    merged as FileUploadProps,
-    [
-      'as',
-      ...FORM_ID_NAME_DISABLED_KEYS,
-      'accept',
-      'multiple',
-      'required',
-      'maxFiles',
-      'onValueChange',
-      'onFileReject',
-    ],
-    ['dropzone', 'preview', 'label', 'description', 'icon', 'fileIcon'],
-    ['size', 'classes'],
-  )
+  const [local, rest] = splitProps(merged as FileUploadProps, [
+    'as',
+    ...FORM_ID_NAME_DISABLED_KEYS,
+    'accept',
+    'multiple',
+    'required',
+    'maxFiles',
+    'onValueChange',
+    'onFileReject',
+    'dropzone',
+    'preview',
+    'label',
+    'description',
+    'icon',
+    'fileIcon',
+    'size',
+    'classes',
+  ])
 
-  const generatedId = useId(() => formProps.id, 'file-upload')
+  const generatedId = useId(() => local.id, 'file-upload')
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled,
+      id: local.id,
+      name: local.name,
+      size: local.size,
+      disabled: local.disabled,
     }),
     () => ({
       defaultId: generatedId(),
@@ -349,15 +352,15 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
   const [previewUrls, setPreviewUrls] = createSignal<Map<File, string>>(new Map())
 
   const resolvedMaxFiles = createMemo(() => {
-    if (formProps.maxFiles !== undefined) {
-      return formProps.maxFiles
+    if (local.maxFiles !== undefined) {
+      return local.maxFiles
     }
 
-    return formProps.multiple ? Number.POSITIVE_INFINITY : 1
+    return local.multiple ? Number.POSITIVE_INFINITY : 1
   })
 
   function resolveValue(files: File[]): FileUploadT.Value {
-    if (formProps.multiple) {
+    if (local.multiple) {
       return [...files]
     }
 
@@ -368,13 +371,13 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
     const nextValue = resolveValue(files)
 
     field.setFormValue(nextValue)
-    formProps.onValueChange?.(nextValue)
+    local.onValueChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
 
   function handleFileReject(files: FileRejection[]): void {
-    formProps.onFileReject?.(files)
+    local.onFileReject?.(files)
   }
 
   function processIncomingFiles(files: File[]): void {
@@ -382,9 +385,9 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       return
     }
 
-    const { accepted, rejected } = filterAcceptedFiles(files, formProps.accept)
+    const { accepted, rejected } = filterAcceptedFiles(files, local.accept)
 
-    if (formProps.multiple) {
+    if (local.multiple) {
       const currentFiles = selectedFiles()
       const bounded = constrainMultipleFiles(accepted, currentFiles.length, resolvedMaxFiles())
       rejected.push(...bounded.rejected)
@@ -434,7 +437,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
           {
             size: field.size(),
           },
-          styleProps.classes?.fileRemove,
+          local.classes?.fileRemove,
         )}
         disabled={field.disabled()}
         onClick={() => {
@@ -500,22 +503,22 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
           {
             size: field.size(),
           },
-          styleProps.classes?.wrapper,
+          local.classes?.wrapper,
         )}
       >
         <Icon
-          name={displayProps.icon}
+          name={local.icon}
           slotName="icon"
           style={merged.styles?.icon}
           class={fileUploadIconVariants(
             {
               size: field.size(),
             },
-            styleProps.classes?.icon,
+            local.classes?.icon,
           )}
         />
 
-        <Show when={displayProps.label}>
+        <Show when={local.label}>
           <span
             data-slot="label"
             style={merged.styles?.label}
@@ -523,14 +526,14 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
               {
                 size: field.size(),
               },
-              styleProps.classes?.label,
+              local.classes?.label,
             )}
           >
-            {displayProps.label}
+            {local.label}
           </span>
         </Show>
 
-        <Show when={displayProps.description}>
+        <Show when={local.description}>
           <span
             data-slot="description"
             style={merged.styles?.description}
@@ -538,10 +541,10 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
               {
                 size: field.size(),
               },
-              styleProps.classes?.description,
+              local.classes?.description,
             )}
           >
-            {displayProps.description}
+            {local.description}
           </span>
         </Show>
       </div>
@@ -550,14 +553,14 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
 
   return (
     <KobalteFileField.Root
-      as={formProps.as}
+      as={local.as}
       id={`${field.id()}-root`}
       name={field.name()}
-      accept={formProps.accept}
-      multiple={formProps.multiple}
+      accept={local.accept}
+      multiple={local.multiple}
       maxFiles={resolvedMaxFiles()}
-      allowDragAndDrop={displayProps.dropzone}
-      required={formProps.required}
+      allowDragAndDrop={local.dropzone}
+      required={local.required}
       disabled={field.disabled()}
       data-slot="root"
       style={merged.styles?.root}
@@ -566,12 +569,12 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
         {
           size: field.size(),
         },
-        styleProps.classes?.root,
+        local.classes?.root,
       )}
-      {...restProps}
+      {...rest}
     >
       <Show
-        when={displayProps.dropzone}
+        when={local.dropzone}
         fallback={
           <KobalteFileField.Trigger
             data-slot="control"
@@ -583,7 +586,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                 dropzone: false,
               },
               field.disabled() && 'bg-muted/32',
-              styleProps.classes?.control,
+              local.classes?.control,
             )}
             onFocus={() => field.emit('focus')}
             onBlur={() => field.emit('blur')}
@@ -603,7 +606,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
               dropzone: true,
             },
             field.disabled() && 'bg-muted/32',
-            styleProps.classes?.control,
+            local.classes?.control,
           )}
           onFocus={() => field.emit('focus')}
           onBlur={() => field.emit('blur')}
@@ -632,7 +635,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
         id={field.id()}
         ref={(element) => (hiddenInputEl = element)}
         name={field.name()}
-        required={formProps.required}
+        required={local.required}
         disabled={field.disabled()}
         onChange={(event) => {
           const files = Array.from(event.currentTarget.files ?? [])
@@ -641,7 +644,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
         {...field.ariaAttrs()}
       />
 
-      <Show when={displayProps.preview && selectedFiles().length > 0}>
+      <Show when={local.preview && selectedFiles().length > 0}>
         <ul
           data-slot="files"
           style={merged.styles?.files}
@@ -649,7 +652,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
             {
               size: field.size(),
             },
-            styleProps.classes?.files,
+            local.classes?.files,
           )}
         >
           <For each={selectedFiles()}>
@@ -661,7 +664,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                   {
                     size: field.size(),
                   },
-                  styleProps.classes?.file,
+                  local.classes?.file,
                 )}
               >
                 <span
@@ -671,14 +674,14 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                     {
                       size: field.size(),
                     },
-                    styleProps.classes?.filePreview,
+                    local.classes?.filePreview,
                   )}
                 >
                   <Show
                     when={previewUrls().get(file)}
                     fallback={
                       <Icon
-                        name={displayProps.fileIcon}
+                        name={local.fileIcon}
                         class={fileUploadIconVariants({
                           size: field.size(),
                         })}
@@ -696,7 +699,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                     {
                       size: field.size(),
                     },
-                    styleProps.classes?.fileMeta,
+                    local.classes?.fileMeta,
                   )}
                 >
                   <span
@@ -706,7 +709,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                       {
                         size: field.size(),
                       },
-                      styleProps.classes?.fileName,
+                      local.classes?.fileName,
                     )}
                   >
                     {file.name}
@@ -718,7 +721,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                       {
                         size: field.size(),
                       },
-                      styleProps.classes?.fileSize,
+                      local.classes?.fileSize,
                     )}
                   >
                     {formatFileSize(file.size)}

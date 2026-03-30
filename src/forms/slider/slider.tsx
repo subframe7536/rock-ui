@@ -158,35 +158,44 @@ export function Slider(props: SliderProps): JSX.Element {
     props,
   )
 
-  const [formProps, rangeProps, styleProps, restProps] = splitProps(
-    merged as SliderProps,
-    [...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS, 'readOnly', 'onValueChange', 'onChange'],
-    ['min', 'max', 'step', 'minStepsBetweenThumbs', 'orientation', 'inverted'],
-    ['size', 'classes', 'styles'],
-  )
+  const [local, rest] = splitProps(merged as SliderProps, [
+    ...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS,
+    'readOnly',
+    'onValueChange',
+    'onChange',
+    'min',
+    'max',
+    'step',
+    'minStepsBetweenThumbs',
+    'orientation',
+    'inverted',
+    'size',
+    'classes',
+    'styles',
+  ])
 
-  const generatedId = useId(() => formProps.id, 'slider')
+  const generatedId = useId(() => local.id, 'slider')
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled,
+      id: local.id,
+      name: local.name,
+      size: local.size,
+      disabled: local.disabled,
     }),
     () => ({
       defaultId: generatedId(),
       defaultSize: 'md',
-      initialValue: formProps.defaultValue ?? rangeProps.min,
+      initialValue: local.defaultValue ?? local.min,
     }),
   )
 
-  const kobalteValue = createMemo(() => normalizeSliderValues(formProps.value, rangeProps.min!))
+  const kobalteValue = createMemo(() => normalizeSliderValues(local.value, local.min!))
   const kobalteDefaultValue = createMemo(() =>
-    normalizeSliderValues(formProps.defaultValue, rangeProps.min!),
+    normalizeSliderValues(local.defaultValue, local.min!),
   )
   let lastInputValues: number[] | undefined
 
-  const thumbValues = () => kobalteValue() ?? kobalteDefaultValue() ?? [rangeProps.min!]
+  const thumbValues = () => kobalteValue() ?? kobalteDefaultValue() ?? [local.min!]
   const thumbIndexes = () => Array.from({ length: thumbValues().length }, (_, index) => index)
 
   createEffect(() => {
@@ -204,11 +213,11 @@ export function Slider(props: SliderProps): JSX.Element {
   }
 
   function toPublicValue(values: number[]): SliderT.Value {
-    if (Array.isArray(formProps.value) || Array.isArray(formProps.defaultValue)) {
+    if (Array.isArray(local.value) || Array.isArray(local.defaultValue)) {
       return [...values]
     }
 
-    return values[0] ?? rangeProps.min!
+    return values[0] ?? local.min!
   }
 
   function onValueChange(values: number[]): void {
@@ -223,7 +232,7 @@ export function Slider(props: SliderProps): JSX.Element {
 
     const nextValue = toPublicValue(values)
     field.setFormValue(nextValue)
-    formProps.onValueChange?.(nextValue)
+    local.onValueChange?.(nextValue)
     field.emit('input')
   }
 
@@ -233,7 +242,7 @@ export function Slider(props: SliderProps): JSX.Element {
     const nextValue = toPublicValue(values)
 
     field.setFormValue(nextValue)
-    formProps.onChange?.(nextValue)
+    local.onChange?.(nextValue)
     field.emit('change')
   }
 
@@ -254,7 +263,7 @@ export function Slider(props: SliderProps): JSX.Element {
       return {
         [context.startEdge()]: `calc(${percent}%)`,
         transform,
-        ...styleProps.styles?.thumb,
+        ...local.styles?.thumb,
       }
     })
 
@@ -267,7 +276,7 @@ export function Slider(props: SliderProps): JSX.Element {
           {
             size: field.size(),
           },
-          styleProps.classes?.thumb,
+          local.classes?.thumb,
         )}
         onFocus={() => field.emit('focus')}
         onBlur={() => field.emit('blur')}
@@ -281,50 +290,50 @@ export function Slider(props: SliderProps): JSX.Element {
     <KobalteSlider.Root
       id={`${field.id()}-root`}
       name={field.name()}
-      minValue={rangeProps.min}
-      maxValue={rangeProps.max}
-      step={rangeProps.step}
-      minStepsBetweenThumbs={rangeProps.minStepsBetweenThumbs}
-      orientation={rangeProps.orientation}
-      inverted={rangeProps.inverted}
+      minValue={local.min}
+      maxValue={local.max}
+      step={local.step}
+      minStepsBetweenThumbs={local.minStepsBetweenThumbs}
+      orientation={local.orientation}
+      inverted={local.inverted}
       value={kobalteValue()}
       defaultValue={kobalteDefaultValue()}
-      required={formProps.required}
+      required={local.required}
       disabled={field.disabled()}
-      readOnly={formProps.readOnly}
+      readOnly={local.readOnly}
       onChange={onValueChange}
       onChangeEnd={onChange}
       data-slot="root"
-      style={styleProps.styles?.root}
+      style={local.styles?.root}
       data-disabled={field.disabled() ? '' : undefined}
       class={sliderRootVariants(
         {
           size: field.size(),
-          orientation: rangeProps.orientation,
+          orientation: local.orientation,
         },
-        styleProps.classes?.root,
+        local.classes?.root,
       )}
-      {...restProps}
+      {...rest}
     >
       <KobalteSlider.Track
         data-slot="track"
-        style={styleProps.styles?.track}
+        style={local.styles?.track}
         class={sliderTrackVariants(
           {
             size: field.size(),
-            orientation: rangeProps.orientation,
+            orientation: local.orientation,
           },
-          styleProps.classes?.track,
+          local.classes?.track,
         )}
       >
         <KobalteSlider.Fill
           data-slot="range"
-          style={styleProps.styles?.range}
+          style={local.styles?.range}
           class={sliderRangeVariants(
             {
-              orientation: rangeProps.orientation,
+              orientation: local.orientation,
             },
-            styleProps.classes?.range,
+            local.classes?.range,
           )}
         />
       </KobalteSlider.Track>

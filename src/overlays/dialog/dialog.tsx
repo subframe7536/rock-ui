@@ -162,18 +162,29 @@ export function Dialog(props: DialogProps): JSX.Element {
     },
     props,
   ) as DialogProps
-  const [behaviorProps, contentProps, restProps] = splitProps(
-    merged,
-    ['overlay', 'scrollable', 'fullscreen', 'close', 'closeIcon', 'dismissible', 'onClosePrevent'],
-    ['title', 'description', 'header', 'body', 'footer', 'classes', 'children'],
-  )
+  const [local, rest] = splitProps(merged, [
+    'overlay',
+    'scrollable',
+    'fullscreen',
+    'close',
+    'closeIcon',
+    'dismissible',
+    'onClosePrevent',
+    'title',
+    'description',
+    'header',
+    'body',
+    'footer',
+    'classes',
+    'children',
+  ])
 
   const popupLayout = () => {
-    if (behaviorProps.fullscreen) {
+    if (local.fullscreen) {
       return 'fullscreen'
     }
 
-    if (behaviorProps.scrollable) {
+    if (local.scrollable) {
       return 'scrollable'
     }
 
@@ -181,58 +192,58 @@ export function Dialog(props: DialogProps): JSX.Element {
   }
 
   const headerContent = () => {
-    if (contentProps.header) {
-      return contentProps.header
+    if (local.header) {
+      return local.header
     }
 
-    if (!contentProps.title && !contentProps.description && !behaviorProps.close) {
+    if (!local.title && !local.description && !local.close) {
       return undefined
     }
 
     return (
       <>
-        <Show when={contentProps.title || contentProps.description}>
+        <Show when={local.title || local.description}>
           <div
             data-slot="wrapper"
             style={merged.styles?.wrapper}
-            class={cn('flex-1 gap-1.5 grid min-w-0', contentProps.classes?.wrapper)}
+            class={cn('flex-1 gap-1.5 grid min-w-0', local.classes?.wrapper)}
           >
-            <Show when={contentProps.title}>
+            <Show when={local.title}>
               <KobalteDialog.Title
                 data-slot="title"
                 style={merged.styles?.title}
                 class={cn(
                   'text-lg leading-none tracking-tight font-semibold',
-                  contentProps.classes?.title,
+                  local.classes?.title,
                 )}
               >
-                {contentProps.title}
+                {local.title}
               </KobalteDialog.Title>
             </Show>
 
-            <Show when={contentProps.description}>
+            <Show when={local.description}>
               <KobalteDialog.Description
                 data-slot="description"
                 style={merged.styles?.description}
-                class={cn('text-sm text-muted-foreground', contentProps.classes?.description)}
+                class={cn('text-sm text-muted-foreground', local.classes?.description)}
               >
-                {contentProps.description}
+                {local.description}
               </KobalteDialog.Description>
             </Show>
           </div>
         </Show>
 
-        <Show when={behaviorProps.close}>
+        <Show when={local.close}>
           <KobalteDialog.CloseButton
             as={IconButton}
-            name={behaviorProps.closeIcon}
+            name={local.closeIcon}
             data-slot="close"
             styles={{ root: merged.styles?.close }}
             aria-label="Close"
             classes={{
               root: [
                 'p-1 rounded-sm size-7 transition-opacity right-4 top-4 absolute focus-visible:effect-fv hover:bg-accent',
-                contentProps.classes?.close,
+                local.classes?.close,
               ],
             }}
           />
@@ -243,36 +254,36 @@ export function Dialog(props: DialogProps): JSX.Element {
 
   return (
     <Popup
-      overlay={behaviorProps.overlay}
-      scrollable={behaviorProps.scrollable}
-      fullscreen={behaviorProps.fullscreen}
-      dismissible={behaviorProps.dismissible}
-      onClosePrevent={behaviorProps.onClosePrevent}
+      overlay={local.overlay}
+      scrollable={local.scrollable}
+      fullscreen={local.fullscreen}
+      dismissible={local.dismissible}
+      onClosePrevent={local.onClosePrevent}
       classes={{
-        trigger: contentProps.classes?.trigger,
-        overlay: contentProps.classes?.overlay,
-        content: contentProps.classes?.content,
+        trigger: local.classes?.trigger,
+        overlay: local.classes?.overlay,
+        content: local.classes?.content,
       }}
       content={
         <Card
           header={headerContent()}
-          footer={contentProps.footer}
+          footer={local.footer}
           classes={{
             root: dialogCardVariants({ layout: popupLayout() }),
-            header: cn('p-6 flex gap-1.5 items-start', contentProps.classes?.header),
-            body: cn('text-sm pb-6', contentProps.classes?.body),
+            header: cn('p-6 flex gap-1.5 items-start', local.classes?.header),
+            body: cn('text-sm pb-6', local.classes?.body),
             footer: cn(
               'px-6 pb-6 pt-0 flex flex-col-reverse gap-2 sm:(flex-row justify-end)',
-              contentProps.classes?.footer,
+              local.classes?.footer,
             ),
           }}
         >
-          {contentProps.body}
+          {local.body}
         </Card>
       }
-      {...restProps}
+      {...rest}
     >
-      {contentProps.children}
+      {local.children}
     </Popup>
   )
 }

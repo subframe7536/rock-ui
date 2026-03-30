@@ -200,37 +200,43 @@ export function Pagination(props: PaginationProps): JSX.Element {
     props,
   ) as PaginationProps
 
-  const [styleProps, uiProps, pagingProps, restProps] = splitProps(
-    merged,
-    ['size', 'variant', 'activeVariant', 'controlVariant'],
-    ['classes', 'styles', 'prevIcon', 'prevText', 'nextIcon', 'nextText', 'ellipsisIcon'],
-    [
-      'page',
-      'defaultPage',
-      'onPageChange',
-      'itemsPerPage',
-      'total',
-      'siblingCount',
-      'showControls',
-      'disabled',
-      'to',
-    ],
-  )
+  const [local, rest] = splitProps(merged, [
+    'size',
+    'variant',
+    'activeVariant',
+    'controlVariant',
+    'classes',
+    'styles',
+    'prevIcon',
+    'prevText',
+    'nextIcon',
+    'nextText',
+    'ellipsisIcon',
+    'page',
+    'defaultPage',
+    'onPageChange',
+    'itemsPerPage',
+    'total',
+    'siblingCount',
+    'showControls',
+    'disabled',
+    'to',
+  ])
 
-  const [internalPage, setInternalPage] = createSignal(pagingProps.defaultPage || 1)
+  const [internalPage, setInternalPage] = createSignal(local.defaultPage || 1)
 
   const pageCount = createMemo(() => {
-    const safeItemsPerPage = Math.max(1, pagingProps.itemsPerPage || 1)
-    const safeTotal = Math.max(0, pagingProps.total || 0)
+    const safeItemsPerPage = Math.max(1, local.itemsPerPage || 1)
+    const safeTotal = Math.max(0, local.total || 0)
     return Math.max(1, Math.ceil(safeTotal / safeItemsPerPage))
   })
 
-  const resolvedPage = createMemo(() => clampPage(pagingProps.page ?? internalPage(), pageCount()))
+  const resolvedPage = createMemo(() => clampPage(local.page ?? internalPage(), pageCount()))
 
   const paginationItems = createMemo(() => {
     const page = resolvedPage()
     const count = pageCount()
-    const siblings = Math.max(0, pagingProps.siblingCount || 0)
+    const siblings = Math.max(0, local.siblingCount || 0)
 
     if (siblings * 2 + 5 >= count) {
       return createRange(1, count)
@@ -251,7 +257,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
   })
 
   const selectPage = (targetPage: number): void => {
-    if (pagingProps.disabled) {
+    if (local.disabled) {
       return
     }
 
@@ -260,44 +266,44 @@ export function Pagination(props: PaginationProps): JSX.Element {
       return
     }
 
-    if (pagingProps.page === undefined) {
+    if (local.page === undefined) {
       setInternalPage(next)
     }
-    pagingProps.onPageChange?.(next)
+    local.onPageChange?.(next)
   }
 
   const getControlProps = (target: number, isEdge: boolean, rel?: string) => {
-    const disabled = Boolean(pagingProps.disabled || isEdge)
-    const href = disabled ? undefined : pagingProps.to?.(target)
+    const disabled = Boolean(local.disabled || isEdge)
+    const href = disabled ? undefined : local.to?.(target)
     return href ? { as: 'a', href, rel } : { type: 'button', disabled }
   }
 
   return (
     <nav
       data-slot="root"
-      style={uiProps.styles?.root}
-      class={cn('w-full', uiProps.classes?.root)}
-      {...restProps}
+      style={local.styles?.root}
+      class={cn('w-full', local.classes?.root)}
+      {...rest}
     >
       <ul
         data-slot="list"
-        style={uiProps.styles?.list}
-        class={cn('flex gap-1 items-center justify-center', uiProps.classes?.list)}
+        style={local.styles?.list}
+        class={cn('flex gap-1 items-center justify-center', local.classes?.list)}
       >
-        <Show when={pagingProps.showControls}>
-          <li data-slot="item" style={uiProps.styles?.item} class={cn(uiProps.classes?.item)}>
+        <Show when={local.showControls}>
+          <li data-slot="item" style={local.styles?.item} class={cn(local.classes?.item)}>
             <Button
               data-slot="prev"
-              style={uiProps.styles?.prev}
-              variant={styleProps.controlVariant}
-              size={getSize(styleProps.size, uiProps.prevText)}
+              style={local.styles?.prev}
+              variant={local.controlVariant}
+              size={getSize(local.size, local.prevText)}
               aria-label="Go to previous page"
-              classes={{ root: uiProps.classes?.prev }}
+              classes={{ root: local.classes?.prev }}
               onClick={() => selectPage(resolvedPage() - 1)}
               {...getControlProps(resolvedPage() - 1, resolvedPage() <= 1, 'prev')}
-              leading={<Icon name={uiProps.prevIcon} />}
+              leading={<Icon name={local.prevIcon} />}
             >
-              {uiProps.prevText}
+              {local.prevText}
             </Button>
           </li>
         </Show>
@@ -308,30 +314,30 @@ export function Pagination(props: PaginationProps): JSX.Element {
             return (
               <li
                 data-slot="item"
-                style={uiProps.styles?.item}
+                style={local.styles?.item}
                 aria-hidden={item < 0 ? true : undefined}
-                class={cn(item < 0 && 'flex size-6 items-center', uiProps.classes?.item)}
+                class={cn(item < 0 && 'flex size-6 items-center', local.classes?.item)}
               >
                 <Show
                   when={item >= 0}
                   fallback={
                     <Icon
                       slotName="ellipsis"
-                      style={uiProps.styles?.ellipsis}
-                      name={uiProps.ellipsisIcon}
-                      class={cn(uiProps.classes?.ellipsis)}
+                      style={local.styles?.ellipsis}
+                      name={local.ellipsisIcon}
+                      class={cn(local.classes?.ellipsis)}
                     />
                   }
                 >
                   <Button
                     data-slot="link"
-                    style={uiProps.styles?.link}
-                    variant={isActive() ? styleProps.activeVariant : styleProps.variant}
-                    size={getSize(styleProps.size)}
+                    style={local.styles?.link}
+                    variant={isActive() ? local.activeVariant : local.variant}
+                    size={getSize(local.size)}
                     aria-current={isActive() ? 'page' : undefined}
                     aria-label={isActive() ? `Page ${item}, current page` : `Go to page ${item}`}
                     data-current={isActive() ? '' : undefined}
-                    classes={{ root: ['outline-none', uiProps.classes?.link] }}
+                    classes={{ root: ['outline-none', local.classes?.link] }}
                     onClick={() => selectPage(item)}
                     {...getControlProps(item, false)}
                   >
@@ -343,20 +349,20 @@ export function Pagination(props: PaginationProps): JSX.Element {
           }}
         </For>
 
-        <Show when={pagingProps.showControls}>
-          <li data-slot="item" style={uiProps.styles?.item} class={cn(uiProps.classes?.item)}>
+        <Show when={local.showControls}>
+          <li data-slot="item" style={local.styles?.item} class={cn(local.classes?.item)}>
             <Button
               data-slot="next"
-              style={uiProps.styles?.next}
-              variant={styleProps.controlVariant}
-              size={getSize(styleProps.size, uiProps.nextText)}
+              style={local.styles?.next}
+              variant={local.controlVariant}
+              size={getSize(local.size, local.nextText)}
               aria-label="Go to next page"
-              classes={{ root: uiProps.classes?.next }}
+              classes={{ root: local.classes?.next }}
               onClick={() => selectPage(resolvedPage() + 1)}
               {...getControlProps(resolvedPage() + 1, resolvedPage() >= pageCount(), 'next')}
-              trailing={<Icon name={uiProps.nextIcon} />}
+              trailing={<Icon name={local.nextIcon} />}
             >
-              {uiProps.nextText}
+              {local.nextText}
             </Button>
           </li>
         </Show>

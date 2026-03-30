@@ -146,36 +146,38 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     },
     props,
   ) as ContextMenuProps
-  const [menuProps, localProps, controlProps, rootProps] = splitProps(
-    merged,
-    [
-      'size',
-      'disabled',
-      'items',
-      'checkedIcon',
-      'submenuIcon',
-      'itemRender',
-      'contentTop',
-      'contentBottom',
-    ],
-    ['id', 'classes', 'styles', 'children'],
-    ['open', 'defaultOpen', 'onOpenChange'],
-  )
+  const [local, rest] = splitProps(merged, [
+    'size',
+    'disabled',
+    'items',
+    'checkedIcon',
+    'submenuIcon',
+    'itemRender',
+    'contentTop',
+    'contentBottom',
+    'id',
+    'classes',
+    'styles',
+    'children',
+    'open',
+    'defaultOpen',
+    'onOpenChange',
+  ])
   const [uncontrolledOpen, setUncontrolledOpen] = createSignal(
-    untrack(() => Boolean(controlProps.defaultOpen)),
+    untrack(() => Boolean(local.defaultOpen)),
   )
   const [anchorPoint, setAnchorPoint] = createSignal<{ x: number; y: number } | null>(null)
-  const resolvedOpen = createMemo(() => controlProps.open ?? uncontrolledOpen())
-  const resolvedId = useId(() => localProps.id, 'contextmenu')
+  const resolvedOpen = createMemo(() => local.open ?? uncontrolledOpen())
+  const resolvedId = useId(() => local.id, 'contextmenu')
   let longPressTimeoutId = 0
   let triggerElement: HTMLElement | undefined
 
   const commitOpen = (open: boolean): void => {
-    if (controlProps.open === undefined) {
+    if (local.open === undefined) {
       setUncontrolledOpen(open)
     }
 
-    controlProps.onOpenChange?.(open)
+    local.onOpenChange?.(open)
   }
 
   const onRootOpenChange = (open: boolean): void => {
@@ -213,7 +215,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
 
   onMount(() => {
     const onDocumentContextMenuCapture = (event: MouseEvent): void => {
-      if (menuProps.disabled) {
+      if (local.disabled) {
         return
       }
 
@@ -244,7 +246,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   })
 
   const openFromPoint = (x: number, y: number): void => {
-    if (menuProps.disabled) {
+    if (local.disabled) {
       return
     }
 
@@ -257,7 +259,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
       return
     }
 
-    if (menuProps.disabled) {
+    if (local.disabled) {
       return
     }
 
@@ -268,11 +270,11 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   }
 
   const Content = (props: KobalteDropdownMenu.DropdownMenuContentProps): JSX.Element => {
-    const [localProps, restProps] = splitProps(props, ['onCloseAutoFocus', 'onInteractOutside'])
+    const [local, rest] = splitProps(props, ['onCloseAutoFocus', 'onInteractOutside'])
     let hasInteractedOutside = false
 
     const onCloseAutoFocus = (event: Event): void => {
-      localProps.onCloseAutoFocus?.(event)
+      local.onCloseAutoFocus?.(event)
 
       if (!event.defaultPrevented && hasInteractedOutside) {
         event.preventDefault()
@@ -284,7 +286,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     const onInteractOutside: KobalteDropdownMenu.DropdownMenuContentProps['onInteractOutside'] = (
       event,
     ): void => {
-      localProps.onInteractOutside?.(event)
+      local.onInteractOutside?.(event)
 
       if (!event.defaultPrevented) {
         hasInteractedOutside = true
@@ -305,21 +307,21 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
         onCloseAutoFocus={onCloseAutoFocus}
         onInteractOutside={onInteractOutside}
         onContextMenu={onContentContextMenu}
-        {...restProps}
+        {...rest}
       />
     )
   }
 
   const onPointerDown = (event: PointerEvent): void => {
-    if (menuProps.disabled || !isTouchOrPen(event.pointerType)) {
+    if (local.disabled || !isTouchOrPen(event.pointerType)) {
       return
     }
 
     clearLongPressTimeout()
     setAnchorPoint({ x: event.clientX, y: event.clientY })
 
-    const isUncontrolled = controlProps.open === undefined
-    const onOpenChange = controlProps.onOpenChange
+    const isUncontrolled = local.open === undefined
+    const onOpenChange = local.onOpenChange
 
     longPressTimeoutId = window.setTimeout(() => {
       if (isUncontrolled) {
@@ -331,7 +333,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   }
 
   const onPointerMove = (event: PointerEvent): void => {
-    if (menuProps.disabled || !isTouchOrPen(event.pointerType)) {
+    if (local.disabled || !isTouchOrPen(event.pointerType)) {
       return
     }
 
@@ -339,7 +341,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   }
 
   const onPointerCancel = (event: PointerEvent): void => {
-    if (menuProps.disabled || !isTouchOrPen(event.pointerType)) {
+    if (local.disabled || !isTouchOrPen(event.pointerType)) {
       return
     }
 
@@ -347,7 +349,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   }
 
   const onPointerUp = (event: PointerEvent): void => {
-    if (menuProps.disabled || !isTouchOrPen(event.pointerType)) {
+    if (local.disabled || !isTouchOrPen(event.pointerType)) {
       return
     }
 
@@ -384,33 +386,39 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
       onOpenChange={onRootOpenChange}
       getAnchorRect={getAnchorRect}
       id={resolvedId()}
-      {...rootProps}
+      {...rest}
     >
       <KobalteDropdownMenu.Trigger
         as="span"
         tabIndex={-1}
         data-slot="trigger"
-        class={cn(localProps.classes?.trigger)}
-        disabled={menuProps.disabled}
+        class={cn(local.classes?.trigger)}
+        disabled={local.disabled}
         ref={(element) => {
           triggerElement = element
         }}
-        style={{ '-webkit-touch-callout': 'none', ...localProps.styles?.trigger }}
+        style={{ '-webkit-touch-callout': 'none', ...local.styles?.trigger }}
         onContextMenu={onContextMenu}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerCancel={onPointerCancel}
         onPointerUp={onPointerUp}
       >
-        {localProps.children}
+        {local.children}
       </KobalteDropdownMenu.Trigger>
 
       <OverlayMenuBaseContent<ContextMenuT.Items>
         content={Content}
-        classes={localProps.classes}
-        styles={localProps.styles}
-        {...menuProps}
-        rootSide={resolveOverlayMenuSide(rootProps.placement)}
+        classes={local.classes}
+        styles={local.styles}
+        size={local.size}
+        items={local.items}
+        checkedIcon={local.checkedIcon}
+        submenuIcon={local.submenuIcon}
+        itemRender={local.itemRender}
+        contentTop={local.contentTop}
+        contentBottom={local.contentBottom}
+        rootSide={resolveOverlayMenuSide(rest.placement)}
       />
     </KobalteDropdownMenu.Root>
   )

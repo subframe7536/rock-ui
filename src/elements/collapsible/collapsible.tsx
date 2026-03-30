@@ -78,7 +78,7 @@ export interface CollapsibleProps extends CollapsibleT.Props {}
 
 /** Expandable content section with animated open/close transitions. */
 export function Collapsible(props: CollapsibleProps): JSX.Element {
-  const [contentProps, restProps] = splitProps(props as CollapsibleProps, [
+  const [local, rest] = splitProps(props as CollapsibleProps, [
     'classes',
     'styles',
     'children',
@@ -88,18 +88,18 @@ export function Collapsible(props: CollapsibleProps): JSX.Element {
   return (
     <KobalteCollapsible.Root
       data-slot="root"
-      style={contentProps.styles?.root}
-      class={cn(contentProps.classes?.root)}
-      {...restProps}
+      style={local.styles?.root}
+      class={cn(local.classes?.root)}
+      {...rest}
     >
-      <Show when={contentProps.trigger}>
+      <Show when={local.trigger}>
         {(render) => {
           const context = KobalteCollapsible.useCollapsibleContext()
           return (
             <KobalteCollapsible.Trigger
               data-slot="trigger"
-              style={contentProps.styles?.trigger}
-              class={cn('cursor-pointer', contentProps.classes?.trigger)}
+              style={local.styles?.trigger}
+              class={cn('cursor-pointer', local.classes?.trigger)}
             >
               {render()({ open: context.isOpen() })}
             </KobalteCollapsible.Trigger>
@@ -109,13 +109,13 @@ export function Collapsible(props: CollapsibleProps): JSX.Element {
 
       <KobalteCollapsible.Content
         data-slot="content"
-        style={contentProps.styles?.content}
+        style={local.styles?.content}
         class={cn(
           'h-$kb-collapsible-content-height overflow-hidden data-closed:h-0',
-          contentProps.classes?.content,
+          local.classes?.content,
         )}
       >
-        {contentProps.children}
+        {local.children}
       </KobalteCollapsible.Content>
     </KobalteCollapsible.Root>
   )

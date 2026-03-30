@@ -65,7 +65,7 @@ export interface IconButtonProps extends IconButtonT.Props {}
  * Button with icon, without padding
  */
 export function IconButton(props: IconButtonProps): JSX.Element {
-  const [localProps, restProps] = splitProps(props as IconButtonProps, [
+  const [local, rest] = splitProps(props as IconButtonProps, [
     'classes',
     'styles',
     'name',
@@ -78,27 +78,27 @@ export function IconButton(props: IconButtonProps): JSX.Element {
   ])
 
   const { isLoading, onClick } = useLoadingAutoClick<ElementOf<'button'>, MouseEvent>({
-    loading: () => localProps.loading,
-    loadingAuto: () => localProps.loadingAuto,
-    onClick: () => localProps.onClick,
+    loading: () => local.loading,
+    loadingAuto: () => local.loadingAuto,
+    onClick: () => local.onClick,
   })
 
   return (
     <KobalteButton.Root
       data-slot="root"
-      class={iconButtonVariants({ size: localProps.size }, localProps.classes?.root)}
-      style={localProps.styles?.root}
+      class={iconButtonVariants({ size: local.size }, local.classes?.root)}
+      style={local.styles?.root}
       aria-busy={isLoading() || undefined}
       data-loading={isLoading() ? '' : undefined}
-      disabled={isLoading() || localProps.disabled}
+      disabled={isLoading() || local.disabled}
       onClick={onClick}
-      {...restProps}
+      {...rest}
     >
       <Icon
         data-loading={isLoading() ? '' : undefined}
-        name={isLoading() ? (localProps.loadingIcon ?? 'icon-loading') : localProps.name}
-        class={iconVariants({ size: localProps.size }, localProps.classes?.icon)}
-        style={localProps.styles?.icon}
+        name={isLoading() ? (local.loadingIcon ?? 'icon-loading') : local.name}
+        class={iconVariants({ size: local.size }, local.classes?.icon)}
+        style={local.styles?.icon}
       />
     </KobalteButton.Root>
   )

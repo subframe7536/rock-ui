@@ -87,38 +87,43 @@ export type ButtonProps<T extends ValidComponent = 'button'> = ButtonT.Props<T>
  * Button component built on top of Kobalte `Button.Root` with polymorphic `as` support.
  */
 export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T>): JSX.Element {
-  const [styleProps, stateProps, contentProps, restProps] = splitProps(
-    props as ButtonProps,
-    ['variant', 'size', 'classes', 'styles', 'slotName'],
-    ['disabled', 'loading', 'loadingAuto', 'loadingIcon', 'onClick'],
-    ['leading', 'trailing', 'children'],
-  )
+  const [local, rest] = splitProps(props as ButtonProps, [
+    'variant',
+    'size',
+    'classes',
+    'styles',
+    'slotName',
+    'disabled',
+    'loading',
+    'loadingAuto',
+    'loadingIcon',
+    'onClick',
+    'leading',
+    'trailing',
+    'children',
+  ])
 
   const { isLoading, onClick } = useLoadingAutoClick<ElementOf<T>, MouseEvent>({
-    loading: () => stateProps.loading,
-    loadingAuto: () => stateProps.loadingAuto,
-    onClick: () => stateProps.onClick,
+    loading: () => local.loading,
+    loadingAuto: () => local.loadingAuto,
+    onClick: () => local.onClick,
   })
 
   const iconSize = createMemo(() =>
-    styleProps.size?.startsWith('icon-') ? styleProps.size.replace('icon-', '') : undefined,
+    local.size?.startsWith('icon-') ? local.size.replace('icon-', '') : undefined,
   )
 
-  const loadingIconName = createMemo<IconT.Name>(() => stateProps.loadingIcon ?? 'icon-loading')
+  const loadingIconName = createMemo<IconT.Name>(() => local.loadingIcon ?? 'icon-loading')
 
-  const isLeadingLoading = createMemo(
-    () => isLoading() && (contentProps.leading || !contentProps.trailing),
-  )
-  const isTrailingLoading = createMemo(
-    () => isLoading() && !(contentProps.leading && contentProps.trailing),
-  )
+  const isLeadingLoading = createMemo(() => isLoading() && (local.leading || !local.trailing))
+  const isTrailingLoading = createMemo(() => isLoading() && !(local.leading && local.trailing))
 
   const resolvedLeading = createMemo(() => {
     if (!isLoading()) {
-      return contentProps.leading
+      return local.leading
     }
 
-    if (contentProps.leading || !contentProps.trailing) {
+    if (local.leading || !local.trailing) {
       return loadingIconName()
     }
 
@@ -127,32 +132,32 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
 
   const resolvedTrailing = createMemo(() => {
     if (!isLoading()) {
-      return contentProps.trailing
+      return local.trailing
     }
 
-    if (!contentProps.leading && contentProps.trailing) {
+    if (!local.leading && local.trailing) {
       return loadingIconName()
     }
 
-    return contentProps.trailing
+    return local.trailing
   })
 
   return (
     <KobalteButton.Root
-      data-slot={styleProps.slotName || 'root'}
-      style={styleProps.styles?.root}
+      data-slot={local.slotName || 'root'}
+      style={local.styles?.root}
       class={buttonVariants(
         {
-          variant: styleProps.variant,
-          size: styleProps.size,
+          variant: local.variant,
+          size: local.size,
         },
-        styleProps.classes?.root,
+        local.classes?.root,
       )}
       aria-busy={isLoading() ? true : undefined}
       data-loading={isLoading() ? '' : undefined}
-      disabled={isLoading() || stateProps.disabled}
+      disabled={isLoading() || local.disabled}
       onClick={onClick}
-      {...restProps}
+      {...rest}
     >
       <Show when={resolvedLeading()}>
         {(leading) => (
@@ -160,23 +165,23 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
             name={leading()}
             size={iconSize()}
             slotName="leading"
-            style={styleProps.styles?.leading}
+            style={local.styles?.leading}
             class={cn(
-              styleProps.classes?.leading,
-              isLeadingLoading() && ['effect-loading', styleProps.classes?.loading],
+              local.classes?.leading,
+              isLeadingLoading() && ['effect-loading', local.classes?.loading],
             )}
             aria-hidden={isLeadingLoading() ? true : undefined}
           />
         )}
       </Show>
 
-      <Show when={contentProps.children}>
+      <Show when={local.children}>
         <span
           data-slot="label"
-          style={styleProps.styles?.label}
-          class={cn('min-w-0 truncate', styleProps.classes?.label)}
+          style={local.styles?.label}
+          class={cn('min-w-0 truncate', local.classes?.label)}
         >
-          {resolveRenderProp(contentProps.children, () => ({
+          {resolveRenderProp(local.children, () => ({
             loading: isLoading(),
           }))}
         </span>
@@ -188,10 +193,10 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
             name={trailing()}
             size={iconSize()}
             slotName="trailing"
-            style={styleProps.styles?.trailing}
+            style={local.styles?.trailing}
             class={cn(
-              styleProps.classes?.trailing,
-              isTrailingLoading() && ['effect-loading', styleProps.classes?.loading],
+              local.classes?.trailing,
+              isTrailingLoading() && ['effect-loading', local.classes?.loading],
             )}
           />
         )}

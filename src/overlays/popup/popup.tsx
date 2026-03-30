@@ -83,14 +83,19 @@ export function Popup(props: PopupProps): JSX.Element {
     },
     props,
   ) as PopupProps
-  const [behaviorProps, contentProps, restProps] = splitProps(
-    merged,
-    ['overlay', 'scrollable', 'fullscreen', 'dismissible', 'onClosePrevent'],
-    ['content', 'classes', 'children'],
-  )
+  const [local, rest] = splitProps(merged, [
+    'overlay',
+    'scrollable',
+    'fullscreen',
+    'dismissible',
+    'onClosePrevent',
+    'content',
+    'classes',
+    'children',
+  ])
 
   const preventDismiss = () => {
-    behaviorProps.onClosePrevent?.()
+    local.onClosePrevent?.()
   }
 
   let hasPreventedPointerAttempt = false
@@ -116,7 +121,7 @@ export function Popup(props: PopupProps): JSX.Element {
   const onPointerDownOutside = (
     event: Parameters<NonNullable<KobalteDialogContentProps['onPointerDownOutside']>>[0],
   ) => {
-    if (behaviorProps.dismissible) {
+    if (local.dismissible) {
       return
     }
 
@@ -129,7 +134,7 @@ export function Popup(props: PopupProps): JSX.Element {
   const onInteractOutside = (
     event: Parameters<NonNullable<KobalteDialogContentProps['onInteractOutside']>>[0],
   ) => {
-    if (behaviorProps.dismissible || event.defaultPrevented) {
+    if (local.dismissible || event.defaultPrevented) {
       return
     }
 
@@ -145,7 +150,7 @@ export function Popup(props: PopupProps): JSX.Element {
   const onEscapeKeyDown = (
     event: Parameters<NonNullable<KobalteDialogContentProps['onEscapeKeyDown']>>[0],
   ) => {
-    if (behaviorProps.dismissible) {
+    if (local.dismissible) {
       return
     }
 
@@ -154,11 +159,11 @@ export function Popup(props: PopupProps): JSX.Element {
   }
 
   const contentLayout = () => {
-    if (behaviorProps.fullscreen) {
+    if (local.fullscreen) {
       return 'fullscreen'
     }
 
-    if (behaviorProps.scrollable) {
+    if (local.scrollable) {
       return 'scrollable'
     }
 
@@ -166,7 +171,7 @@ export function Popup(props: PopupProps): JSX.Element {
   }
 
   const popupContent = () => (
-    <Show when={contentProps.content}>
+    <Show when={local.content}>
       <KobalteDialog.Content
         data-slot="content"
         style={merged.styles?.content}
@@ -174,45 +179,45 @@ export function Popup(props: PopupProps): JSX.Element {
           {
             layout: contentLayout(),
           },
-          contentProps.classes?.content,
+          local.classes?.content,
         )}
         onPointerDownOutside={onPointerDownOutside}
         onInteractOutside={onInteractOutside}
         onEscapeKeyDown={onEscapeKeyDown}
       >
-        {contentProps.content}
+        {local.content}
       </KobalteDialog.Content>
     </Show>
   )
 
   return (
-    <KobalteDialog.Root preventScroll={!behaviorProps.scrollable} {...restProps}>
-      <Show when={contentProps.children}>
+    <KobalteDialog.Root preventScroll={!local.scrollable} {...rest}>
+      <Show when={local.children}>
         <KobalteDialog.Trigger
           as="span"
           tabIndex={-1}
           data-slot="trigger"
           style={merged.styles?.trigger}
-          class={cn('outline-none', contentProps.classes?.trigger)}
+          class={cn('outline-none', local.classes?.trigger)}
         >
-          {contentProps.children}
+          {local.children}
         </KobalteDialog.Trigger>
       </Show>
 
       <KobalteDialog.Portal>
         <Show
-          when={behaviorProps.scrollable && behaviorProps.overlay}
+          when={local.scrollable && local.overlay}
           fallback={
             <>
-              <Show when={behaviorProps.overlay}>
+              <Show when={local.overlay}>
                 <KobalteDialog.Overlay
                   data-slot="overlay"
                   style={merged.styles?.overlay}
                   class={popupOverlayVariants(
                     {
-                      scrollable: behaviorProps.scrollable,
+                      scrollable: local.scrollable,
                     },
-                    contentProps.classes?.overlay,
+                    local.classes?.overlay,
                   )}
                 />
               </Show>
@@ -226,9 +231,9 @@ export function Popup(props: PopupProps): JSX.Element {
             style={merged.styles?.overlay}
             class={popupOverlayVariants(
               {
-                scrollable: behaviorProps.scrollable,
+                scrollable: local.scrollable,
               },
-              contentProps.classes?.overlay,
+              local.classes?.overlay,
             )}
           >
             {popupContent()}

@@ -69,32 +69,32 @@ export interface IconProps extends IconT.Props {}
 
 /** Renders an icon from a UnoCSS icon class, JSX element, or render function. */
 export function Icon(props: IconProps): JSX.Element {
-  const [localProps, restProps] = splitProps(props, ['name', 'class', 'style', 'size', 'slotName'])
+  const [local, rest] = splitProps(props, ['name', 'class', 'style', 'size', 'slotName'])
 
   const style = createMemo(() => {
-    if (!localProps.size) {
-      return localProps.style
+    if (!local.size) {
+      return local.style
     }
     return {
-      'font-size': typeof localProps.size === 'number' ? `${localProps.size}px` : localProps.size,
-      ...(localProps.style as any),
+      'font-size': typeof local.size === 'number' ? `${local.size}px` : local.size,
+      ...(local.style as any),
     } as JSX.CSSProperties
   })
 
   return (
     <Dynamic
       component={
-        typeof localProps.name === 'string'
+        typeof local.name === 'string'
           ? 'div'
-          : typeof localProps.name === 'function'
-            ? localProps.name
-            : () => localProps.name as JSX.Element
+          : typeof local.name === 'function'
+            ? local.name
+            : () => local.name as JSX.Element
       }
-      data-slot={localProps.slotName ?? 'icon'}
-      class={cn(typeof localProps.name === 'string' && localProps.name, localProps.class)}
+      data-slot={local.slotName ?? 'icon'}
+      class={cn(typeof local.name === 'string' && local.name, local.class)}
       style={style()}
-      {...restProps}
-      aria-hidden={restProps['aria-label'] ? undefined : true}
+      {...rest}
+      aria-hidden={rest['aria-label'] ? undefined : true}
     />
   )
 }

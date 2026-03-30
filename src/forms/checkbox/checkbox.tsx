@@ -145,48 +145,44 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
     props,
   )
 
-  const [formProps, styleProps, restProps] = splitProps(
-    merged as CheckboxProps<TTrue, TFalse>,
-    [
-      ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
-      'checked',
-      'defaultChecked',
-      'formFieldBind',
-      'trueValue',
-      'falseValue',
-      'indeterminate',
-    ],
-    [
-      'label',
-      'description',
-      'size',
-      'variant',
-      'indicator',
-      'checkedIcon',
-      'indeterminateIcon',
-      'classes',
-    ],
-  )
+  const [local, rest] = splitProps(merged as CheckboxProps<TTrue, TFalse>, [
+    ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
+    'checked',
+    'defaultChecked',
+    'formFieldBind',
+    'trueValue',
+    'falseValue',
+    'indeterminate',
+    'label',
+    'description',
+    'size',
+    'variant',
+    'indicator',
+    'checkedIcon',
+    'indeterminateIcon',
+    'classes',
+    'styles',
+  ])
 
-  const generatedId = useId(() => formProps.id, 'checkbox')
+  const generatedId = useId(() => local.id, 'checkbox')
 
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled,
+      id: local.id,
+      name: local.name,
+      size: local.size,
+      disabled: local.disabled,
     }),
     () => ({
-      bind: formProps.formFieldBind,
+      bind: local.formFieldBind,
       defaultId: generatedId(),
       defaultSize: 'md',
       initialValue:
-        formProps.formFieldBind === false
+        local.formFieldBind === false
           ? undefined
           : (normalizeFieldValue(
-              formProps.checked !== undefined ? formProps.checked : formProps.defaultChecked,
-            ) ?? formProps.falseValue),
+              local.checked !== undefined ? local.checked : local.defaultChecked,
+            ) ?? local.falseValue),
     }),
   )
 
@@ -195,7 +191,7 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       return 'indeterminate'
     }
 
-    return value === formProps.trueValue || (typeof value === 'boolean' && value)
+    return value === local.trueValue || (typeof value === 'boolean' && value)
   }
 
   function normalizeFieldValue(value: unknown): unknown {
@@ -203,27 +199,27 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       return value
     }
 
-    if (value === formProps.trueValue || value === formProps.falseValue) {
+    if (value === local.trueValue || value === local.falseValue) {
       return value
     }
 
     if (typeof value === 'boolean') {
-      return value ? formProps.trueValue : formProps.falseValue
+      return value ? local.trueValue : local.falseValue
     }
 
     return value
   }
 
   function toChangeValue(nextChecked: boolean): TTrue | TFalse {
-    return nextChecked ? (formProps.trueValue as TTrue) : (formProps.falseValue as TFalse)
+    return nextChecked ? (local.trueValue as TTrue) : (local.falseValue as TFalse)
   }
 
   const checked = createMemo<boolean | 'indeterminate' | undefined>(() => {
-    if (formProps.checked !== undefined) {
-      return toCheckedState(formProps.checked)
+    if (local.checked !== undefined) {
+      return toCheckedState(local.checked)
     }
 
-    if (formProps.formFieldBind !== false && field.value() !== undefined) {
+    if (local.formFieldBind !== false && field.value() !== undefined) {
       return toCheckedState(field.value())
     }
 
@@ -231,11 +227,11 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
   })
 
   const defaultChecked = createMemo<boolean | 'indeterminate' | undefined>(() => {
-    if (formProps.defaultChecked === undefined) {
+    if (local.defaultChecked === undefined) {
       return undefined
     }
 
-    return toCheckedState(formProps.defaultChecked)
+    return toCheckedState(local.defaultChecked)
   })
 
   const resolvedChecked = createMemo<boolean | undefined>(() => {
@@ -250,8 +246,8 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
   })
 
   const indeterminate = createMemo<boolean>(() => {
-    if (formProps.indeterminate !== undefined) {
-      return formProps.indeterminate
+    if (local.indeterminate !== undefined) {
+      return local.indeterminate
     }
     return (
       checked() === 'indeterminate' ||
@@ -260,23 +256,23 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
   })
 
   createEffect(() => {
-    if (formProps.formFieldBind === false || formProps.checked === undefined) {
+    if (local.formFieldBind === false || local.checked === undefined) {
       return
     }
 
-    field.setFormValue(normalizeFieldValue(formProps.checked))
+    field.setFormValue(normalizeFieldValue(local.checked))
   })
 
   function onChange(nextChecked: boolean): void {
     const nextValue = toChangeValue(nextChecked)
 
-    if (formProps.formFieldBind === false) {
-      formProps.onChange?.(nextValue)
+    if (local.formFieldBind === false) {
+      local.onChange?.(nextValue)
       return
     }
 
     field.setFormValue(nextValue)
-    formProps.onChange?.(nextValue)
+    local.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
@@ -291,36 +287,36 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       defaultChecked={resolvedDefaultChecked()}
       indeterminate={indeterminate()}
       data-slot="root"
-      style={merged.styles?.root}
       data-disabled={field.disabled() ? '' : undefined}
+      style={local.styles?.root}
       class={checkboxRootVariants(
         {
-          variant: styleProps.variant === 'card' ? 'card' : undefined,
-          indicator: styleProps.indicator === 'hidden' ? undefined : styleProps.indicator,
+          variant: local.variant === 'card' ? 'card' : undefined,
+          indicator: local.indicator === 'hidden' ? undefined : local.indicator,
         },
-        styleProps.variant === 'card' &&
+        local.variant === 'card' &&
           checkboxCardPaddingVariants({
             size: field.size(),
           }),
-        styleProps.variant === 'card' && 'cursor-pointer',
-        styleProps.classes?.root,
+        local.variant === 'card' && 'cursor-pointer',
+        local.classes?.root,
       )}
-      {...restProps}
+      {...rest}
     >
       {(state) => (
         <>
-          <Show when={styleProps.variant === 'card'}>
+          <Show when={local.variant === 'card'}>
             <label for={field.id()} class="inset-0 absolute" />
           </Show>
           <div
             data-slot="container"
-            style={merged.styles?.container}
+            style={local.styles?.container}
             class={checkboxContainerVariants(
               {
                 size: field.size(),
               },
-              styleProps.variant === 'card' && 'relative z-1',
-              styleProps.classes?.container,
+              local.variant === 'card' && 'relative z-1',
+              local.classes?.container,
             )}
           >
             <KobalteCheckbox.Input
@@ -332,92 +328,90 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
 
             <KobalteCheckbox.Control
               data-slot="control"
-              style={merged.styles?.control}
+              style={local.styles?.control}
               data-invalid={field.invalid() ? '' : undefined}
               class={checkboxBaseVariants(
                 {
                   size: field.size(),
                 },
-                styleProps.indicator === 'hidden' && 'sr-only',
-                styleProps.classes?.control,
+                local.indicator === 'hidden' && 'sr-only',
+                local.classes?.control,
               )}
             >
               <KobalteCheckbox.Indicator
                 data-slot="indicator"
-                style={merged.styles?.indicator}
+                style={local.styles?.indicator}
                 class={cn(
                   'text-primary-foreground bg-primary flex size-full items-center justify-center',
-                  styleProps.classes?.indicator,
+                  local.classes?.indicator,
                 )}
               >
                 <Icon
-                  name={
-                    state.indeterminate() ? styleProps.indeterminateIcon : styleProps.checkedIcon
-                  }
+                  name={state.indeterminate() ? local.indeterminateIcon : local.checkedIcon}
                   class={checkboxIconVariants(
                     {
                       size: field.size(),
                     },
-                    styleProps.classes?.icon,
+                    local.classes?.icon,
                   )}
                 />
               </KobalteCheckbox.Indicator>
             </KobalteCheckbox.Control>
           </div>
 
-          <Show when={styleProps.label || styleProps.description}>
+          <Show when={local.label || local.description}>
             <div
               data-slot="wrapper"
-              style={merged.styles?.wrapper}
+              style={local.styles?.wrapper}
               class={checkboxWrapperVariants(
                 {
-                  indicator: styleProps.indicator,
+                  indicator: local.indicator,
                   size: field.size(),
                 },
-                styleProps.classes?.wrapper,
+                local.classes?.wrapper,
               )}
             >
-              <Show when={styleProps.label}>
+              <Show when={local.label}>
                 <Show
-                  when={styleProps.variant === 'card'}
+                  when={local.variant === 'card'}
                   fallback={
                     <label
                       for={field.id()}
                       data-slot="label"
-                      style={merged.styles?.label}
+                      style={local.styles?.label}
                       class={checkboxLabelVariants(
                         {
-                          required: restProps.required,
+                          required: rest.required,
                         },
-                        styleProps.classes?.label,
+                        local.classes?.label,
                       )}
                     >
-                      {styleProps.label}
+                      {local.label}
                     </label>
                   }
                 >
                   <p
                     data-slot="label"
-                    style={merged.styles?.label}
+                    style={local.styles?.label}
                     class={checkboxLabelVariants(
                       {
-                        required: restProps.required,
+                        required: rest.required,
                       },
-                      styleProps.classes?.label,
+                      local.classes?.label,
                     )}
                   >
-                    {styleProps.label}
+                    {local.label}
                   </p>
                 </Show>
               </Show>
 
-              <Show when={styleProps.description}>
+              <Show when={local.description}>
                 <p
                   data-slot="description"
-                  style={merged.styles?.description}
-                  class={cn('text-muted-foreground', styleProps.classes?.description)}
+                  style={local.styles?.description}
+                  class={cn('text-muted-foreground', local.classes?.description)}
                 >
-                  {styleProps.description}
+                  {local.description}
                 </p>
               </Show>
             </div>

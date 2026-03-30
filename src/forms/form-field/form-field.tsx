@@ -145,21 +145,32 @@ export function FormField(props: FormFieldProps): JSX.Element {
     props,
   )
 
-  const [fieldProps, contentProps, styleProps, restProps] = splitProps(
-    merged as FormFieldProps,
-    ['as', 'id', 'name', 'error', 'required', 'eagerValidation', 'validateOnInputDelay'],
-    ['label', 'description', 'hint', 'help', 'children'],
-    ['orientation', 'size', 'classes'],
-  )
+  const [local, rest] = splitProps(merged as FormFieldProps, [
+    'as',
+    'id',
+    'name',
+    'error',
+    'required',
+    'eagerValidation',
+    'validateOnInputDelay',
+    'label',
+    'description',
+    'hint',
+    'help',
+    'children',
+    'orientation',
+    'size',
+    'classes',
+  ])
 
   const formContext = useFormContext()
 
-  const ariaId = useId(() => fieldProps.id, 'form-field')
+  const ariaId = useId(() => local.id, 'form-field')
   const [registeredControls, setRegisteredControls] = createSignal<
     { id: () => string; bind: () => boolean; key: symbol }[]
   >([])
 
-  const fieldPath = createMemo(() => toFieldPath(fieldProps.name))
+  const fieldPath = createMemo(() => toFieldPath(local.name))
 
   const registerControl: NonNullable<FormFieldContextOptions['registerControl']> = (entry) => {
     const key = Symbol('form-field-control')
@@ -189,19 +200,19 @@ export function FormField(props: FormFieldProps): JSX.Element {
     const controls = registeredControls()
 
     if (controls.length === 0) {
-      return fieldProps.id ?? ariaId()
+      return local.id ?? ariaId()
     }
 
     return selectedControlId()
   })
 
   const resolvedError = createMemo(() => {
-    if (fieldProps.error === false) {
+    if (local.error === false) {
       return false
     }
 
-    if (fieldProps.error !== undefined && fieldProps.error !== null) {
-      return fieldProps.error
+    if (local.error !== undefined && local.error !== null) {
+      return local.error
     }
 
     if (!formContext) {
@@ -257,22 +268,22 @@ export function FormField(props: FormFieldProps): JSX.Element {
       return fieldPath()
     },
     get size() {
-      return styleProps.size
+      return local.size
     },
     get eagerValidation() {
-      return fieldProps.eagerValidation
+      return local.eagerValidation
     },
     get validateOnInputDelay() {
-      return fieldProps.validateOnInputDelay
+      return local.validateOnInputDelay
     },
     get hint() {
-      return contentProps.hint
+      return local.hint
     },
     get description() {
-      return contentProps.description
+      return local.description
     },
     get help() {
-      return contentProps.help
+      return local.help
     },
     get ariaId() {
       return ariaId()
@@ -300,35 +311,29 @@ export function FormField(props: FormFieldProps): JSX.Element {
   return (
     <FormFieldProvider value={fieldContextValue}>
       <Dynamic
-        component={fieldProps.as}
+        component={local.as}
         data-slot="root"
         style={merged.styles?.root}
-        data-orientation={styleProps.orientation}
+        data-orientation={local.orientation}
         class={formFieldSizeVariants(
           {
-            size: styleProps.size,
+            size: local.size,
           },
-          styleProps.orientation === 'horizontal' && 'flex items-baseline justify-between gap-2',
-          styleProps.classes?.root,
+          local.orientation === 'horizontal' && 'flex items-baseline justify-between gap-2',
+          local.classes?.root,
         )}
-        {...restProps}
+        {...rest}
       >
         <div
           data-slot="wrapper"
           style={merged.styles?.wrapper}
-          class={cn(
-            styleProps.orientation === 'horizontal' && 'flex-1',
-            styleProps.classes?.wrapper,
-          )}
+          class={cn(local.orientation === 'horizontal' && 'flex-1', local.classes?.wrapper)}
         >
-          <Show when={contentProps.label}>
+          <Show when={local.label}>
             <div
               data-slot="labelWrapper"
               style={merged.styles?.labelWrapper}
-              class={cn(
-                'flex gap-1 items-center justify-between',
-                styleProps.classes?.labelWrapper,
-              )}
+              class={cn('flex gap-1 items-center justify-between', local.classes?.labelWrapper)}
             >
               <label
                 for={resolvedLabelTargetId()}
@@ -336,66 +341,66 @@ export function FormField(props: FormFieldProps): JSX.Element {
                 style={merged.styles?.label}
                 class={formFieldLabelVariants(
                   {
-                    required: fieldProps.required,
+                    required: local.required,
                   },
-                  styleProps.classes?.label,
+                  local.classes?.label,
                 )}
               >
-                {contentProps.label}
+                {local.label}
               </label>
 
-              <Show when={contentProps.hint}>
+              <Show when={local.hint}>
                 <span
                   id={`${ariaId()}-hint`}
                   data-slot="hint"
                   style={merged.styles?.hint}
-                  class={cn('text-muted-foreground ms-1', styleProps.classes?.hint)}
+                  class={cn('text-muted-foreground ms-1', local.classes?.hint)}
                 >
-                  {contentProps.hint}
+                  {local.hint}
                 </span>
               </Show>
             </div>
           </Show>
 
-          <Show when={contentProps.description}>
+          <Show when={local.description}>
             <p
               id={`${ariaId()}-description`}
               data-slot="description"
               style={merged.styles?.description}
-              class={cn('text-muted-foreground', styleProps.classes?.description)}
+              class={cn('text-muted-foreground', local.classes?.description)}
             >
-              {contentProps.description}
+              {local.description}
             </p>
           </Show>
         </div>
 
         <div
           class={
-            contentProps.label || contentProps.description
+            local.label || local.description
               ? formFieldContainerVariants(
                   {
-                    orientation: styleProps.orientation,
+                    orientation: local.orientation,
                   },
-                  styleProps.classes?.container,
+                  local.classes?.container,
                 )
-              : cn(styleProps.classes?.container)
+              : cn(local.classes?.container)
           }
         >
-          {resolveRenderProp<FormFieldT.RenderContext>(contentProps.children, () => ({
+          {resolveRenderProp<FormFieldT.RenderContext>(local.children, () => ({
             error: resolvedError(),
           }))}
 
           <Show
-            when={fieldProps.error !== false && shouldShowError()}
+            when={local.error !== false && shouldShowError()}
             fallback={
-              <Show when={contentProps.help}>
+              <Show when={local.help}>
                 <div
                   id={`${ariaId()}-help`}
                   data-slot="help"
                   style={merged.styles?.help}
-                  class={cn('text-muted-foreground mt-2', styleProps.classes?.help)}
+                  class={cn('text-muted-foreground mt-2', local.classes?.help)}
                 >
-                  {contentProps.help}
+                  {local.help}
                 </div>
               </Show>
             }
@@ -404,7 +409,7 @@ export function FormField(props: FormFieldProps): JSX.Element {
               id={`${ariaId()}-error`}
               data-slot="error"
               style={merged.styles?.error}
-              class={cn('text-destructive mt-2', styleProps.classes?.error)}
+              class={cn('text-destructive mt-2', local.classes?.error)}
             >
               {resolvedError() as JSX.Element}
             </div>

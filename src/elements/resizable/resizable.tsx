@@ -156,7 +156,7 @@ const EMPTY_PANELS: ResizablePanelItem[] = []
 
 /** Resizable panel layout with draggable dividers and keyboard support. */
 export function Resizable(props: ResizableProps): JSX.Element {
-  const localProps = mergeProps(
+  const local = mergeProps(
     {
       orientation: 'horizontal' as ResizableOrientation,
       keyboardDelta: '10%' as ResizableSize,
@@ -166,8 +166,8 @@ export function Resizable(props: ResizableProps): JSX.Element {
     props,
   )
 
-  const panelIdPrefix = useId(() => localProps.id, 'resizable')
-  const orientation = () => localProps.orientation
+  const panelIdPrefix = useId(() => local.id, 'resizable')
+  const orientation = () => local.orientation
 
   let rootRef: HTMLDivElement | undefined = undefined
   const [rootSize, setRootSize] = createSignal(0)
@@ -177,7 +177,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
   const [interactionResizing, setInteractionResizing] = createSignal(false)
   const [transitioningPanelIndexes, setTransitioningPanelIndexes] = createSignal<number[]>([])
   let initializedWithMeasuredRootSize = false
-  const panelItems = createMemo(() => localProps.panels ?? EMPTY_PANELS)
+  const panelItems = createMemo(() => local.panels ?? EMPTY_PANELS)
 
   const resolvedPanels = createMemo(() => resolvePanels(panelItems(), rootSize(), panelIdPrefix()))
   const panelCount = createMemo(() => resolvedPanels().length)
@@ -565,11 +565,11 @@ export function Resizable(props: ResizableProps): JSX.Element {
   }
 
   function beginResize(nextSizes: number[]): void {
-    localProps.onResizeStart?.(resolvePixelSizes(nextSizes))
+    local.onResizeStart?.(resolvePixelSizes(nextSizes))
   }
 
   function endResize(nextSizes: number[]): void {
-    localProps.onResizeEnd?.(resolvePixelSizes(nextSizes))
+    local.onResizeEnd?.(resolvePixelSizes(nextSizes))
   }
 
   function emitSizes(normalizedSizes: number[]): void {
@@ -579,7 +579,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
       )
     }
 
-    localProps.onResize?.(resolvePixelSizes(normalizedSizes))
+    local.onResize?.(resolvePixelSizes(normalizedSizes))
   }
 
   let drag: DragState | null = null
@@ -650,11 +650,11 @@ export function Resizable(props: ResizableProps): JSX.Element {
   }
 
   function onHandleKeyDown(handleIndex: number, event: KeyboardEvent, altKey: boolean): void {
-    if (localProps.disable || !isHandleResizable(handleIndex)) {
+    if (local.disable || !isHandleResizable(handleIndex)) {
       return
     }
 
-    localProps.onHandleKeyDown?.({
+    local.onHandleKeyDown?.({
       event,
       handleIndex,
       sizes: resolvePixelSizes(sizes()),
@@ -664,7 +664,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
       return
     }
 
-    const keyboardDelta = resolveKeyboardDelta(localProps.keyboardDelta, rootSize())
+    const keyboardDelta = resolveKeyboardDelta(local.keyboardDelta, rootSize())
     let deltaPercentage: number | null = null
 
     if (
@@ -711,12 +711,12 @@ export function Resizable(props: ResizableProps): JSX.Element {
   return (
     <div
       ref={rootRef}
-      id={localProps.id}
+      id={local.id}
       data-slot="root"
-      style={localProps.styles?.root}
+      style={local.styles?.root}
       data-resizable-root
       data-orientation={orientation()}
-      class={resizableRootVariants({ orientation: orientation() }, localProps.classes?.root)}
+      class={resizableRootVariants({ orientation: orientation() }, local.classes?.root)}
     >
       <Index each={resolvedPanels()}>
         {(panel, index) => {
@@ -724,13 +724,13 @@ export function Resizable(props: ResizableProps): JSX.Element {
           const size = () => sizes()[index] ?? 0
           const collapsed = () => isPanelCollapsed(size(), panelItem())
           const handleDisabled = createMemo(
-            () => localProps.disable === true || !isHandleResizable(index),
+            () => local.disable === true || !isHandleResizable(index),
           )
           const handleCollapseAction = createMemo(
-            () => localProps.handleAction === 'collapse' && localProps.disable !== true,
+            () => local.handleAction === 'collapse' && local.disable !== true,
           )
           const handleRenderDisabled = createMemo(() =>
-            localProps.handleAction === 'collapse' ? localProps.disable === true : handleDisabled(),
+            local.handleAction === 'collapse' ? local.disable === true : handleDisabled(),
           )
           const collapseState = createMemo(() => resolveNearestCollapsibleState(index))
 
@@ -742,7 +742,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
             handleIndex: () => index,
             orientation,
             disable: handleDisabled,
-            intersection: () => localProps.intersection,
+            intersection: () => local.intersection,
             onDrag: resizeHandleByDelta,
             onDragEnd: stopHandleDrag,
             onKeyDown: onHandleKeyDown,
@@ -768,7 +768,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
           const handleState = createMemo<ResizableT.HandleState>(() => ({
             orientation: orientation(),
             disabled: handleRenderDisabled(),
-            action: localProps.handleAction,
+            action: local.handleAction,
             active: bindings.active(),
             dragging: bindings.dragging(),
             canCollapse: collapseState().canCollapse,
@@ -776,7 +776,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
           }))
 
           const handleContent = createMemo(() => {
-            const renderHandle = localProps.renderHandle
+            const renderHandle = local.renderHandle
             const state = handleState()
 
             if (renderHandle === true) {
@@ -804,14 +804,14 @@ export function Resizable(props: ResizableProps): JSX.Element {
                 data-transitioning={isTransitioning() ? '' : undefined}
                 class={cn(
                   'min-h-0 min-w-0 ease-out overflow-auto data-transitioning:(transition-flex-grow duration-200) motion-reduce:transition-none',
-                  localProps.classes?.panel,
+                  local.classes?.panel,
                   panelItem().class,
                 )}
                 style={{
                   'flex-grow': size(),
                   'flex-shrink': 1,
                   'flex-basis': 0,
-                  ...localProps.styles?.panel,
+                  ...local.styles?.panel,
                   ...panelItem().style,
                 }}
                 onTransitionEnd={(event) => onPanelTransitionFinish(index, event)}
@@ -832,14 +832,14 @@ export function Resizable(props: ResizableProps): JSX.Element {
                   aria-disabled={handleDisabled() ? 'true' : undefined}
                   tabIndex={handleDisabled() ? -1 : 0}
                   data-slot="divider"
-                  style={localProps.styles?.divider}
+                  style={local.styles?.divider}
                   data-orientation={orientation()}
                   data-active={bindings.active() ? '' : undefined}
                   data-cross={bindings.crossHovered() ? '' : undefined}
                   data-dragging={bindings.dragging() ? '' : undefined}
                   class={resizableHandleVariants(
                     { orientation: orientation() },
-                    localProps.classes?.divider,
+                    local.classes?.divider,
                   )}
                   onMouseEnter={bindings.onMouseEnter}
                   onMouseLeave={bindings.onMouseLeave}
@@ -854,7 +854,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
                       data-resizable-handle-start-target
                       class={resizableCrossTargetVariants(
                         { orientation: orientation(), target: 'start' },
-                        localProps.classes?.crossTarget,
+                        local.classes?.crossTarget,
                       )}
                       onMouseEnter={() =>
                         bindings.onIntersectionMouseEnter(RESIZABLE_HANDLE_TARGET_START)
@@ -863,22 +863,22 @@ export function Resizable(props: ResizableProps): JSX.Element {
                     />
                   </Show>
 
-                  <Show when={localProps.renderHandle !== false}>
+                  <Show when={local.renderHandle !== false}>
                     <button
                       type="button"
                       data-slot="handle"
-                      tabIndex={localProps.handleAction === 'collapse' ? undefined : -1}
-                      style={localProps.styles?.handle}
+                      tabIndex={local.handleAction === 'collapse' ? undefined : -1}
+                      style={local.styles?.handle}
                       onPointerDown={onHandlePointerDown}
                       onClick={onHandleClick}
                       class={cn(
                         'rounded flex cursor-inherit items-center justify-center z-10 focus-visible:effect-fv',
                         handleCollapseAction() && 'active:cursor-pointer hover:cursor-pointer',
-                        localProps.renderHandle === true && [
+                        local.renderHandle === true && [
                           'bg-border/90 flex shrink-0',
                           orientation() === 'vertical' ? 'h-1 w-6' : 'h-6 w-1',
                         ],
-                        localProps.classes?.handle,
+                        local.classes?.handle,
                       )}
                     >
                       {handleContent()}
@@ -891,7 +891,7 @@ export function Resizable(props: ResizableProps): JSX.Element {
                       data-resizable-handle-end-target
                       class={resizableCrossTargetVariants(
                         { orientation: orientation(), target: 'end' },
-                        localProps.classes?.crossTarget,
+                        local.classes?.crossTarget,
                       )}
                       onMouseEnter={() =>
                         bindings.onIntersectionMouseEnter(RESIZABLE_HANDLE_TARGET_END)

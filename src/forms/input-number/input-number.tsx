@@ -142,38 +142,40 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     props,
   )
 
-  const [formProps, controlProps, styleProps, restProps] = splitProps(
-    merged as InputNumberProps,
-    [...FORM_ID_NAME_DISABLED_KEYS, 'onRawValueChange', ...FORM_INPUT_INTERACTION_KEYS],
-    [
-      'placeholder',
-      'orientation',
-      'increment',
-      'incrementIcon',
-      'incrementDisabled',
-      'decrement',
-      'decrementIcon',
-      'decrementDisabled',
-      'onIncrementClick',
-      'onDecrementClick',
-      'autofocus',
-      'autofocusDelay',
-    ],
-    ['size', 'variant', 'classes', 'styles'],
-  )
+  const [local, rest] = splitProps(merged as InputNumberProps, [
+    ...FORM_ID_NAME_DISABLED_KEYS,
+    'onRawValueChange',
+    ...FORM_INPUT_INTERACTION_KEYS,
+    'placeholder',
+    'orientation',
+    'increment',
+    'incrementIcon',
+    'incrementDisabled',
+    'decrement',
+    'decrementIcon',
+    'decrementDisabled',
+    'onIncrementClick',
+    'onDecrementClick',
+    'autofocus',
+    'autofocusDelay',
+    'size',
+    'variant',
+    'classes',
+    'styles',
+  ])
 
-  const generatedId = useId(() => formProps.id, 'input-number')
+  const generatedId = useId(() => local.id, 'input-number')
   const field = useFormField(
     () => ({
-      id: formProps.id,
-      name: formProps.name,
-      size: styleProps.size,
-      disabled: formProps.disabled,
+      id: local.id,
+      name: local.name,
+      size: local.size,
+      disabled: local.disabled,
     }),
     () => ({
       defaultId: generatedId(),
       defaultSize: 'md',
-      initialValue: restProps.rawValue ?? restProps.defaultValue ?? 0,
+      initialValue: rest.rawValue ?? rest.defaultValue ?? 0,
     }),
   )
 
@@ -185,25 +187,25 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
   let autofocusTimeoutId: ReturnType<typeof setTimeout> | undefined
   let repeatedDuringPress = false
 
-  const resolvedIncrement = createMemo(() => Boolean(controlProps.increment))
+  const resolvedIncrement = createMemo(() => Boolean(local.increment))
 
-  const resolvedDecrement = createMemo(() => Boolean(controlProps.decrement))
+  const resolvedDecrement = createMemo(() => Boolean(local.decrement))
 
   const resolvedOrientation = createMemo<InputNumberOrientation>(
-    () => controlProps.orientation ?? 'horizontal',
+    () => local.orientation ?? 'horizontal',
   )
 
   const incrementIcon = createMemo<IconT.Name>(() => {
-    if (controlProps.incrementIcon) {
-      return controlProps.incrementIcon
+    if (local.incrementIcon) {
+      return local.incrementIcon
     }
 
     return resolvedOrientation() === 'vertical' ? 'icon-chevron-up' : 'icon-plus'
   })
 
   const decrementIcon = createMemo<IconT.Name>(() => {
-    if (controlProps.decrementIcon) {
-      return controlProps.decrementIcon
+    if (local.decrementIcon) {
+      return local.decrementIcon
     }
 
     return resolvedOrientation() === 'vertical' ? 'icon-chevron-down' : 'icon-minus'
@@ -350,20 +352,17 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     clearAutofocusTimeout()
   })
 
-  const isBorderless = createMemo(
-    () => styleProps.variant === 'ghost' || styleProps.variant === 'none',
-  )
+  const isBorderless = createMemo(() => local.variant === 'ghost' || local.variant === 'none')
 
   function resolveControlProps(kind: ControlKind): ButtonT.Props {
     const isIncrement = kind === 'increment'
-    const userOnClick = isIncrement ? controlProps.onIncrementClick : controlProps.onDecrementClick
+    const userOnClick = isIncrement ? local.onIncrementClick : local.onDecrementClick
 
     return {
       slotName: kind,
-      styles: { root: styleProps.styles?.[kind] },
+      styles: { root: local.styles?.[kind] },
       disabled:
-        field.disabled() ||
-        (isIncrement ? controlProps.incrementDisabled : controlProps.decrementDisabled),
+        field.disabled() || (isIncrement ? local.incrementDisabled : local.decrementDisabled),
       variant: 'ghost',
       size: `icon-${field.size()}`,
       'aria-label': isIncrement ? 'Increment' : 'Decrement',
@@ -382,8 +381,8 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
             orientation: resolvedOrientation(),
           },
           isBorderless() && 'b-transparent',
-          styleProps.variant === 'none' && 'hover:bg-transparent',
-          styleProps.classes?.[kind],
+          local.variant === 'none' && 'hover:bg-transparent',
+          local.classes?.[kind],
         ),
       },
     } as const
@@ -399,29 +398,29 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
 
   function onRawValueChange(value: number): void {
     field.setFormValue(value)
-    formProps.onRawValueChange?.(value)
+    local.onRawValueChange?.(value)
     field.emit('change')
     field.emit('input')
   }
 
   const onBlur: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
-    callHandler(event, formProps.onBlur as any)
+    callHandler(event, local.onBlur as any)
     field.emit('blur')
   }
 
   const onFocus: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
-    callHandler(event, formProps.onFocus as any)
+    callHandler(event, local.onFocus as any)
     field.emit('focus')
   }
 
   onMount(() => {
-    if (!controlProps.autofocus) {
+    if (!local.autofocus) {
       return
     }
 
     autofocusTimeoutId = setTimeout(() => {
       inputEl?.focus()
-    }, controlProps.autofocusDelay ?? 0)
+    }, local.autofocusDelay ?? 0)
   })
 
   return (
@@ -437,11 +436,11 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       class={inputNumberRootVariants(
         {
           size: field.size(),
-          variant: styleProps.variant,
+          variant: local.variant,
         },
-        styleProps.classes?.root,
+        local.classes?.root,
       )}
-      {...restProps}
+      {...rest}
     >
       <Show when={!isVertical() && resolvedDecrement()}>
         <DecrementControl />
@@ -450,7 +449,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       <KobalteNumberField.Input
         id={field.id()}
         ref={(e) => (inputEl = e)}
-        placeholder={controlProps.placeholder}
+        placeholder={local.placeholder}
         data-slot="input"
         style={merged.styles?.input}
         class={inputNumberBaseVariants(
@@ -458,7 +457,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
             size: field.size(),
             align: resolveInputNumberAlign(resolvedOrientation(), resolvedDecrement()),
           },
-          styleProps.classes?.input,
+          local.classes?.input,
         )}
         onBlur={onBlur}
         onFocus={onFocus}
