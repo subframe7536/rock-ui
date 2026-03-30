@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import ts from 'typescript'
@@ -46,6 +46,117 @@ function typeIncludesUndefined(type: ts.Type): boolean {
 const TYPE_FORMAT_FLAGS =
   ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
 
+let _kobalteHashMap: Map<string, string> | undefined
+let _projectRoot: string | undefined
+
+export function normalizePathForComparison(filePath: string): string {
+  const resolved = path.resolve(filePath).replaceAll('\\', '/')
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved
+}
+
+function extractIndexHashFileName(moduleSpecifier: string): string | undefined {
+  const normalized = moduleSpecifier.replaceAll('\\', '/')
+  if (!normalized.startsWith('../')) {
+    return undefined
+  }
+
+  const parsed = path.posix.parse(normalized)
+  if (!parsed.name.startsWith('index-')) {
+    return undefined
+  }
+
+  return `${parsed.name}.d.ts`
+}
+
+function trimKobalteDistHashSuffix(fileName: string): string {
+  if (!fileName.endsWith('.d.ts')) {
+    return fileName
+  }
+
+  const nameWithoutExt = fileName.slice(0, -'.d.ts'.length)
+  const hashSeparator = nameWithoutExt.lastIndexOf('-')
+  if (hashSeparator <= 0) {
+    return fileName
+  }
+
+  const hashPart = nameWithoutExt.slice(hashSeparator + 1)
+  if (!/^[\da-f]+$/i.test(hashPart)) {
+    return fileName
+  }
+
+  const partSeparator = nameWithoutExt.lastIndexOf('-', hashSeparator - 1)
+  if (partSeparator <= 0) {
+    return fileName
+  }
+
+  return nameWithoutExt.slice(0, partSeparator)
+}
+
+/**
+ * Scans `@kobalte/core/dist/` for component index files and builds a reverse mapping
+ * from hash-based filenames (e.g. `index-4cb1a0c7.d.ts`) to component names (e.g. `accordion`).
+ */
+function getKobalteHashMap(): Map<string, string> {
+  if (_kobalteHashMap) {
+    return _kobalteHashMap
+  }
+
+  _kobalteHashMap = new Map()
+
+  if (!_projectRoot) {
+    return _kobalteHashMap
+  }
+
+  try {
+    const distDir = path.join(_projectRoot, 'node_modules', '@kobalte', 'core', 'dist')
+
+    if (!existsSync(distDir)) {
+      return _kobalteHashMap
+    }
+
+    const entries = readdirSync(distDir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue
+      }
+
+      const componentName = entry.name
+      const indexPath = path.join(distDir, componentName, 'index.d.ts')
+
+      if (!existsSync(indexPath)) {
+        continue
+      }
+
+      const content = readFileSync(indexPath, 'utf-8')
+      const sourceFile = ts.createSourceFile(indexPath, content, ts.ScriptTarget.Latest, true)
+
+      for (const statement of sourceFile.statements) {
+        if (!ts.isExportDeclaration(statement)) {
+          continue
+        }
+
+        const moduleSpecifier = statement.moduleSpecifier
+        if (!moduleSpecifier || !ts.isStringLiteral(moduleSpecifier)) {
+          continue
+        }
+
+        const hashBaseName = extractIndexHashFileName(moduleSpecifier.text)
+        if (!hashBaseName) {
+          continue
+        }
+
+        _kobalteHashMap.set(hashBaseName, componentName)
+        break
+      }
+    }
+  } catch {
+    // Silently ignore errors — fallback to the existing heuristic
+  }
+
+  return _kobalteHashMap
+}
+
 function inferModuleFromFileName(fileName: string): string {
   const normalized = fileName.replaceAll('\\', '/')
   const idx = normalized.lastIndexOf('/node_modules/')
@@ -59,41 +170,26 @@ function inferModuleFromFileName(fileName: string): string {
     parts[0]?.startsWith('@') && parts[1] ? `${parts[0]}/${parts[1]}` : (parts[0] ?? 'unknown')
 
   if (pkg === '@kobalte/core') {
-    const known = [
-      'accordion',
-      'button',
-      'checkbox',
-      'collapsible',
-      'combobox',
-      'dialog',
-      'dropdown-menu',
-      'file-field',
-      'number-field',
-      'popover',
-      'polymorphic',
-      'progress',
-      'radio-group',
-      'separator',
-      'slider',
-      'switch',
-      'tabs',
-      'tooltip',
-    ]
-    const hit = known.find((item) => {
-      if (parts.includes(item)) {
-        return true
-      }
+    const packageParts = parts[0]?.startsWith('@') ? parts.slice(2) : parts.slice(1)
+    const distRoot = packageParts[0]
+    const componentName = packageParts[1]
+    const normalizedComponentName = componentName
+      ? trimKobalteDistHashSuffix(componentName)
+      : componentName
 
-      // Some d.ts live in filenames like `number-field.d.ts` (no directory segment).
-      // Also cover common prefixes like `number-field/index.d.ts`.
-      return (
-        rest.includes(`/${item}/`) ||
-        rest.includes(`/${item}.`) ||
-        rest.includes(`/${item}-`) ||
-        rest.includes(`/${item}_`)
-      )
-    })
-    return hit ? `${pkg}/${hit}` : pkg
+    if (distRoot === 'dist' && normalizedComponentName && !normalizedComponentName.startsWith('index-')) {
+      return `${pkg}/${normalizedComponentName}`
+    }
+
+    // Fall back to the hash-file reverse mapping for bundled index files
+    const baseName = path.posix.basename(normalized)
+    const hashMap = getKobalteHashMap()
+    const hashComponentName = hashMap.get(baseName)
+    if (hashComponentName) {
+      return `${pkg}/${hashComponentName}`
+    }
+
+    return pkg
   }
 
   return pkg
@@ -136,18 +232,35 @@ function buildRegionByLine(text: string): Array<string | undefined> {
   return regions
 }
 
-function isJsxElementReturn(typeNode: ts.TypeNode | undefined, sourceFile: ts.SourceFile): boolean {
+function entityNameToParts(name: ts.EntityName): string[] {
+  if (ts.isIdentifier(name)) {
+    return [name.text]
+  }
+  return [...entityNameToParts(name.left), name.right.text]
+}
+
+function isJsxElementReturn(typeNode: ts.TypeNode | undefined): boolean {
   if (!typeNode) {
     return false
   }
 
-  const text = typeNode.getText(sourceFile).replaceAll(' ', '')
-  return text === 'JSX.Element' || text.endsWith('.JSX.Element')
+  if (!ts.isTypeReferenceNode(typeNode)) {
+    return false
+  }
+
+  const parts = entityNameToParts(typeNode.typeName)
+  return parts.length >= 2 && parts.at(-2) === 'JSX' && parts.at(-1) === 'Element'
+}
+
+function getLiteralStringText(node: ts.Expression): string | undefined {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+    return node.text
+  }
+  return undefined
 }
 
 function extractSlotNames(
   node: ts.ModuleDeclaration,
-  sourceFile: ts.SourceFile,
   checker: ts.TypeChecker,
 ): string[] {
   const body = node.body
@@ -163,11 +276,13 @@ function extractSlotNames(
     if (ts.isUnionTypeNode(statement.type)) {
       return statement.type.types
         .filter((typeNode): typeNode is ts.LiteralTypeNode => ts.isLiteralTypeNode(typeNode))
-        .map((typeNode) => typeNode.literal.getText(sourceFile).replace(/^['"]|['"]$/g, ''))
+        .map((typeNode) => getLiteralStringText(typeNode.literal))
+        .filter((name): name is string => Boolean(name))
     }
 
     if (ts.isLiteralTypeNode(statement.type)) {
-      return [statement.type.literal.getText(sourceFile).replace(/^['"]|['"]$/g, '')]
+      const name = getLiteralStringText(statement.type.literal)
+      return name ? [name] : []
     }
 
     // Fallback: resolve via type checker (handles alias references like `export type Slot = SomeSharedSlots`)
@@ -336,6 +451,7 @@ function groupProperties(
   own.sort((left, right) => left.name.localeCompare(right.name))
 
   const inherited = [...inheritedGroups.entries()]
+    .filter(([from]) => shouldIncludeInheritedGroup(from))
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([from, props]) => ({
       from,
@@ -343,6 +459,10 @@ function groupProperties(
     }))
 
   return { own, inherited }
+}
+
+export function shouldIncludeInheritedGroup(from: string): boolean {
+  return from !== 'solid-js'
 }
 
 interface ComponentMetadata {
@@ -360,7 +480,7 @@ function collectNamespaceMetadata(
   const visit = (node: ts.Node) => {
     if (ts.isModuleDeclaration(node) && node.name.text.endsWith('T')) {
       const componentName = node.name.text.slice(0, -1)
-      const slotNames = extractSlotNames(node, sourceFile, checker)
+      const slotNames = extractSlotNames(node, checker)
       if (slotNames.length > 0) {
         slots.set(componentName, slotNames)
       }
@@ -386,7 +506,7 @@ function processComponentNode(
   regionByLine: Array<string | undefined>,
   metadata: ComponentMetadata,
 ): { key: string; doc: ComponentDoc } | null {
-  if (!node.name || node.parameters.length === 0 || !isJsxElementReturn(node.type, sourceFile)) {
+  if (!node.name || node.parameters.length === 0 || !isJsxElementReturn(node.type)) {
     return null
   }
 
@@ -423,7 +543,246 @@ function processComponentNode(
   return { key: componentKey, doc }
 }
 
+interface GenericAliasInfo {
+  paramName: string
+  defaultType: ts.TypeNode
+}
+
+interface GenericFunctionInfo {
+  paramName: string
+  defaultType: ts.TypeNode
+}
+
+function collectAliasReferences(
+  node: ts.Node | undefined,
+  aliasNames: ReadonlySet<string>,
+  out: Set<string>,
+): void {
+  if (!node) {
+    return
+  }
+
+  const visit = (child: ts.Node) => {
+    if (
+      ts.isTypeReferenceNode(child) &&
+      ts.isIdentifier(child.typeName) &&
+      aliasNames.has(child.typeName.text)
+    ) {
+      out.add(child.typeName.text)
+    }
+    ts.forEachChild(child, visit)
+  }
+
+  visit(node)
+}
+
+function replaceTypeReferences(
+  root: ts.Node,
+  context: ts.TransformationContext,
+  genericParamName: string | undefined,
+  genericDefaultType: ts.TypeNode | undefined,
+  aliasNames: ReadonlySet<string>,
+): ts.Node {
+  const visit = (node: ts.Node): ts.Node => {
+    if (
+      genericParamName &&
+      genericDefaultType &&
+      ts.isTypeReferenceNode(node) &&
+      !node.typeArguments &&
+      ts.isIdentifier(node.typeName) &&
+      node.typeName.text === genericParamName
+    ) {
+      return cloneTypeNode(genericDefaultType)
+    }
+
+    if (
+      ts.isTypeReferenceNode(node) &&
+      node.typeArguments &&
+      node.typeArguments.length > 0 &&
+      ts.isIdentifier(node.typeName) &&
+      aliasNames.has(node.typeName.text)
+    ) {
+      return ts.factory.updateTypeReferenceNode(node, node.typeName, undefined)
+    }
+
+    return ts.visitEachChild(node, visit, context)
+  }
+
+  return ts.visitNode(root, visit)
+}
+
+function cloneTypeNode(typeNode: ts.TypeNode): ts.TypeNode {
+  const nodeFactory = ts.factory as ts.NodeFactory & { cloneNode(node: ts.Node): ts.Node }
+  return nodeFactory.cloneNode(typeNode) as ts.TypeNode
+}
+
+function preprocessGenericTypeAliases(text: string, fileName: string): string {
+  const sourceFile = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true)
+  const genericAliases = new Map<string, GenericAliasInfo>()
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isTypeAliasDeclaration(statement)) {
+      continue
+    }
+    if (!statement.typeParameters || statement.typeParameters.length !== 1) {
+      continue
+    }
+
+    const typeParam = statement.typeParameters[0]
+    if (!typeParam.default) {
+      continue
+    }
+
+    genericAliases.set(statement.name.text, {
+      paramName: typeParam.name.text,
+      defaultType: typeParam.default,
+    })
+  }
+
+  if (genericAliases.size === 0) {
+    return text
+  }
+
+  const aliasNames = new Set(genericAliases.keys())
+  const referencedAliases = new Set<string>()
+  const functionGenerics = new Map<ts.FunctionDeclaration, GenericFunctionInfo>()
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isFunctionDeclaration(statement)) {
+      continue
+    }
+    if (!statement.typeParameters || statement.typeParameters.length !== 1) {
+      continue
+    }
+
+    const typeParam = statement.typeParameters[0]
+    if (!typeParam.default) {
+      continue
+    }
+
+    const aliasesInParameters = new Set<string>()
+    for (const parameter of statement.parameters) {
+      collectAliasReferences(parameter.type, aliasNames, aliasesInParameters)
+    }
+    if (aliasesInParameters.size === 0) {
+      continue
+    }
+
+    for (const aliasName of aliasesInParameters) {
+      referencedAliases.add(aliasName)
+    }
+
+    functionGenerics.set(statement, {
+      paramName: typeParam.name.text,
+      defaultType: typeParam.default,
+    })
+  }
+
+  if (referencedAliases.size === 0) {
+    return text
+  }
+
+  let changed = false
+  const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
+    const visit = (node: ts.Node): ts.Node => {
+      if (ts.isTypeAliasDeclaration(node) && referencedAliases.has(node.name.text)) {
+        const aliasInfo = genericAliases.get(node.name.text)
+        if (aliasInfo) {
+          changed = true
+          const updatedType = replaceTypeReferences(
+            node.type,
+            context,
+            aliasInfo.paramName,
+            aliasInfo.defaultType,
+            referencedAliases,
+          ) as ts.TypeNode
+          return ts.factory.updateTypeAliasDeclaration(
+            node,
+            node.modifiers,
+            node.name,
+            undefined,
+            updatedType,
+          )
+        }
+      }
+
+      if (ts.isFunctionDeclaration(node)) {
+        const genericInfo = functionGenerics.get(node)
+        if (genericInfo) {
+          changed = true
+          const updatedParameters = node.parameters.map((parameter) => {
+            if (!parameter.type) {
+              return parameter
+            }
+
+            const updatedType = replaceTypeReferences(
+              parameter.type,
+              context,
+              genericInfo.paramName,
+              genericInfo.defaultType,
+              referencedAliases,
+            ) as ts.TypeNode
+            return ts.factory.updateParameterDeclaration(
+              parameter,
+              parameter.modifiers,
+              parameter.dotDotDotToken,
+              parameter.name,
+              parameter.questionToken,
+              updatedType,
+              parameter.initializer,
+            )
+          })
+
+          const updatedReturnType = node.type
+            ? (replaceTypeReferences(
+                node.type,
+                context,
+                genericInfo.paramName,
+                genericInfo.defaultType,
+                referencedAliases,
+              ) as ts.TypeNode)
+            : undefined
+
+          return ts.factory.updateFunctionDeclaration(
+            node,
+            node.modifiers,
+            node.asteriskToken,
+            node.name,
+            undefined,
+            updatedParameters,
+            updatedReturnType,
+            node.body,
+          )
+        }
+      }
+
+      if (
+        ts.isTypeReferenceNode(node) &&
+        node.typeArguments &&
+        node.typeArguments.length > 0 &&
+        ts.isIdentifier(node.typeName) &&
+        referencedAliases.has(node.typeName.text)
+      ) {
+        changed = true
+        return ts.factory.updateTypeReferenceNode(node, node.typeName, undefined)
+      }
+
+      return ts.visitEachChild(node, visit, context)
+    }
+
+    return (node) => ts.visitNode(node, visit) as ts.SourceFile
+  }
+
+  const transformed = ts.transform(sourceFile, [transformer])
+  const output = ts.createPrinter().printFile(transformed.transformed[0])
+  transformed.dispose()
+
+  return changed ? output : text
+}
+
 export function generateApiDoc(projectRoot: string): GenerationResult | null {
+  _projectRoot = projectRoot
+  _kobalteHashMap = undefined
   const dtsPath = path.join(projectRoot, 'dist', 'index.d.mts')
   if (!existsSync(dtsPath)) {
     console.warn(`[api-doc] ${dtsPath} not found, skipping generation`)
@@ -439,10 +798,36 @@ export function generateApiDoc(projectRoot: string): GenerationResult | null {
     types: [],
   }
 
-  const host = ts.createCompilerHost(options, true)
+  const dtsContent = readFileSync(dtsPath, 'utf-8')
+  const processedContent = preprocessGenericTypeAliases(dtsContent, dtsPath)
+  const useCustomHost = processedContent !== dtsContent
+  const normalizedDtsPath = normalizePathForComparison(dtsPath)
+
+  const baseHost = ts.createCompilerHost(options, true)
+  const host: ts.CompilerHost = useCustomHost
+    ? {
+        ...baseHost,
+        getSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile) {
+          if (normalizePathForComparison(fileName) === normalizedDtsPath) {
+            return ts.createSourceFile(fileName, processedContent, languageVersion, true)
+          }
+          return baseHost.getSourceFile(
+            fileName,
+            languageVersion,
+            onError,
+            shouldCreateNewSourceFile,
+          )
+        },
+      }
+    : baseHost
+
   const program = ts.createProgram([dtsPath], options, host)
   const checker = program.getTypeChecker()
-  const sourceFile = program.getSourceFile(dtsPath)
+  const sourceFile =
+    program.getSourceFile(dtsPath) ??
+    program
+      .getSourceFiles()
+      .find((item) => normalizePathForComparison(item.fileName) === normalizedDtsPath)
   if (!sourceFile) {
     console.warn('[api-doc] Failed to parse dist/index.d.mts')
     return null

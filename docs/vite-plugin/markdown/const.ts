@@ -7,4 +7,4 @@ export const DOCS_HEADING_ANCHOR_ARIA_LABEL = 'Link to this section'
 
 // Shared prose styling for both pure markdown and docs widgets.
 export const DOCS_PROSE_CLASS =
-  'max-w-none prose prose-neutral prose-headings:(text-foreground font-semibold mb-3 mt-8) prose-p:(text-muted-foreground leading-6) prose-pre:(b-1 b-border rounded-xl bg-muted) dark:prose-invert'
+  'max-w-none prose prose-neutral prose-headings:(text-foreground font-semibold mb-2 mt-4) prose-p:(text-muted-foreground leading-6) prose-pre:(b-1 b-border rounded-xl bg-muted) dark:prose-invert'

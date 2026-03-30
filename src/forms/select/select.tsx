@@ -187,7 +187,7 @@ export namespace SelectT {
     Variant,
     Extend,
     Slot,
-    'multiple' | 'itemComponent' | 'sectionComponent'
+    'multiple' | 'defaultFilter' | 'itemComponent' | 'sectionComponent'
   > {}
 }
 

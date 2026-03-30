@@ -208,7 +208,13 @@ export namespace MultiSelectT {
   /**
    * Props for the MultiSelect component.
    */
-  export interface Props extends BaseProps<Base, Variant, Extend, Slot, 'multiple'> {}
+  export interface Props extends BaseProps<
+    Base,
+    Variant,
+    Extend,
+    Slot,
+    'multiple' | 'defaultFilter' | 'itemComponent' | 'sectionComponent'
+  > {}
 }
 
 /**

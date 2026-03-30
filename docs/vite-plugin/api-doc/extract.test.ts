@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { generateApiDoc } from './extract'
+import { generateApiDoc, normalizePathForComparison, shouldIncludeInheritedGroup } from './extract'
 
 const D_MTS_SAMPLE = `
 declare namespace DemoT {
@@ -102,6 +102,34 @@ declare namespace ExternalAliasT {
 
 interface ExternalAliasProps extends ExternalProps {}
 declare function ExternalAlias(props: ExternalAliasProps): JSX.Element
+`
+
+const D_MTS_GENERIC_DEFAULT = `
+type BaseProps<T extends string> = {
+  as?: T
+  data?: T[]
+}
+
+type DemoProps<T extends string = 'button'> = {
+  foo?: T
+  nested?: { kind: T }
+} & BaseProps<T>;
+
+declare function Demo<T extends string = 'button'>(props: DemoProps<T>): JSX.Element
+`
+
+const D_MTS_KOBALTE_HASH = `
+import type { ButtonRootProps } from '@kobalte/core/button'
+
+interface DemoProps extends ButtonRootProps {}
+declare function Demo(props: DemoProps): JSX.Element
+`
+
+const D_MTS_KOBALTE_HASHED_DIST_FILE = `
+import type { NumberFieldRootProps } from '@kobalte/core/dist/number-field-root-30f25adc.js'
+
+interface DemoProps extends NumberFieldRootProps {}
+declare function Demo(props: DemoProps): JSX.Element
 `
 
 async function createTempProject(): Promise<string> {
@@ -289,6 +317,122 @@ export interface ExternalProps {
     expect(keyboardDelegateProp?.type).toBe('KeyboardDelegate')
     expect(keyboardDelegateProp?.type).not.toContain('import("')
     expect(keyboardDelegateProp?.type).not.toContain('/node_modules/')
+
+    await rm(projectRoot, { recursive: true, force: true })
+  })
+
+  test('resolves generic defaults via AST transform for top-level aliases used by declarations', async () => {
+    const projectRoot = await createTempProject()
+    await writeProjectDts(projectRoot, D_MTS_GENERIC_DEFAULT)
+
+    const result = generateApiDoc(projectRoot)
+    const props = result?.componentDocs.get('demo')?.props.own ?? []
+    const asProp = props.find((prop) => prop.name === 'as')
+    const dataProp = props.find((prop) => prop.name === 'data')
+    const fooProp = props.find((prop) => prop.name === 'foo')
+
+    expect(asProp?.type).toBe('"button"')
+    expect(dataProp?.type).toBe('"button"[]')
+    expect(fooProp?.type).toBe('"button"')
+
+    await rm(projectRoot, { recursive: true, force: true })
+  })
+
+  test('normalizes windows and posix style paths for compiler host comparison', () => {
+    const winPath = 'E:\\project\\moraine\\dist\\index.d.mts'
+    const posixPath = 'E:/project/moraine/dist/index.d.mts'
+    const mixedCasePath = 'e:/PROJECT/moraine/dist/index.d.mts'
+
+    const normalizedWin = normalizePathForComparison(winPath)
+    const normalizedPosix = normalizePathForComparison(posixPath)
+    const normalizedMixedCase = normalizePathForComparison(mixedCasePath)
+
+    expect(normalizedWin).toBe(normalizedPosix)
+    expect(normalizedWin).toBe(normalizedMixedCase)
+  })
+
+  test('infers @kobalte/core component from hash index using AST exports parsing', async () => {
+    const projectRoot = await createTempProject()
+    await writeProjectDts(projectRoot, D_MTS_KOBALTE_HASH)
+
+    await writeNodeModuleFile(
+      projectRoot,
+      '@kobalte/core',
+      'package.json',
+      JSON.stringify({
+        name: '@kobalte/core',
+        version: '1.0.0',
+        types: 'dist/index.d.ts',
+        exports: {
+          '.': { types: './dist/index.d.ts' },
+          './button': { types: './dist/button/index.d.ts' },
+        },
+      }),
+    )
+    await writeNodeModuleFile(projectRoot, '@kobalte/core', 'dist/index.d.ts', 'export {}\n')
+    await writeNodeModuleFile(
+      projectRoot,
+      '@kobalte/core',
+      'dist/button/index.d.ts',
+      `export type { ButtonRootProps } from '../index-abcd1234.js'`,
+    )
+    await writeNodeModuleFile(
+      projectRoot,
+      '@kobalte/core',
+      'dist/index-abcd1234.d.ts',
+      `
+export interface ButtonRootProps {
+  disabled?: boolean
+}
+`,
+    )
+
+    const result = generateApiDoc(projectRoot)
+    const inherited = result?.componentDocs.get('demo')?.props.inherited ?? []
+    const kobalteGroup = inherited.find((group) => group.from === '@kobalte/core/button')
+    expect(kobalteGroup?.props.find((prop) => prop.name === 'disabled')).toBeDefined()
+
+    await rm(projectRoot, { recursive: true, force: true })
+  })
+
+  test('filters solid-js inherited groups while preserving External groups', () => {
+    expect(shouldIncludeInheritedGroup('solid-js')).toBe(false)
+    expect(shouldIncludeInheritedGroup('External')).toBe(true)
+    expect(shouldIncludeInheritedGroup('@kobalte/core')).toBe(true)
+  })
+
+  test('trims hashed @kobalte/core dist filename suffix in inherited group source', async () => {
+    const projectRoot = await createTempProject()
+    await writeProjectDts(projectRoot, D_MTS_KOBALTE_HASHED_DIST_FILE)
+
+    await writeNodeModuleFile(
+      projectRoot,
+      '@kobalte/core',
+      'package.json',
+      JSON.stringify({
+        name: '@kobalte/core',
+        version: '1.0.0',
+        types: 'dist/index.d.ts',
+      }),
+    )
+    await writeNodeModuleFile(projectRoot, '@kobalte/core', 'dist/index.d.ts', 'export {}\n')
+    await writeNodeModuleFile(
+      projectRoot,
+      '@kobalte/core',
+      'dist/number-field-root-30f25adc.d.ts',
+      `
+export interface NumberFieldRootProps {
+  spinOnPress?: boolean
+}
+`,
+    )
+
+    const result = generateApiDoc(projectRoot)
+    const inherited = result?.componentDocs.get('demo')?.props.inherited ?? []
+    const groupNames = inherited.map((group) => group.from)
+
+    expect(groupNames).toContain('@kobalte/core/number-field')
+    expect(groupNames).not.toContain('@kobalte/core/number-field-root-30f25adc.d.ts')
 
     await rm(projectRoot, { recursive: true, force: true })
   })
