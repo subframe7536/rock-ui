@@ -8,7 +8,11 @@ import { loadComponentApiDoc } from '../api-doc/load'
 import { resolveDocsPageContext, toImportPath } from '../core/paths'
 import { toKebabCase, toSingleQuoted } from '../core/strings'
 
-import { MARKDOWN_ANCHOR_HEADING_CLASS, MARKDOWN_ANCHOR_LINK_CLASS } from './const'
+import {
+  DOCS_HEADING_ANCHOR_ARIA_LABEL,
+  MARKDOWN_ANCHOR_HEADING_CLASS,
+  MARKDOWN_ANCHOR_LINK_CLASS,
+} from './const'
 import { parseSegments } from './directives'
 import type { CompileMarkdownOptions, MarkdownHighlightLang, ParsedSegment } from './types'
 
@@ -56,6 +60,7 @@ interface OnThisPageEntryLiteral {
 
 interface TocInheritedGroup {
   from: string
+  props: unknown[]
 }
 
 interface TocApiDocShape {
@@ -154,7 +159,7 @@ function createMarkdown(
     const anchorSlug =
       typeof openToken?.meta?.anchorSlug === 'string' ? openToken.meta.anchorSlug : ''
     const anchorHtml = anchorSlug
-      ? `<a class="${MARKDOWN_ANCHOR_LINK_CLASS}" href="#${anchorSlug}" aria-label="Link to this section">#</a>`
+      ? `<a class="${MARKDOWN_ANCHOR_LINK_CLASS}" href="#${anchorSlug}" aria-label="${DOCS_HEADING_ANCHOR_ARIA_LABEL}">#</a>`
       : ''
 
     if (defaultHeadingCloseRule) {
@@ -162,6 +167,83 @@ function createMarkdown(
     }
 
     return `${anchorHtml}${self.renderToken(tokens, idx, options)}`
+  }
+
+  // Match our markdown-it table output to the custom PropsTable look.
+  // (Rounded wrapper, header typography, row borders/hover.)
+  const defaultTableOpenRule = markdown.renderer.rules.table_open
+  markdown.renderer.rules.table_open = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    token.attrSet('class', 'text-sm m-0 w-full border-collapse')
+
+    const openHtml = defaultTableOpenRule
+      ? defaultTableOpenRule(tokens, idx, options, env, self)
+      : self.renderToken(tokens, idx, options)
+
+    return `<div class="my-6 b-1 b-border rounded-lg overflow-x-auto">${openHtml}`
+  }
+
+  const defaultTableCloseRule = markdown.renderer.rules.table_close
+  markdown.renderer.rules.table_close = (tokens, idx, options, env, self) => {
+    const closeHtml = defaultTableCloseRule
+      ? defaultTableCloseRule(tokens, idx, options, env, self)
+      : self.renderToken(tokens, idx, options)
+
+    return `${closeHtml}</div>`
+  }
+
+  const DEFAULT_TABLE_THEAD_TR_CLASS =
+    'text-xs text-muted-foreground tracking-wider text-left bg-muted uppercase'
+  const DEFAULT_TABLE_TBODY_TR_CLASS = 'b-t b-border hover:bg-muted/50'
+  const DEFAULT_TABLE_TH_CLASS = 'font-medium px-3 py-2'
+  const DEFAULT_TABLE_TD_CLASS = 'px-3 py-2'
+
+  const isInsideThead = (allTokens: Array<{ type?: string }>, trOpenIdx: number) => {
+    for (let i = trOpenIdx - 1; i >= 0; i -= 1) {
+      const type = allTokens[i]?.type
+      if (type === 'thead_open') {
+        return true
+      }
+      if (type === 'tbody_open') {
+        return false
+      }
+      if (type === 'table_open') {
+        return false
+      }
+    }
+    return false
+  }
+
+  const defaultTrOpenRule = markdown.renderer.rules.tr_open
+  markdown.renderer.rules.tr_open = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    const useThead = isInsideThead(tokens, idx)
+    token.attrJoin('class', useThead ? DEFAULT_TABLE_THEAD_TR_CLASS : DEFAULT_TABLE_TBODY_TR_CLASS)
+
+    if (defaultTrOpenRule) {
+      return defaultTrOpenRule(tokens, idx, options, env, self)
+    }
+    return self.renderToken(tokens, idx, options)
+  }
+
+  const defaultThOpenRule = markdown.renderer.rules.th_open
+  markdown.renderer.rules.th_open = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    token.attrJoin('class', DEFAULT_TABLE_TH_CLASS)
+    if (defaultThOpenRule) {
+      return defaultThOpenRule(tokens, idx, options, env, self)
+    }
+    return self.renderToken(tokens, idx, options)
+  }
+
+  const defaultTdOpenRule = markdown.renderer.rules.td_open
+  markdown.renderer.rules.td_open = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    token.attrJoin('class', DEFAULT_TABLE_TD_CLASS)
+    if (defaultTdOpenRule) {
+      return defaultTdOpenRule(tokens, idx, options, env, self)
+    }
+    return self.renderToken(tokens, idx, options)
   }
 
   return markdown
@@ -223,7 +305,10 @@ function asTocApiDoc(value: unknown): TocApiDocShape | null {
       if (typeof inheritedGroup.from !== 'string') {
         return null
       }
-      return { from: inheritedGroup.from }
+      return {
+        from: inheritedGroup.from,
+        props: Array.isArray(inheritedGroup.props) ? inheritedGroup.props : [],
+      }
     })
     .filter((group): group is TocInheritedGroup => Boolean(group))
   return {
@@ -417,6 +502,58 @@ export function compileMarkdownPage(
   const hasMainItems = Boolean(tocApiDoc?.items)
   const hasMainInherited = Boolean(tocApiDoc?.props.inherited.length)
   const hasMainApiReference = hasMainSlots || hasMainProps || hasMainItems || hasMainInherited
+
+  const apiReferenceModel =
+    tocApiDoc && hasDocsApiReferenceWidget && hasMainApiReference
+      ? (() => {
+          const sections: Array<{
+            id: string
+            heading: string
+            description?: string
+            props: unknown[]
+            groups?: Array<{ description: string; props: unknown[] }>
+          }> = []
+
+          if (hasMainProps) {
+            sections.push({
+              id: 'api-props',
+              heading: 'Props',
+              props: tocApiDoc.props.own,
+            })
+          }
+
+          if (hasMainItems) {
+            const itemsDoc = tocApiDoc.items as
+              | { description?: string; props?: unknown[] }
+              | undefined
+            sections.push({
+              id: 'api-items',
+              heading: 'Items',
+              description: itemsDoc?.description,
+              props: itemsDoc?.props ?? [],
+            })
+          }
+
+          if (hasMainInherited) {
+            sections.push({
+              id: 'api-inherited',
+              heading: 'Inherited',
+              props: [],
+              groups: tocApiDoc.props.inherited.map((group) => ({
+                description: `From ${group.from}`,
+                props: group.props,
+              })),
+            })
+          }
+
+          return {
+            showSlots: hasMainSlots,
+            slots: tocApiDoc.slots as string[],
+            showSections: sections.length > 0,
+            sections,
+          }
+        })()
+      : null
   for (const segment of segmentLiterals) {
     if (segment.onThisPageEntries) {
       onThisPageEntries.push(...segment.onThisPageEntries)
@@ -439,6 +576,7 @@ export function compileMarkdownPage(
   const configFields = [
     shouldExposeComponentKey ? `componentKey: ${JSON.stringify(page.pageKey)}` : '',
     mergedApiDoc ? `apiDoc: ${JSON.stringify(mergedApiDoc)}` : '',
+    apiReferenceModel ? `apiReference: ${JSON.stringify(apiReferenceModel)}` : '',
     kobalteHref ? `kobalteHref: ${JSON.stringify(kobalteHref)}` : '',
     `onThisPageEntries: ${JSON.stringify(onThisPageEntries)}`,
     'segments',

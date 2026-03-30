@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Textarea, TextareaT } from 'moraine'
+import { Textarea } from 'moraine'
 ```
 
 ## Examples

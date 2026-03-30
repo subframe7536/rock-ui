@@ -5,10 +5,11 @@ import type { PropDoc } from '../vite-plugin/api-doc/types'
 import {
   MARKDOWN_ANCHOR_HEADING_CLASS,
   MARKDOWN_ANCHOR_LINK_CLASS,
+  DOCS_HEADING_ANCHOR_ARIA_LABEL,
+  DOCS_PROSE_CLASS,
 } from '../vite-plugin/markdown/const'
 
-export const API_HEADING_PROSE_CLASS =
-  'max-w-none prose prose-neutral prose-headings:(text-foreground font-semibold mb-1 mt-6) dark:prose-invert'
+export const API_HEADING_PROSE_CLASS = DOCS_PROSE_CLASS
 
 export interface PropsTableProps {
   sections: PropsTableSection[]
@@ -34,6 +35,8 @@ export interface PropsTableSection {
     props: PropDoc[]
   }[]
 }
+
+const DESCRIPTION_PREFIX = 'From '
 
 export function PropsTable(props: PropsTableProps): JSX.Element {
   return (
@@ -107,7 +110,7 @@ function SectionTableBlock(sectionProps: { section: PropsTableSection }): JSX.El
         <a
           href={`#${sectionProps.section.id}`}
           class={MARKDOWN_ANCHOR_LINK_CLASS}
-          aria-label={`Link to ${sectionProps.section.heading}`}
+          aria-label={DOCS_HEADING_ANCHOR_ARIA_LABEL}
         >
           #
         </a>
@@ -124,7 +127,15 @@ function SectionTableBlock(sectionProps: { section: PropsTableSection }): JSX.El
         <For each={sectionProps.section.groups}>
           {(group) => (
             <>
-              <p class="text-sm text-muted-foreground">{group.description}</p>
+              <p class="text-sm text-muted-foreground">
+                <Show
+                  when={group.description.startsWith(DESCRIPTION_PREFIX)}
+                  fallback={group.description}
+                >
+                  {DESCRIPTION_PREFIX}
+                  <code>{group.description.slice(DESCRIPTION_PREFIX.length)}</code>
+                </Show>
+              </p>
               <PropRows props={group.props} />
             </>
           )}

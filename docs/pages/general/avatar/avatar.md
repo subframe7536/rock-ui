@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Avatar, AvatarT } from 'moraine'
+import { Avatar } from 'moraine'
 ```
 
 ## Examples

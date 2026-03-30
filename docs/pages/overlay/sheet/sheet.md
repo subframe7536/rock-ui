@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Sheet, SheetT } from 'moraine'
+import { Sheet } from 'moraine'
 ```
 
 ## Examples

@@ -70,6 +70,7 @@ export default defineConfig<PresetWind4Theme>({
         './**/*.class.ts',
         '../src/**/*.tsx',
         '../src/**/*.class.ts',
+        './vite-plugin/markdown/const.ts',
         'node_modules/**/*.*',
       ],
     },

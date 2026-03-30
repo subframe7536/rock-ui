@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Badge, BadgeT } from 'moraine'
+import { Badge } from 'moraine'
 ```
 
 ## Examples

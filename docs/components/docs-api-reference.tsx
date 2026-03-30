@@ -2,18 +2,17 @@ import { For, Show } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
 import { Badge, cn } from '../../src'
-import type { ItemsDoc } from '../vite-plugin/api-doc/types'
 import {
+  DOCS_HEADING_ANCHOR_ARIA_LABEL,
   MARKDOWN_ANCHOR_HEADING_CLASS,
   MARKDOWN_ANCHOR_LINK_CLASS,
 } from '../vite-plugin/markdown/const'
 
-import type { ExamplePageApiDoc } from './markdown'
 import { API_HEADING_PROSE_CLASS, PropsTable } from './props-table'
-import type { ComponentPropsDoc, PropsTableSection } from './props-table'
+import type { PropsTableSection } from './props-table'
 
 interface DocsApiReferenceProps {
-  apiDoc?: ExamplePageApiDoc
+  model?: DocsApiReferenceModel
 }
 
 interface AnchoredHeadingProps {
@@ -34,7 +33,7 @@ function AnchoredHeading(props: AnchoredHeadingProps) {
       <a
         href={`#${props.id}`}
         class={MARKDOWN_ANCHOR_LINK_CLASS}
-        aria-label={`Link to ${props.label}`}
+        aria-label={DOCS_HEADING_ANCHOR_ARIA_LABEL}
       >
         #
       </a>
@@ -42,81 +41,28 @@ function AnchoredHeading(props: AnchoredHeadingProps) {
   )
 }
 
-function createInheritedSections(
-  inheritedGroups: ComponentPropsDoc['inherited'],
-  id: string,
-): PropsTableSection[] {
-  if (inheritedGroups.length === 0) {
-    return []
-  }
-
-  return [
-    {
-      id,
-      heading: 'Inherited',
-      props: [],
-      groups: inheritedGroups.map((group) => ({
-        description: `From ${group.from}`,
-        props: group.props,
-      })),
-    },
-  ]
-}
-
 export const DocsApiReference = (props: DocsApiReferenceProps) => {
-  const slots = () => props.apiDoc?.slots ?? []
-  const propsDoc = () => props.apiDoc?.props ?? { own: [], inherited: [] }
-  const itemsDoc = () => props.apiDoc?.items
-
-  const hasMainSlots = () => slots().length > 0
-  const hasMainProps = () => propsDoc().own.length > 0
-  const hasMainItems = () => Boolean(itemsDoc())
-  const hasMainInherited = () => propsDoc().inherited.length > 0
-  const hasMainApiReference = () =>
-    hasMainSlots() || hasMainProps() || hasMainItems() || hasMainInherited()
-
-  const mainPropSections = (): PropsTableSection[] => {
-    const sections: PropsTableSection[] = []
-    const currentItemsDoc = itemsDoc()
-
-    if (hasMainProps()) {
-      sections.push({
-        id: 'api-props',
-        heading: 'Props',
-        props: propsDoc().own,
-      })
-    }
-
-    if (hasMainItems()) {
-      sections.push({
-        id: 'api-items',
-        heading: 'Items',
-        description: (currentItemsDoc as ItemsDoc | undefined)?.description,
-        props: (currentItemsDoc as ItemsDoc | undefined)?.props ?? [],
-      })
-    }
-
-    if (hasMainInherited()) {
-      sections.push(...createInheritedSections(propsDoc().inherited, 'api-inherited'))
-    }
-
-    return sections
-  }
-
   return (
-    <Show when={hasMainApiReference()}>
-      <Show when={hasMainSlots()}>
+    <Show when={props.model}>
+      <Show when={props.model?.showSlots}>
         <div class={API_HEADING_PROSE_CLASS}>
           <AnchoredHeading id="api-slots" label="Slots" level={3} />
         </div>
         <div class="flex flex-wrap gap-2">
-          <For each={slots()}>{(slot) => <Badge>{slot}</Badge>}</For>
+          <For each={props.model?.slots ?? []}>{(slot) => <Badge>{slot}</Badge>}</For>
         </div>
       </Show>
 
-      <Show when={mainPropSections().length > 0}>
-        <PropsTable sections={mainPropSections()} />
+      <Show when={props.model?.showSections}>
+        <PropsTable sections={props.model?.sections ?? []} />
       </Show>
     </Show>
   )
+}
+
+export interface DocsApiReferenceModel {
+  showSlots: boolean
+  slots: string[]
+  showSections: boolean
+  sections: PropsTableSection[]
 }

@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { RadioGroup, RadioGroupT } from 'moraine'
+import { RadioGroup } from 'moraine'
 ```
 
 ## Examples

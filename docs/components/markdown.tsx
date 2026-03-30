@@ -6,8 +6,10 @@ import { Tabs } from '../../src'
 import { useTableOfContents } from '../hooks/use-table-of-contents'
 import type { OnThisPageEntry } from '../hooks/use-table-of-contents'
 import type { ItemsDoc } from '../vite-plugin/api-doc/types'
+import { DOCS_PROSE_CLASS } from '../vite-plugin/markdown/const'
 
 import { DocsApiReference } from './docs-api-reference'
+import type { DocsApiReferenceModel } from './docs-api-reference'
 import { DocsHeader } from './docs-header'
 import { IntroCards } from './intro-cards'
 import { IntroComponents } from './intro-components'
@@ -80,6 +82,7 @@ type RenderSegment =
 export interface RenderExampleMarkdownPageInput {
   componentKey?: string
   apiDoc?: ExamplePageApiDoc
+  apiReference?: DocsApiReferenceModel
   kobalteHref?: string
   onThisPageEntries?: OnThisPageEntry[]
   segments: RenderSegment[]
@@ -90,29 +93,27 @@ function getOnThisPageIndentStyle(level: number) {
   return { 'padding-inline-start': `${indentLevel * 0.75}rem` }
 }
 
+const SEGMENT_UNSUPPORTED_CLASS =
+  'text-sm text-muted-foreground p-4 b-1 b-border rounded-xl border-dashed'
+
 const SegmentRenderer = (props: {
   segment: RenderSegment
   pageContext: RenderExampleMarkdownPageInput
 }) => {
   return (
-    <Switch
-      fallback={
-        <div class="text-sm text-muted-foreground p-4 b-1 b-border rounded-xl border-dashed">
-          Unsupported segment type
-        </div>
-      }
-    >
+    <Switch fallback={<div class={SEGMENT_UNSUPPORTED_CLASS}>Unsupported segment type</div>}>
       <Match
         when={props.segment.type === 'markdown' ? (props.segment as MarkdownRenderSegment) : false}
       >
         {(segment) => (
           <div
-            class="max-w-none prose prose-neutral prose-headings:(text-foreground font-semibold mb-3 mt-8) prose-p:(text-muted-foreground leading-6) prose-pre:(b-1 b-border rounded-xl bg-muted) dark:prose-invert"
+            class={DOCS_PROSE_CLASS}
             // oxlint-disable-next-line solid/no-innerhtml
             innerHTML={segment().html}
           />
         )}
       </Match>
+
       <Match
         when={props.segment.type === 'example' ? (props.segment as ExampleRenderSegment) : false}
       >
@@ -167,7 +168,9 @@ const SegmentRenderer = (props: {
             : false
         }
       >
-        {(segment) => <DocsApiReference apiDoc={props.pageContext.apiDoc} {...segment().props} />}
+        {(segment) => (
+          <DocsApiReference model={props.pageContext.apiReference} {...segment().props} />
+        )}
       </Match>
       <Match
         when={props.segment.type === 'intro-cards' ? (props.segment as WidgetRenderSegment) : false}
@@ -197,12 +200,10 @@ export function Markdown(input: RenderExampleMarkdownPageInput) {
   return (
     <main class="text-foreground px-4 py-8 min-h-screen w-full sm:(px-8 py-16)">
       <div class="mx-auto flex gap-8 max-w-7xl items-start">
-        <div class="flex-1 min-w-0">
-          <div class="mx-auto flex flex-col gap-4 max-w-4xl">
-            <For each={input.segments}>
-              {(segment) => <SegmentRenderer segment={segment} pageContext={input} />}
-            </For>
-          </div>
+        <div class="mx-auto flex flex-1 flex-col gap-4 max-w-4xl min-w-0">
+          <For each={input.segments}>
+            {(segment) => <SegmentRenderer segment={segment} pageContext={input} />}
+          </For>
         </div>
 
         <aside class="p-4 shrink-0 max-h-[calc(100vh-4rem)] w-60 hidden self-start top-8 sticky overflow-y-auto xl:block">

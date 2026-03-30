@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Tooltip, TooltipT } from 'moraine'
+import { Tooltip } from 'moraine'
 ```
 
 ## Examples

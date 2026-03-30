@@ -20,6 +20,12 @@ function decodeHashAnchor(hash: string): string {
 export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
   const [activeId, setActiveId] = createSignal('')
 
+  const setActiveIdIfChanged = (nextId: string) => {
+    if (nextId !== activeId()) {
+      setActiveId(nextId)
+    }
+  }
+
   const scrollToAnchor = () => {
     const hash = decodeHashAnchor(location.hash.slice(1))
     if (!hash) {
@@ -34,36 +40,42 @@ export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
     return true
   }
 
-  const syncActiveIdWithHash = () => {
-    const hash = decodeHashAnchor(location.hash.slice(1))
-    if (!hash) {
-      const entries = getEntries()
-      setActiveId(entries[0]?.id ?? '')
-      return
+  onMount(() => {
+    const entries = getEntries()
+
+    const syncActiveIdWithHashWithEntries = () => {
+      const hash = decodeHashAnchor(location.hash.slice(1))
+      if (!hash) {
+        setActiveIdIfChanged(entries[0]?.id ?? '')
+        return
+      }
+
+      setActiveIdIfChanged(hash)
     }
 
-    setActiveId(hash)
-  }
-
-  onMount(() => {
-    syncActiveIdWithHash()
+    syncActiveIdWithHashWithEntries()
     scrollToAnchor()
 
     const scrollRoot = document.querySelector<HTMLElement>('[data-docs-scroll-root="true"]')
-    const entries = getEntries()
     const observer =
       typeof IntersectionObserver === 'function' && entries.length > 0
         ? new IntersectionObserver(
             (intersectingEntries) => {
-              const visibleEntry = intersectingEntries
-                .filter((entry) => entry.isIntersecting)
-                .sort(
-                  (left, right) => left.boundingClientRect.top - right.boundingClientRect.top,
-                )[0]
-              if (!visibleEntry?.target.id) {
-                return
+              let bestId = ''
+              let bestTop = Number.POSITIVE_INFINITY
+
+              for (const entry of intersectingEntries) {
+                if (!entry.isIntersecting) continue
+                const top = entry.boundingClientRect.top
+                if (top < bestTop) {
+                  bestTop = top
+                  bestId = (entry.target as HTMLElement)?.id ?? ''
+                }
               }
-              setActiveId(visibleEntry.target.id)
+
+              if (bestId) {
+                setActiveIdIfChanged(bestId)
+              }
             },
             {
               root: scrollRoot,
@@ -84,7 +96,7 @@ export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
 
     const handleHashChange = () => {
       scrollToAnchor()
-      syncActiveIdWithHash()
+      syncActiveIdWithHashWithEntries()
     }
 
     window.addEventListener('hashchange', handleHashChange)

@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Separator, SeparatorT } from 'moraine'
+import { Separator } from 'moraine'
 ```
 
 ## Examples

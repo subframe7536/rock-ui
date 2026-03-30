@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Breadcrumb, BreadcrumbT } from 'moraine'
+import { Breadcrumb } from 'moraine'
 ```
 
 ## Examples

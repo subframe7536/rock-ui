@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { CheckboxGroup, CheckboxGroupT } from 'moraine'
+import { CheckboxGroup } from 'moraine'
 ```
 
 ## Examples

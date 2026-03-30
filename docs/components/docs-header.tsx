@@ -38,7 +38,7 @@ export const DocsHeader = (props: DocsHeaderProps) => {
         </div>
 
         <Show when={pageTitle()}>
-          <p class="text-2xl font-semibold mt-3 sm:text-3xl">{pageTitle()}</p>
+          <p class="text-2xl font-semibold mt-3 capitalize sm:text-3xl">{pageTitle()}</p>
         </Show>
 
         <Show when={component()?.description || props.description}>
@@ -59,7 +59,7 @@ export const DocsHeader = (props: DocsHeaderProps) => {
                   variant="outline"
                   leading="i-lucide:github"
                 >
-                  GitHub Source
+                  Source Code
                 </Button>
               )}
             </Show>

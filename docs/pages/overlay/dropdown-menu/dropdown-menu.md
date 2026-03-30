@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { DropdownMenu, DropdownMenuT } from 'moraine'
+import { DropdownMenu } from 'moraine'
 ```
 
 ## Examples

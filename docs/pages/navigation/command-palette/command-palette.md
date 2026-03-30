@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { CommandPalette, CommandPaletteT } from 'moraine'
+import { CommandPalette } from 'moraine'
 ```
 
 ## Examples

@@ -79,7 +79,20 @@ function inferModuleFromFileName(fileName: string): string {
       'tabs',
       'tooltip',
     ]
-    const hit = known.find((item) => parts.includes(item))
+    const hit = known.find((item) => {
+      if (parts.includes(item)) {
+        return true
+      }
+
+      // Some d.ts live in filenames like `number-field.d.ts` (no directory segment).
+      // Also cover common prefixes like `number-field/index.d.ts`.
+      return (
+        rest.includes(`/${item}/`) ||
+        rest.includes(`/${item}.`) ||
+        rest.includes(`/${item}-`) ||
+        rest.includes(`/${item}_`)
+      )
+    })
     return hit ? `${pkg}/${hit}` : pkg
   }
 

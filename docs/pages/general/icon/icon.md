@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Icon, IconT } from 'moraine'
+import { Icon } from 'moraine'
 ```
 
 ## Examples

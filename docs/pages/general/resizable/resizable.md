@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Resizable, ResizableT } from 'moraine'
+import { Resizable } from 'moraine'
 ```
 
 ## Examples

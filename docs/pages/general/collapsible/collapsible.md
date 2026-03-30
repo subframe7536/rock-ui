@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Collapsible, CollapsibleT } from 'moraine'
+import { Collapsible } from 'moraine'
 ```
 
 ## Examples

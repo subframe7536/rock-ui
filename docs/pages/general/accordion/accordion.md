@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Accordion, AccordionT } from 'moraine'
+import { Accordion } from 'moraine'
 ```
 
 ## Examples

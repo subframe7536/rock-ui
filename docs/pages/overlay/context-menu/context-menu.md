@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { ContextMenu, ContextMenuT } from 'moraine'
+import { ContextMenu } from 'moraine'
 ```
 
 ## Examples

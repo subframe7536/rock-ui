@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { FileUpload, FileUploadT } from 'moraine'
+import { FileUpload } from 'moraine'
 ```
 
 ## Examples

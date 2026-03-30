@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Pagination, PaginationT } from 'moraine'
+import { Pagination } from 'moraine'
 ```
 
 ## Examples

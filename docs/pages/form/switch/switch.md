@@ -1,10 +1,10 @@
 :::docs-header
 :::
 
-## import
+## Import
 
 ```tsx
-import { Switch, SwitchT } from 'moraine'
+import { Switch } from 'moraine'
 ```
 
 ## Examples
