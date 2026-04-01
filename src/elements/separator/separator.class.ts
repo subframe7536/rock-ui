@@ -2,7 +2,7 @@ import type { VariantProps } from 'cls-variant'
 
 import { cva } from '../../shared/utils'
 
-export const separatorRootVariants = cva('text-muted text-center flex items-center', {
+export const separatorRootVariants = cva('text-border text-center flex items-center', {
   defaultVariants: {
     orientation: 'horizontal',
   },
