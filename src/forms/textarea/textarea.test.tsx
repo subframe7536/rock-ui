@@ -219,7 +219,7 @@ describe('Textarea', () => {
     const screen = render(() => (
       <>
         <Textarea autoresize rows={2} />
-        <Textarea autoresize rows={2} maxrows={3} />
+        <Textarea autoresize rows={2} maxRows={3} />
       </>
     ))
 

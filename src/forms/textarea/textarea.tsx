@@ -22,6 +22,22 @@ import {
   textareaRootVariants,
 } from './textarea.class'
 
+// --- Autosize helpers ---
+function getVerticalPadding(styles: CSSStyleDeclaration): number {
+  const paddingTop = Number.parseInt(styles.paddingTop, 10) || 0
+  const paddingBottom = Number.parseInt(styles.paddingBottom, 10) || 0
+  return paddingTop + paddingBottom
+}
+
+function getLineHeight(styles: CSSStyleDeclaration): number {
+  const lineHeight = Number.parseInt(styles.lineHeight, 10) || 0
+  return lineHeight > 0 ? lineHeight : 16
+}
+
+function calculateNeededRows(el: HTMLTextAreaElement, padding: number, lineHeight: number): number {
+  return Math.ceil((el.scrollHeight - padding) / lineHeight)
+}
+
 export namespace TextareaT {
   export type Value = string | number | undefined
   export type ChangeValue = Value | null
@@ -72,7 +88,7 @@ export namespace TextareaT {
      * Delay in milliseconds before triggering autoresize on mount.
      * @default 0
      */
-    autoresizeDelay?: number
+    autoResizeDelay?: number
 
     /**
      * Default number of rows.
@@ -84,7 +100,7 @@ export namespace TextareaT {
      * Maximum number of rows allowed during autoresize.
      * @default 0
      */
-    maxrows?: number
+    maxRows?: number
 
     /**
      * Element to render above the textarea.
@@ -194,7 +210,6 @@ export function Textarea(props: TextareaProps): JSX.Element {
 
   function updateInputValue(value: string | null | undefined): void {
     const nextValue = applyInputModifiers<TextareaT.ChangeValue>(value, merged.modelModifiers)
-
     field.setFormValue(nextValue)
     merged.onValueChange?.(nextValue)
     field.emit('input')
@@ -208,25 +223,19 @@ export function Textarea(props: TextareaProps): JSX.Element {
     const rows = merged.rows ?? 3
     textareaEl.rows = rows
 
-    const previousOverflow = textareaEl.style.overflow
+    const prevOverflow = textareaEl.style.overflow
     textareaEl.style.overflow = 'hidden'
 
     const styles = window.getComputedStyle(textareaEl)
-    const paddingTop = Number.parseInt(styles.paddingTop, 10) || 0
-    const paddingBottom = Number.parseInt(styles.paddingBottom, 10) || 0
-    const padding = paddingTop + paddingBottom
+    const padding = getVerticalPadding(styles)
+    const lineHeight = getLineHeight(styles)
 
-    let lineHeight = Number.parseInt(styles.lineHeight, 10) || 0
-    if (lineHeight <= 0) {
-      lineHeight = 16
-    }
-
-    const nextRows = Math.ceil((textareaEl.scrollHeight - padding) / lineHeight)
+    const nextRows = calculateNeededRows(textareaEl, padding, lineHeight)
     if (nextRows > rows) {
-      textareaEl.rows = merged.maxrows ? Math.min(nextRows, merged.maxrows) : nextRows
+      textareaEl.rows = merged.maxRows ? Math.min(nextRows, merged.maxRows) : nextRows
     }
 
-    textareaEl.style.overflow = previousOverflow
+    textareaEl.style.overflow = prevOverflow
   }
 
   const onInput: JSX.EventHandlerUnion<HTMLTextAreaElement, InputEvent> = (event) => {
@@ -240,7 +249,6 @@ export function Textarea(props: TextareaProps): JSX.Element {
 
   const onChange: JSX.EventHandlerUnion<HTMLTextAreaElement, Event> = (event) => {
     const value = event.currentTarget.value
-
     if (isLazy()) {
       updateInputValue(value)
     }
@@ -289,15 +297,15 @@ export function Textarea(props: TextareaProps): JSX.Element {
   )
 
   onMount(() => {
-    setTimeout(() => {
-      if (merged.autofocus) {
+    if (merged.autofocus) {
+      setTimeout(() => {
         textareaEl?.focus()
-      }
-    }, merged.autofocusDelay ?? 0)
+      }, merged.autofocusDelay)
+    }
 
     setTimeout(() => {
       autoResize()
-    }, merged.autoresizeDelay ?? 0)
+    }, merged.autoResizeDelay)
   })
 
   return (

@@ -201,10 +201,6 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
     return value
   }
 
-  function toChangeValue(nextChecked: boolean): TTrue | TFalse {
-    return nextChecked ? (local.trueValue as TTrue) : (local.falseValue as TFalse)
-  }
-
   const checked = createMemo<boolean | undefined>(() => {
     if (local.checked !== undefined) {
       return toCheckedState(local.checked)
@@ -226,7 +222,7 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
   })
 
   function onChange(nextChecked: boolean): void {
-    const nextValue = toChangeValue(nextChecked)
+    const nextValue = nextChecked ? (local.trueValue as TTrue) : (local.falseValue as TFalse)
 
     field.setFormValue(nextValue)
     local.onChange?.(nextValue)
