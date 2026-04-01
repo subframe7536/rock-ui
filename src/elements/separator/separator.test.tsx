@@ -15,7 +15,7 @@ describe('Separator', () => {
     expect(root?.getAttribute('data-orientation')).toBe('horizontal')
     expect(root?.getAttribute('role')).toBe('separator')
     expect(root?.className).toContain('flex-row')
-    expect(root?.className).toContain('text-muted')
+    expect(root?.className).toContain('text-border')
     expect(borders.length).toBe(1)
     expect(borders[0]?.className).toContain('b-t')
   })
