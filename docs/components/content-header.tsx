@@ -16,7 +16,7 @@ export function ContentHeader(props: ContentHeaderProps) {
     <header
       class={cn(
         'px-4 bg-background/70 flex h-12 transition-shadow duration-300 items-center top-0 justify-between sticky z-10 backdrop-blur-md sm:px-6',
-        props.scrolled() && 'shadow-sm',
+        // props.scrolled() && 'shadow-sm',
       )}
     >
       <div class="flex gap-1 min-w-0 items-center">

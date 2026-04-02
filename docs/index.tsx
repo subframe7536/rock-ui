@@ -1,6 +1,5 @@
 import 'uno.css'
 
-import type { JSX } from 'solid-js'
 import { Show, createMemo, createSignal } from 'solid-js'
 import { Dynamic, render } from 'solid-js/web'
 import { exampleMap, pages } from 'virtual:example-pages'
@@ -28,15 +27,11 @@ function App() {
     () => exampleMap[page()] ?? (fallbackPage ? exampleMap[fallbackPage] : undefined),
   )
 
-  const pageTitle = createMemo(() => pages.find(p => p.key === page())?.label ?? '')
+  const pageTitle = createMemo(() => pages.find((p) => p.key === page())?.label ?? '')
 
   const navigateAndCloseSidebar = (key: string) => {
     navigate(key)
     setMobileSidebarOpen(false)
-  }
-
-  const handleContentScroll: JSX.EventHandler<HTMLDivElement, UIEvent> = (e) => {
-    setScrolled(e.currentTarget.scrollTop > 60)
   }
 
   return (
@@ -47,7 +42,9 @@ function App() {
           <div
             class="flex-1 min-h-0 overflow-y-auto"
             data-docs-scroll-root="true"
-            onScroll={handleContentScroll}
+            onScroll={(e) => {
+              setScrolled(e.currentTarget.scrollTop > 60)
+            }}
           >
             <ContentHeader
               leading={
@@ -83,9 +80,7 @@ function App() {
             />
             <Show
               when={ActiveExample()}
-              fallback={
-                <div class="text-sm text-muted-foreground p-6">Example not found.</div>
-              }
+              fallback={<div class="text-sm text-muted-foreground p-6">Example not found.</div>}
             >
               <Dynamic component={ActiveExample()!} />
             </Show>
@@ -98,13 +93,7 @@ function App() {
         <Resizable
           panels={[
             {
-              content: (
-                <Sidebar
-                  pages={pages}
-                  activePage={page}
-                  setActivePage={navigate}
-                />
-              ),
+              content: <Sidebar pages={pages} activePage={page} setActivePage={navigate} />,
               defaultSize: '18%',
               min: 240,
               max: 400,
@@ -114,7 +103,9 @@ function App() {
                 <div
                   class="h-full overflow-y-auto"
                   data-docs-scroll-root="true"
-                  onScroll={handleContentScroll}
+                  onScroll={(e) => {
+                    setScrolled(e.currentTarget.scrollTop > 60)
+                  }}
                 >
                   <ContentHeader
                     pageTitle={pageTitle}
@@ -137,7 +128,7 @@ function App() {
           orientation="horizontal"
           classes={{
             root: 'h-full',
-            divider: 'after:(transition duration-200 ease-out) hover:after:(bg-accent w-1.5)',
+            divider: 'after:(transition duration-200 ease-out z-20) hover:after:(bg-accent w-1.5)',
           }}
         />
       </Show>
