@@ -104,6 +104,35 @@ function MyButton() {
 }
 ```
 
+## Class Concatenation
+
+Moraine provides `cn()` and `cva()` utilities that concatenate class strings and conditionals. It is used internally to merge user-provided classes with defaults.
+
+```ts
+import { cn, cva } from 'moraine'
+
+cn('btn', 'btn-primary', isDisabled && 'btn-disabled') // => "btn btn-primary btn-disabled"
+
+const buttonClasses = cva('btn', {
+  variants: {
+    color: {
+      primary: 'btn-primary',
+      secondary: 'btn-secondary',
+    },
+    disabled: {
+      true: 'btn-disabled',
+    },
+  },
+})
+// Reuse `cn()` under the hood to merge variant classes with other conditionals
+buttonClasses(
+  { color: 'primary', disabled: isDisabled },
+  'other',
+  condition && 'another'
+)
+// => "btn btn-primary btn-disabled other another"
+```
+
 ## Patch Built-in `cn`
 
 Moraine exports `extendCN` so you can plug in class merge utilities like `tailwind-merge`.
