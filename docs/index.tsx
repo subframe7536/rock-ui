@@ -1,5 +1,6 @@
 import 'uno.css'
 
+import type { JSX } from 'solid-js'
 import { Show, createMemo, createSignal } from 'solid-js'
 import { Dynamic, render } from 'solid-js/web'
 import { exampleMap, pages } from 'virtual:example-pages'
@@ -7,6 +8,7 @@ import { exampleMap, pages } from 'virtual:example-pages'
 import { Button, Sheet } from '../src'
 import { Resizable } from '../src/elements/resizable'
 
+import { ContentHeader } from './components/content-header'
 import { Sidebar } from './components/sidebar'
 import { useIsMobile } from './hooks/use-mobile'
 import { useRouting } from './hooks/use-routing'
@@ -20,14 +22,21 @@ function App() {
   const { page, navigate } = useRouting(pageKeys, fallbackPage)
   const isMobile = useIsMobile()
   const [mobileSidebarOpen, setMobileSidebarOpen] = createSignal(false)
+  const [scrolled, setScrolled] = createSignal(false)
 
   const ActiveExample = createMemo(
     () => exampleMap[page()] ?? (fallbackPage ? exampleMap[fallbackPage] : undefined),
   )
 
+  const pageTitle = createMemo(() => pages.find(p => p.key === page())?.label ?? '')
+
   const navigateAndCloseSidebar = (key: string) => {
     navigate(key)
     setMobileSidebarOpen(false)
+  }
+
+  const handleContentScroll: JSX.EventHandler<HTMLDivElement, UIEvent> = (e) => {
+    setScrolled(e.currentTarget.scrollTop > 60)
   }
 
   return (
@@ -49,8 +58,6 @@ function App() {
                   pages={pages}
                   activePage={page}
                   setActivePage={navigateAndCloseSidebar}
-                  theme={theme}
-                  setTheme={updateTheme}
                   onClose={() => setMobileSidebarOpen(false)}
                 />
               }
@@ -64,7 +71,17 @@ function App() {
             </Sheet>
             <span class="ms-3 font-semibold text-foreground">Moraine</span>
           </header>
-          <div class="flex-1 min-h-0 overflow-y-auto" data-docs-scroll-root="true">
+          <div
+            class="flex-1 min-h-0 overflow-y-auto relative"
+            data-docs-scroll-root="true"
+            onScroll={handleContentScroll}
+          >
+            <ContentHeader
+              pageTitle={pageTitle}
+              scrolled={scrolled}
+              theme={theme}
+              setTheme={updateTheme}
+            />
             <Show
               when={ActiveExample()}
               fallback={
@@ -87,8 +104,6 @@ function App() {
                   pages={pages}
                   activePage={page}
                   setActivePage={navigate}
-                  theme={theme}
-                  setTheme={updateTheme}
                 />
               ),
               defaultSize: '18%',
@@ -97,7 +112,17 @@ function App() {
             },
             {
               content: (
-                <div class="h-full overflow-y-auto" data-docs-scroll-root="true">
+                <div
+                  class="h-full overflow-y-auto relative"
+                  data-docs-scroll-root="true"
+                  onScroll={handleContentScroll}
+                >
+                  <ContentHeader
+                    pageTitle={pageTitle}
+                    scrolled={scrolled}
+                    theme={theme}
+                    setTheme={updateTheme}
+                  />
                   <Show
                     when={ActiveExample()}
                     fallback={
