@@ -2,7 +2,7 @@ import type { Accessor } from 'solid-js'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 
 import { version } from '../../package.json'
-import { Badge, cn, Input, Switch } from '../../src'
+import { Badge, Button, cn, Input } from '../../src'
 
 export interface SidebarPage {
   key: string
@@ -14,8 +14,7 @@ export interface SidebarProps {
   pages: SidebarPage[]
   activePage: Accessor<string>
   setActivePage: (key: string) => void
-  theme: Accessor<'light' | 'dark'>
-  setTheme: (theme: 'light' | 'dark') => void
+  onClose?: () => void
 }
 
 interface SidebarSection {
@@ -73,13 +72,15 @@ export const Sidebar = (props: SidebarProps) => {
               </div>
             </div>
           </div>
-          <Switch
-            size="sm"
-            checked={props.theme() === 'dark'}
-            onChange={(next) => props.setTheme(next ? 'dark' : 'light')}
-            checkedIcon="i-lucide-moon"
-            uncheckedIcon="i-lucide-sun"
-          />
+          <Show when={props.onClose}>
+            <Button
+              variant="ghost"
+              size="sm"
+              leading="i-lucide-x"
+              aria-label="Close sidebar"
+              onClick={props.onClose}
+            />
+          </Show>
         </div>
 
         <div class="mt-4 px-1">
