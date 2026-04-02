@@ -92,6 +92,7 @@ describe('InputNumber', () => {
       pointerId: 3,
       pointerType: 'mouse',
     })
+    await fireEvent.click(incrementButton)
 
     expect(spinbutton.value).toBe('1')
   })
@@ -188,6 +189,154 @@ describe('InputNumber', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  test('uses configurable repeat delay and interval', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const screen = render(() => (
+        <InputNumber defaultValue={0} repeatDelayMs={300} repeatIntervalMs={40} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+      await fireEvent.pointerDown(incrementButton, {
+        button: 0,
+        pointerId: 7,
+        pointerType: 'mouse',
+      })
+
+      await vi.advanceTimersByTimeAsync(260)
+      expect(spinbutton.value).toBe('0')
+
+      await vi.advanceTimersByTimeAsync(100)
+      expect(Number(spinbutton.value)).toBeGreaterThan(1)
+
+      await fireEvent.pointerUp(incrementButton, {
+        button: 0,
+        pointerId: 7,
+        pointerType: 'mouse',
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('applies repeat throttle threshold', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const screen = render(() => (
+        <InputNumber
+          defaultValue={0}
+          repeatDelayMs={200}
+          repeatIntervalMs={30}
+          repeatThrottleMs={120}
+        />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+      await fireEvent.pointerDown(incrementButton, {
+        button: 0,
+        pointerId: 8,
+        pointerType: 'mouse',
+      })
+
+      await vi.advanceTimersByTimeAsync(500)
+
+      expect(Number(spinbutton.value)).toBeGreaterThan(1)
+      expect(Number(spinbutton.value)).toBeLessThan(5)
+
+      await fireEvent.pointerUp(incrementButton, {
+        button: 0,
+        pointerId: 8,
+        pointerType: 'mouse',
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('respects holdRepeat=false by not repeating while holding', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const screen = render(() => <InputNumber defaultValue={0} holdRepeat={false} />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+      await fireEvent.pointerDown(incrementButton, {
+        button: 0,
+        pointerId: 9,
+        pointerType: 'mouse',
+      })
+
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(spinbutton.value).toBe('0')
+
+      await fireEvent.pointerUp(incrementButton, {
+        button: 0,
+        pointerId: 9,
+        pointerType: 'mouse',
+      })
+      await fireEvent.click(incrementButton)
+      expect(spinbutton.value).toBe('1')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('calls onIncrementClick for repeated press steps without extra release click', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const onIncrementClick = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={0} onIncrementClick={onIncrementClick} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+      await fireEvent.pointerDown(incrementButton, {
+        button: 0,
+        pointerId: 10,
+        pointerType: 'mouse',
+      })
+      await vi.advanceTimersByTimeAsync(620)
+      await fireEvent.pointerUp(incrementButton, {
+        button: 0,
+        pointerId: 10,
+        pointerType: 'mouse',
+      })
+
+      const value = Number(spinbutton.value)
+      expect(value).toBeGreaterThan(1)
+      expect(onIncrementClick).toHaveBeenCalledTimes(value)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('prevents contextmenu on touch long press', async () => {
+    const screen = render(() => <InputNumber defaultValue={0} />)
+    const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+    await fireEvent.pointerDown(incrementButton, {
+      button: 0,
+      pointerId: 11,
+      pointerType: 'touch',
+    })
+
+    const contextMenuEvent = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+    })
+
+    incrementButton.dispatchEvent(contextMenuEvent)
+
+    expect(contextMenuEvent.defaultPrevented).toBe(true)
   })
 
   test('keeps controlled value while emitting onRawValueChange', async () => {
