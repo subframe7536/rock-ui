@@ -71,7 +71,7 @@ export const ShikiCodeBlock = (props: ShikiCodeBlockProps) => {
       return undefined
     }
 
-    return `${isExpanded() ? EXPANDED_HEIGHT_PX : COLLAPSED_HEIGHT_PX}px`
+    return `${isExpanded() ? Math.min(EXPANDED_HEIGHT_PX, contentRef?.scrollHeight ?? EXPANDED_HEIGHT_PX) : COLLAPSED_HEIGHT_PX}px`
   }
 
   createEffect(() => {

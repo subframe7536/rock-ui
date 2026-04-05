@@ -26,7 +26,7 @@ export function OnThisPage(props: { entries: OnThisPageEntry[] }) {
               <a
                 href={`#${entry.id}`}
                 aria-current={activeId() === entry.id ? 'location' : undefined}
-                class="text-sm text-muted-foreground leading-8 px-2 b-(1 transparent) rounded-md h-8 aria-current:(text-foreground b-border bg-accent/60) hover:text-foreground"
+                class="text-(sm muted-foreground) leading-8 px-2 b-(1 border transparent) rounded-md h-8 aria-current:text-primary hover:text-foreground"
               >
                 <span class="block truncate" style={getOnThisPageIndentStyle(entry.level)}>
                   {entry.label}
