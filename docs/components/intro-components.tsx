@@ -37,7 +37,7 @@ export const IntroComponents = () => {
                 <For each={group.components}>
                   {(component) => (
                     <a
-                      href={`#${component.key}`}
+                      href={`/${component.key}`}
                       class="p-3 b-1 b-border rounded-lg bg-background block transition hover:bg-muted"
                     >
                       <p class="text-sm text-foreground font-medium">{component.name}</p>
