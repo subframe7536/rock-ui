@@ -54,6 +54,12 @@ describe('transformer-inject-moraine-prefix', () => {
     )
   })
 
+  test('prefixes class strings with escaped quotes', async () => {
+    const output = await runTransform(`const view = <div class={'a \\'b\\' c'} />`, 'src/example.tsx')
+
+    expect(output).toContain(`class={'${TEST_PREFIX}a ${TEST_PREFIX}\\'b\\' ${TEST_PREFIX}c'}`)
+  })
+
   test('normalizes id before applying custom idFilter', async () => {
     const transformer = transformerInjectPrefix({
       prefix: TEST_PREFIX,
@@ -176,6 +182,21 @@ const view = (
     expect(output).not.toContain(`${TEST_PREFIX}table`)
     expect(output).not.toContain(`${TEST_PREFIX}md`)
     expect(output).not.toContain(`${TEST_PREFIX}sm`)
+  })
+
+  test('prefixes class operands passed to class helper calls', async () => {
+    const output = await runTransform(
+      `
+const view = (
+  <div class={getItemClass(item, 'data-expanded:bg-accent', cond && 'text-sm', classes?.item)} />
+)
+`,
+      'src/example.tsx',
+    )
+
+    expect(output).toContain(
+      `getItemClass(item, '${TEST_PREFIX}data-expanded:bg-accent', cond && '${TEST_PREFIX}text-sm', classes?.item)`,
+    )
   })
 
   test('is idempotent when transformer runs multiple times', async () => {

@@ -1,6 +1,6 @@
 import type { SourceCodeTransformer } from 'unocss'
 
-import { runTransform } from './shared'
+import { runTransform, normalizeId } from './shared'
 
 const TSX_SUFFIX = '.tsx'
 const CLASS_TS_SUFFIX = '.class.ts'
@@ -169,13 +169,13 @@ export function createMigrateSyntaxTransformer(): SourceCodeTransformer {
     enforce: 'pre',
     idFilter: (id) => isClassFile(id) || isTsxFile(id),
     transform(code, id) {
-      runTransform(code, id, (start, end, text, source) => {
+      runTransform(code, normalizeId(id), (start, end, text, source) => {
         const normalizedValue = normalizeClassList(text)
         const quoteChar = source[start - 1]
         const nextValue = normalizedValue
           .replace(/\\/g, '\\\\')
           .replaceAll(quoteChar, `\\${quoteChar}`)
-          .replace(/\$\{/g, '\\${')
+          .replace(/\$\{/g, '\\\${')
         const originalSlice = source.slice(start, end)
 
         if (nextValue === originalSlice) {

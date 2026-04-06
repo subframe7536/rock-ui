@@ -160,7 +160,7 @@ async function loadHashClassTransformer(): Promise<SourceCodeTransformer> {
     compileClassTransformerPromise = undefined
 
     throw new Error(
-      '[preset-theme-moraine] `enableComponentLayer.strategy: "hash"` requires `@unocss/transformer-compile-class`. Install it or switch to `strategy: "prefix"`.',
+      '[preset-moraine] `enableComponentLayer.strategy: "hash"` requires `@unocss/transformer-compile-class`. Install it or switch to `strategy: "prefix"`.',
       { cause: error },
     )
   }

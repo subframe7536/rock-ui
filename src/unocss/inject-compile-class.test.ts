@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest'
 
 import { injectCompileClassTrigger, transformerInjectCompileClass } from './inject-compile-class'
 
-const TEST_TRIGGER = ':uno-pl:'
+const TEST_TRIGGER = ':uno-test:'
 
 async function runTransform(source: string, id: string): Promise<string> {
   const variantGroupTransformer = transformerVariantGroup()
@@ -110,6 +110,31 @@ const view = (
     expect(output).not.toContain(`${TEST_TRIGGER} table`)
     expect(output).not.toContain(`${TEST_TRIGGER} md`)
     expect(output).not.toContain(`${TEST_TRIGGER} sm`)
+  })
+
+  test('skips template literals with interpolation in class expressions', async () => {
+    const output = await runTransform(
+      `const view = <div class={\`text-sm \${active ? 'font-medium' : 'font-bold'}\`} />`,
+      'src/example.tsx',
+    )
+
+    expect(output).toContain(`class={\`text-sm \${active ? 'font-medium' : 'font-bold'}\`}`)
+    expect(output).not.toContain(`${TEST_TRIGGER} text-sm`)
+  })
+
+  test('injects trigger into class operands passed to class helper calls', async () => {
+    const output = await runTransform(
+      `
+const view = (
+  <div class={getItemClass(item, 'data-expanded:bg-accent', cond && 'text-sm', classes?.item)} />
+)
+`,
+      'src/example.tsx',
+    )
+
+    expect(output).toContain(
+      `getItemClass(item, '${TEST_TRIGGER} data-expanded:bg-accent', cond && '${TEST_TRIGGER} text-sm', classes?.item)`,
+    )
   })
 
   test('is idempotent when transformer runs multiple times', async () => {

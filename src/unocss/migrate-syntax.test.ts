@@ -60,6 +60,23 @@ export const card = cva('b-1 font-500', {
     expect(output).toContain("class: 'supports-[backdrop-filter]:backdrop-blur-xs border-b-2'")
   })
 
+  test('ignores class, cva and variant tokens in comments', async () => {
+    const output = await runTransform(
+      `
+// class="b-1 font-500"
+/* cva('b-1', { variants: { tone: { quiet: 'font-500' } } }) */
+// const SIZE_VARIANT = { sm: 'b-1' }
+export const card = cva('b-1', { variants: { tone: { quiet: 'font-500' } } })
+`,
+      'src/example.class.ts',
+    )
+
+    expect(output).toContain(`// class="b-1 font-500"`)
+    expect(output).toContain(`/* cva('b-1', { variants: { tone: { quiet: 'font-500' } } }) */`)
+    expect(output).toContain(`// const SIZE_VARIANT = { sm: 'b-1' }`)
+    expect(output).toContain(`cva('border', { variants: { tone: { quiet: 'font-medium' } } })`)
+  })
+
   test('migrates only class operands inside tsx class expressions', async () => {
     const output = await runTransform(
       `
@@ -77,6 +94,21 @@ const view = (
     )
     expect(output).toContain(
       'class="font-medium supports-[backdrop-filter]:backdrop-blur-xs var-input-1.5 icon-close"',
+    )
+  })
+
+  test('migrates class operands passed to class helper calls', async () => {
+    const output = await runTransform(
+      `
+const view = (
+  <div class={getItemClass(item, 'b-1 not-last:b-b', cond && 'font-500', classes?.item)} />
+)
+`,
+      'src/example.tsx',
+    )
+
+    expect(output).toContain(
+      `getItemClass(item, 'border [&:not(:last-child)]:border-b', cond && 'font-medium', classes?.item)`,
     )
   })
 
