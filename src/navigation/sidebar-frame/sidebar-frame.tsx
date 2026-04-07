@@ -296,7 +296,7 @@ export function SidebarFrame(props: SidebarFrameProps): JSX.Element {
             data-slot="sidebar"
             style={merged.styles?.sidebar}
             class={sidebarFrameSidebarVariants(
-              { variant: merged.variant, side: merged.side },
+              { variant: merged.variant, side: merged.side, isMobile: resolvedIsMobile() },
               merged.classes?.sidebar,
             )}
           >
