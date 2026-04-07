@@ -4,12 +4,10 @@ import { Show, createMemo, createSignal } from 'solid-js'
 import { Dynamic, render } from 'solid-js/web'
 import { exampleMap, pages } from 'virtual:example-pages'
 
-import { Button, Sheet } from '../src'
-import { Resizable } from '../src/elements/resizable'
+import { Button, SidebarFrame, SidebarFrameSheetResizableRender } from '../src'
 
 import { ContentHeader } from './components/content-header'
-import { Sidebar } from './components/sidebar'
-import { useIsMobile } from './hooks/use-mobile'
+import { Sidebar, SidebarHeader } from './components/sidebar'
 import { useRouting } from './hooks/use-routing'
 import { useTheme } from './hooks/use-theme'
 
@@ -19,9 +17,7 @@ function App() {
 
   const { theme, updateTheme } = useTheme()
   const { page, navigate } = useRouting(pageKeys, fallbackPage)
-  const isMobile = useIsMobile()
-  const [mobileSidebarOpen, setMobileSidebarOpen] = createSignal(false)
-  const [scrolled, setScrolled] = createSignal(false)
+  const [sidebarSearch, setSidebarSearch] = createSignal('')
 
   const ActiveExample = createMemo(
     () => exampleMap[page()] ?? (fallbackPage ? exampleMap[fallbackPage] : undefined),
@@ -29,52 +25,59 @@ function App() {
 
   const pageTitle = createMemo(() => pages.find((p) => p.key === page())?.label ?? '')
 
-  const navigateAndCloseSidebar = (key: string) => {
-    navigate(key)
-    setMobileSidebarOpen(false)
-  }
-
   return (
     <div class="h-screen overflow-hidden">
-      {/* Mobile layout */}
-      <Show when={isMobile()}>
-        <div class="flex flex-col h-full">
-          <div
-            class="flex-1 min-h-0 overflow-y-auto"
-            data-docs-scroll-root="true"
-            onScroll={(e) => {
-              setScrolled(e.currentTarget.scrollTop > 60)
+      <SidebarFrame
+        renderFrame={(ctx) => (
+          <SidebarFrameSheetResizableRender
+            {...ctx}
+            resizableOptions={{
+              classes: {
+                divider:
+                  'after:(transition duration-200 ease-out z-20) hover:after:(bg-accent w-1.5)',
+              },
             }}
-          >
+            resizablePanelOptions={{
+              defaultSize: '18%',
+              min: 240,
+              max: 400,
+            }}
+          />
+        )}
+        renderSidebarHeader={(ctx) => (
+          <SidebarHeader
+            search={sidebarSearch}
+            setSearch={setSidebarSearch}
+            onClose={ctx.isMobile() ? () => ctx.setOpen(false) : undefined}
+          />
+        )}
+        renderSidebarBody={(ctx) => (
+          <Sidebar
+            pages={pages}
+            activePage={page}
+            search={sidebarSearch}
+            setActivePage={(key) => {
+              navigate(key)
+              ctx.setOpen(false)
+            }}
+          />
+        )}
+        renderMain={(ctx) => (
+          <>
             <ContentHeader
               leading={
-                <Sheet
-                  side="left"
-                  open={mobileSidebarOpen()}
-                  onOpenChange={setMobileSidebarOpen}
-                  close={false}
-                  classes={{
-                    body: '!p-0 !overflow-hidden',
-                  }}
-                  body={
-                    <Sidebar
-                      pages={pages}
-                      activePage={page}
-                      setActivePage={navigateAndCloseSidebar}
-                      onClose={() => setMobileSidebarOpen(false)}
-                    />
-                  }
-                >
+                <Show when={ctx.isMobile()}>
                   <Button
                     variant="ghost"
                     size="sm"
                     leading="i-lucide-menu"
                     aria-label="Toggle sidebar"
+                    onClick={ctx.toggle}
                   />
-                </Sheet>
+                </Show>
               }
               pageTitle={pageTitle}
-              scrolled={scrolled}
+              scrolled={ctx.scrolled}
               theme={theme}
               setTheme={updateTheme}
             />
@@ -84,54 +87,9 @@ function App() {
             >
               <Dynamic component={ActiveExample()!} />
             </Show>
-          </div>
-        </div>
-      </Show>
-
-      {/* Desktop layout */}
-      <Show when={!isMobile()}>
-        <Resizable
-          panels={[
-            {
-              content: <Sidebar pages={pages} activePage={page} setActivePage={navigate} />,
-              defaultSize: '18%',
-              min: 240,
-              max: 400,
-            },
-            {
-              content: (
-                <div
-                  class="h-full overflow-y-auto"
-                  data-docs-scroll-root="true"
-                  onScroll={(e) => {
-                    setScrolled(e.currentTarget.scrollTop > 60)
-                  }}
-                >
-                  <ContentHeader
-                    pageTitle={pageTitle}
-                    scrolled={scrolled}
-                    theme={theme}
-                    setTheme={updateTheme}
-                  />
-                  <Show
-                    when={ActiveExample()}
-                    fallback={
-                      <div class="text-sm text-muted-foreground p-6">Example not found.</div>
-                    }
-                  >
-                    <Dynamic component={ActiveExample()!} />
-                  </Show>
-                </div>
-              ),
-            },
-          ]}
-          orientation="horizontal"
-          classes={{
-            root: 'h-full',
-            divider: 'after:(transition duration-200 ease-out z-20) hover:after:(bg-accent w-1.5)',
-          }}
-        />
-      </Show>
+          </>
+        )}
+      />
     </div>
   )
 }

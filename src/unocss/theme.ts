@@ -297,6 +297,7 @@ export function presetMoraine(options?: PresetThemeOptions): Preset {
       ['surface-border', 'b-(1 border)'],
       ['surface-overlay', 'ring-1 ring-foreground/10'],
       ['hidden-hitless', 'opacity-0 pointer-events-none'],
+      ['rm-side-b', '[&>[data-slot=sidebar]]:b-0!'],
       ...Object.entries(SEMANTIC_ANIMATION_SHORTCUTS).map(
         ([name, value]) => [name, value] as [string, string],
       ),

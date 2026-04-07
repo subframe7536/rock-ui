@@ -1,4 +1,5 @@
 export * from './breadcrumb'
+export * from './sidebar-frame'
 export * from './pagination'
 export * from './stepper'
 export * from './tabs'

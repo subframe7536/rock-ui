@@ -1,0 +1,58 @@
+import { Button, SidebarFrame } from '@src'
+import { For } from 'solid-js'
+
+const TASKS = [
+  'Release checklist',
+  'Migrate docs examples',
+  'Review API naming',
+  'Polish accessibility labels',
+  'Publish changelog',
+  'Sync design tokens',
+]
+
+export function HeaderFooterSlots() {
+  return (
+    <div class="b-1 b-border rounded-xl h-72 overflow-hidden">
+      <SidebarFrame
+        isMobile={false}
+        renderSidebarHeader={() => (
+          <div class="p-3">
+            <p class="text-sm font-medium">Project Tasks</p>
+            <p class="text-xs text-muted-foreground mt-1">Header slot content</p>
+          </div>
+        )}
+        renderSidebarBody={() => (
+          <div class="p-2 h-full overflow-y-auto">
+            <div class="flex flex-col gap-1">
+              <For each={TASKS}>
+                {(task) => (
+                  <button
+                    type="button"
+                    class="text-sm px-2.5 py-1.5 text-left rounded-md hover:bg-accent"
+                  >
+                    {task}
+                  </button>
+                )}
+              </For>
+            </div>
+          </div>
+        )}
+        renderSidebarFooter={() => (
+          <div class="p-2 b-t b-border bg-background/80">
+            <Button size="sm" variant="ghost">
+              Footer Action
+            </Button>
+          </div>
+        )}
+        renderMain={() => (
+          <div class="p-4 h-full">
+            <h3 class="text-base font-semibold">Main Content</h3>
+            <p class="text-sm text-muted-foreground mt-2">
+              Sidebar header and footer are rendered from dedicated slots.
+            </p>
+          </div>
+        )}
+      />
+    </div>
+  )
+}
