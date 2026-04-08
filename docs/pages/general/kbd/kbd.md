@@ -7,6 +7,23 @@
 import { Kbd } from 'moraine'
 ```
 
+## Slot Structure
+
+Keyboard shortcut display with different structures for single vs. multiple keys.
+
+Single key:
+
+```text
+kbd
+```
+
+Multiple keys:
+
+```text
+kbds
+└── kbd (×n)
+```
+
 ## Examples
 
 ### Variants
@@ -32,21 +49,6 @@ Inline command palette hints.
 :::example
 name: ShortcutComposition
 :::
-
-## DOM Structure
-
-Single key:
-
-```
-kbd
-```
-
-Multiple keys:
-
-```
-kbds
-└── kbd (×n)
-```
 
 :::docs-api-reference
 :::

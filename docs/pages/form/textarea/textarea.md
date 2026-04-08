@@ -7,6 +7,17 @@
 import { Textarea } from 'moraine'
 ```
 
+## Slot Structure
+
+Multi-line text input with optional header and footer slots.
+
+```text
+root
+├── header (optional)
+├── input
+└── footer (optional)
+```
+
 ## Examples
 
 ### Variants
@@ -40,15 +51,6 @@ Build composer-like surfaces using header/footer slots.
 :::example
 name: HeaderFooter
 :::
-
-## DOM Structure
-
-```
-root
-├── header (optional)
-├── input
-└── footer (optional)
-```
 
 :::docs-api-reference
 :::

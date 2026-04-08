@@ -7,6 +7,16 @@
 import { Collapsible } from 'moraine'
 ```
 
+## Slot Structure
+
+Single expandable section with an optional trigger slot.
+
+```text
+root
+├── trigger (optional)
+└── content
+```
+
 ## Examples
 
 ### Uncontrolled
@@ -40,14 +50,6 @@ Use compact trigger UI for dense list and settings surfaces.
 :::example
 name: CompactTriggerComposition
 :::
-
-## DOM Structure
-
-```
-root
-├── trigger (optional)
-└── content
-```
 
 :::docs-api-reference
 :::

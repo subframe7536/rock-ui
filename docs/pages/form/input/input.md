@@ -7,6 +7,17 @@
 import { Input } from 'moraine'
 ```
 
+## Slot Structure
+
+Text input shell with optional leading and trailing icon slots.
+
+```text
+root
+├── leading (optional)
+├── input
+└── trailing (optional)
+```
+
 ## Examples
 
 ### Variants
@@ -40,15 +51,6 @@ Loading, disabled, and type.
 :::example
 name: InputStates
 :::
-
-## DOM Structure
-
-```
-root
-├── leading (optional)
-├── input
-└── trailing (optional)
-```
 
 :::docs-api-reference
 :::

@@ -7,6 +7,33 @@
 import { DropdownMenu } from 'moraine'
 ```
 
+## Slot Structure
+
+Wrapper trigger with a floating menu portal containing grouped items.
+
+Menu:
+
+```text
+trigger
+└── content (portal)
+    └── group (×n)
+        ├── label (optional)
+        ├── separator (optional)
+        └── item (×n)
+```
+
+Item internals:
+
+```text
+item
+├── itemLeading (optional)
+├── itemWrapper
+│   ├── itemLabel (optional)
+│   └── itemDescription (optional)
+└── itemTrailing
+    └── itemIndicator (optional, checkbox items)
+```
+
 ## Examples
 
 ### Sizes
@@ -40,25 +67,6 @@ A heavier project menu with move flows, release actions, mixed-content labels, a
 :::example
 name: ProjectReleaseActions
 :::
-
-## DOM Structure
-
-```
-trigger
-└── content (portal)
-    └── group (×n)
-        ├── label (optional)
-        ├── separator (optional)
-        └── item (×n)
-            ├── itemLeading (optional)
-            ├── itemWrapper
-            │   ├── itemLabel (optional)
-            │   └── itemDescription (optional)
-            └── itemTrailing
-                └── itemIndicator (optional, checkbox items)
-```
-
-Submenu items additionally render a nested `content` portal with the same structure.
 
 :::docs-api-reference
 :::

@@ -7,6 +7,14 @@
 import { Icon } from 'moraine'
 ```
 
+## Slot Structure
+
+Single icon element with no nested slots.
+
+```text
+icon
+```
+
 ## Examples
 
 ### Icon Sizes
@@ -32,12 +40,6 @@ Pass a JSX element or render function instead of a string name.
 :::example
 name: IconAsJSX
 :::
-
-## DOM Structure
-
-```
-icon
-```
 
 :::docs-api-reference
 :::

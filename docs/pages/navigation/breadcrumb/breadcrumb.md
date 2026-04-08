@@ -7,6 +7,18 @@
 import { Breadcrumb } from 'moraine'
 ```
 
+## Slot Structure
+
+Ordered navigation list with links and separators between items.
+
+```text
+root
+└── list
+    └── item (×n)
+        ├── link
+        └── separator (optional, between items)
+```
+
 ## Examples
 
 ### Default
@@ -40,16 +52,6 @@ Toggle wrapping behavior for long breadcrumb labels.
 :::example
 name: Wrapping
 :::
-
-## DOM Structure
-
-```
-root
-└── list
-    └── item (×n)
-        ├── link
-        └── separator (optional, between items)
-```
 
 :::docs-api-reference
 :::

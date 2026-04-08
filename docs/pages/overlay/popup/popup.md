@@ -7,6 +7,16 @@
 import { Popup } from 'moraine'
 ```
 
+## Slot Structure
+
+Wrapper trigger with an optional backdrop and a floating content portal.
+
+```text
+trigger
+├── overlay (optional)
+└── content (portal)
+```
+
 ## Examples
 
 ### Default Container
@@ -32,14 +42,6 @@ Scrollable overlay keeps content in flow while preserving the backdrop.
 :::example
 name: ScrollableOverlayMode
 :::
-
-## DOM Structure
-
-```
-trigger
-├── overlay (optional)
-└── content (portal)
-```
 
 :::docs-api-reference
 :::

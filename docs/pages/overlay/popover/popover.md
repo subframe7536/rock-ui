@@ -7,6 +7,16 @@
 import { Popover } from 'moraine'
 ```
 
+## Slot Structure
+
+Wrapper trigger with a floating content portal containing the body.
+
+```text
+trigger
+└── content (portal)
+    └── body
+```
+
 ## Examples
 
 ### Placements
@@ -32,14 +42,6 @@ Prevent closing on outside interaction and Escape key.
 :::example
 name: DismissControl
 :::
-
-## DOM Structure
-
-```
-trigger
-└── content (portal)
-    └── body
-```
 
 :::docs-api-reference
 :::

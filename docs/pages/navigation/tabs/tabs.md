@@ -7,6 +7,20 @@
 import { Tabs } from 'moraine'
 ```
 
+## Slot Structure
+
+Tab list with triggers and associated content panels.
+
+```text
+root
+├── list
+│   ├── indicator (optional)
+│   └── trigger (×n)
+│       ├── leading (Icon, optional)
+│       └── label (optional)
+└── content (×n)
+```
+
 ## Examples
 
 ### Variants
@@ -40,18 +54,6 @@ Controlled value with disabled tab options and external navigation controls.
 :::example
 name: ControlledDisabledItems
 :::
-
-## DOM Structure
-
-```
-root
-├── list
-│   ├── indicator (optional)
-│   └── trigger (×n)
-│       ├── leading (Icon, optional)
-│       └── label (optional)
-└── content (×n)
-```
 
 :::docs-api-reference
 :::

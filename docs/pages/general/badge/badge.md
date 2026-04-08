@@ -7,6 +7,17 @@
 import { Badge } from 'moraine'
 ```
 
+## Slot Structure
+
+Compact label with optional leading and trailing icon slots.
+
+```text
+root
+├── leading (Icon, optional)
+├── label (optional)
+└── trailing (Icon or IconButton, optional)
+```
+
 ## Examples
 
 ### Variants
@@ -40,15 +51,6 @@ Clickable trailing icons support removable tag UIs like Select multi-value chips
 :::example
 name: DismissibleTags
 :::
-
-## DOM Structure
-
-```
-root
-├── leading (Icon, optional)
-├── label (optional)
-└── trailing (Icon or IconButton, optional)
-```
 
 :::docs-api-reference
 :::

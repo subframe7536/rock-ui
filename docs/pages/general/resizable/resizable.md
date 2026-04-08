@@ -7,6 +7,19 @@
 import { Resizable } from 'moraine'
 ```
 
+## Slot Structure
+
+Panels separated by interactive dividers with optional handle and intersection targets.
+
+```text
+root
+└── panel (×n)
+    └── divider (between panels)
+        ├── cross-target (optional, intersection start)
+        ├── handle (optional)
+        └── cross-target (optional, intersection end)
+```
+
 ## Examples
 
 ### Basic Horizontal
@@ -48,17 +61,6 @@ Clicking handle toggles collapse/expand while dragging divider still resizes. Th
 :::example
 name: CollapsibleCollapsibleMin
 :::
-
-## DOM Structure
-
-```
-root
-└── panel (×n)
-    └── divider (between panels)
-        ├── cross-target (optional, intersection start)
-        ├── handle (optional)
-        └── cross-target (optional, intersection end)
-```
 
 :::docs-api-reference
 :::

@@ -7,6 +7,22 @@
 import { FormField } from 'moraine'
 ```
 
+## Slot Structure
+
+Label, description, and hint area above a control slot with validation feedback.
+
+```text
+root
+├── wrapper
+│   ├── labelWrapper (optional)
+│   │   ├── label
+│   │   └── hint (optional)
+│   └── description (optional)
+└── {children}
+    ├── help (optional)
+    └── error (optional)
+```
+
 ## Examples
 
 ### Basic
@@ -64,20 +80,6 @@ Use array path names for nested form fields.
 :::example
 name: NestedPath
 :::
-
-## DOM Structure
-
-```
-root
-├── wrapper
-│   ├── labelWrapper (optional)
-│   │   ├── label
-│   │   └── hint (optional)
-│   └── description (optional)
-└── {children}
-    ├── help (optional)
-    └── error (optional)
-```
 
 :::docs-api-reference
 :::

@@ -7,6 +7,17 @@
 import { Slider } from 'moraine'
 ```
 
+## Slot Structure
+
+Track with a fill range and one or more draggable thumb handles.
+
+```text
+root
+├── track
+│   └── range
+└── thumb (×n)
+```
+
 ## Examples
 
 ### Controlled Single
@@ -48,15 +59,6 @@ Submit to validate required minimum value through Form + FormField.
 :::example
 name: FormIntegration
 :::
-
-## DOM Structure
-
-```
-root
-├── track
-│   └── range
-└── thumb (×n)
-```
 
 :::docs-api-reference
 :::

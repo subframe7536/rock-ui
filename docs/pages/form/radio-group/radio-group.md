@@ -7,6 +7,24 @@
 import { RadioGroup } from 'moraine'
 ```
 
+## Slot Structure
+
+Fieldset with optional legend and mutually exclusive radio items.
+
+```text
+root
+└── fieldset
+    ├── legend (optional)
+    └── item (×n)
+        ├── container
+        │   ├── input
+        │   └── control
+        │       └── indicator
+        └── wrapper (optional)
+            ├── label (optional)
+            └── description (optional)
+```
+
 ## Examples
 
 ### Variants
@@ -40,22 +58,6 @@ Start/end/hidden indicator styles with card variant.
 :::example
 name: IndicatorPositions
 :::
-
-## DOM Structure
-
-```
-root
-└── fieldset
-    ├── legend (optional)
-    └── item (×n)
-        ├── container
-        │   ├── input
-        │   └── control
-        │       └── indicator
-        └── wrapper (optional)
-            ├── label (optional)
-            └── description (optional)
-```
 
 :::docs-api-reference
 :::

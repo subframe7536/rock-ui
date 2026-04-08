@@ -7,6 +7,19 @@
 import { Progress } from 'moraine'
 ```
 
+## Slot Structure
+
+Track with a fill indicator, optional status text, and step labels.
+
+```text
+root
+├── status (optional, determinate only)
+├── track
+│   └── indicator
+└── steps (optional, step mode)
+    └── step (×n)
+```
+
 ## Examples
 
 ### Sizes
@@ -48,17 +61,6 @@ String-array max renders named steps.
 :::example
 name: StepMode
 :::
-
-## DOM Structure
-
-```
-root
-├── status (optional, determinate only)
-├── track
-│   └── indicator
-└── steps (optional, step mode)
-    └── step (×n)
-```
 
 :::docs-api-reference
 :::

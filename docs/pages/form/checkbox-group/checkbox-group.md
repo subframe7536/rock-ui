@@ -7,6 +7,17 @@
 import { CheckboxGroup } from 'moraine'
 ```
 
+## Slot Structure
+
+Fieldset with an optional legend grouping multiple Checkbox items.
+
+```text
+root
+└── fieldset
+    ├── legend (optional)
+    └── root (Checkbox, ×n)
+```
+
 ## Examples
 
 ### Variants
@@ -48,15 +59,6 @@ Controlled selected values with per-item disabled state.
 :::example
 name: ControlledDisabledItems
 :::
-
-## DOM Structure
-
-```
-root
-└── fieldset
-    ├── legend (optional)
-    └── root (Checkbox, ×n)
-```
 
 :::docs-api-reference
 :::

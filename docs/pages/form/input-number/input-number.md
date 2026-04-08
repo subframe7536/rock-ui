@@ -7,6 +7,29 @@
 import { InputNumber } from 'moraine'
 ```
 
+## Slot Structure
+
+Numeric input with increment/decrement controls placed inline (horizontal) or stacked (vertical).
+
+Horizontal:
+
+```text
+root
+├── (decrement button, optional)
+├── input
+└── (increment button, optional)
+```
+
+Vertical:
+
+```text
+root
+├── input
+└── controls
+    ├── (increment button, optional)
+    └── (decrement button, optional)
+```
+
 ## Examples
 
 ### Variants
@@ -64,16 +87,6 @@ Constrained ranges and custom step increments.
 :::example
 name: MinMaxStep
 :::
-
-## DOM Structure
-
-```
-root
-├── input
-└── controls (optional, vertical orientation)
-```
-
-Horizontal orientation renders decrement/increment controls inline alongside `input` instead.
 
 :::docs-api-reference
 :::

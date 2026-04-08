@@ -7,6 +7,21 @@
 import { Pagination } from 'moraine'
 ```
 
+## Slot Structure
+
+Page controls with previous, next, and numbered page link buttons.
+
+```text
+root
+└── list
+    ├── item (prev)
+    │   └── prev (Button)
+    ├── item (×n, page links)
+    │   └── link (Button)
+    └── item (next)
+        └── next (Button)
+```
+
 ## Examples
 
 ### Variants
@@ -40,19 +55,6 @@ Hide prev/next controls and show only page buttons.
 :::example
 name: Minimal
 :::
-
-## DOM Structure
-
-```
-root
-└── list
-    ├── item (prev)
-    │   └── prev (Button)
-    ├── item (×n, page links)
-    │   └── link (Button)
-    └── item (next)
-        └── next (Button)
-```
 
 :::docs-api-reference
 :::

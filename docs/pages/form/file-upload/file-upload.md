@@ -7,6 +7,34 @@
 import { FileUpload } from 'moraine'
 ```
 
+## Slot Structure
+
+Upload control and optional file preview list.
+
+Upload area:
+
+```text
+root
+└── control (dropzone or trigger button)
+    └── wrapper
+        ├── icon (Icon)
+        ├── label (optional)
+        └── description (optional)
+```
+
+File preview list:
+
+```text
+root
+└── files
+    └── file (×n)
+        ├── filePreview
+        ├── fileMeta
+        │   ├── fileName
+        │   └── fileSize
+        └── fileRemove
+```
+
 ## Examples
 
 ### Single Upload
@@ -48,24 +76,6 @@ Submit to validate a required attachment with Form + FormField.
 :::example
 name: FormIntegration
 :::
-
-## DOM Structure
-
-```
-root
-├── control (dropzone or trigger button)
-│   └── wrapper
-│       ├── icon (Icon)
-│       ├── label (optional)
-│       └── description (optional)
-└── files (optional, preview list)
-    └── file (×n)
-        ├── filePreview
-        ├── fileMeta
-        │   ├── fileName
-        │   └── fileSize
-        └── fileRemove
-```
 
 :::docs-api-reference
 :::

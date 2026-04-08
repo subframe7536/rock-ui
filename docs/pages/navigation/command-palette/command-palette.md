@@ -7,6 +7,41 @@
 import { CommandPalette } from 'moraine'
 ```
 
+## Slot Structure
+
+Search input and results list with grouped items and optional footer.
+
+Input area:
+
+```text
+root
+└── inputWrapper
+    ├── search (IconButton, optional)
+    ├── back (IconButton, optional)
+    ├── input
+    └── close (IconButton, optional)
+```
+
+Results:
+
+```text
+root
+├── listbox
+│   └── item (×n)
+│       ├── itemLeading (Icon, optional)
+│       ├── itemWrapper
+│       │   ├── itemLabel (optional)
+│       │   │   ├── itemLabelPrefix (optional)
+│       │   │   ├── itemLabelBase
+│       │   │   └── itemLabelSuffix (optional)
+│       │   └── itemDescription (optional)
+│       └── itemTrailing (Icon or Kbd, optional)
+├── group (×n, optional)
+│   └── label (optional)
+├── empty (optional, no matches)
+└── footer (optional)
+```
+
 ## Examples
 
 ### Usage
@@ -56,31 +91,6 @@ Items with children drill into a sub-group. Press Backspace or the back button t
 :::example
 name: SubNavigation
 :::
-
-## DOM Structure
-
-```
-root
-├── inputWrapper
-│   ├── search (IconButton, optional)
-│   ├── back (IconButton, optional)
-│   ├── input
-│   └── close (IconButton, optional)
-├── listbox (optional)
-│   └── item (×n)
-│       ├── itemLeading (Icon, optional)
-│       ├── itemWrapper
-│       │   ├── itemLabel (optional)
-│       │   │   ├── itemLabelPrefix (optional)
-│       │   │   ├── itemLabelBase
-│       │   │   └── itemLabelSuffix (optional)
-│       │   └── itemDescription (optional)
-│       └── itemTrailing (Icon or Kbd, optional)
-├── group (×n, optional)
-│   └── label (optional)
-├── empty (optional, no matches)
-└── footer (optional)
-```
 
 :::docs-api-reference
 :::

@@ -7,6 +7,32 @@
 import { Avatar } from 'moraine'
 ```
 
+## Slot Structure
+
+Single avatar with image fallback, or a group of avatars with an overflow counter.
+
+Single avatar:
+
+```text
+root
+├── image
+├── fallback
+│   └── fallbackIcon (Icon, optional)
+└── badge (optional)
+```
+
+Group avatar:
+
+```text
+group
+├── groupCount (optional, overflow count)
+└── groupItem (×n)
+    ├── image
+    ├── fallback
+    │   └── fallbackIcon (Icon, optional)
+    └── badge (optional)
+```
+
 ## Examples
 
 ### Single Avatar
@@ -48,30 +74,6 @@ Use the same Avatar component with items.
 :::example
 name: MergedGroupMode
 :::
-
-## DOM Structure
-
-Single avatar:
-
-```
-root
-├── image
-├── fallback
-│   └── fallbackIcon (Icon, optional)
-└── badge (optional)
-```
-
-Group avatar:
-
-```
-group
-├── groupCount (optional, overflow count)
-└── groupItem (×n, same as single avatar)
-    ├── image
-    ├── fallback
-    │   └── fallbackIcon (Icon, optional)
-    └── badge (optional)
-```
 
 :::docs-api-reference
 :::

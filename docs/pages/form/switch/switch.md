@@ -7,6 +7,21 @@
 import { Switch } from 'moraine'
 ```
 
+## Slot Structure
+
+Toggle track with thumb and optional label area.
+
+```text
+root
+├── container
+│   ├── input
+│   └── track
+│       └── thumb
+└── wrapper (optional)
+    ├── label (optional)
+    └── description (optional)
+```
+
 ## Examples
 
 ### Basic + Controlled
@@ -40,19 +55,6 @@ Map checked state to domain values instead of boolean.
 :::example
 name: CustomTrueFalseValues
 :::
-
-## DOM Structure
-
-```
-root
-├── container
-│   ├── input
-│   ├── track
-│   │   └── thumb
-└── wrapper (optional)
-    ├── label (optional)
-    └── description (optional)
-```
 
 :::docs-api-reference
 :::
