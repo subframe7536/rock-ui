@@ -167,7 +167,7 @@ export function Textarea(props: TextareaProps): JSX.Element {
       maxrows: 0,
       autofocusDelay: 0,
       autoresizeDelay: 0,
-      variant: 'outlined' as const,
+      variant: 'outlined' as TextareaVariantProps['variant'],
       autoresize: false,
     },
     props,

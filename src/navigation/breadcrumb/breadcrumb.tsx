@@ -142,7 +142,7 @@ export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
     {
       separator: 'icon-chevron-right' as IconT.Name,
       wrap: true,
-      size: 'md',
+      size: 'md' as BreadcrumbT.Base['size'],
       'aria-label': 'Breadcrumbs',
     },
     props,

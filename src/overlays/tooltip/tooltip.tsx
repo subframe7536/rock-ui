@@ -52,8 +52,6 @@ export namespace TooltipT {
  */
 export interface TooltipProps extends TooltipT.Props {}
 
-type TooltipSide = OverlayMenuSide
-
 /** Hover-triggered informational overlay anchored to a trigger element. */
 export function Tooltip(props: TooltipProps): JSX.Element {
   const merged = mergeProps(
@@ -73,11 +71,12 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     'classes',
     'styles',
     'children',
+    'placement',
   ])
 
   function Content(): JSX.Element {
     const popperContext = usePopperContext()
-    const resolvedSide = createMemo<TooltipSide>(() => {
+    const resolvedSide = createMemo<OverlayMenuSide>(() => {
       const runtimePlacement = popperContext.currentPlacement()
 
       if (runtimePlacement) {
@@ -88,7 +87,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
         return local.side
       }
 
-      return resolveOverlayMenuSide(rest.placement)
+      return resolveOverlayMenuSide(local.placement)
     })
 
     return (
@@ -124,7 +123,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
   }
 
   return (
-    <KobalteTooltip.Root overflowPadding={4} placement={local.side} {...rest}>
+    <KobalteTooltip.Root overflowPadding={4} placement={resolveOverlayMenuSide()} {...rest}>
       <KobalteTooltip.Trigger
         as="span"
         tabIndex={-1}

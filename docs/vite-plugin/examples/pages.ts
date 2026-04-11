@@ -142,9 +142,7 @@ export function readComponentNameMap(projectRoot: string): Map<string, string> {
   return new Map(indexDoc.components.map((component) => [component.key, component.name]))
 }
 
-function serializePage(
-  page: Pick<ExamplePageEntry, 'key' | 'group' | 'label' | 'status'>,
-): string {
+function serializePage(page: Pick<ExamplePageEntry, 'key' | 'group' | 'label' | 'status'>): string {
   const fields = [`key: ${toSingleQuoted(page.key)}`]
 
   if (page.group) {

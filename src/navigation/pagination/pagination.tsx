@@ -183,7 +183,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
   const merged = mergeProps(
     {
       'aria-label': 'Pagination',
-      role: 'navigation',
+      role: 'navigation' as JSX.HTMLAttributes<HTMLElement>['role'],
       itemsPerPage: 10,
       total: 0,
       siblingCount: 2,

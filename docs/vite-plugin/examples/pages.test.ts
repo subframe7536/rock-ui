@@ -53,15 +53,9 @@ describe('scanExamplePages', () => {
 
     await writeFile(
       path.join(projectRoot, 'docs/pages/form/input/input.md'),
-      [
-        ':::docs-header',
-        'status: update',
-        ':::',
-        '',
-        ':::docs-header',
-        'status: new',
-        ':::',
-      ].join('\n'),
+      [':::docs-header', 'status: update', ':::', '', ':::docs-header', 'status: new', ':::'].join(
+        '\n',
+      ),
       'utf8',
     )
 

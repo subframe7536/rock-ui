@@ -154,10 +154,10 @@ export interface InputProps extends InputT.Props {}
 export function Input(props: InputProps): JSX.Element {
   const merged = mergeProps(
     {
-      type: 'text' as NonNullable<JSX.InputHTMLAttributes<HTMLInputElement>['type']>,
-      autocomplete: 'off' as const,
+      type: 'text',
+      autocomplete: 'off',
       autofocusDelay: 0,
-      variant: 'outlined' as const,
+      variant: 'outlined' as InputVariantProps['variant'],
       loadingIcon: 'icon-loading' as IconT.Name,
     },
     props,
