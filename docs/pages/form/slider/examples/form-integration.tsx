@@ -2,14 +2,12 @@ import { Button, Form, FormField, Slider } from '@src'
 import type { SliderT } from '@src'
 import { createSignal } from 'solid-js'
 
-type SliderValue = SliderT.Value
-
 export function FormIntegration() {
   const [formState, setFormState] = createSignal({
     volume: 10,
   })
 
-  const updateFormVolume = (nextValue: SliderValue) => {
+  const updateFormVolume = (nextValue: SliderT.Value) => {
     const next = Array.isArray(nextValue) ? (nextValue[0] ?? 0) : nextValue
     setFormState((prev) => ({ ...prev, volume: next }))
   }

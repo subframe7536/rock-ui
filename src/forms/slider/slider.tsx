@@ -38,10 +38,10 @@ export namespace SliderT {
   /**
    * Base props for the Slider component.
    */
-  export interface Base
+  export interface Base<TValue = Value>
     extends
       FormIdentityOptions,
-      FormValueOptions<Value>,
+      FormValueOptions<TValue>,
       FormRequiredOption,
       FormDisableOption,
       FormReadOnlyOption {
@@ -84,19 +84,19 @@ export namespace SliderT {
     /**
      * Callback when the slider selection changes during interaction.
      */
-    onValueChange?: (value: Value) => void
+    onValueChange?: (value: TValue) => void
 
     /**
      * Callback when the slider selection change is committed.
      */
-    onChange?: (value: Value) => void
+    onChange?: (value: TValue) => void
   }
 
   /**
    * Props for the Slider component.
    */
-  export interface Props extends BaseProps<
-    Base,
+  export interface Props<TValue = Value> extends BaseProps<
+    Base<TValue>,
     Variant,
     Extend,
     Slot,
@@ -107,7 +107,7 @@ export namespace SliderT {
 /**
  * Props for the Slider component.
  */
-export interface SliderProps extends SliderT.Props {}
+export interface SliderProps<TValue = SliderT.Value> extends SliderT.Props<TValue> {}
 
 function normalizeSliderValues(
   value: SliderT.Value | undefined,
@@ -145,7 +145,9 @@ function areEqualValues(a: number[] | undefined, b: number[] | undefined): boole
 }
 
 /** Range slider component with single or multi-thumb support and step markers. */
-export function Slider(props: SliderProps): JSX.Element {
+export function Slider<TValue extends SliderT.Value = SliderT.Value>(
+  props: SliderProps<TValue>,
+): JSX.Element {
   const merged = mergeProps(
     {
       min: 0,
@@ -212,12 +214,12 @@ export function Slider(props: SliderProps): JSX.Element {
     return `${field.id()}-${index + 1}`
   }
 
-  function toPublicValue(values: number[]): SliderT.Value {
+  function toPublicValue(values: number[]): TValue {
     if (Array.isArray(local.value) || Array.isArray(local.defaultValue)) {
-      return [...values]
+      return [...values] as TValue
     }
 
-    return values[0] ?? local.min!
+    return (values[0] ?? local.min!) as TValue
   }
 
   function onValueChange(values: number[]): void {
