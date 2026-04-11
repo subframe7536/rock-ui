@@ -7,7 +7,7 @@ export function Autoresize() {
   return (
     <div class="max-w-xl space-y-3">
       <Textarea
-        autoresize
+        autoResize
         maxRows={6}
         value={value()}
         onValueChange={(next) => setValue(String(next ?? ''))}

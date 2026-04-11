@@ -24,7 +24,7 @@ export function HeaderFooter() {
         value={composerValue()}
         onValueChange={(nextValue) => setComposerValue(String(nextValue ?? ''))}
         placeholder="Write your message..."
-        autoresize
+        autoResize
         footer={
           <>
             <span>{composerValue().length}/280 characters</span>

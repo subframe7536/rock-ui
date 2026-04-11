@@ -85,6 +85,12 @@ export namespace TextareaT {
     maxLength?: number
 
     /**
+     * Whether the textarea should automatically resize based on content.
+     * @default false
+     */
+    autoResize?: boolean
+
+    /**
      * Delay in milliseconds before triggering autoresize on mount.
      * @default 0
      */
@@ -216,7 +222,7 @@ export function Textarea(props: TextareaProps): JSX.Element {
   }
 
   function autoResize(): void {
-    if (!merged.autoresize || !textareaEl) {
+    if (!merged.autoResize || !textareaEl) {
       return
     }
 
@@ -353,7 +359,7 @@ export function Textarea(props: TextareaProps): JSX.Element {
         class={textareaBaseVariants(
           {
             size: field.size(),
-            autoresize: merged.autoresize,
+            autoresize: merged.autoResize,
           },
           merged.classes?.input,
         )}
