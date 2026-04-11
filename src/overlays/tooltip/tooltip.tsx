@@ -19,7 +19,7 @@ export namespace TooltipT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteTooltip.TooltipRootProps
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the Tooltip component.

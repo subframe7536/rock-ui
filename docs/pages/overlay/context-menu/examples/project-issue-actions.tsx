@@ -8,7 +8,7 @@ export function ProjectIssueActions() {
   const panelClass =
     'flex min-h-28 w-full flex-col justify-between rounded-lg b-1 b-border border-border bg-background p-4 text-sm text-foreground'
 
-  const projectItems: ContextMenuT.Items[] = [
+  const projectItems: ContextMenuT.Item[] = [
     {
       type: 'group',
       label: (

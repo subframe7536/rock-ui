@@ -1,7 +1,7 @@
 import { For } from 'solid-js'
 
 import type { OnThisPageEntry } from '../hooks/use-table-of-contents'
-import type { ItemsDoc } from '../vite-plugin/api-doc/types'
+import type { ItemDoc } from '../vite-plugin/api-doc/types'
 import type { FrontmatterData } from '../vite-plugin/markdown/types'
 
 import type { DocsApiReferenceModel } from './docs-api-reference'
@@ -38,7 +38,7 @@ export interface ExamplePageApiDoc {
   component: ComponentIndexEntry
   slots: string[]
   props: ComponentPropsDoc
-  items?: ItemsDoc
+  items?: ItemDoc
 }
 
 export interface RenderExampleMarkdownPageInput {

@@ -21,7 +21,7 @@ export namespace BadgeT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the Badge component.
    */

@@ -2,7 +2,7 @@ import { CommandPalette } from '@src'
 import type { CommandPaletteT } from '@src'
 
 export function Loading() {
-  const BASIC_GROUPS: CommandPaletteT.Items[] = [
+  const BASIC_GROUPS: CommandPaletteT.Item[] = [
     {
       id: 'actions',
       label: 'Actions',

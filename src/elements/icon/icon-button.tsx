@@ -21,7 +21,7 @@ export namespace IconButtonT {
     'as'
   >
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the IconButton component.
    */

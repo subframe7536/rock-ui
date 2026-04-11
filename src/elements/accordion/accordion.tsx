@@ -22,7 +22,7 @@ export namespace AccordionT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteAccordion.AccordionRootProps
 
-  export interface Items {
+  export interface Item {
     /**
      * Header label for the accordion item.
      */
@@ -56,7 +56,7 @@ export namespace AccordionT {
     /**
      * Array of accordion items to render.
      */
-    items?: Items[]
+    items?: Item[]
 
     /**
      * Whether the entire accordion is disabled.

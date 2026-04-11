@@ -22,7 +22,7 @@ export namespace CollapsibleT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteCollapsible.CollapsibleRootProps
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the Collapsible component.
    */

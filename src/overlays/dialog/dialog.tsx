@@ -30,7 +30,7 @@ export namespace DialogT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteDialog.DialogRootProps
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the Dialog component.

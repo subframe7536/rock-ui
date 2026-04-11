@@ -2,7 +2,7 @@ import { Select } from '@src'
 import type { SelectT } from '@src'
 
 export function Disabled() {
-  const FRUIT_OPTIONS: SelectT.Items[] = [
+  const FRUIT_OPTIONS: SelectT.Item[] = [
     { label: 'Apple', value: 'apple' },
     { label: 'Banana', value: 'banana' },
     { label: 'Cherry', value: 'cherry' },

@@ -22,7 +22,7 @@ export namespace CommandPaletteT {
   /**
    * An individual item in the command palette.
    */
-  export interface Item {
+  export interface SubItem {
     /**
      * Unique value for the item.
      */
@@ -72,7 +72,7 @@ export namespace CommandPaletteT {
     /**
      * Selecting this item drills into a nested group of items.
      */
-    children?: Item[]
+    children?: SubItem[]
 
     /**
      * Callback triggered when the item is selected.
@@ -111,7 +111,7 @@ export namespace CommandPaletteT {
   /**
    * A grouped collection of items in the command palette.
    */
-  export interface Items {
+  export interface Item {
     /**
      * Unique identifier for the group.
      */
@@ -125,7 +125,7 @@ export namespace CommandPaletteT {
     /**
      * Items belonging to this group.
      */
-    children?: Item[]
+    children?: SubItem[]
   }
 
   /**
@@ -135,7 +135,7 @@ export namespace CommandPaletteT {
     /**
      * Command groups to display initially.
      */
-    items?: Items[]
+    items?: Item[]
 
     /**
      * Placeholder text for the search input.
@@ -243,7 +243,7 @@ interface NormalizedItem {
   description?: string
   icon?: string
   kbds?: string[]
-  children?: CommandPaletteT.Item[]
+  children?: CommandPaletteT.SubItem[]
   onSelect?: () => void
 }
 
@@ -254,7 +254,7 @@ interface NormalizedGroup {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function buildItemLabel(item: CommandPaletteT.Item): string {
+function buildItemLabel(item: CommandPaletteT.SubItem): string {
   const text = [item.prefix, item.label, item.suffix]
     .filter((part): part is string => Boolean(part))
     .join(' ')
@@ -263,7 +263,7 @@ function buildItemLabel(item: CommandPaletteT.Item): string {
 }
 
 function createNormalizedGroups(
-  groups: CommandPaletteT.Items[] | undefined,
+  groups: CommandPaletteT.Item[] | undefined,
   warnDuplicateValue: (value: string) => void,
 ): NormalizedGroup[] {
   const seenValues = new Set<string>()
@@ -336,7 +336,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   )
 
   // ── History stack for sub-navigation ──────────────────────────────────────
-  const [history, setHistory] = createSignal<CommandPaletteT.Items[]>([])
+  const [history, setHistory] = createSignal<CommandPaletteT.Item[]>([])
 
   // ── Input ref — cleared visually after navigation ─────────────────────────
   let inputRef: HTMLInputElement | undefined
@@ -414,11 +414,11 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   }
 
   // ── Current groups: last history entry or root ─────────────────────────────
-  const currentGroups = createMemo<CommandPaletteT.Items[]>(() => {
+  const currentGroups = createMemo<CommandPaletteT.Item[]>(() => {
     const hist = history()
     return (
       hist.length > 0 ? [hist[hist.length - 1]] : (merged.items ?? [])
-    ) as CommandPaletteT.Items[]
+    ) as CommandPaletteT.Item[]
   })
 
   const normalizedGroups = createMemo<NormalizedGroup[]>(() =>

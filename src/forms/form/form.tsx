@@ -60,7 +60,7 @@ export namespace FormT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the Form component.
    */

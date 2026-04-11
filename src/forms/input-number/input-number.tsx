@@ -45,7 +45,7 @@ export namespace InputNumberT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteNumberField.NumberFieldRootProps
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the InputNumber component.

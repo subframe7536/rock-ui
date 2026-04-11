@@ -45,7 +45,7 @@ export namespace RadioGroupT {
   /**
    * A radio item object.
    */
-  export interface Items {
+  export interface Item {
     /**
      * Value of the radio item.
      */
@@ -85,7 +85,7 @@ export namespace RadioGroupT {
     /**
      * Array of items to render in the group.
      */
-    items?: (string | Items)[]
+    items?: (string | Item)[]
 
     /**
      * Callback when the selected value changes.

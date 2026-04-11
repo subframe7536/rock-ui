@@ -34,7 +34,7 @@ export namespace TabsT {
   /**
    * An individual tab in the tabs component.
    */
-  export interface Items {
+  export interface Item {
     /**
      * Label to display on the tab trigger.
      */
@@ -75,7 +75,7 @@ export namespace TabsT {
     /**
      * Array of tabs to display.
      */
-    items?: Items[]
+    items?: Item[]
   }
 
   /**
@@ -89,7 +89,7 @@ export namespace TabsT {
  */
 export interface TabsProps extends TabsT.Props {}
 
-function normalizeItemValue(item: TabsT.Items, index: number): string {
+function normalizeItemValue(item: TabsT.Item, index: number): string {
   if (item.value === undefined || item.value === null) {
     return String(index)
   }

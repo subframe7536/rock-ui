@@ -3,14 +3,14 @@ import type { SelectT } from '@src'
 import { createSignal } from 'solid-js'
 
 export function InfiniteScroll() {
-  function makeOptions(count: number, offset = 0): SelectT.Items[] {
+  function makeOptions(count: number, offset = 0): SelectT.Item[] {
     return Array.from({ length: count }, (_, i) => ({
       label: `Option ${offset + i + 1}`,
       value: `opt-${offset + i + 1}`,
     }))
   }
 
-  const [infiniteOptions, setInfiniteOptions] = createSignal<SelectT.Items[]>(makeOptions(20))
+  const [infiniteOptions, setInfiniteOptions] = createSignal<SelectT.Item[]>(makeOptions(20))
 
   const [loadingMore, setLoadingMore] = createSignal(false)
 

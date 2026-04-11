@@ -7,7 +7,7 @@ import { FormField } from '../form-field'
 import { MultiSelect } from './multi-select'
 import type { MultiSelectProps, MultiSelectT } from './multi-select'
 
-const FRUITS: MultiSelectT.Items[] = [
+const FRUITS: MultiSelectT.Item[] = [
   { label: 'Apple', value: 'apple' },
   { label: 'Banana', value: 'banana' },
   { label: 'Cherry', value: 'cherry', disabled: true },

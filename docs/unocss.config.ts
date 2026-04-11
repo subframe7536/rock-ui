@@ -6,7 +6,7 @@ import { presetMoraine } from '../src/unocss/theme'
 
 const transformer = transformerVariantGroup()
 const markdownShortCuts = {
-  'docs-h1': 'text-2xl sm:text-3xl text-foreground font-bold mb-3 mt-5 sm:mt-8',
+  'docs-h1': 'text-3xl text-foreground font-bold mb-3 mt-5 sm:mt-8',
   'docs-h2': 'text-xl sm:text-2xl text-foreground font-semibold mb-3 sm:mb-4 mt-5 sm:mt-8',
   'docs-h3': 'text-lg sm:text-xl text-foreground font-semibold mb-2 mt-3 sm:mt-4',
   'docs-h4': 'text-sm sm:text-base text-foreground font-semibold mb-1.5 mt-3',

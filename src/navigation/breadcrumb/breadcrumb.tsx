@@ -18,7 +18,7 @@ export namespace BreadcrumbT {
     /**
      * The original item object.
      */
-    item: Items
+    item: Item
 
     /**
      * Index of the item in the list.
@@ -45,7 +45,7 @@ export namespace BreadcrumbT {
   /**
    * An individual item in the breadcrumb trail.
    */
-  export interface Items {
+  export interface Item {
     /**
      * Label to display for the breadcrumb item.
      */
@@ -99,7 +99,7 @@ export namespace BreadcrumbT {
     /**
      * Array of breadcrumb items to display.
      */
-    items?: Items[]
+    items?: Item[]
 
     /**
      * Icon name for the separator between items.

@@ -3,7 +3,7 @@ import type { SelectT } from '@src'
 import { For } from 'solid-js'
 
 export function Variants() {
-  const FRUIT_OPTIONS: SelectT.Items[] = [
+  const FRUIT_OPTIONS: SelectT.Item[] = [
     { label: 'Apple', value: 'apple' },
     { label: 'Banana', value: 'banana' },
     { label: 'Cherry', value: 'cherry' },

@@ -46,7 +46,7 @@ export namespace StepperT {
   /**
    * An individual step in the stepper.
    */
-  export interface Items {
+  export interface Item {
     /**
      * Unique value for the step.
      * @default index of the item
@@ -93,7 +93,7 @@ export namespace StepperT {
     /**
      * Array of steps to display.
      */
-    items?: Items[]
+    items?: Item[]
 
     /**
      * Whether to enforce linear navigation (must complete steps in order).
@@ -126,7 +126,7 @@ export namespace StepperT {
 export interface StepperProps extends StepperT.Props {}
 
 interface NormalizedStepperItem {
-  item: StepperT.Items
+  item: StepperT.Item
   index: number
   value: StepperT.Value
 }

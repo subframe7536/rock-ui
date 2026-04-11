@@ -43,7 +43,7 @@ export namespace ProgressT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteProgress.ProgressRootProps
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the Progress component.
    */

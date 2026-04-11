@@ -35,7 +35,7 @@ export namespace InputT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the Input component.

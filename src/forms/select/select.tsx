@@ -97,11 +97,11 @@ export namespace SelectT {
    * Base props for the Select component.
    */
   export type Extend<Val extends Value> = ComboboxRootProps<
-    SharedNormalizedOption<Items<Val>>,
-    SharedNormalizedGroup<Items<Val>>
+    SharedNormalizedOption<Item<Val>>,
+    SharedNormalizedGroup<Item<Val>>
   >
 
-  export interface Items<Val extends Value = Value> {
+  export interface Item<Val extends Value = Value> {
     /** Label to display for the option. */
     label?: string | JSX.Element
     /** Text key used for filtering and matching; set this when `label` is not a string. */
@@ -115,7 +115,7 @@ export namespace SelectT {
     /** Icon shown next to the label. */
     icon?: IconT.Name
     /** One-layer child options for grouped select. */
-    children?: Items<Val>[]
+    children?: Item<Val>[]
   }
 
   export interface Base<TItem extends Value = Value>
@@ -125,7 +125,7 @@ export namespace SelectT {
       FormRequiredOption,
       FormDisableOption {
     /** Available options. */
-    options?: Items<TItem>[]
+    options?: Item<TItem>[]
 
     /** Called when the selection changes. */
     onChange?: (value: NoInfer<TItem | null>) => void
@@ -149,7 +149,7 @@ export namespace SelectT {
       | 'startsWith'
       | 'endsWith'
       | 'contains'
-      | ((inputValue: string, option: SelectT.Items<TItem>) => boolean)
+      | ((inputValue: string, option: SelectT.Item<TItem>) => boolean)
     /**
      * Controls whether clicking the control opens the menu.
      * @default 'control'
@@ -164,9 +164,9 @@ export namespace SelectT {
     onClear?: () => void
 
     /** Custom renderer for each option in the dropdown. */
-    optionRender?: (option: SelectT.Items & OptionRenderState) => JSX.Element
+    optionRender?: (option: SelectT.Item & OptionRenderState) => JSX.Element
     /** Custom renderer for the option label text. */
-    labelRender?: (option: SelectT.Items) => JSX.Element
+    labelRender?: (option: SelectT.Item) => JSX.Element
     /** Custom renderer for the empty state when current filtered result has no matches. */
     emptyRender?: string | ((context: EmptyRenderContext<TItem>) => JSX.Element)
     /**
@@ -220,9 +220,9 @@ export interface SelectProps<
 export function Select<TItem extends SelectT.Value = SelectT.Value>(
   props: SelectProps<TItem>,
 ): JSX.Element {
-  type NormalizedOption = SharedNormalizedOption<SelectT.Items<TItem>>
-  type NormalizedGroup = SharedNormalizedGroup<SelectT.Items<TItem>>
-  type SelectControlState = SharedSelectControlState<SelectT.Items<TItem>>
+  type NormalizedOption = SharedNormalizedOption<SelectT.Item<TItem>>
+  type NormalizedGroup = SharedNormalizedGroup<SelectT.Item<TItem>>
+  type SelectControlState = SharedSelectControlState<SelectT.Item<TItem>>
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
 
   const [local, rest] = splitProps(merged, SELECT_SPLIT_KEYS)
@@ -240,7 +240,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
 
   // ---- Normalize options for Kobalte ----
   const normalizedOptions = createMemo(() =>
-    normalizeOptions(local.options as SelectT.Items<TItem>[]),
+    normalizeOptions(local.options as SelectT.Item<TItem>[]),
   )
 
   const hasGroups = createMemo(() => normalizedOptions().some((item) => item.isGroup === true))
@@ -259,7 +259,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     (searchValue) => setCurrentInputText(searchValue),
   )
 
-  const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Items<TItem>>({
+  const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Item<TItem>>({
     isSearchable,
     filterOption: () => local.filterOption,
     allOptions: allFlatOptions,
@@ -267,7 +267,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   })
 
   // ---- Value lookup ----
-  const findOptionByValue = createFindOptionByValue<SelectT.Items<TItem>>(() => allFlatOptions())
+  const findOptionByValue = createFindOptionByValue<SelectT.Item<TItem>>(() => allFlatOptions())
 
   // ---- Value conversion memos ----
   const kobalteValue = createMemo(() => {
@@ -314,7 +314,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
 
   // ---- Item component ----
   const { ItemComponent, SectionComponent } = createSelectComponents<
-    SelectT.Items<TItem>,
+    SelectT.Item<TItem>,
     SelectT.OptionRenderState
   >({
     styles: () => merged.styles,
@@ -451,7 +451,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
       {...field.ariaAttrs()}
       {...rest}
     >
-      <RenderSelectComboboxFrame<SelectT.Items<TItem>>
+      <RenderSelectComboboxFrame<SelectT.Item<TItem>>
         controlStyle={merged.styles?.control}
         controlClass={selectControlVariants(
           {

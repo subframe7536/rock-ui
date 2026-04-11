@@ -49,7 +49,7 @@ export namespace TextareaT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the Textarea component.

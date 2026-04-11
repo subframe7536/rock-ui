@@ -2,7 +2,7 @@ import { Select } from '@src'
 import type { SelectT } from '@src'
 
 export function GroupedOptions() {
-  const GROUPED_OPTIONS: SelectT.Items[] = [
+  const GROUPED_OPTIONS: SelectT.Item[] = [
     {
       label: 'Fruits',
       children: [

@@ -18,7 +18,7 @@ export namespace SeparatorT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteSeparator.SeparatorRootProps<HTMLDivElement>
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the Separator component.
    */

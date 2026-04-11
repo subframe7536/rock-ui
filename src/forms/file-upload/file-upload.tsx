@@ -64,7 +64,7 @@ export namespace FileUploadT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteFileField.FileFieldRootProps
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the FileUpload component.

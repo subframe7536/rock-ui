@@ -58,7 +58,7 @@ export namespace ResizableT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items extends ResizablePanelItem {}
+  export interface Item extends ResizablePanelItem {}
   /**
    * Base props for the Resizable component.
    */
@@ -71,7 +71,7 @@ export namespace ResizableT {
     /**
      * Array of panels to render.
      */
-    panels?: Items[]
+    panels?: Item[]
 
     /**
      * Callback when any panel is resized.

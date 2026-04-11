@@ -82,7 +82,7 @@ function SetErrorsOnMount() {
 }
 
 describe('Form', () => {
-  const roleOptions: SelectT.Items[] = [
+  const roleOptions: SelectT.Item[] = [
     { label: 'Developer', value: 'developer' },
     { label: 'Designer', value: 'designer' },
   ]

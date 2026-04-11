@@ -760,12 +760,12 @@ export function compileMarkdownPage(
       onThisPageEntries.push(...segment.onThisPageEntries)
     }
   }
-  onThisPageEntries.push({
-    id: 'api-ref',
-    label: 'API Reference',
-    level: 1,
-  })
   if (hasDocsApiReferenceWidget && renderedApiReferenceModel) {
+    onThisPageEntries.push({
+      id: 'api-ref',
+      label: 'API Reference',
+      level: 1,
+    })
     for (const section of renderedApiReferenceModel.sections) {
       onThisPageEntries.push({
         id: section.id,

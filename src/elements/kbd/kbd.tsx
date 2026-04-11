@@ -14,7 +14,7 @@ export namespace KbdT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the Kbd component.
    */

@@ -35,12 +35,12 @@ The `XxxT` namespace groups all supporting types for a component under a single 
 
 ### Item models
 
-List-like components (e.g. `Select`, `MultiSelect`) expose an `Items` type for their option objects.
+List-like components (e.g. `Select`, `MultiSelect`) expose an `Item` type for their option objects.
 
 ```tsx
 import type { SelectT } from 'moraine'
 
-const regionOptions: SelectT.Items[] = [
+const regionOptions: SelectT.Item[] = [
   { label: 'Asia', value: 'asia' },
   { label: 'Europe', value: 'europe' },
 ]
@@ -87,7 +87,7 @@ Each `XxxT` namespace may expose the following members depending on the componen
 | --------- | -------------------------------------------------- |
 | `Slot`    | Union of slot names used by `classes` and `styles` |
 | `Variant` | Variant options for visual/style customization     |
-| `Items`   | Data model for list items or option objects        |
+| `Item`    | Data model for list items or option objects        |
 | `Value`   | Domain type of the component's controlled value    |
 | `Classes` | Typed map from slot name to CSS class string       |
 | `Styles`  | Typed map from slot name to inline style object    |

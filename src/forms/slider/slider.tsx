@@ -33,7 +33,7 @@ export namespace SliderT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteSlider.SliderRootProps
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the Slider component.

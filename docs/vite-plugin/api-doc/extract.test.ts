@@ -6,132 +6,6 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { generateApiDoc, normalizePathForComparison, shouldIncludeInheritedGroup } from './extract'
 
-const D_MTS_SAMPLE = `
-declare namespace DemoT {
-  /** Items for demo. */
-  interface Items {
-    /** Label text. */
-    label?: string
-  }
-  type Slot = 'root' | 'item'
-}
-
-interface DemoProps {
-  /** Title text. */
-  title: string
-  /**
-   * Mode value.
-   * @default "a"
-   */
-  mode?: 'a' | 'b'
-}
-
-declare function Demo(props: DemoProps): JSX.Element
-
-declare namespace EmptyT {
-  interface Items {}
-  type Slot = 'root'
-}
-
-interface EmptyProps {
-  /** Optional value. */
-  value?: number
-}
-
-declare function Empty(props: EmptyProps): JSX.Element
-`
-
-const D_MTS_ADVANCED = `
-declare namespace AliasT {
-  /** Alias-only items doc. */
-  type Items = string | number
-  type Slot = 'root'
-}
-
-interface AliasProps {
-  /** Explicit undefined union. */
-  value: string | undefined
-}
-
-//#region src/forms/alias/alias.d.ts
-declare function Alias(props: AliasProps): JSX.Element
-//#endregion
-
-declare function Helper(props: AliasProps): string
-
-declare namespace PropOnlyT {
-  interface Items {
-    /** Identifier field. */
-    id?: number
-  }
-}
-
-interface PropOnlyProps {}
-declare function PropOnly(props: PropOnlyProps): JSX.Element
-`
-
-const D_MTS_ITEMS_COLLECTION = `
-type GenericItems<T> = T[] | T[][]
-
-declare namespace CollectionT {
-  interface Item {
-    /** Label text. */
-    label?: string
-    /** Disabled state. */
-    disabled?: boolean
-  }
-
-  /** Collection-based items doc. */
-  type Items = GenericItems<Item>
-  type Slot = 'root'
-}
-
-interface CollectionProps {
-  items?: CollectionT.Items
-}
-
-declare function Collection(props: CollectionProps): JSX.Element
-`
-
-const D_MTS_EXTERNAL_ALIAS = `
-import type { ExternalProps } from 'opaque-lib'
-
-declare namespace ExternalAliasT {
-  type Slot = 'root'
-}
-
-interface ExternalAliasProps extends ExternalProps {}
-declare function ExternalAlias(props: ExternalAliasProps): JSX.Element
-`
-
-const D_MTS_GENERIC_DEFAULT = `
-type BaseProps<T extends string> = {
-  as?: T
-  data?: T[]
-}
-
-type DemoProps<T extends string = 'button'> = {
-  foo?: T
-  nested?: { kind: T }
-} & BaseProps<T>;
-
-declare function Demo<T extends string = 'button'>(props: DemoProps<T>): JSX.Element
-`
-
-const D_MTS_KOBALTE_HASH = `
-import type { ButtonRootProps } from '@kobalte/core/button'
-
-interface DemoProps extends ButtonRootProps {}
-declare function Demo(props: DemoProps): JSX.Element
-`
-
-const D_MTS_KOBALTE_HASHED_DIST_FILE = `
-import type { NumberFieldRootProps } from '@kobalte/core/dist/number-field-root-30f25adc.js'
-
-interface DemoProps extends NumberFieldRootProps {}
-declare function Demo(props: DemoProps): JSX.Element
-`
-
 async function createTempProject(): Promise<string> {
   return mkdtemp(path.join(tmpdir(), 'moraine-api-doc-'))
 }
@@ -170,7 +44,43 @@ describe('generateApiDoc', () => {
 
   test('extracts props, slots and items docs from declarations', async () => {
     const projectRoot = await createTempProject()
-    await writeProjectDts(projectRoot, D_MTS_SAMPLE)
+    await writeProjectDts(
+      projectRoot,
+      `
+declare namespace DemoT {
+  /** Items for demo. */
+  interface Item {
+    /** Label text. */
+    label?: string
+  }
+  type Slot = 'root' | 'item'
+}
+
+interface DemoProps {
+  /** Title text. */
+  title: string
+  /**
+   * Mode value.
+   * @default "a"
+   */
+  mode?: 'a' | 'b'
+}
+
+declare function Demo(props: DemoProps): JSX.Element
+
+declare namespace EmptyT {
+  interface Item {}
+  type Slot = 'root'
+}
+
+interface EmptyProps {
+  /** Optional value. */
+  value?: number
+}
+
+declare function Empty(props: EmptyProps): JSX.Element
+`,
+    )
 
     const result = generateApiDoc(projectRoot)
     expect(result).not.toBeNull()
@@ -182,8 +92,8 @@ describe('generateApiDoc', () => {
 
     const demoDoc = data.componentDocs.get('demo')
     expect(demoDoc?.slots).toEqual(['root', 'item'])
-    expect(demoDoc?.items?.description).toBe('Items for demo.')
-    expect(demoDoc?.items?.props).toEqual([
+    expect(demoDoc?.item?.description).toBe('Items for demo.')
+    expect(demoDoc?.item?.props).toEqual([
       {
         name: 'label',
         required: false,
@@ -202,14 +112,44 @@ describe('generateApiDoc', () => {
 
     const emptyDoc = data.componentDocs.get('empty')
     expect(emptyDoc?.slots).toEqual(['root'])
-    expect(emptyDoc?.items).toBeUndefined()
+    expect(emptyDoc?.item).toBeUndefined()
 
     await rm(projectRoot, { recursive: true, force: true })
   })
 
   test('handles alias items, non-jsx declarations and region-based category/sourcePath', async () => {
     const projectRoot = await createTempProject()
-    await writeProjectDts(projectRoot, D_MTS_ADVANCED)
+    await writeProjectDts(
+      projectRoot,
+      `
+declare namespace AliasT {
+  /** Alias-only items doc. */
+  type Item = string | number
+  type Slot = 'root'
+}
+
+interface AliasProps {
+  /** Explicit undefined union. */
+  value: string | undefined
+}
+
+//#region src/forms/alias/alias.d.ts
+declare function Alias(props: AliasProps): JSX.Element
+//#endregion
+
+declare function Helper(props: AliasProps): string
+
+declare namespace PropOnlyT {
+  interface Item {
+    /** Identifier field. */
+    id?: number
+  }
+}
+
+interface PropOnlyProps {}
+declare function PropOnly(props: PropOnlyProps): JSX.Element
+`,
+    )
 
     const result = generateApiDoc(projectRoot)
     expect(result).not.toBeNull()
@@ -223,13 +163,13 @@ describe('generateApiDoc', () => {
     const aliasDoc = data.componentDocs.get('alias')
     expect(aliasDoc?.component.category).toBe('forms')
     expect(aliasDoc?.component.sourcePath).toBe('src/forms/alias/alias.d.ts')
-    expect(aliasDoc?.items).toEqual({
+    expect(aliasDoc?.item).toEqual({
       description: 'Alias-only items doc.',
       props: [],
     })
     expect(aliasDoc?.props.own.find((prop) => prop.name === 'value')?.required).toBe(true)
 
-    expect(data.componentDocs.get('prop-only')?.items).toEqual({
+    expect(data.componentDocs.get('prop-only')?.item).toEqual({
       props: [
         {
           name: 'id',
@@ -245,10 +185,34 @@ describe('generateApiDoc', () => {
 
   test('extracts item props from collection alias item types', async () => {
     const projectRoot = await createTempProject()
-    await writeProjectDts(projectRoot, D_MTS_ITEMS_COLLECTION)
+    await writeProjectDts(
+      projectRoot,
+      `
+type GenericItems<T> = T[] | T[][]
+
+declare namespace CollectionT {
+  interface SubItem {
+    /** Label text. */
+    label?: string
+    /** Disabled state. */
+    disabled?: boolean
+  }
+
+  /** Collection-based items doc. */
+  type Item = GenericItems<SubItem>
+  type Slot = 'root'
+}
+
+interface CollectionProps {
+  items?: CollectionT.Item
+}
+
+declare function Collection(props: CollectionProps): JSX.Element
+`,
+    )
 
     const result = generateApiDoc(projectRoot)
-    expect(result?.componentDocs.get('collection')?.items).toEqual({
+    expect(result?.componentDocs.get('collection')?.item).toEqual({
       description: 'Collection-based items doc.',
       props: [
         {
@@ -271,7 +235,19 @@ describe('generateApiDoc', () => {
 
   test('uses readable type aliases for inherited external types without absolute import paths', async () => {
     const projectRoot = await createTempProject()
-    await writeProjectDts(projectRoot, D_MTS_EXTERNAL_ALIAS)
+    await writeProjectDts(
+      projectRoot,
+      `
+import type { ExternalProps } from 'opaque-lib'
+
+declare namespace ExternalAliasT {
+  type Slot = 'root'
+}
+
+interface ExternalAliasProps extends ExternalProps {}
+declare function ExternalAlias(props: ExternalAliasProps): JSX.Element
+`,
+    )
 
     await writeNodeModuleFile(
       projectRoot,
@@ -323,7 +299,22 @@ export interface ExternalProps {
 
   test('resolves generic defaults via AST transform for top-level aliases used by declarations', async () => {
     const projectRoot = await createTempProject()
-    await writeProjectDts(projectRoot, D_MTS_GENERIC_DEFAULT)
+    await writeProjectDts(
+      projectRoot,
+      `
+type BaseProps<T extends string> = {
+  as?: T
+  data?: T[]
+}
+
+type DemoProps<T extends string = 'button'> = {
+  foo?: T
+  nested?: { kind: T }
+} & BaseProps<T>;
+
+declare function Demo<T extends string = 'button'>(props: DemoProps<T>): JSX.Element
+`,
+    )
 
     const result = generateApiDoc(projectRoot)
     const props = result?.componentDocs.get('demo')?.props.own ?? []
@@ -353,7 +344,15 @@ export interface ExternalProps {
 
   test('infers @kobalte/core component from hash index using AST exports parsing', async () => {
     const projectRoot = await createTempProject()
-    await writeProjectDts(projectRoot, D_MTS_KOBALTE_HASH)
+    await writeProjectDts(
+      projectRoot,
+      `
+import type { ButtonRootProps } from '@kobalte/core/button'
+
+interface DemoProps extends ButtonRootProps {}
+declare function Demo(props: DemoProps): JSX.Element
+`,
+    )
 
     await writeNodeModuleFile(
       projectRoot,
@@ -403,7 +402,15 @@ export interface ButtonRootProps {
 
   test('trims hashed @kobalte/core dist filename suffix in inherited group source', async () => {
     const projectRoot = await createTempProject()
-    await writeProjectDts(projectRoot, D_MTS_KOBALTE_HASHED_DIST_FILE)
+    await writeProjectDts(
+      projectRoot,
+      `
+import type { NumberFieldRootProps } from '@kobalte/core/dist/number-field-root-30f25adc.js'
+
+interface DemoProps extends NumberFieldRootProps {}
+declare function Demo(props: DemoProps): JSX.Element
+`,
+    )
 
     await writeNodeModuleFile(
       projectRoot,

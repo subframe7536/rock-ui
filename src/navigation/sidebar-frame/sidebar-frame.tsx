@@ -82,7 +82,7 @@ export namespace SidebarFrameT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items {}
+  export interface Item {}
 
   export interface Base {
     /**
@@ -191,7 +191,7 @@ export function SidebarFrameSheetResizableRender(
     /**
      * Additional options for the sidebar panel when on desktop layout.
      */
-    resizablePanelOptions?: Omit<ResizableT.Items, 'content'>
+    resizablePanelOptions?: Omit<ResizableT.Item, 'content'>
   },
 ): JSX.Element {
   return (

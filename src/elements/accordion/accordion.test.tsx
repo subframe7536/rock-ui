@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { Accordion } from './accordion'
 import type { AccordionT } from './accordion'
 
-const BASE_ITEMS: [AccordionT.Items, AccordionT.Items, AccordionT.Items] = [
+const BASE_ITEMS: [AccordionT.Item, AccordionT.Item, AccordionT.Item] = [
   {
     value: 'one',
     label: 'One',

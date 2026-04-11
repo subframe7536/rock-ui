@@ -39,7 +39,7 @@ export namespace SwitchT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteSwitch.SwitchRootProps
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the Switch component.

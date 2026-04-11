@@ -10,7 +10,7 @@ import type {
   ComponentIndexEntry,
   GenerationResult,
   InheritedGroupDoc,
-  ItemsDoc,
+  ItemDoc,
   PropDoc,
 } from './types'
 
@@ -394,7 +394,7 @@ function extractItemsDoc(
   node: ts.ModuleDeclaration,
   sourceFile: ts.SourceFile,
   checker: ts.TypeChecker,
-): ItemsDoc | undefined {
+): ItemDoc | undefined {
   const body = node.body
   if (!body || !ts.isModuleBlock(body)) {
     return undefined
@@ -403,7 +403,7 @@ function extractItemsDoc(
   for (const statement of body.statements) {
     if (
       (!ts.isInterfaceDeclaration(statement) && !ts.isTypeAliasDeclaration(statement)) ||
-      statement.name.text !== 'Items'
+      statement.name.text !== 'Item'
     ) {
       continue
     }
@@ -473,7 +473,7 @@ export function shouldIncludeInheritedGroup(from: string): boolean {
 
 interface ComponentMetadata {
   slots: Map<string, string[]>
-  items: Map<string, ItemsDoc>
+  items: Map<string, ItemDoc>
 }
 
 function collectNamespaceMetadata(
@@ -481,7 +481,7 @@ function collectNamespaceMetadata(
   checker: ts.TypeChecker,
 ): ComponentMetadata {
   const slots = new Map<string, string[]>()
-  const items = new Map<string, ItemsDoc>()
+  const items = new Map<string, ItemDoc>()
 
   const visit = (node: ts.Node) => {
     if (ts.isModuleDeclaration(node) && node.name.text.endsWith('T')) {
@@ -543,7 +543,7 @@ function processComponentNode(
     component,
     slots: metadata.slots.get(componentName) ?? [],
     props: groupProperties(propsType, checker, sourceFile, propsParam.name),
-    ...(metadata.items.get(componentName) ? { items: metadata.items.get(componentName) } : {}),
+    ...(metadata.items.get(componentName) ? { item: metadata.items.get(componentName) } : {}),
   }
 
   return { key: componentKey, doc }

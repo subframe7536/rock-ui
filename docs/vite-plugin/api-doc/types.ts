@@ -24,7 +24,7 @@ export interface InheritedGroupDoc {
   props: PropDoc[]
 }
 
-export interface ItemsDoc {
+export interface ItemDoc {
   props: PropDoc[]
   description?: string
 }
@@ -36,7 +36,7 @@ export interface ComponentDoc {
     own: PropDoc[]
     inherited: InheritedGroupDoc[]
   }
-  items?: ItemsDoc
+  item?: ItemDoc
 }
 
 export interface GenerationResult {

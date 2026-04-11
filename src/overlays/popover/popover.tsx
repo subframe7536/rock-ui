@@ -20,7 +20,7 @@ export namespace PopoverT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobaltePopover.PopoverRootProps
 
-  export interface Items {}
+  export interface Item {}
 
   /**
    * Base props for the Popover component.

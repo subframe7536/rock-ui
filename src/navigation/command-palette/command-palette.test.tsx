@@ -492,13 +492,13 @@ describe('CommandPalette', () => {
 
   test('requires value in item type contract', () => {
     // @ts-expect-error value is required
-    const item: CommandPaletteT.Item = { label: 'No value' }
+    const item: CommandPaletteT.SubItem = { label: 'No value' }
     expect(item).toBeDefined()
   })
 
   test('rejects item classes in type contract', () => {
     // @ts-expect-error item-level classes has been removed
-    const item: CommandPaletteT.Item = { value: 'x', label: 'Legacy', classes: { item: 'x' } }
+    const item: CommandPaletteT.SubItem = { value: 'x', label: 'Legacy', classes: { item: 'x' } }
     expect(item).toBeDefined()
   })
 })

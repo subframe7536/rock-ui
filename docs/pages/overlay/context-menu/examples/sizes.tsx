@@ -5,7 +5,7 @@ import { For } from 'solid-js'
 export function Sizes() {
   const SIZES = ['sm', 'md', 'lg'] as const
 
-  const ITEMS: ContextMenuT.Items[] = [
+  const ITEMS: ContextMenuT.Item[] = [
     {
       type: 'group',
       children: [

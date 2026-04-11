@@ -38,7 +38,7 @@ export interface PropsTableSection {
 
 function normalizeType(type: string): string {
   let result = type
-  result = result.replaceAll('cls_variant0.', '')
+  result = result.replaceAll('cls_variant0.', '').replaceAll('_$', '')
   return result
 }
 

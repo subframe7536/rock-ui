@@ -39,7 +39,7 @@ export namespace CheckboxGroupT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items<TTrue = boolean, TFalse = boolean> {
+  export interface Item<TTrue = boolean, TFalse = boolean> {
     /**
      * Value of the group item.
      */
@@ -83,7 +83,7 @@ export namespace CheckboxGroupT {
     /**
      * Array of items to render in the group.
      */
-    items?: (string | Items<TTrue, TFalse>)[]
+    items?: (string | Item<TTrue, TFalse>)[]
 
     /**
      * Default indicator position for all items.

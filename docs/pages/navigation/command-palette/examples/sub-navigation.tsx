@@ -2,7 +2,7 @@ import { CommandPalette } from '@src'
 import type { CommandPaletteT } from '@src'
 
 export function SubNavigation() {
-  const SUB_NAV_GROUPS: CommandPaletteT.Items[] = [
+  const SUB_NAV_GROUPS: CommandPaletteT.Item[] = [
     {
       id: 'main',
       label: 'Commands',

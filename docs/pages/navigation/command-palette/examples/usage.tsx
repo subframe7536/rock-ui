@@ -3,7 +3,7 @@ import type { CommandPaletteT } from '@src'
 import { createSignal, onCleanup, onMount } from 'solid-js'
 
 export function Usage() {
-  const BASIC_GROUPS: CommandPaletteT.Items[] = [
+  const BASIC_GROUPS: CommandPaletteT.Item[] = [
     {
       id: 'actions',
       label: 'Actions',

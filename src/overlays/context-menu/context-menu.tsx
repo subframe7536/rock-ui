@@ -30,7 +30,7 @@ export namespace ContextMenuT {
   export type Styles = SlotStyles<Slot>
   export type Extend = KobalteDropdownMenu.DropdownMenuRootProps
 
-  export interface Items extends OverlayMenuSharedItem<Items> {}
+  export interface Item extends OverlayMenuSharedItem<Item> {}
 
   /**
    * Base props for the ContextMenu component.
@@ -77,7 +77,7 @@ export namespace ContextMenuT {
     /**
      * Items to display in the context menu.
      */
-    items?: Items[]
+    items?: Item[]
 
     /**
      * Icon name used for checked menu items.
@@ -94,7 +94,7 @@ export namespace ContextMenuT {
     /**
      * Custom renderer for individual menu items.
      */
-    itemRender?: (context: OverlayMenuSharedItemRenderContext<Items>) => JSX.Element
+    itemRender?: (context: OverlayMenuSharedItemRenderContext<Item>) => JSX.Element
 
     /**
      * Content to render at the top of the menu.
@@ -407,7 +407,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
         {local.children}
       </KobalteDropdownMenu.Trigger>
 
-      <OverlayMenuBaseContent<ContextMenuT.Items>
+      <OverlayMenuBaseContent<ContextMenuT.Item>
         content={Content}
         classes={local.classes}
         styles={local.styles}

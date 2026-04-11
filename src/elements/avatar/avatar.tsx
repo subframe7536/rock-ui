@@ -34,7 +34,7 @@ export namespace AvatarT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  export interface Items {
+  export interface Item {
     /**
      * Source URL for the avatar image.
      */
@@ -79,7 +79,7 @@ export namespace AvatarT {
      * Array of items to render in a group.
      * @default []
      */
-    items?: Items[]
+    items?: Item[]
 
     /**
      * Maximum number of avatars to show when in a group.
@@ -140,7 +140,7 @@ export function Avatar(props: AvatarProps): JSX.Element {
     {
       size: 'md' as const,
       transition: 'normal' as const,
-      items: [] as AvatarT.Items[],
+      items: [] as AvatarT.Item[],
       max: undefined as number | string | undefined,
     },
     props,
@@ -164,7 +164,7 @@ export function Avatar(props: AvatarProps): JSX.Element {
     return merged.items.length - visibleItems().length
   })
 
-  function AvatarFace(props: AvatarT.Items & { slot: 'root' | 'groupItem' }): JSX.Element {
+  function AvatarFace(props: AvatarT.Item & { slot: 'root' | 'groupItem' }): JSX.Element {
     const [status, setStatusSignal] = createSignal<Status>('idle')
     const [resolvedSrc, setResolvedSrc] = createSignal<string | undefined>(undefined)
 

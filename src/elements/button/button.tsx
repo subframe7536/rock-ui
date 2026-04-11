@@ -24,7 +24,7 @@ export namespace ButtonT {
     KobalteButton.ButtonRootProps<ElementOf<T>>
   >
 
-  export interface Items {}
+  export interface Item {}
   /**
    * Base props for the Button component.
    */
