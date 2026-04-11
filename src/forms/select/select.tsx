@@ -62,13 +62,13 @@ export namespace SelectT {
     /** Whether the option is disabled. */
     isDisabled: boolean
   }
-  export interface EmptyRenderContext {
+  export interface EmptyRenderContext<TItem extends Value = Value> {
     /** Current input/search text. */
     inputValue: string
     /** Whether the current filter has any matches. */
     hasMatches: boolean
     /** Currently selected value. */
-    selectedValue: Value | null
+    selectedValue: TItem | null
     /** Close the dropdown menu. */
     close: () => void
   }
@@ -93,15 +93,21 @@ export namespace SelectT {
   export type Variant = SelectControlVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
+  /**
+   * Base props for the Select component.
+   */
+  export type Extend<Val extends Value> = ComboboxRootProps<
+    SharedNormalizedOption<Items<Val>>,
+    SharedNormalizedGroup<Items<Val>>
+  >
 
-  export interface Items {
+  export interface Items<Val extends Value = Value> {
     /** Label to display for the option. */
     label?: string | JSX.Element
     /** Text key used for filtering and matching; set this when `label` is not a string. */
     key?: string
     /** Value of the option. */
-    value?: Value
+    value?: Val
     /** Whether the option is disabled. */
     disabled?: boolean
     /** Description shown below the label. */
@@ -109,23 +115,20 @@ export namespace SelectT {
     /** Icon shown next to the label. */
     icon?: IconT.Name
     /** One-layer child options for grouped select. */
-    children?: Items[]
+    children?: Items<Val>[]
   }
 
-  /**
-   * Base props for the Select component.
-   */
-  export interface Base
+  export interface Base<TItem extends Value = Value>
     extends
       FormIdentityOptions,
-      FormValueOptions<SelectT.Value | null>,
+      FormValueOptions<TItem | null>,
       FormRequiredOption,
       FormDisableOption {
     /** Available options. */
-    options?: Items[]
+    options?: Items<TItem>[]
 
     /** Called when the selection changes. */
-    onChange?: (value: SelectT.Value | null) => void
+    onChange?: (value: NoInfer<TItem | null>) => void
 
     /** Enable search input. Defaults to `false`. */
     search?: boolean
@@ -146,7 +149,7 @@ export namespace SelectT {
       | 'startsWith'
       | 'endsWith'
       | 'contains'
-      | ((inputValue: string, option: SelectT.Items) => boolean)
+      | ((inputValue: string, option: SelectT.Items<TItem>) => boolean)
     /**
      * Controls whether clicking the control opens the menu.
      * @default 'control'
@@ -165,7 +168,7 @@ export namespace SelectT {
     /** Custom renderer for the option label text. */
     labelRender?: (option: SelectT.Items) => JSX.Element
     /** Custom renderer for the empty state when current filtered result has no matches. */
-    emptyRender?: string | ((context: EmptyRenderContext) => JSX.Element)
+    emptyRender?: string | ((context: EmptyRenderContext<TItem>) => JSX.Element)
     /**
      * Placeholder text shown when no value is selected.
      * @default ''
@@ -197,10 +200,10 @@ export namespace SelectT {
   /**
    * Props for the Select component.
    */
-  export interface Props extends BaseProps<
-    Base,
+  export interface Props<TItem extends Value = Value> extends BaseProps<
+    Base<TItem>,
     Variant,
-    Extend,
+    Extend<TItem>,
     Slot,
     'multiple' | 'defaultFilter' | 'itemComponent' | 'sectionComponent'
   > {}
@@ -209,14 +212,17 @@ export namespace SelectT {
 /**
  * Props for the Select component.
  */
-export interface SelectProps extends SelectT.Props {}
-
-type NormalizedOption = SharedNormalizedOption<SelectT.Items>
-type NormalizedGroup = SharedNormalizedGroup<SelectT.Items>
-type SelectControlState = SharedSelectControlState<SelectT.Items>
+export interface SelectProps<
+  TItem extends SelectT.Value = SelectT.Value,
+> extends SelectT.Props<TItem> {}
 
 /** Dropdown select component with search and custom item rendering. */
-export function Select(props: SelectProps): JSX.Element {
+export function Select<TItem extends SelectT.Value = SelectT.Value>(
+  props: SelectProps<TItem>,
+): JSX.Element {
+  type NormalizedOption = SharedNormalizedOption<SelectT.Items<TItem>>
+  type NormalizedGroup = SharedNormalizedGroup<SelectT.Items<TItem>>
+  type SelectControlState = SharedSelectControlState<SelectT.Items<TItem>>
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
 
   const [local, rest] = splitProps(merged, SELECT_SPLIT_KEYS)
@@ -233,7 +239,9 @@ export function Select(props: SelectProps): JSX.Element {
   const isSearchable = createMemo(() => Boolean(local.search))
 
   // ---- Normalize options for Kobalte ----
-  const normalizedOptions = createMemo(() => normalizeOptions(local.options))
+  const normalizedOptions = createMemo(() =>
+    normalizeOptions(local.options as SelectT.Items<TItem>[]),
+  )
 
   const hasGroups = createMemo(() => normalizedOptions().some((item) => item.isGroup === true))
 
@@ -251,7 +259,7 @@ export function Select(props: SelectProps): JSX.Element {
     (searchValue) => setCurrentInputText(searchValue),
   )
 
-  const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Items>({
+  const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Items<TItem>>({
     isSearchable,
     filterOption: () => local.filterOption,
     allOptions: allFlatOptions,
@@ -259,7 +267,7 @@ export function Select(props: SelectProps): JSX.Element {
   })
 
   // ---- Value lookup ----
-  const findOptionByValue = createFindOptionByValue(() => allFlatOptions())
+  const findOptionByValue = createFindOptionByValue<SelectT.Items<TItem>>(() => allFlatOptions())
 
   // ---- Value conversion memos ----
   const kobalteValue = createMemo(() => {
@@ -284,7 +292,7 @@ export function Select(props: SelectProps): JSX.Element {
     const nextValue = option ? mapNormalizedToRawValue(option) : null
 
     field.setFormValue(nextValue ?? '')
-    local.onChange?.(nextValue)
+    local.onChange?.(nextValue as any)
     field.emit('change')
     field.emit('input')
   }
@@ -306,7 +314,7 @@ export function Select(props: SelectProps): JSX.Element {
 
   // ---- Item component ----
   const { ItemComponent, SectionComponent } = createSelectComponents<
-    SelectT.Items,
+    SelectT.Items<TItem>,
     SelectT.OptionRenderState
   >({
     styles: () => merged.styles,
@@ -392,7 +400,7 @@ export function Select(props: SelectProps): JSX.Element {
     const context = useComboboxContext()
 
     return (
-      <RenderSelectEmptyNode<SelectT.EmptyRenderContext>
+      <RenderSelectEmptyNode<SelectT.EmptyRenderContext<TItem>>
         emptyRender={local.emptyRender}
         style={merged.styles?.empty}
         class={local.classes?.empty}
@@ -404,7 +412,7 @@ export function Select(props: SelectProps): JSX.Element {
             if (!selected) {
               return null
             }
-            return mapNormalizedToRawValue(selected)
+            return mapNormalizedToRawValue(selected) as unknown as TItem
           })(),
           close: () => context.close(),
         })}
@@ -443,7 +451,7 @@ export function Select(props: SelectProps): JSX.Element {
       {...field.ariaAttrs()}
       {...rest}
     >
-      <RenderSelectComboboxFrame<SelectT.Items>
+      <RenderSelectComboboxFrame<SelectT.Items<TItem>>
         controlStyle={merged.styles?.control}
         controlClass={selectControlVariants(
           {

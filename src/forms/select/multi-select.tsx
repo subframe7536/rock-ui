@@ -66,13 +66,13 @@ export namespace MultiSelectT {
     /** Whether the option is disabled. */
     isDisabled: boolean
   }
-  export interface EmptyRenderContext {
+  export interface EmptyRenderContext<TItem extends Value = Value> {
     /** Current input/search text. */
     inputValue: string
     /** Whether the current filter has any matches. */
     hasMatches: boolean
     /** Currently selected values. */
-    selectedValues: Value[]
+    selectedValues: TItem[]
     /** Whether the maximum selection count has been reached. */
     isAtMaxCount: boolean
     /** Create a new tag (requires `allowCreate`). Returns true if successfully created. */
@@ -105,15 +105,18 @@ export namespace MultiSelectT {
   export type Variant = SelectControlVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = ComboboxRootProps<NormalizedOption, NormalizedGroup>
+  export type Extend<Val extends Value> = ComboboxRootProps<
+    SharedNormalizedOption<Items<Val>>,
+    SharedNormalizedGroup<Items<Val>>
+  >
 
-  export interface Items {
+  export interface Items<Val extends Value = Value> {
     /** Label to display for the option. */
     label?: string | JSX.Element
     /** Text key used for filtering and matching; set this when `label` is not a string. */
     key?: string
     /** Value of the option. */
-    value?: Value
+    value?: Val
     /** Whether the option is disabled. */
     disabled?: boolean
     /** Description shown below the label. */
@@ -121,23 +124,19 @@ export namespace MultiSelectT {
     /** Icon shown next to the label. */
     icon?: IconT.Name
     /** One-layer child options for grouped select. */
-    children?: Items[]
+    children?: Items<Val>[]
   }
 
   /**
    * Base props for the MultiSelect component.
    */
-  export interface Base
-    extends
-      FormIdentityOptions,
-      FormValueOptions<MultiSelectT.Value[]>,
-      FormRequiredOption,
-      FormDisableOption {
+  export interface Base<TItem extends Value = Value>
+    extends FormIdentityOptions, FormValueOptions<TItem[]>, FormRequiredOption, FormDisableOption {
     /** Available options. */
-    options?: Items[]
+    options?: Items<TItem>[]
 
     /** Called when the selection changes. */
-    onChange?: (value: MultiSelectT.Value[]) => void
+    onChange?: (value: NoInfer<TItem[]>) => void
 
     /** Enable search input. Defaults to `false`. */
     search?: boolean
@@ -158,7 +157,7 @@ export namespace MultiSelectT {
       | 'startsWith'
       | 'endsWith'
       | 'contains'
-      | ((inputValue: string, option: MultiSelectT.Items) => boolean)
+      | ((inputValue: string, option: MultiSelectT.Items<TItem>) => boolean)
     /**
      * Controls whether clicking the control opens the menu.
      * @default 'control'
@@ -186,13 +185,13 @@ export namespace MultiSelectT {
     maxTagCount?: number
 
     /** Custom renderer for each option in the dropdown. */
-    optionRender?: (option: MultiSelectT.Items & OptionRenderState) => JSX.Element
+    optionRender?: (option: MultiSelectT.Items<TItem> & OptionRenderState) => JSX.Element
     /** Custom renderer for each selected tag (multiple/tags). */
-    tagRender?: (option: MultiSelectT.Items & { onClose: () => void }) => JSX.Element
+    tagRender?: (option: MultiSelectT.Items<TItem> & { onClose: () => void }) => JSX.Element
     /** Custom renderer for the option label text. */
-    labelRender?: (option: MultiSelectT.Items) => JSX.Element
+    labelRender?: (option: MultiSelectT.Items<TItem>) => JSX.Element
     /** Custom renderer for the empty state when current filtered result has no matches. */
-    emptyRender?: string | ((context: EmptyRenderContext) => JSX.Element)
+    emptyRender?: string | ((context: EmptyRenderContext<TItem>) => JSX.Element)
     /**
      * Placeholder text shown when no value is selected.
      * @default ''
@@ -224,10 +223,10 @@ export namespace MultiSelectT {
   /**
    * Props for the MultiSelect component.
    */
-  export interface Props extends BaseProps<
-    Base,
+  export interface Props<TItem extends Value = Value> extends BaseProps<
+    Base<TItem>,
     Variant,
-    Extend,
+    Extend<TItem>,
     Slot,
     'multiple' | 'defaultFilter' | 'itemComponent' | 'sectionComponent'
   > {}
@@ -236,15 +235,13 @@ export namespace MultiSelectT {
 /**
  * Props for the MultiSelect component.
  */
-export interface MultiSelectProps extends MultiSelectT.Props {}
+export interface MultiSelectProps<
+  TItem extends MultiSelectT.Value = MultiSelectT.Value,
+> extends MultiSelectT.Props<TItem> {}
 
 // ---------------------------------------------------------------------------
-// Normalized option types (internal)
+// Component
 // ---------------------------------------------------------------------------
-
-type NormalizedOption = SharedNormalizedOption<MultiSelectT.Items>
-type NormalizedGroup = SharedNormalizedGroup<MultiSelectT.Items>
-type SelectControlState = SharedSelectControlState<MultiSelectT.Items>
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -255,7 +252,13 @@ function escapeRegex(str: string): string {
 // ---------------------------------------------------------------------------
 
 /** Dropdown select component with search, multi-select, and custom item rendering. */
-export function MultiSelect(props: MultiSelectProps): JSX.Element {
+export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Value>(
+  props: MultiSelectProps<TItem>,
+): JSX.Element {
+  type NormalizedOption = SharedNormalizedOption<MultiSelectT.Items<TItem>>
+  type NormalizedGroup = SharedNormalizedGroup<MultiSelectT.Items<TItem>>
+  type SelectControlState = SharedSelectControlState<MultiSelectT.Items<TItem>>
+
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
 
   const [local, rest] = splitProps(merged, MULTI_SELECT_SPLIT_KEYS)
@@ -277,7 +280,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
 
   // ---- Normalize options for Kobalte ----
   const normalizedOptions = createMemo(() => {
-    const base = normalizeOptions(local.options)
+    const base = normalizeOptions(local.options as unknown as MultiSelectT.Items<TItem>[])
 
     if (local.allowCreate || Boolean(local.tokenSeparators?.length)) {
       const existingValues = new Set(flattenOptions(base).map((o) => o.value))
@@ -296,7 +299,9 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
   // ---- maxCount: track selected values to disable remaining options ----
   const [selectedValueSet, setSelectedValueSet] = createSignal<Set<string>>(new Set())
   // ---- Value lookup ----
-  const findOptionByValue = createFindOptionByValue(() => allFlatOptions())
+  const findOptionByValue = createFindOptionByValue<MultiSelectT.Items<TItem>>(() =>
+    allFlatOptions(),
+  )
 
   // ---- Value conversion memos ----
   const multiKobalteValue = createMemo(() => {
@@ -366,7 +371,10 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
     (searchValue) => setCurrentInputText(searchValue),
   )
 
-  const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, MultiSelectT.Items>({
+  const { kobalteFilter, hasMatches } = useSelectFilter<
+    NormalizedOption,
+    MultiSelectT.Items<TItem>
+  >({
     isSearchable,
     filterOption: () => local.filterOption,
     allOptions: allFlatOptions,
@@ -378,7 +386,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       return undefined
     }
 
-    return local.defaultValue
+    return (local.defaultValue as TItem[])
       .map((v) => findOptionByValue(v))
       .filter((o): o is NormalizedOption => o !== undefined)
   })
@@ -388,7 +396,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
     setSelectedValueSet(new Set(options.map((o) => o.value)))
 
     const nextValue = mapNormalizedListToRawValues(options)
-    emitSelectValueChange(field, nextValue, local.onChange)
+    emitSelectValueChange(field, nextValue as unknown as TItem[], local.onChange as any)
   }
 
   const selectedOptions = createMemo(() =>
@@ -538,7 +546,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       label: normalized,
       key: normalized,
       disabled: false,
-      raw: { label: normalized, value: normalized },
+      raw: { label: normalized, value: normalized as unknown as TItem },
     }
 
     setCreatedTags((prev) => [...prev, newOpt])
@@ -599,7 +607,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
 
   // ---- Item component ----
   const { ItemComponent, SectionComponent } = createSelectComponents<
-    MultiSelectT.Items,
+    MultiSelectT.Items<TItem>,
     MultiSelectT.OptionRenderState
   >({
     styles: () => merged.styles,
@@ -804,7 +812,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
     const context = useComboboxContext()
 
     return (
-      <RenderSelectEmptyNode<MultiSelectT.EmptyRenderContext>
+      <RenderSelectEmptyNode<MultiSelectT.EmptyRenderContext<TItem>>
         emptyRender={local.emptyRender}
         style={merged.styles?.empty}
         class={local.classes?.empty}
@@ -813,7 +821,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
           hasMatches: hasMatches(),
           selectedValues: [...selectedValueSet()].map((value) => {
             const option = findOptionByValue(value)
-            return option ? mapNormalizedToRawValue(option) : value
+            return (option ? mapNormalizedToRawValue(option) : value) as unknown as TItem
           }),
           isAtMaxCount: isAtMaxCount(),
           create: (value?: string): boolean => createTag(value),
@@ -851,7 +859,7 @@ export function MultiSelect(props: MultiSelectProps): JSX.Element {
       {...field.ariaAttrs()}
       {...rest}
     >
-      <RenderSelectComboboxFrame<MultiSelectT.Items>
+      <RenderSelectComboboxFrame<MultiSelectT.Items<TItem>>
         controlStyle={merged.styles?.control}
         controlClass={cn(
           selectControlVariants(
