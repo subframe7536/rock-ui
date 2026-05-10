@@ -1,6 +1,4 @@
-import { clamp } from '@kobalte/utils'
-
-import { fixToPrecision, nearlyEqual, normalizeSizeVector, resolveSize } from './size'
+import { clamp, fixToPrecision, nearlyEqual, normalizeSizeVector, resolveSize } from './size'
 import type { ResizableResolvedPanel, ResizableSize } from './types'
 
 interface IndexSpan {

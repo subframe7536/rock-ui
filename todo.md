@@ -28,11 +28,11 @@ To inline a Kobalte package:
 
 No external state machine, context, or positioning logic needed — replaceable with small self-contained SolidJS primitives.
 
-- [ ] **`@kobalte/utils`** → inline `clamp` as a one-liner math helper; replace `createMediaQuery` with a tiny SolidJS signal/effect wrapper over `window.matchMedia`
+- [x] **`@kobalte/utils`** → inline `clamp` as a one-liner math helper; replace `createMediaQuery` with a tiny SolidJS signal/effect wrapper over `window.matchMedia`
   - Used in: `src/elements/resizable/hook/panel.ts`, `src/elements/resizable/hook/resize.ts` (`clamp`); `src/navigation/sidebar-frame/sidebar-frame.tsx` (`createMediaQuery`)
-- [ ] **`@kobalte/core/button`** → replace with a polymorphic `<button>` element handling `aria-disabled`; remove dependency on `@kobalte/core/polymorphic`
+- [x] **`@kobalte/core/button`** → replace with a polymorphic `<button>` element handling `aria-disabled`; remove dependency on `@kobalte/core/polymorphic`
   - Affects: `Button` (`src/elements/button/button.tsx`), `IconButton` (`src/elements/icon/icon-button.tsx`)
-- [ ] **`@kobalte/core/separator`** → replace with `<div role="separator">` (or `<hr>`) and the correct `aria-orientation` attribute
+- [x] **`@kobalte/core/separator`** → replace with `<div role="separator">` (or `<hr>`) and the correct `aria-orientation` attribute
   - Affects: `Separator` (`src/elements/separator/separator.tsx`)
 
 ### Complex
@@ -79,7 +79,7 @@ Floating/positioned overlays with portals, focus traps, and complex pointer/keyb
 
 # Current
 
-- [ ] remove button's icon-* size variants, create a <IconButtonInner> component with size variants for internal use without loading logic, expose <IconButton> with loading logic (using <IconButtonInner> inside)
+- [ ] remove button's icon-\* size variants, create a <IconButtonInner> component with size variants for internal use without loading logic, expose <IconButton> with loading logic (using <IconButtonInner> inside)
 - [ ] refactor to solid 2
 
 # V1

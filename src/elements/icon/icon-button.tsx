@@ -1,6 +1,4 @@
-import * as KobalteButton from '@kobalte/core/button'
-import type { ElementOf, PolymorphicProps } from '@kobalte/core/polymorphic'
-import type { JSX } from 'solid-js'
+import type { ComponentProps, JSX } from 'solid-js'
 import { splitProps } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
@@ -16,10 +14,7 @@ export namespace IconButtonT {
   export type Variant = IconButtonVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = Omit<
-    PolymorphicProps<'button', KobalteButton.ButtonRootProps<ElementOf<'button'>>>,
-    'as'
-  >
+  export type Extend = ComponentProps<'button'>
 
   export interface Item {}
   /**
@@ -77,15 +72,16 @@ export function IconButton(props: IconButtonProps): JSX.Element {
     'onClick',
   ])
 
-  const { isLoading, onClick } = useLoadingAutoClick<ElementOf<'button'>, MouseEvent>({
+  const { isLoading, onClick } = useLoadingAutoClick<HTMLButtonElement, MouseEvent>({
     loading: () => local.loading,
     loadingAuto: () => local.loadingAuto,
     onClick: () => local.onClick,
   })
 
   return (
-    <KobalteButton.Root
+    <button
       data-slot="root"
+      type="button"
       class={iconButtonVariants({ size: local.size }, local.classes?.root)}
       style={local.styles?.root}
       aria-busy={isLoading() || undefined}
@@ -100,6 +96,6 @@ export function IconButton(props: IconButtonProps): JSX.Element {
         class={iconVariants({ size: local.size }, local.classes?.icon)}
         style={local.styles?.icon}
       />
-    </KobalteButton.Root>
+    </button>
   )
 }

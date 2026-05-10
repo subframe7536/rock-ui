@@ -1,6 +1,4 @@
-import { clamp } from '@kobalte/utils'
-
-import { fixToPrecision, nearlyEqual, resolveSize } from './size'
+import { clamp, fixToPrecision, nearlyEqual, resolveSize } from './size'
 import type { ResizableHandleAria, ResizablePanelItem, ResizableResolvedPanel } from './types'
 
 export function resolvePanels(

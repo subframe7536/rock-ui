@@ -112,11 +112,11 @@ name: Variants
 ## Variants
 `
 
-    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/general/button/button.md', {
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/general/checkbox/checkbox.md', {
       projectRoot: process.cwd(),
     })
 
-    expect(code).toContain('upstreamHref: "https://kobalte.dev/docs/core/components/button"')
+    expect(code).toContain('upstreamHref: "https://kobalte.dev/docs/core/components/checkbox"')
   })
 
   test('does not inject upstreamHref for non-kobalte component pages', () => {
