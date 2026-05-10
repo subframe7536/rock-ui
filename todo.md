@@ -23,6 +23,7 @@ To inline a Kobalte package:
 5. Once all usages of a package are replaced, remove it from `package.json`
 6. migrate all tests of relative components
 7. make copied components non headless and fuse it into target components, eliminate createContext usage without breaking anything if possible, refactor and organize component structure better fitting a standalone lib with resuable components and useful hooks
+8. Set `Extend` in namespace to `never` for all components to prevent external extension of props, and remove all `as` polymorphic prop support. Migrate all props except `HTMLAttributes` to `Base` with jsdoc descriptions (with `@default` if needed), drop `HTMLAttributes` from prop types, remove `splitProps` since rest is always be `{}`
 
 ### Simple
 
@@ -62,7 +63,7 @@ Multiple subcomponents with shared context and keyboard navigation, but no float
 
 Floating/positioned overlays with portals, focus traps, and complex pointer/keyboard interaction chains.
 
-- [ ] **`@kobalte/core/slider`** → inline `Slider.Root`, `Slider.Track`, `Slider.Fill`, `Slider.Thumb`, `Slider.Input`, `useSliderContext`; **fix**: allow sliding in any direction when thumbs overlap
+- [x] **`@kobalte/core/slider`** → inline `Slider.Root`, `Slider.Track`, `Slider.Fill`, `Slider.Thumb`, `Slider.Input`, `useSliderContext`; **fix**: allow sliding in any direction when thumbs overlap
   - Affects: `Slider` (`src/forms/slider/slider.tsx`)
 - [ ] **`@kobalte/core/dialog`** → inline `Dialog.Root`, `Dialog.Trigger`, `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.CloseButton`; includes focus trap and scroll lock
   - Affects: `Dialog` (`src/overlays/dialog/dialog.tsx`), `Sheet` (`src/overlays/sheet/sheet.tsx`), `Popup` (`src/overlays/popup/popup.tsx`)

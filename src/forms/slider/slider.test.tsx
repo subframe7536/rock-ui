@@ -15,6 +15,51 @@ function getInputs(container: HTMLElement): HTMLInputElement[] {
   return Array.from(container.querySelectorAll('input[type="range"]')) as HTMLInputElement[]
 }
 
+function mockPointerCapture(target: HTMLElement): void {
+  const capturedPointers = new Set<number>()
+
+  Object.defineProperty(target, 'setPointerCapture', {
+    configurable: true,
+    value(pointerId: number) {
+      capturedPointers.add(pointerId)
+    },
+  })
+
+  Object.defineProperty(target, 'hasPointerCapture', {
+    configurable: true,
+    value(pointerId: number) {
+      return capturedPointers.has(pointerId)
+    },
+  })
+
+  Object.defineProperty(target, 'releasePointerCapture', {
+    configurable: true,
+    value(pointerId: number) {
+      capturedPointers.delete(pointerId)
+    },
+  })
+}
+
+function mockTrackRect(target: HTMLElement): void {
+  Object.defineProperty(target, 'getBoundingClientRect', {
+    configurable: true,
+    value: () =>
+      ({
+        left: 0,
+        top: 0,
+        right: 100,
+        bottom: 100,
+        width: 100,
+        height: 100,
+        x: 0,
+        y: 0,
+        toJSON() {
+          return this
+        },
+      }) as DOMRect,
+  })
+}
+
 function createForm(validateOn: Array<'blur' | 'change' | 'input'>) {
   const state = { value: 10 }
 
@@ -94,7 +139,7 @@ describe('Slider', () => {
 
     const root = screen.container.querySelector('[data-slot="root"][id$="-root"]')
     const track = screen.container.querySelector('[data-slot="track"]')
-    const thumb = screen.container.querySelector('[data-slot="thumb"]')
+    const thumb = screen.container.querySelector('[data-slot="thumb"]') as HTMLElement | null
     const inputs = getInputs(screen.container)
 
     expect(inputs.length).toBe(1)
@@ -108,11 +153,38 @@ describe('Slider', () => {
     expect(inputs[0]?.readOnly).toBe(true)
     expect(root?.getAttribute('data-orientation')).toBe('vertical')
     expect(track?.className).toContain('bg-input')
-    expect(thumb?.className).toContain('data-dragging:scale-120')
+    expect(thumb?.className).toContain('absolute')
+    expect(thumb?.style.translate).toBe('')
+    expect(thumb?.className).toContain('translate-y-1/2')
+    expect(thumb?.className).toContain('scale-120')
     expect(thumb?.className).toContain('cursor-pointer')
     expect(thumb?.className).toContain('hover:effect-fv')
     expect(thumb?.className).toContain('focus-visible:effect-fv')
     expect(screen.queryByRole('tooltip')).toBeNull()
+  })
+
+  test('vertical arrow keys follow the visual direction', async () => {
+    const verticalChange = vi.fn()
+    const verticalScreen = render(() => (
+      <Slider orientation="vertical" defaultValue={45} onValueChange={verticalChange} />
+    ))
+    const verticalThumb = getThumbs(verticalScreen.container)[0]
+
+    await fireEvent.focus(verticalThumb as HTMLElement)
+    await fireEvent.keyDown(verticalThumb as HTMLElement, { key: 'ArrowDown' })
+
+    expect(verticalChange).toHaveBeenLastCalledWith(46)
+
+    const invertedChange = vi.fn()
+    const invertedScreen = render(() => (
+      <Slider orientation="vertical" inverted defaultValue={45} onValueChange={invertedChange} />
+    ))
+    const invertedThumb = getThumbs(invertedScreen.container)[0]
+
+    await fireEvent.focus(invertedThumb as HTMLElement)
+    await fireEvent.keyDown(invertedThumb as HTMLElement, { key: 'ArrowDown' })
+
+    expect(invertedChange).toHaveBeenLastCalledWith(44)
   })
 
   test('single uncontrolled emits number for input and commit phases', async () => {
@@ -158,6 +230,175 @@ describe('Slider', () => {
 
     expect(onChange).toHaveBeenLastCalledWith([20, 79])
     expect(Array.isArray(onChange.mock.calls[0]?.[0])).toBe(true)
+  })
+
+  test('moves overlapping thumbs in both directions', async () => {
+    const rightChange = vi.fn()
+    const rightScreen = render(() => <Slider defaultValue={[20, 20]} onValueChange={rightChange} />)
+    const rightThumbs = getThumbs(rightScreen.container)
+
+    await fireEvent.focus(rightThumbs[0] as HTMLElement)
+    await fireEvent.keyDown(rightThumbs[0] as HTMLElement, { key: 'ArrowRight' })
+
+    expect(rightChange).toHaveBeenLastCalledWith([20, 21])
+
+    const leftChange = vi.fn()
+    const leftScreen = render(() => <Slider defaultValue={[20, 20]} onValueChange={leftChange} />)
+    const leftThumbs = getThumbs(leftScreen.container)
+
+    await fireEvent.focus(leftThumbs[0] as HTMLElement)
+    await fireEvent.keyDown(leftThumbs[0] as HTMLElement, { key: 'ArrowLeft' })
+
+    expect(leftChange).toHaveBeenLastCalledWith([19, 20])
+  })
+
+  test('dragging past another thumb moves the dragged value across the range when minStepsBetweenThumbs is 0', async () => {
+    const screen = render(() => <Slider defaultValue={[20, 50]} />)
+    const thumbs = getThumbs(screen.container)
+    const track = screen.container.querySelector('[data-slot="track"]') as HTMLElement
+
+    mockPointerCapture(thumbs[0] as HTMLElement)
+    mockTrackRect(track)
+
+    await fireEvent.pointerDown(thumbs[0] as HTMLElement, {
+      button: 0,
+      pointerId: 1,
+      clientX: 20,
+      clientY: 0,
+    })
+    await fireEvent.pointerMove(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 60,
+      clientY: 0,
+    })
+    await fireEvent.pointerMove(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 70,
+      clientY: 0,
+    })
+
+    expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('50')
+    expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('70')
+
+    await fireEvent.pointerUp(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 70,
+      clientY: 0,
+    })
+  })
+
+  test('dragging the left thumb across the right thumb keeps updating when reversing direction', async () => {
+    const onValueChange = vi.fn()
+    const screen = render(() => <Slider defaultValue={[20, 50]} onValueChange={onValueChange} />)
+    const thumbs = getThumbs(screen.container)
+    const track = screen.container.querySelector('[data-slot="track"]') as HTMLElement
+
+    mockPointerCapture(thumbs[0] as HTMLElement)
+    mockTrackRect(track)
+
+    await fireEvent.pointerDown(thumbs[0] as HTMLElement, {
+      button: 0,
+      pointerId: 1,
+      clientX: 20,
+      clientY: 0,
+    })
+    await fireEvent.pointerMove(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 60,
+      clientY: 0,
+    })
+
+    expect(onValueChange).toHaveBeenLastCalledWith([50, 60])
+    expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('50')
+    expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('60')
+    expect(thumbs[1]?.getAttribute('data-dragging')).toBe('')
+
+    await fireEvent.pointerMove(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 40,
+      clientY: 0,
+    })
+
+    expect(onValueChange).toHaveBeenLastCalledWith([40, 50])
+    expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('40')
+    expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('50')
+    expect(thumbs[0]?.getAttribute('data-dragging')).toBe('')
+
+    await fireEvent.pointerUp(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 40,
+      clientY: 0,
+    })
+  })
+
+  test('can disable thumb crossing while dragging', async () => {
+    const onValueChange = vi.fn()
+    const screen = render(() => (
+      <Slider defaultValue={[20, 50]} allowThumbCrossing={false} onValueChange={onValueChange} />
+    ))
+    const thumbs = getThumbs(screen.container)
+    const track = screen.container.querySelector('[data-slot="track"]') as HTMLElement
+
+    mockPointerCapture(thumbs[0] as HTMLElement)
+    mockTrackRect(track)
+
+    await fireEvent.pointerDown(thumbs[0] as HTMLElement, {
+      button: 0,
+      pointerId: 1,
+      clientX: 20,
+      clientY: 0,
+    })
+    await fireEvent.pointerMove(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 60,
+      clientY: 0,
+    })
+    await fireEvent.pointerMove(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 70,
+      clientY: 0,
+    })
+
+    expect(onValueChange).toHaveBeenLastCalledWith([50, 50])
+    expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('50')
+    expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('50')
+    expect(thumbs[0]?.getAttribute('data-dragging')).toBe('')
+
+    await fireEvent.pointerUp(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 70,
+      clientY: 0,
+    })
+  })
+
+  test('dragging overlapping thumbs respects minStepsBetweenThumbs without moving the sibling', async () => {
+    const screen = render(() => <Slider defaultValue={[20, 20]} minStepsBetweenThumbs={10} />)
+    const thumbs = getThumbs(screen.container)
+    const track = screen.container.querySelector('[data-slot="track"]') as HTMLElement
+
+    mockPointerCapture(thumbs[0] as HTMLElement)
+    mockTrackRect(track)
+
+    await fireEvent.pointerDown(thumbs[0] as HTMLElement, {
+      button: 0,
+      pointerId: 1,
+      clientX: 20,
+      clientY: 0,
+    })
+    await fireEvent.pointerMove(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 30,
+      clientY: 0,
+    })
+
+    expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('10')
+    expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('20')
+
+    await fireEvent.pointerUp(thumbs[0] as HTMLElement, {
+      pointerId: 1,
+      clientX: 30,
+      clientY: 0,
+    })
   })
 
   test('single thumb uses default aria label', () => {

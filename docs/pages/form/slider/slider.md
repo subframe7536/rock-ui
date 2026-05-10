@@ -46,7 +46,7 @@ name: Orientations
 
 ### Range Slider
 
-Two thumbs with min steps between thumbs and controlled array value.
+Two thumbs with controlled array value, optional minimum gap, and configurable thumb crossing.
 
 :::example
 name: RangeSlider

@@ -1,4 +1,3 @@
-import { createMediaQuery } from '@src/shared/use-media-query'
 import type { JSX, Component, Accessor } from 'solid-js'
 import { Show, createEffect, createMemo, createSignal, mergeProps, on } from 'solid-js'
 
@@ -6,6 +5,7 @@ import { Resizable } from '../../elements/resizable'
 import type { ResizableT } from '../../elements/resizable'
 import { Sheet } from '../../overlays/sheet'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
+import { createMediaQuery } from '../../shared/use-media-query'
 import { cn } from '../../shared/utils'
 
 import {
