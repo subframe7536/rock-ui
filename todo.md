@@ -39,23 +39,23 @@ No external state machine, context, or positioning logic needed — replaceable 
 
 Multiple subcomponents with shared context and keyboard navigation, but no floating/portal positioning required.
 
-- [ ] **`@kobalte/core/switch`** → inline `Switch.Root`, `Switch.Input`, `Switch.Control`, `Switch.Thumb`, `Switch.Label`
+- [x] **`@kobalte/core/switch`** → fuse switch input, control, thumb, and label behavior directly into the styled component
   - Affects: `Switch` (`src/forms/switch/switch.tsx`)
-- [ ] **`@kobalte/core/checkbox`** → inline `Checkbox.Root`, `Checkbox.Input`, `Checkbox.Control`, `Checkbox.Indicator`, `Checkbox.Label`
+- [x] **`@kobalte/core/checkbox`** → fuse checkbox input, control, indicator, and label behavior directly into the styled component
   - Affects: `Checkbox` (`src/forms/checkbox/checkbox.tsx`)
-- [ ] **`@kobalte/core/radio-group`** → inline `RadioGroup.Root`, `RadioGroup.Item`, `RadioGroup.ItemInput`, `RadioGroup.ItemControl`, `RadioGroup.ItemIndicator`, `RadioGroup.ItemLabel`
+- [x] **`@kobalte/core/radio-group`** → fuse radio-group state, item, input, control, indicator, and label behavior directly into the styled component
   - Affects: `RadioGroup` (`src/forms/radio-group/radio-group.tsx`)
-- [ ] **`@kobalte/core/file-field`** → inline `FileField.Root`, `FileField.Input`, `FileField.Label`, `FileField.Trigger`, `FileField.ItemList`, `FileField.Item`, `FileField.ItemName`, `FileField.ItemSize`, `FileField.ItemDeleteTrigger`
+- [x] **`@kobalte/core/file-field`** → fuse upload trigger, hidden input, dropzone, file list, and remove behavior directly into the styled component
   - Affects: `FileUpload` (`src/forms/file-upload/file-upload.tsx`)
-- [ ] **`@kobalte/core/number-field`** → inline `NumberField.Root`, `NumberField.Input`, `NumberField.IncrementTrigger`, `NumberField.DecrementTrigger`, `NumberField.Label`
+- [x] **`@kobalte/core/number-field`** → fuse number input state, spinbutton input, and increment/decrement trigger behavior directly into the styled component
   - Affects: `InputNumber` (`src/forms/input-number/input-number.tsx`)
-- [ ] **`@kobalte/core/progress`** → inline `Progress.Root`, `Progress.Track`, `Progress.Fill`, `useProgressContext`
+- [x] **`@kobalte/core/progress`** → fuse progress state, track, fill, status, and steps behavior directly into the styled component
   - Affects: `Progress` (`src/elements/progress/progress.tsx`)
-- [ ] **`@kobalte/core/collapsible`** → inline `Collapsible.Root`, `Collapsible.Trigger`, `Collapsible.Content`, `useCollapsibleContext`; **fix**: add CSS height transition on content open/close
+- [x] **`@kobalte/core/collapsible`** → fuse collapsible state, trigger, and content behavior directly into the styled component; **fix**: add CSS height transition on content open/close
   - Affects: `Collapsible` (`src/elements/collapsible/collapsible.tsx`), `Accordion` (`src/elements/accordion/accordion.tsx`)
-- [ ] **`@kobalte/core/accordion`** → inline `Accordion.Root`, `Accordion.Item`, `Accordion.Header`, `Accordion.Trigger`, `Accordion.Content`; depends on `collapsible` being inlined first
+- [x] **`@kobalte/core/accordion`** → inline `Accordion.Root`, `Accordion.Item`, `Accordion.Header`, `Accordion.Trigger`, `Accordion.Content`; depends on `collapsible` being inlined first
   - Affects: `Accordion` (`src/elements/accordion/accordion.tsx`)
-- [ ] **`@kobalte/core/tabs`** → inline `Tabs.Root`, `Tabs.List`, `Tabs.Trigger`, `Tabs.Indicator`, `Tabs.Content`; **fix**: add keyboard loop option so arrow navigation wraps at boundaries
+- [x] **`@kobalte/core/tabs`** → fuse tabs state, list, trigger, indicator, and content behavior directly into the styled components; **fix**: add keyboard loop option so arrow navigation wraps at boundaries
   - Affects: `Tabs` (`src/navigation/tabs/tabs.tsx`), `Stepper` (`src/navigation/stepper/stepper.tsx`)
 
 ### Comprehensive

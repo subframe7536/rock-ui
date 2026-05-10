@@ -88,6 +88,34 @@ describe('Accordion', () => {
     expect(triggerTwo.getAttribute('aria-expanded')).toBe('true')
   })
 
+  test('collapsible mode toggles with Enter on the focused trigger', async () => {
+    const screen = render(() => <Accordion items={BASE_ITEMS} collapsible defaultValue={['one']} />)
+
+    const triggerOne = screen.getByRole('button', { name: 'One' })
+
+    triggerOne.focus()
+
+    await fireEvent.keyDown(triggerOne, { key: 'Enter' })
+    expect(triggerOne.getAttribute('aria-expanded')).toBe('false')
+
+    await fireEvent.keyDown(triggerOne, { key: 'Enter' })
+    expect(triggerOne.getAttribute('aria-expanded')).toBe('true')
+  })
+
+  test('multiple mode toggles with Space on the focused trigger', async () => {
+    const screen = render(() => <Accordion items={BASE_ITEMS} multiple defaultValue={['one']} />)
+
+    const triggerOne = screen.getByRole('button', { name: 'One' })
+
+    triggerOne.focus()
+
+    await fireEvent.keyDown(triggerOne, { key: ' ' })
+    expect(triggerOne.getAttribute('aria-expanded')).toBe('false')
+
+    await fireEvent.keyDown(triggerOne, { key: ' ' })
+    expect(triggerOne.getAttribute('aria-expanded')).toBe('true')
+  })
+
   test('single controlled mode emits onChange and keeps controlled UI state', async () => {
     const onChange = vi.fn()
 

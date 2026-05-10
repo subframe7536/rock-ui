@@ -43,6 +43,46 @@ describe('InputNumber', () => {
     expect(spinbutton.value).toBe('5')
   })
 
+  test('supports PageUp and PageDown using largeStep', async () => {
+    const screen = render(() => <InputNumber defaultValue={0} step={4} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    await fireEvent.keyDown(spinbutton, { key: 'PageUp' })
+    expect(spinbutton.value).toBe('40')
+
+    await fireEvent.keyDown(spinbutton, { key: 'PageDown' })
+    expect(spinbutton.value).toBe('0')
+  })
+
+  test('supports Home and End keyboard shortcuts for min and max', async () => {
+    const screen = render(() => <InputNumber defaultValue={20} minValue={-100} maxValue={100} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    await fireEvent.keyDown(spinbutton, { key: 'End' })
+    expect(spinbutton.value).toBe('100')
+
+    await fireEvent.keyDown(spinbutton, { key: 'Home' })
+    expect(spinbutton.value).toBe('-100')
+  })
+
+  test('keeps hidden input value in sync with the visible input', async () => {
+    const screen = render(() => <InputNumber defaultValue={4} />)
+    const input = screen.getByRole('spinbutton') as HTMLInputElement
+    const hiddenInput = screen.container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    expect(input.value).toBe('4')
+    expect(hiddenInput.value).toBe('4')
+
+    await fireEvent.input(input, { currentTarget: { value: '40' }, target: { value: '40' } })
+
+    expect(input.value).toBe('40')
+    expect(hiddenInput.value).toBe('40')
+  })
+
   test('repeats increment while the trigger is held', async () => {
     vi.useFakeTimers()
 
@@ -353,6 +393,16 @@ describe('InputNumber', () => {
     await waitFor(() => {
       expect(spinbutton.value).toBe('5')
     })
+  })
+
+  test('focuses the input after trigger clicks', async () => {
+    const screen = render(() => <InputNumber defaultValue={0} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+    const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+    await fireEvent.click(incrementButton)
+
+    expect(document.activeElement).toBe(spinbutton)
   })
 
   test('uses vertical orientation behavior with both controls', async () => {

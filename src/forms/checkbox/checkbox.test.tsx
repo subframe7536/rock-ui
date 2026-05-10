@@ -112,6 +112,34 @@ describe('Checkbox', () => {
     })
   })
 
+  test('does not toggle a controlled readonly checkbox', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <Checkbox checked readOnly label="Readonly" onChange={onChange} />)
+    const checkbox = screen.getByRole('checkbox', { name: 'Readonly' }) as HTMLInputElement
+
+    expect(checkbox.getAttribute('aria-readonly')).toBe('true')
+
+    await fireEvent.click(checkbox)
+
+    expect(checkbox.checked).toBe(true)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  test('does not toggle an uncontrolled readonly checkbox', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <Checkbox readOnly label="Readonly uncontrolled" onChange={onChange} />
+    ))
+    const checkbox = screen.getByRole('checkbox', {
+      name: 'Readonly uncontrolled',
+    }) as HTMLInputElement
+
+    await fireEvent.click(checkbox)
+
+    expect(checkbox.checked).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   test('maps custom true and false values for controlled checkbox', async () => {
     const onChange = vi.fn()
 

@@ -1,16 +1,21 @@
-import * as KobalteNumberField from '@kobalte/core/number-field'
 import type { JSX } from 'solid-js'
-import { createMemo, mergeProps, onCleanup, onMount, Show, splitProps } from 'solid-js'
+import { createMemo, mergeProps, onCleanup, onMount, Show } from 'solid-js'
 
 import { Button } from '../../elements/button'
 import type { ButtonT } from '../../elements/button'
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
+import { HiddenInput } from '../../shared/hidden-input'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
+import { useControllableValue } from '../../shared/use-controllable-value'
 import { callHandler, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
-import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-options'
-import { FORM_ID_NAME_DISABLED_KEYS, FORM_INPUT_INTERACTION_KEYS } from '../form-field/form-options'
+import type {
+  FormDisableOption,
+  FormIdentityOptions,
+  FormReadOnlyOption,
+  FormRequiredOption,
+} from '../form-field/form-options'
 
 import type { InputNumberOrientation, InputNumberVariantProps } from './input-number.class'
 import {
@@ -36,6 +41,23 @@ interface PressRepeatState {
   targetEl: HTMLButtonElement | null
 }
 
+function toNumber(value: string | number | undefined, fallback: number): number {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : fallback
+  }
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
+
+  return fallback
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
 export namespace InputNumberT {
   export type Slot = 'root' | 'input' | 'increment' | 'decrement'
 
@@ -43,14 +65,62 @@ export namespace InputNumberT {
 
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteNumberField.NumberFieldRootProps
+  export type Extend = never
 
   export interface Item {}
 
   /**
    * Base props for the InputNumber component.
    */
-  export interface Base extends FormIdentityOptions, FormDisableOption {
+  export interface Base
+    extends FormIdentityOptions, FormDisableOption, FormRequiredOption, FormReadOnlyOption {
+    /**
+     * Controlled displayed value.
+     */
+    value?: string | number
+
+    /**
+     * Default displayed value for uncontrolled usage.
+     */
+    defaultValue?: string | number
+
+    /**
+     * Controlled numeric value. Takes precedence over `value`.
+     */
+    rawValue?: number
+
+    /**
+     * Minimum allowed numeric value.
+     */
+    minValue?: number
+
+    /**
+     * Maximum allowed numeric value.
+     */
+    maxValue?: number
+
+    /**
+     * The increment/decrement step size.
+     * @default 1
+     */
+    step?: number
+
+    /**
+     * The step size used for PageUp/PageDown.
+     * @default step * 10
+     */
+    largeStep?: number
+
+    /**
+     * Callback when the formatted string value changes.
+     */
+    onChange?: (value: string) => void
+
+    /**
+     * Callback when the numeric value changes.
+     */
+    onRawValueChange?: (value: number) => void
+
     /**
      * The orientation of the control buttons.
      * @default 'horizontal'
@@ -188,67 +258,68 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    ...FORM_ID_NAME_DISABLED_KEYS,
-    'onRawValueChange',
-    ...FORM_INPUT_INTERACTION_KEYS,
-    'placeholder',
-    'orientation',
-    'increment',
-    'incrementIcon',
-    'incrementDisabled',
-    'decrement',
-    'decrementIcon',
-    'decrementDisabled',
-    'onIncrementClick',
-    'onDecrementClick',
-    'holdRepeat',
-    'repeatDelayMs',
-    'repeatIntervalMs',
-    'repeatThrottleMs',
-    'repeatPointerTypes',
-    'autofocus',
-    'autofocusDelay',
-    'size',
-    'variant',
-    'classes',
-    'styles',
-  ])
-
-  const generatedId = useId(() => local.id, 'input-number')
+  const generatedId = useId(() => merged.id, 'input-number')
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      disabled: local.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
       defaultId: generatedId(),
       defaultSize: 'md',
-      initialValue: rest.rawValue ?? rest.defaultValue ?? 0,
+      initialValue: merged.rawValue ?? merged.value ?? merged.defaultValue ?? 0,
     }),
   )
 
   let inputEl: HTMLInputElement | undefined
+  const [resolvedValue, setResolvedValue] = useControllableValue<number>({
+    value: () => {
+      if (merged.rawValue !== undefined) {
+        return toNumber(merged.rawValue, 0)
+      }
 
-  const resolvedIncrement = createMemo(() => Boolean(local.increment))
-  const resolvedDecrement = createMemo(() => Boolean(local.decrement))
+      if (merged.value !== undefined) {
+        return toNumber(merged.value, 0)
+      }
+
+      if (field.value() !== undefined) {
+        return toNumber(field.value() as string | number | undefined, 0)
+      }
+
+      return undefined
+    },
+    defaultValue: () => toNumber(merged.defaultValue, 0),
+  })
+
+  const minValue = createMemo(() => merged.minValue ?? Number.MIN_SAFE_INTEGER)
+  const maxValue = createMemo(() => merged.maxValue ?? Number.MAX_SAFE_INTEGER)
+  const stepValue = createMemo(() => merged.step ?? 1)
+  const largeStepValue = createMemo(() => merged.largeStep ?? stepValue() * 10)
+  const readOnly = createMemo(() => Boolean(merged.readOnly))
+
+  const currentValue = createMemo(() => clamp(resolvedValue() ?? 0, minValue(), maxValue()))
+
+  const inputValue = createMemo(() => String(currentValue()))
+
+  const resolvedIncrement = createMemo(() => Boolean(merged.increment))
+  const resolvedDecrement = createMemo(() => Boolean(merged.decrement))
   const resolvedOrientation = createMemo<InputNumberOrientation>(
-    () => local.orientation ?? 'horizontal',
+    () => merged.orientation ?? 'horizontal',
   )
 
   const incrementIcon = createMemo<IconT.Name>(() => {
-    if (local.incrementIcon) {
-      return local.incrementIcon
+    if (merged.incrementIcon) {
+      return merged.incrementIcon
     }
 
     return resolvedOrientation() === 'vertical' ? 'icon-chevron-up' : 'icon-plus'
   })
 
   const decrementIcon = createMemo<IconT.Name>(() => {
-    if (local.decrementIcon) {
-      return local.decrementIcon
+    if (merged.decrementIcon) {
+      return merged.decrementIcon
     }
 
     return resolvedOrientation() === 'vertical' ? 'icon-chevron-down' : 'icon-minus'
@@ -256,7 +327,31 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
 
   const isVertical = createMemo(() => resolvedOrientation() === 'vertical')
 
-  const isBorderless = createMemo(() => local.variant === 'ghost' || local.variant === 'none')
+  const isBorderless = createMemo(() => merged.variant === 'ghost' || merged.variant === 'none')
+
+  function commitValue(nextValue: number): void {
+    if (field.disabled() || readOnly()) {
+      return
+    }
+
+    const boundedValue = clamp(nextValue, minValue(), maxValue())
+
+    setResolvedValue(boundedValue)
+
+    field.setFormValue(boundedValue)
+    merged.onRawValueChange?.(boundedValue)
+    merged.onChange?.(String(boundedValue))
+    field.emit('change')
+    field.emit('input')
+  }
+
+  function incrementValue(amount = stepValue()): void {
+    commitValue(currentValue() + amount)
+  }
+
+  function decrementValue(amount = stepValue()): void {
+    commitValue(currentValue() - amount)
+  }
 
   const selectionState = {
     count: 0,
@@ -339,15 +434,15 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
   }
 
   function isAllowedPointerType(pointerType: string): boolean {
-    return local.repeatPointerTypes === 'all' || local.repeatPointerTypes === pointerType
+    return merged.repeatPointerTypes === 'all' || merged.repeatPointerTypes === pointerType
   }
 
   function getControlUserOnClick(kind: ControlKind) {
-    return kind === 'increment' ? local.onIncrementClick : local.onDecrementClick
+    return kind === 'increment' ? merged.onIncrementClick : merged.onDecrementClick
   }
 
   function triggerControlClick(state: PressRepeatState): void {
-    const throttleMs = Math.max(0, local.repeatThrottleMs ?? 0)
+    const throttleMs = Math.max(0, merged.repeatThrottleMs ?? 0)
     const now = Date.now()
 
     if (throttleMs > 0 && now - state.lastTriggeredAt < throttleMs) {
@@ -362,7 +457,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
   }
 
   function onControlPointerDown(kind: ControlKind, event: PointerEvent): void {
-    if (!local.holdRepeat || event.button !== 0 || !isAllowedPointerType(event.pointerType)) {
+    if (!merged.holdRepeat || event.button !== 0 || !isAllowedPointerType(event.pointerType)) {
       return
     }
 
@@ -384,8 +479,8 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
 
     lockSelection()
 
-    const delayMs = Math.max(0, local.repeatDelayMs ?? 500)
-    const intervalMs = Math.max(16, local.repeatIntervalMs ?? 80)
+    const delayMs = Math.max(0, merged.repeatDelayMs ?? 500)
+    const intervalMs = Math.max(16, merged.repeatIntervalMs ?? 80)
 
     state.delayTimer = setTimeout(() => {
       if (state.activePointerId === null) {
@@ -460,7 +555,16 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
 
     if (state.syntheticClicksPending > 0) {
       state.syntheticClicksPending -= 1
-      callHandler(event, getControlUserOnClick(kind))
+      const { defaultPrevented } = callHandler(event, getControlUserOnClick(kind))
+      if (!defaultPrevented) {
+        if (kind === 'increment') {
+          incrementValue()
+        } else {
+          decrementValue()
+        }
+
+        inputEl?.focus()
+      }
       return
     }
 
@@ -473,7 +577,17 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       return
     }
 
-    callHandler(event, getControlUserOnClick(kind))
+    const { defaultPrevented } = callHandler(event, getControlUserOnClick(kind))
+
+    if (!defaultPrevented) {
+      if (kind === 'increment') {
+        incrementValue()
+      } else {
+        decrementValue()
+      }
+
+      inputEl?.focus()
+    }
   }
 
   onCleanup(() => {
@@ -487,9 +601,9 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
 
     return {
       slotName: kind,
-      styles: { root: local.styles?.[kind] },
+      styles: { root: merged.styles?.[kind] },
       disabled:
-        field.disabled() || (isIncrement ? local.incrementDisabled : local.decrementDisabled),
+        field.disabled() || (isIncrement ? merged.incrementDisabled : merged.decrementDisabled),
       variant: 'ghost',
       size: `icon-${field.size()}`,
       'aria-label': isIncrement ? 'Increment' : 'Decrement',
@@ -509,46 +623,39 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
           },
           'select-none touch-none',
           isBorderless() && 'b-transparent',
-          local.variant === 'none' && 'hover:bg-transparent',
-          local.classes?.[kind],
+          merged.variant === 'none' && 'hover:bg-transparent',
+          merged.classes?.[kind],
         ),
       },
     } as const
   }
 
   function IncrementControl(): JSX.Element {
-    return <KobalteNumberField.IncrementTrigger as={Button} {...resolveControlProps('increment')} />
+    return <Button as="button" {...resolveControlProps('increment')} />
   }
 
   function DecrementControl(): JSX.Element {
-    return <KobalteNumberField.DecrementTrigger as={Button} {...resolveControlProps('decrement')} />
-  }
-
-  function onRawValueChange(value: number): void {
-    field.setFormValue(value)
-    local.onRawValueChange?.(value)
-    field.emit('change')
-    field.emit('input')
+    return <Button as="button" {...resolveControlProps('decrement')} />
   }
 
   const onBlur: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
-    callHandler(event, local.onBlur as any)
+    callHandler(event, merged.onBlur as any)
     field.emit('blur')
   }
 
   const onFocus: JSX.FocusEventHandlerUnion<HTMLInputElement, FocusEvent> = (event) => {
-    callHandler(event, local.onFocus as any)
+    callHandler(event, merged.onFocus as any)
     field.emit('focus')
   }
 
   onMount(() => {
-    if (!local.autofocus) {
+    if (!merged.autofocus) {
       return
     }
 
     const autofocusTimeoutId = setTimeout(() => {
       inputEl?.focus()
-    }, local.autofocusDelay ?? 0)
+    }, merged.autofocusDelay ?? 0)
 
     onCleanup(() => {
       clearTimeout(autofocusTimeoutId)
@@ -556,32 +663,41 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
   })
 
   return (
-    <KobalteNumberField.Root
+    <div
       id={`${field.id()}-root`}
-      name={field.name()}
-      disabled={field.disabled()}
-      onRawValueChange={onRawValueChange}
+      role="group"
       data-slot="root"
       style={merged.styles?.root}
       data-invalid={field.invalid() ? '' : undefined}
       data-disabled={field.disabled() ? '' : undefined}
+      data-readonly={readOnly() ? '' : undefined}
       class={inputNumberRootVariants(
         {
           size: field.size(),
-          variant: local.variant,
+          variant: merged.variant,
         },
-        local.classes?.root,
+        merged.classes?.root,
       )}
-      {...rest}
     >
       <Show when={!isVertical() && resolvedDecrement()}>
         <DecrementControl />
       </Show>
 
-      <KobalteNumberField.Input
+      <input
+        type="text"
+        inputMode="decimal"
+        role="spinbutton"
         id={field.id()}
         ref={(e) => (inputEl = e)}
-        placeholder={local.placeholder}
+        name={field.name()}
+        value={inputValue()}
+        required={merged.required}
+        disabled={field.disabled()}
+        readOnly={readOnly()}
+        aria-valuemin={minValue()}
+        aria-valuemax={maxValue()}
+        aria-valuenow={currentValue()}
+        placeholder={merged.placeholder}
         data-slot="input"
         style={merged.styles?.input}
         class={inputNumberBaseVariants(
@@ -589,14 +705,58 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
             size: field.size(),
             align: resolveInputNumberAlign(resolvedOrientation(), resolvedDecrement()),
           },
-          local.classes?.input,
+          merged.classes?.input,
         )}
+        onInput={(event) => {
+          commitValue(toNumber(event.currentTarget.value, currentValue()))
+          event.currentTarget.value = inputValue()
+        }}
+        onChange={(event) => {
+          commitValue(toNumber(event.currentTarget.value, currentValue()))
+          event.currentTarget.value = inputValue()
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowUp') {
+            event.preventDefault()
+            incrementValue()
+            return
+          }
+
+          if (event.key === 'ArrowDown') {
+            event.preventDefault()
+            decrementValue()
+            return
+          }
+
+          if (event.key === 'PageUp') {
+            event.preventDefault()
+            incrementValue(largeStepValue())
+            return
+          }
+
+          if (event.key === 'PageDown') {
+            event.preventDefault()
+            decrementValue(largeStepValue())
+            return
+          }
+
+          if (event.key === 'Home') {
+            event.preventDefault()
+            commitValue(minValue())
+            return
+          }
+
+          if (event.key === 'End') {
+            event.preventDefault()
+            commitValue(maxValue())
+          }
+        }}
         onBlur={onBlur}
         onFocus={onFocus}
         {...field.ariaAttrs()}
       />
 
-      <KobalteNumberField.HiddenInput />
+      <HiddenInput type="hidden" visuallyHidden={false} name={field.name()} value={inputValue()} />
 
       <Show when={isVertical() && (resolvedIncrement() || resolvedDecrement())}>
         <div
@@ -618,6 +778,6 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       <Show when={!isVertical() && resolvedIncrement()}>
         <IncrementControl />
       </Show>
-    </KobalteNumberField.Root>
+    </div>
   )
 }

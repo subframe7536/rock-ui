@@ -1,10 +1,11 @@
-import * as KobalteTabs from '@kobalte/core/tabs'
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, mergeProps, onCleanup } from 'solid-js'
+import { For, Show, createMemo, mergeProps } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { useSelectableCollectionNavigation } from '../../shared/use-selectable-collection-navigation'
 import { cn, useId } from '../../shared/utils'
 
 import type { StepperVariantProps } from './stepper.class'
@@ -41,7 +42,7 @@ export namespace StepperT {
   export type Variant = StepperVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteTabs.TabsRootProps
+  export type Extend = never
 
   /**
    * An individual step in the stepper.
@@ -90,6 +91,38 @@ export namespace StepperT {
    * Base props for the Stepper component.
    */
   export interface Base {
+    /**
+     * Unique identifier for the stepper root element.
+     */
+    id?: string
+
+    /**
+     * Controlled active step value.
+     */
+    value?: Value
+
+    /**
+     * Default active step value for uncontrolled usage.
+     */
+    defaultValue?: Value
+
+    /**
+     * Callback when the active step changes.
+     */
+    onChange?: (value: Value) => void
+
+    /**
+     * The orientation of the stepper.
+     * @default 'horizontal'
+     */
+    orientation?: 'horizontal' | 'vertical'
+
+    /**
+     * Whether keyboard activation happens immediately or only after confirmation.
+     * @default 'automatic'
+     */
+    activationMode?: 'automatic' | 'manual'
+
     /**
      * Array of steps to display.
      */
@@ -146,6 +179,11 @@ export function Stepper(props: StepperProps): JSX.Element {
   )
 
   const id = useId(() => merged.id, 'stepper')
+  const [requestedValue, setRequestedValue] = useControllableValue<StepperT.Value>({
+    value: () => merged.value,
+    defaultValue: () => merged.defaultValue,
+  })
+  const triggerRefs = new Map<StepperT.Value, HTMLButtonElement>()
 
   const normalizedItems = createMemo<NormalizedStepperItem[]>(() =>
     (merged.items ?? []).map((item, index) => ({
@@ -156,9 +194,10 @@ export function Stepper(props: StepperProps): JSX.Element {
   )
 
   const resolvedValue = createMemo(() => {
-    const value = merged.value
+    const value = requestedValue()
     if (value === undefined) {
-      return undefined
+      const firstEnabled = normalizedItems().find((entry) => !entry.item.disabled)
+      return firstEnabled?.value ?? normalizedItems()[0]?.value
     }
     const items = normalizedItems()
     if (items.length === 0) {
@@ -173,234 +212,230 @@ export function Stepper(props: StepperProps): JSX.Element {
     return firstEnabled?.value ?? items[0]?.value
   })
 
-  function StepperBody(): JSX.Element {
-    const tabsContext = KobalteTabs.useTabsContext()
+  const currentIndex = createMemo(() => {
+    const value = resolvedValue()
+    return normalizedItems().findIndex((item) => item.value === value)
+  })
+  const { onNavigationKeyDown } = useSelectableCollectionNavigation<
+    NormalizedStepperItem,
+    StepperT.Value
+  >({
+    items: normalizedItems,
+    getValue: (entry) => entry.value,
+    isDisabled: isItemDisabled,
+    loop: () => false,
+    activationMode: () => merged.activationMode ?? 'automatic',
+    focusValue: (value) => triggerRefs.get(value)?.focus(),
+    onSelect: selectStep,
+  })
 
-    const currentValue = createMemo(() => tabsContext.listState().selectedKey())
-
-    const currentIndex = createMemo(() => {
-      const value = currentValue()
-      return normalizedItems().findIndex((item) => item.value === value)
-    })
-
-    function getItemState(index: number): StepperState {
-      const activeIndex = currentIndex()
-      if (activeIndex >= 0 && index < activeIndex) {
-        return 'completed'
-      }
-      if (index === activeIndex) {
-        return 'active'
-      }
-
-      return 'inactive'
+  function getItemState(index: number): StepperState {
+    const activeIndex = currentIndex()
+    if (activeIndex >= 0 && index < activeIndex) {
+      return 'completed'
+    }
+    if (index === activeIndex) {
+      return 'active'
     }
 
-    function isItemDisabled(entry: NormalizedStepperItem): boolean {
-      if (merged.disabled || entry.item.disabled) {
-        return true
-      }
+    return 'inactive'
+  }
 
-      const activeIndex = currentIndex()
+  function isItemDisabled(entry: NormalizedStepperItem): boolean {
+    if (merged.disabled || entry.item.disabled) {
+      return true
+    }
 
-      if (!merged.clickable) {
-        if (activeIndex < 0) {
-          return false
-        }
+    const activeIndex = currentIndex()
 
-        return entry.index !== activeIndex
-      }
-
-      if (!merged.linear) {
-        return false
-      }
-
+    if (!merged.clickable) {
       if (activeIndex < 0) {
         return false
       }
 
-      return entry.index > activeIndex + 1
+      return entry.index !== activeIndex
     }
 
-    function handleTriggerKeyDown(event: KeyboardEvent, index: number): void {
-      const lastIndex = normalizedItems().length - 1
-
-      if (lastIndex < 0) {
-        return
-      }
-
-      const isBoundaryKey =
-        merged.orientation === 'vertical'
-          ? (event.key === 'ArrowDown' && index === lastIndex) ||
-            (event.key === 'ArrowUp' && index === 0)
-          : (event.key === 'ArrowRight' && index === lastIndex) ||
-            (event.key === 'ArrowLeft' && index === 0)
-
-      if (!isBoundaryKey) {
-        return
-      }
-
-      event.preventDefault()
-      event.stopPropagation()
-      event.stopImmediatePropagation()
+    if (!merged.linear || activeIndex < 0) {
+      return false
     }
 
-    return (
-      <>
-        <KobalteTabs.List
-          data-slot="header"
-          style={merged.styles?.header}
-          class={stepperHeaderVariants({ orientation: merged.orientation }, merged.classes?.header)}
-        >
-          <For each={normalizedItems()}>
-            {(entry) => {
-              const state = createMemo(() => getItemState(entry.index))
-              const disabled = createMemo(() => isItemDisabled(entry))
-              const idPrefix = createMemo(() => tabsContext.generateContentId(entry.value))
+    return entry.index > activeIndex + 1
+  }
 
-              return (
-                <div
-                  data-slot="item"
-                  style={merged.styles?.item}
-                  data-state={state()}
-                  data-disabled={disabled() ? '' : undefined}
-                  class={stepperItemVariants(
-                    {
-                      orientation: merged.orientation,
-                      size: merged.size,
-                    },
-                    merged.classes?.item,
-                    entry.item.class,
-                  )}
-                >
-                  <div
-                    data-slot="container"
-                    style={merged.styles?.container}
-                    class={stepperContainerVariants(
-                      { orientation: merged.orientation },
-                      merged.classes?.container,
-                    )}
-                  >
-                    <KobalteTabs.Trigger
-                      data-slot="trigger"
-                      style={merged.styles?.trigger}
-                      data-state={state()}
-                      data-clickable={merged.clickable ? '' : undefined}
-                      value={entry.value}
-                      ref={(el: HTMLElement) => {
-                        const listener: EventListener = (event) => {
-                          handleTriggerKeyDown(event as KeyboardEvent, entry.index)
-                        }
+  function selectStep(nextValue: StepperT.Value): void {
+    if (merged.disabled || nextValue === resolvedValue()) {
+      return
+    }
 
-                        el.addEventListener('keydown', listener, true)
-                        onCleanup(() => el.removeEventListener('keydown', listener, true))
-                      }}
-                      disabled={disabled()}
-                      aria-labelledby={
-                        entry.item.title ? `${idPrefix()}-step-${entry.index}-title` : undefined
-                      }
-                      aria-describedby={
-                        entry.item.description
-                          ? `${idPrefix()}-step-${entry.index}-description`
-                          : undefined
-                      }
-                      class={stepperTriggerVariants(
-                        {
-                          size: merged.size,
-                          state: state(),
-                        },
-                        merged.classes?.trigger,
-                      )}
-                    >
-                      <Icon name={entry.item.icon || (() => entry.index + 1)} />
-                    </KobalteTabs.Trigger>
+    setRequestedValue(nextValue)
 
-                    <Show when={entry.index < normalizedItems().length - 1}>
-                      <div
-                        data-slot="separator"
-                        style={merged.styles?.separator}
-                        data-state={state()}
-                        data-disabled={disabled() ? '' : undefined}
-                        class={stepperSeparatorVariants(
-                          {
-                            orientation: merged.orientation,
-                          },
-                          merged.classes?.separator,
-                        )}
-                      />
-                    </Show>
-                  </div>
+    if (merged.clickable) {
+      merged.onChange?.(nextValue)
+    }
+  }
 
-                  <div
-                    data-slot="wrapper"
-                    style={merged.styles?.wrapper}
-                    class={stepperWrapperVariants(
-                      { orientation: merged.orientation },
-                      merged.classes?.wrapper,
-                    )}
-                  >
-                    <Show when={entry.item.title}>
-                      <div
-                        data-slot="title"
-                        style={merged.styles?.title}
-                        id={`${idPrefix()}-step-${entry.index}-title`}
-                        class={stepperTitleVariants({ size: merged.size }, merged.classes?.title)}
-                      >
-                        {entry.item.title}
-                      </div>
-                    </Show>
+  function getTriggerId(value: StepperT.Value): string {
+    return `${id()}-${value}-trigger`
+  }
 
-                    <Show when={entry.item.description}>
-                      <div
-                        data-slot="description"
-                        style={merged.styles?.description}
-                        id={`${idPrefix()}-step-${entry.index}-description`}
-                        class={stepperDescriptionVariants(
-                          { size: merged.size },
-                          merged.classes?.description,
-                        )}
-                      >
-                        {entry.item.description}
-                      </div>
-                    </Show>
-                  </div>
-                </div>
-              )
-            }}
-          </For>
-        </KobalteTabs.List>
-
-        <For each={normalizedItems()}>
-          {(entry) => (
-            <Show when={entry.item.content}>
-              <KobalteTabs.Content
-                data-slot="content"
-                style={merged.styles?.content}
-                value={entry.value}
-                class={cn('w-full', entry.item.class, merged.classes?.content)}
-              >
-                {entry.item.content}
-              </KobalteTabs.Content>
-            </Show>
-          )}
-        </For>
-      </>
-    )
+  function getContentId(value: StepperT.Value): string {
+    return `${id()}-${value}-content`
   }
 
   return (
-    <KobalteTabs.Root
+    <div
+      id={id()}
       data-slot="root"
       style={merged.styles?.root}
-      id={id()}
-      activationMode={merged.activationMode}
-      orientation={merged.orientation}
-      disabled={merged.disabled}
-      value={resolvedValue()}
-      defaultValue={merged.defaultValue}
-      onChange={(e) => merged.clickable && merged.onChange?.(e)}
       class={stepperRootVariants({ orientation: merged.orientation }, merged.classes?.root)}
     >
-      <StepperBody />
-    </KobalteTabs.Root>
+      <div
+        role="tablist"
+        aria-orientation={merged.orientation}
+        data-slot="header"
+        style={merged.styles?.header}
+        class={stepperHeaderVariants({ orientation: merged.orientation }, merged.classes?.header)}
+      >
+        <For each={normalizedItems()}>
+          {(entry) => {
+            const state = createMemo(() => getItemState(entry.index))
+            const disabled = createMemo(() => isItemDisabled(entry))
+            const triggerId = createMemo(() => getTriggerId(entry.value))
+            const contentId = createMemo(() => getContentId(entry.value))
+            const titleId = createMemo(() => `${contentId()}-step-${entry.index}-title`)
+            const descriptionId = createMemo(() => `${contentId()}-step-${entry.index}-description`)
+            const selected = createMemo(() => resolvedValue() === entry.value)
+
+            return (
+              <div
+                data-slot="item"
+                style={merged.styles?.item}
+                data-state={state()}
+                data-disabled={disabled() ? '' : undefined}
+                class={stepperItemVariants(
+                  {
+                    orientation: merged.orientation,
+                    size: merged.size,
+                  },
+                  merged.classes?.item,
+                  entry.item.class,
+                )}
+              >
+                <div
+                  data-slot="container"
+                  style={merged.styles?.container}
+                  class={stepperContainerVariants(
+                    { orientation: merged.orientation },
+                    merged.classes?.container,
+                  )}
+                >
+                  <button
+                    id={triggerId()}
+                    ref={(element) => {
+                      triggerRefs.set(entry.value, element)
+                    }}
+                    type="button"
+                    role="tab"
+                    tabIndex={selected() ? 0 : -1}
+                    aria-controls={contentId()}
+                    aria-selected={selected()}
+                    data-selected={selected() ? '' : undefined}
+                    data-slot="trigger"
+                    style={merged.styles?.trigger}
+                    data-state={state()}
+                    data-clickable={merged.clickable ? '' : undefined}
+                    disabled={disabled()}
+                    aria-labelledby={entry.item.title ? titleId() : undefined}
+                    aria-describedby={entry.item.description ? descriptionId() : undefined}
+                    class={stepperTriggerVariants(
+                      {
+                        size: merged.size,
+                        state: state(),
+                      },
+                      merged.classes?.trigger,
+                    )}
+                    onClick={() => selectStep(entry.value)}
+                    onKeyDown={(event) => {
+                      onNavigationKeyDown(event, entry.value, merged.orientation)
+                    }}
+                  >
+                    <Icon name={entry.item.icon || (() => entry.index + 1)} />
+                  </button>
+
+                  <Show when={entry.index < normalizedItems().length - 1}>
+                    <div
+                      data-slot="separator"
+                      style={merged.styles?.separator}
+                      data-state={state()}
+                      data-disabled={disabled() ? '' : undefined}
+                      class={stepperSeparatorVariants(
+                        {
+                          orientation: merged.orientation,
+                        },
+                        merged.classes?.separator,
+                      )}
+                    />
+                  </Show>
+                </div>
+
+                <div
+                  data-slot="wrapper"
+                  style={merged.styles?.wrapper}
+                  class={stepperWrapperVariants(
+                    { orientation: merged.orientation },
+                    merged.classes?.wrapper,
+                  )}
+                >
+                  <Show when={entry.item.title}>
+                    <div
+                      data-slot="title"
+                      style={merged.styles?.title}
+                      id={titleId()}
+                      class={stepperTitleVariants({ size: merged.size }, merged.classes?.title)}
+                    >
+                      {entry.item.title}
+                    </div>
+                  </Show>
+
+                  <Show when={entry.item.description}>
+                    <div
+                      data-slot="description"
+                      style={merged.styles?.description}
+                      id={descriptionId()}
+                      class={stepperDescriptionVariants(
+                        { size: merged.size },
+                        merged.classes?.description,
+                      )}
+                    >
+                      {entry.item.description}
+                    </div>
+                  </Show>
+                </div>
+              </div>
+            )
+          }}
+        </For>
+      </div>
+
+      <For each={normalizedItems()}>
+        {(entry) => (
+          <Show when={entry.item.content && resolvedValue() === entry.value}>
+            <div
+              id={getContentId(entry.value)}
+              role="tabpanel"
+              tabIndex={0}
+              aria-labelledby={getTriggerId(entry.value)}
+              data-selected=""
+              data-slot="content"
+              style={merged.styles?.content}
+              class={cn('w-full', entry.item.class, merged.classes?.content)}
+            >
+              {entry.item.content}
+            </div>
+          </Show>
+        )}
+      </For>
+    </div>
   )
 }

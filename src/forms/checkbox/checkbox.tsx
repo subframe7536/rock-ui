@@ -1,14 +1,19 @@
-import * as KobalteCheckbox from '@kobalte/core/checkbox'
 import type { JSX } from 'solid-js'
-import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps } from 'solid-js'
 
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
+import { HiddenInput } from '../../shared/hidden-input'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn, useId } from '../../shared/utils'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { callHandler, cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
-import type { FormDisableOption, FormIdentityOptions } from '../form-field/form-options'
-import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options'
+import type {
+  FormDisableOption,
+  FormIdentityOptions,
+  FormReadOnlyOption,
+  FormRequiredOption,
+} from '../form-field/form-options'
 
 import type { CheckboxVariantProps } from './checkbox.class'
 import {
@@ -35,7 +40,7 @@ export namespace CheckboxT {
   export type Variant = CheckboxVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteCheckbox.CheckboxRootProps
+  export type Extend = never
 
   export interface Item {}
 
@@ -43,7 +48,18 @@ export namespace CheckboxT {
    * Base props for the Checkbox component.
    */
   export interface Base<TTrue = boolean, TFalse = boolean>
-    extends FormIdentityOptions, FormDisableOption {
+    extends FormIdentityOptions, FormDisableOption, FormRequiredOption, FormReadOnlyOption {
+    /**
+     * Pointer down handler for the checkbox root container.
+     */
+    onPointerDown?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
+
+    /**
+     * Native value submitted when the checkbox is checked.
+     * @default 'on'
+     */
+    value?: string
+
     /**
      * Whether the checkbox is checked (controlled).
      */
@@ -141,57 +157,49 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       formFieldBind: true,
       trueValue: true,
       falseValue: false,
+      value: 'on',
     },
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
-    'checked',
-    'defaultChecked',
-    'formFieldBind',
-    'trueValue',
-    'falseValue',
-    'indeterminate',
-    'label',
-    'description',
-    'size',
-    'variant',
-    'indicator',
-    'checkedIcon',
-    'indeterminateIcon',
-    'classes',
-    'styles',
-  ])
-
-  const generatedId = useId(() => local.id, 'checkbox')
+  const generatedId = useId(() => merged.id, 'checkbox')
 
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      disabled: local.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
-      bind: local.formFieldBind,
+      bind: merged.formFieldBind,
       defaultId: generatedId(),
       defaultSize: 'md',
       initialValue:
-        local.formFieldBind === false
+        merged.formFieldBind === false
           ? undefined
           : (normalizeFieldValue(
-              local.checked !== undefined ? local.checked : local.defaultChecked,
-            ) ?? local.falseValue),
+              merged.checked !== undefined ? merged.checked : merged.defaultChecked,
+            ) ?? merged.falseValue),
     }),
   )
+
+  const defaultCheckedState = createMemo<boolean | 'indeterminate'>(() => {
+    if (merged.defaultChecked === undefined) {
+      return false
+    }
+
+    return toCheckedState(merged.defaultChecked)
+  })
+
+  let inputEl: HTMLInputElement | undefined
 
   function toCheckedState(value: unknown): boolean | 'indeterminate' {
     if (value === 'indeterminate') {
       return 'indeterminate'
     }
 
-    return value === local.trueValue || (typeof value === 'boolean' && value)
+    return value === merged.trueValue || (typeof value === 'boolean' && value)
   }
 
   function normalizeFieldValue(value: unknown): unknown {
@@ -199,39 +207,34 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       return value
     }
 
-    if (value === local.trueValue || value === local.falseValue) {
+    if (value === merged.trueValue || value === merged.falseValue) {
       return value
     }
 
     if (typeof value === 'boolean') {
-      return value ? local.trueValue : local.falseValue
+      return value ? merged.trueValue : merged.falseValue
     }
 
     return value
   }
 
   function toChangeValue(nextChecked: boolean): TTrue | TFalse {
-    return nextChecked ? (local.trueValue as TTrue) : (local.falseValue as TFalse)
+    return nextChecked ? (merged.trueValue as TTrue) : (merged.falseValue as TFalse)
   }
 
-  const checked = createMemo<boolean | 'indeterminate' | undefined>(() => {
-    if (local.checked !== undefined) {
-      return toCheckedState(local.checked)
-    }
+  const [checked, setChecked] = useControllableValue<boolean | 'indeterminate'>({
+    value: () => {
+      if (merged.checked !== undefined) {
+        return toCheckedState(merged.checked)
+      }
 
-    if (local.formFieldBind !== false && field.value() !== undefined) {
-      return toCheckedState(field.value())
-    }
+      if (merged.formFieldBind !== false && field.value() !== undefined) {
+        return toCheckedState(field.value())
+      }
 
-    return undefined
-  })
-
-  const defaultChecked = createMemo<boolean | 'indeterminate' | undefined>(() => {
-    if (local.defaultChecked === undefined) {
       return undefined
-    }
-
-    return toCheckedState(local.defaultChecked)
+    },
+    defaultValue: defaultCheckedState,
   })
 
   const resolvedChecked = createMemo<boolean | undefined>(() => {
@@ -240,184 +243,233 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
     return value === 'indeterminate' ? false : value
   })
 
-  const resolvedDefaultChecked = createMemo<boolean | undefined>(() => {
-    const value = defaultChecked()
-    return value === 'indeterminate' ? false : value
-  })
-
   const indeterminate = createMemo<boolean>(() => {
-    if (local.indeterminate !== undefined) {
-      return local.indeterminate
+    if (merged.indeterminate !== undefined) {
+      return merged.indeterminate
     }
-    return (
-      checked() === 'indeterminate' ||
-      (checked() === undefined && defaultChecked() === 'indeterminate')
-    )
+    return checked() === 'indeterminate'
   })
 
   createEffect(() => {
-    if (local.formFieldBind === false || local.checked === undefined) {
+    if (merged.formFieldBind === false || merged.checked === undefined) {
       return
     }
 
-    field.setFormValue(normalizeFieldValue(local.checked))
+    field.setFormValue(normalizeFieldValue(merged.checked))
   })
 
   function onChange(nextChecked: boolean): void {
     const nextValue = toChangeValue(nextChecked)
 
-    if (local.formFieldBind === false) {
-      local.onChange?.(nextValue)
+    setChecked(nextChecked)
+
+    if (merged.formFieldBind === false) {
+      merged.onChange?.(nextValue)
       return
     }
 
     field.setFormValue(nextValue)
-    local.onChange?.(nextValue)
+    merged.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
 
+  const readOnly = createMemo(() => Boolean(merged.readOnly))
+  const dataAttrs = createMemo(() => ({
+    'data-checked': resolvedChecked() ? '' : undefined,
+    'data-disabled': field.disabled() ? '' : undefined,
+    'data-indeterminate': indeterminate() ? '' : undefined,
+    'data-readonly': readOnly() ? '' : undefined,
+  }))
+
+  createEffect(() => {
+    if (inputEl) {
+      inputEl.indeterminate = indeterminate()
+    }
+  })
+
+  function toggle(): void {
+    if (field.disabled() || readOnly()) {
+      return
+    }
+
+    onChange(!resolvedChecked())
+    inputEl?.focus()
+  }
+
+  function onRootPointerDown(event: PointerEvent): void {
+    callHandler(event, merged.onPointerDown)
+
+    if (document.activeElement === inputEl) {
+      event.preventDefault()
+    }
+  }
+
   return (
-    <KobalteCheckbox.Root
+    <div
       id={`${field.id()}-root`}
-      name={field.name()}
-      disabled={field.disabled()}
-      onChange={onChange}
-      checked={resolvedChecked()}
-      defaultChecked={resolvedDefaultChecked()}
-      indeterminate={indeterminate()}
+      role="group"
       data-slot="root"
-      data-disabled={field.disabled() ? '' : undefined}
-      style={local.styles?.root}
+      style={merged.styles?.root}
       class={checkboxRootVariants(
         {
-          variant: local.variant === 'card' ? 'card' : undefined,
-          indicator: local.indicator === 'hidden' ? undefined : local.indicator,
+          variant: merged.variant === 'card' ? 'card' : undefined,
+          indicator: merged.indicator === 'hidden' ? undefined : merged.indicator,
         },
-        local.variant === 'card' &&
+        merged.variant === 'card' &&
           checkboxCardPaddingVariants({
             size: field.size(),
           }),
-        local.variant === 'card' && 'cursor-pointer',
-        local.classes?.root,
+        merged.variant === 'card' && 'cursor-pointer',
+        merged.classes?.root,
       )}
-      {...rest}
+      onPointerDown={onRootPointerDown}
+      {...dataAttrs()}
     >
-      {(state) => (
-        <>
-          <Show when={local.variant === 'card'}>
-            <label for={field.id()} class="inset-0 absolute" />
-          </Show>
-          <div
-            data-slot="container"
-            style={local.styles?.container}
-            class={checkboxContainerVariants(
-              {
-                size: field.size(),
-              },
-              local.variant === 'card' && 'relative z-1',
-              local.classes?.container,
-            )}
-          >
-            <KobalteCheckbox.Input
-              id={field.id()}
-              class="peer"
-              data-slot="input"
-              {...field.ariaAttrs()}
-            />
+      <Show when={merged.variant === 'card'}>
+        <label for={field.id()} class="inset-0 absolute" />
+      </Show>
+      <div
+        data-slot="container"
+        style={merged.styles?.container}
+        class={checkboxContainerVariants(
+          {
+            size: field.size(),
+          },
+          merged.variant === 'card' && 'relative z-1',
+          merged.classes?.container,
+        )}
+      >
+        <HiddenInput
+          ref={(element) => {
+            inputEl = element
+          }}
+          id={field.id()}
+          type="checkbox"
+          name={field.name()}
+          value={merged.value}
+          checked={Boolean(resolvedChecked())}
+          required={merged.required}
+          disabled={field.disabled()}
+          readOnly={readOnly()}
+          aria-checked={indeterminate() ? 'mixed' : Boolean(resolvedChecked())}
+          aria-required={merged.required || undefined}
+          aria-disabled={field.disabled() || undefined}
+          aria-readonly={readOnly() || undefined}
+          class="peer"
+          data-slot="input"
+          onChange={(event) => {
+            event.stopPropagation()
 
-            <KobalteCheckbox.Control
-              data-slot="control"
-              style={local.styles?.control}
-              data-invalid={field.invalid() ? '' : undefined}
-              class={checkboxBaseVariants(
-                {
-                  size: field.size(),
-                },
-                local.indicator === 'hidden' && 'sr-only',
-                local.classes?.control,
-              )}
-            >
-              <KobalteCheckbox.Indicator
-                data-slot="indicator"
-                style={local.styles?.indicator}
-                class={cn(
-                  'text-primary-foreground bg-primary flex size-full items-center justify-center',
-                  local.classes?.indicator,
-                )}
-              >
-                <Icon
-                  name={state.indeterminate() ? local.indeterminateIcon : local.checkedIcon}
-                  class={checkboxIconVariants(
-                    {
-                      size: field.size(),
-                    },
-                    local.classes?.icon,
-                  )}
-                />
-              </KobalteCheckbox.Indicator>
-            </KobalteCheckbox.Control>
-          </div>
+            if (field.disabled() || readOnly()) {
+              event.currentTarget.checked = Boolean(resolvedChecked())
+              event.currentTarget.indeterminate = indeterminate()
+              return
+            }
 
-          <Show when={local.label || local.description}>
+            onChange(event.currentTarget.checked)
+            event.currentTarget.checked = Boolean(resolvedChecked())
+            event.currentTarget.indeterminate = indeterminate()
+          }}
+          {...dataAttrs()}
+          {...field.ariaAttrs()}
+        />
+
+        <div
+          data-slot="control"
+          style={merged.styles?.control}
+          data-invalid={field.invalid() ? '' : undefined}
+          class={checkboxBaseVariants(
+            {
+              size: field.size(),
+            },
+            merged.indicator === 'hidden' && 'sr-only',
+            merged.classes?.control,
+          )}
+          onClick={() => toggle()}
+          {...dataAttrs()}
+        >
+          <Show when={resolvedChecked() || indeterminate()}>
             <div
-              data-slot="wrapper"
-              style={local.styles?.wrapper}
-              class={checkboxWrapperVariants(
-                {
-                  indicator: local.indicator,
-                  size: field.size(),
-                },
-                local.classes?.wrapper,
+              data-slot="indicator"
+              style={merged.styles?.indicator}
+              class={cn(
+                'text-primary-foreground bg-primary flex size-full items-center justify-center',
+                merged.classes?.indicator,
               )}
+              {...dataAttrs()}
             >
-              <Show when={local.label}>
-                <Show
-                  when={local.variant === 'card'}
-                  fallback={
-                    <label
-                      for={field.id()}
-                      data-slot="label"
-                      style={local.styles?.label}
-                      class={checkboxLabelVariants(
-                        {
-                          required: rest.required,
-                        },
-                        local.classes?.label,
-                      )}
-                    >
-                      {local.label}
-                    </label>
-                  }
-                >
-                  <p
-                    data-slot="label"
-                    style={local.styles?.label}
-                    class={checkboxLabelVariants(
-                      {
-                        required: rest.required,
-                      },
-                      local.classes?.label,
-                    )}
-                  >
-                    {local.label}
-                  </p>
-                </Show>
-              </Show>
-
-              <Show when={local.description}>
-                <p
-                  data-slot="description"
-                  style={local.styles?.description}
-                  class={cn('text-muted-foreground', local.classes?.description)}
-                >
-                  {local.description}
-                </p>
-              </Show>
+              <Icon
+                name={indeterminate() ? merged.indeterminateIcon : merged.checkedIcon}
+                class={checkboxIconVariants(
+                  {
+                    size: field.size(),
+                  },
+                  merged.classes?.icon,
+                )}
+              />
             </div>
           </Show>
-        </>
-      )}
-    </KobalteCheckbox.Root>
+        </div>
+      </div>
+
+      <Show when={merged.label || merged.description}>
+        <div
+          data-slot="wrapper"
+          style={merged.styles?.wrapper}
+          class={checkboxWrapperVariants(
+            {
+              indicator: merged.indicator,
+              size: field.size(),
+            },
+            merged.classes?.wrapper,
+          )}
+        >
+          <Show when={merged.label}>
+            <Show
+              when={merged.variant === 'card'}
+              fallback={
+                <label
+                  for={field.id()}
+                  data-slot="label"
+                  style={merged.styles?.label}
+                  class={checkboxLabelVariants(
+                    {
+                      required: merged.required,
+                    },
+                    merged.classes?.label,
+                  )}
+                >
+                  {merged.label}
+                </label>
+              }
+            >
+              <p
+                data-slot="label"
+                style={merged.styles?.label}
+                class={checkboxLabelVariants(
+                  {
+                    required: merged.required,
+                  },
+                  merged.classes?.label,
+                )}
+              >
+                {merged.label}
+              </p>
+            </Show>
+          </Show>
+
+          <Show when={merged.description}>
+            <p
+              data-slot="description"
+              style={merged.styles?.description}
+              class={cn('text-muted-foreground', merged.classes?.description)}
+            >
+              {merged.description}
+            </p>
+          </Show>
+        </div>
+      </Show>
+    </div>
   )
 }

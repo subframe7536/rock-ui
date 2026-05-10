@@ -55,6 +55,34 @@ describe('Switch', () => {
     })
   })
 
+  test('does not toggle a controlled readOnly switch', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <Switch checked readOnly label="Readonly" onChange={onChange} />)
+    const switchInput = screen.getByRole('switch', { name: 'Readonly' }) as HTMLInputElement
+
+    expect(switchInput.getAttribute('aria-readonly')).toBe('true')
+
+    await fireEvent.click(switchInput)
+
+    expect(switchInput.checked).toBe(true)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  test('does not toggle an uncontrolled readOnly switch', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <Switch readOnly label="Readonly uncontrolled" onChange={onChange} />
+    ))
+    const switchInput = screen.getByRole('switch', {
+      name: 'Readonly uncontrolled',
+    }) as HTMLInputElement
+
+    await fireEvent.click(switchInput)
+
+    expect(switchInput.checked).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   test('maps custom numeric values for controlled switch', async () => {
     const onChange = vi.fn()
     const screen = render(() => (

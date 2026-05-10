@@ -50,6 +50,146 @@ describe('Tabs', () => {
     expect(selected.getAttribute('aria-selected')).toBe('true')
   })
 
+  test('changes selection with horizontal arrow keys and wraps by default', async () => {
+    const screen = render(() => (
+      <Tabs
+        items={[
+          { label: 'One', value: 'one', content: 'Panel one' },
+          { label: 'Two', value: 'two', content: 'Panel two' },
+          { label: 'Three', value: 'three', content: 'Panel three' },
+        ]}
+        defaultValue="one"
+      />
+    ))
+
+    const one = screen.getByRole('tab', { name: 'One' })
+    const two = screen.getByRole('tab', { name: 'Two' })
+    const three = screen.getByRole('tab', { name: 'Three' })
+
+    one.focus()
+
+    await fireEvent.keyDown(one, { key: 'ArrowRight' })
+    expect(two.getAttribute('aria-selected')).toBe('true')
+
+    await fireEvent.keyDown(two, { key: 'ArrowLeft' })
+    expect(one.getAttribute('aria-selected')).toBe('true')
+
+    await fireEvent.keyDown(one, { key: 'ArrowLeft' })
+    expect(three.getAttribute('aria-selected')).toBe('true')
+  })
+
+  test('changes selection with vertical arrow keys', async () => {
+    const screen = render(() => (
+      <Tabs
+        orientation="vertical"
+        items={[
+          { label: 'One', value: 'one', content: 'Panel one' },
+          { label: 'Two', value: 'two', content: 'Panel two' },
+          { label: 'Three', value: 'three', content: 'Panel three' },
+        ]}
+        defaultValue="one"
+      />
+    ))
+
+    const one = screen.getByRole('tab', { name: 'One' })
+    const two = screen.getByRole('tab', { name: 'Two' })
+
+    one.focus()
+
+    await fireEvent.keyDown(one, { key: 'ArrowRight' })
+    expect(one.getAttribute('aria-selected')).toBe('true')
+
+    await fireEvent.keyDown(one, { key: 'ArrowDown' })
+    expect(two.getAttribute('aria-selected')).toBe('true')
+  })
+
+  test('supports Home and End keyboard navigation', async () => {
+    const screen = render(() => (
+      <Tabs
+        items={[
+          { label: 'One', value: 'one', content: 'Panel one' },
+          { label: 'Two', value: 'two', content: 'Panel two' },
+          { label: 'Three', value: 'three', content: 'Panel three' },
+        ]}
+        defaultValue="one"
+      />
+    ))
+
+    const one = screen.getByRole('tab', { name: 'One' })
+    const three = screen.getByRole('tab', { name: 'Three' })
+
+    one.focus()
+
+    await fireEvent.keyDown(one, { key: 'End' })
+    expect(three.getAttribute('aria-selected')).toBe('true')
+
+    await fireEvent.keyDown(three, { key: 'Home' })
+    expect(one.getAttribute('aria-selected')).toBe('true')
+  })
+
+  test('supports manual activation mode via Enter and Space', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <Tabs
+        activationMode="manual"
+        defaultValue="one"
+        onChange={onChange}
+        items={[
+          { label: 'One', value: 'one', content: 'Panel one' },
+          { label: 'Two', value: 'two', content: 'Panel two' },
+          { label: 'Three', value: 'three', content: 'Panel three' },
+        ]}
+      />
+    ))
+
+    const one = screen.getByRole('tab', { name: 'One' })
+    const two = screen.getByRole('tab', { name: 'Two' })
+    const three = screen.getByRole('tab', { name: 'Three' })
+
+    one.focus()
+
+    await fireEvent.keyDown(one, { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(two)
+    expect(two.getAttribute('aria-selected')).toBe('false')
+
+    await fireEvent.keyDown(two, { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(three)
+    expect(three.getAttribute('aria-selected')).toBe('false')
+
+    await fireEvent.keyDown(three, { key: 'Enter' })
+    expect(three.getAttribute('aria-selected')).toBe('true')
+
+    await fireEvent.keyDown(three, { key: ' ' })
+    expect(onChange).toHaveBeenCalledWith('three')
+  })
+
+  test('respects keyboardLoop=false at boundaries', async () => {
+    const screen = render(() => (
+      <Tabs
+        keyboardLoop={false}
+        items={[
+          { label: 'One', value: 'one', content: 'Panel one' },
+          { label: 'Two', value: 'two', content: 'Panel two' },
+          { label: 'Three', value: 'three', content: 'Panel three' },
+        ]}
+        defaultValue="three"
+      />
+    ))
+
+    const one = screen.getByRole('tab', { name: 'One' })
+    const three = screen.getByRole('tab', { name: 'Three' })
+
+    three.focus()
+
+    await fireEvent.keyDown(three, { key: 'ArrowRight' })
+    expect(three.getAttribute('aria-selected')).toBe('true')
+
+    one.focus()
+    await fireEvent.keyDown(one, { key: 'ArrowLeft' })
+    expect(one.getAttribute('aria-selected')).toBe('false')
+    expect(screen.getByRole('tab', { name: 'Three' }).getAttribute('aria-selected')).toBe('true')
+  })
+
   test('applies orientation/variant classes and class overrides', () => {
     const screen = render(() => (
       <Tabs

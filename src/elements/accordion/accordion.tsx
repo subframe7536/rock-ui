@@ -1,9 +1,10 @@
-import * as KobalteAccordion from '@kobalte/core/accordion'
 import type { JSX } from 'solid-js'
-import { For, Show, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createMemo, mergeProps } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { useDisclosureState } from '../../shared/use-disclosure-state'
+import { callHandler, cn, useId } from '../../shared/utils'
 import { Icon } from '../icon'
 import type { IconT } from '../icon'
 
@@ -20,7 +21,7 @@ export namespace AccordionT {
   export type Variant = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteAccordion.AccordionRootProps
+  export type Extend = never
 
   export interface Item {
     /**
@@ -53,6 +54,39 @@ export namespace AccordionT {
    * Base props for the Accordion component.
    */
   export interface Base {
+    /**
+     * Unique identifier for the accordion root element.
+     */
+    id?: string
+
+    /**
+     * Controlled list of expanded item values.
+     */
+    value?: string[]
+
+    /**
+     * Default list of expanded item values for uncontrolled usage.
+     * @default []
+     */
+    defaultValue?: string[]
+
+    /**
+     * Whether multiple accordion items can be expanded at the same time.
+     * @default false
+     */
+    multiple?: boolean
+
+    /**
+     * Whether the last expanded item can be collapsed.
+     * @default true
+     */
+    collapsible?: boolean
+
+    /**
+     * Callback when the expanded item values change.
+     */
+    onChange?: (value: string[]) => void
+
     /**
      * Array of accordion items to render.
      */
@@ -88,6 +122,12 @@ export namespace AccordionT {
  */
 export interface AccordionProps extends AccordionT.Props {}
 
+interface NormalizedAccordionItem {
+  disabled: boolean
+  item: AccordionT.Item
+  value: string
+}
+
 /** Stacked disclosure component with single or multiple expanded sections. */
 export function Accordion(props: AccordionProps): JSX.Element {
   const merged = mergeProps(
@@ -100,95 +140,177 @@ export function Accordion(props: AccordionProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    'disabled',
-    'unmountOnHide',
-    'items',
-    'trailing',
-    'classes',
-    'styles',
-  ])
+  const rootId = useId(() => merged.id, 'accordion')
+  const [selectedValues, setSelectedValues] = useControllableValue<string[]>({
+    value: () => merged.value,
+    defaultValue: () => merged.defaultValue ?? [],
+  })
+  const resolvedSelectedValues = createMemo(() => selectedValues() ?? [])
+  const normalizedItems = createMemo<NormalizedAccordionItem[]>(() =>
+    (merged.items ?? []).map((item, index) => ({
+      disabled: Boolean(merged.disabled || item.disabled),
+      item,
+      value: item.value ?? String(index),
+    })),
+  )
+
+  function setValue(nextValue: string[]): void {
+    setSelectedValues(nextValue)
+
+    merged.onChange?.(nextValue)
+  }
+
+  function toggleValue(itemValue: string): void {
+    const currentValue = resolvedSelectedValues()
+    const isOpen = currentValue.includes(itemValue)
+
+    if (merged.multiple) {
+      setValue(
+        isOpen
+          ? currentValue.filter((valueItem) => valueItem !== itemValue)
+          : [...currentValue, itemValue],
+      )
+      return
+    }
+
+    if (isOpen) {
+      if (merged.collapsible) {
+        setValue([])
+      }
+      return
+    }
+
+    setValue([itemValue])
+  }
 
   return (
-    <KobalteAccordion.Root
+    <div
+      id={rootId()}
       data-slot="root"
-      style={local.styles?.root}
-      class={cn('flex flex-col w-full', local.disabled && 'effect-dis', local.classes?.root)}
-      {...rest}
+      style={merged.styles?.root}
+      class={cn('flex flex-col w-full', merged.disabled && 'effect-dis', merged.classes?.root)}
     >
-      <For each={local.items}>
-        {(item, index) => (
-          <KobalteAccordion.Item
-            value={item.value ?? String(index())}
-            disabled={Boolean(local.disabled || item.disabled)}
-            forceMount={!local.unmountOnHide}
-            data-slot="item"
-            style={local.styles?.item}
-            class={cn('not-last:b-(b b-border) data-disabled:effect-dis', local.classes?.item)}
-          >
-            <KobalteAccordion.Header
-              data-slot="header"
-              style={local.styles?.header}
-              class={cn('flex', local.classes?.header)}
+      <For each={normalizedItems()}>
+        {(entry) => {
+          const expanded = createMemo(() => resolvedSelectedValues().includes(entry.value))
+          const { contentHeight, dataAttrs, setContentElement } = useDisclosureState({
+            open: expanded,
+            disabled: () => entry.disabled,
+          })
+          const triggerId = createMemo(() => `${rootId()}-${entry.value}-trigger`)
+          const contentId = createMemo(() => `${rootId()}-${entry.value}-content`)
+
+          function onTriggerClick(event: MouseEvent): void {
+            const { defaultPrevented } = callHandler(event, undefined)
+
+            if (!defaultPrevented && !entry.disabled) {
+              toggleValue(entry.value)
+            }
+          }
+
+          function onTriggerKeyDown(event: KeyboardEvent): void {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+              return
+            }
+
+            event.preventDefault()
+
+            if (!entry.disabled) {
+              toggleValue(entry.value)
+            }
+          }
+
+          return (
+            <div
+              data-slot="item"
+              style={merged.styles?.item}
+              class={cn('not-last:b-(b b-border) data-disabled:effect-dis', merged.classes?.item)}
+              {...dataAttrs()}
             >
-              <KobalteAccordion.Trigger
-                data-slot="trigger"
-                style={local.styles?.trigger}
-                class={cn(
-                  'group text-sm font-medium py-2.5 text-left outline-none b-1 b-transparent rounded-lg flex flex-1 gap-1.5 min-w-0 w-full transition items-center justify-between relative focus-visible:effect-fv-border disabled:effect-dis hover:underline',
-                  local.classes?.trigger,
-                )}
+              <div
+                data-slot="header"
+                style={merged.styles?.header}
+                class={cn('flex', merged.classes?.header)}
               >
-                <Show when={item.leading}>
-                  <Icon
-                    name={item.leading}
-                    slotName="leading"
-                    style={local.styles?.leading}
-                    class={cn('shrink-0 size-5', local.classes?.leading)}
-                  />
-                </Show>
-
-                <Show when={item.label}>
-                  <span
-                    data-slot="label"
-                    style={local.styles?.label}
-                    class={cn('text-start break-words', local.classes?.label)}
-                  >
-                    {item.label}
-                  </span>
-                </Show>
-
-                <Show when={local.trailing}>
-                  <Icon
-                    name={local.trailing}
-                    slotName="trailing"
-                    style={local.styles?.trailing}
-                    class={cn(
-                      'text-muted-foreground ml-auto shrink-0 size-4 pointer-events-none duration-150 group-aria-expanded:rotate-180',
-                      local.classes?.trailing,
-                    )}
-                  />
-                </Show>
-              </KobalteAccordion.Trigger>
-            </KobalteAccordion.Header>
-
-            <KobalteAccordion.Content class="text-sm overflow-hidden data-closed:animate-accordion-up data-expanded:animate-accordion-down">
-              <Show when={item.content}>
-                <div
-                  data-slot="content"
-                  style={local.styles?.content}
+                <button
+                  id={triggerId()}
+                  type="button"
+                  aria-controls={contentId()}
+                  aria-expanded={expanded()}
+                  disabled={entry.disabled}
+                  data-slot="trigger"
+                  style={merged.styles?.trigger}
                   class={cn(
-                    'style-accordion-content pb-2.5 h-$kb-collapsible-content-height',
-                    local.classes?.content,
+                    'group text-sm font-medium py-2.5 text-left outline-none b-1 b-transparent rounded-lg flex flex-1 gap-1.5 min-w-0 w-full transition items-center justify-between relative focus-visible:effect-fv-border disabled:effect-dis hover:underline',
+                    merged.classes?.trigger,
                   )}
+                  onClick={onTriggerClick}
+                  onKeyDown={onTriggerKeyDown}
+                  {...dataAttrs()}
                 >
-                  {item.content}
+                  <Show when={entry.item.leading}>
+                    <Icon
+                      name={entry.item.leading}
+                      slotName="leading"
+                      style={merged.styles?.leading}
+                      class={cn('shrink-0 size-5', merged.classes?.leading)}
+                    />
+                  </Show>
+
+                  <Show when={entry.item.label}>
+                    <span
+                      data-slot="label"
+                      style={merged.styles?.label}
+                      class={cn('text-start break-words', merged.classes?.label)}
+                    >
+                      {entry.item.label}
+                    </span>
+                  </Show>
+
+                  <Show when={merged.trailing}>
+                    <Icon
+                      name={merged.trailing}
+                      slotName="trailing"
+                      style={merged.styles?.trailing}
+                      class={cn(
+                        'text-muted-foreground ml-auto shrink-0 size-4 pointer-events-none duration-150 group-aria-expanded:rotate-180',
+                        merged.classes?.trailing,
+                      )}
+                    />
+                  </Show>
+                </button>
+              </div>
+
+              <Show when={!merged.unmountOnHide || expanded()}>
+                <div
+                  id={contentId()}
+                  role="region"
+                  aria-labelledby={triggerId()}
+                  class="text-sm overflow-hidden data-closed:animate-accordion-up data-expanded:animate-accordion-down"
+                  {...dataAttrs()}
+                >
+                  <Show when={entry.item.content}>
+                    <div
+                      ref={setContentElement}
+                      data-slot="content"
+                      style={{
+                        '--kb-collapsible-content-height': `${contentHeight()}px`,
+                        ...(merged.styles?.content as JSX.CSSProperties | undefined),
+                      }}
+                      class={cn(
+                        'style-accordion-content pb-2.5 h-$kb-collapsible-content-height',
+                        merged.classes?.content,
+                      )}
+                    >
+                      {entry.item.content}
+                    </div>
+                  </Show>
                 </div>
               </Show>
-            </KobalteAccordion.Content>
-          </KobalteAccordion.Item>
-        )}
+            </div>
+          )
+        }}
       </For>
-    </KobalteAccordion.Root>
+    </div>
   )
 }

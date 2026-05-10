@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from '@solidjs/testing-library'
+import { createSignal } from 'solid-js'
 import { describe, expect, test, vi } from 'vitest'
 
 import { Form } from '../form'
@@ -369,5 +370,33 @@ describe('FileUpload', () => {
     await setInputFiles(input, [createFile('a.txt'), createFile('b.txt')])
 
     expect(onFileReject).toHaveBeenCalledTimes(1)
+  })
+
+  test('readOnly keeps selected files and disables removal', async () => {
+    const onValueChange = vi.fn()
+    const [readOnly, setReadOnly] = createSignal(false)
+    const screen = render(() => (
+      <FileUpload multiple readOnly={readOnly()} onValueChange={onValueChange} />
+    ))
+    const input = getFileInput(screen.container)
+
+    await setInputFiles(input, [createFile('locked.txt')])
+
+    setReadOnly(true)
+
+    await waitFor(() => {
+      expect(
+        (screen.container.querySelector('[data-slot="fileRemove"]') as HTMLButtonElement | null)
+          ?.disabled,
+      ).toBe(true)
+    })
+
+    await fireEvent.click(screen.container.querySelector('[data-slot="fileRemove"]') as HTMLElement)
+
+    expect(onValueChange).toHaveBeenCalledTimes(1)
+    expect(screen.container.querySelectorAll('[data-slot="file"]').length).toBe(1)
+    expect(
+      screen.container.querySelector('[data-slot="root"]')?.getAttribute('data-readonly'),
+    ).toBe('')
   })
 })

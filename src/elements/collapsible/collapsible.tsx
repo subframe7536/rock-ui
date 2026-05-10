@@ -1,9 +1,10 @@
-import * as KobalteCollapsible from '@kobalte/core/collapsible'
 import type { JSX } from 'solid-js'
-import { Show, splitProps } from 'solid-js'
+import { Show, createMemo } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { useDisclosureState } from '../../shared/use-disclosure-state'
+import { callHandler, cn, useId } from '../../shared/utils'
 
 export namespace CollapsibleT {
   /**
@@ -20,7 +21,7 @@ export namespace CollapsibleT {
   export type Variant = never
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteCollapsible.CollapsibleRootProps
+  export type Extend = never
 
   export interface Item {}
   /**
@@ -28,12 +29,18 @@ export namespace CollapsibleT {
    */
   export interface Base {
     /**
+     * Unique identifier for the collapsible root element.
+     */
+    id?: string
+
+    /**
      * Whether the collapsible is open (controlled).
      */
     open?: boolean
 
     /**
      * Whether the collapsible is open by default (uncontrolled).
+     * @default false
      */
     defaultOpen?: boolean
 
@@ -78,40 +85,85 @@ export interface CollapsibleProps extends CollapsibleT.Props {}
 
 /** Expandable content section with animated open/close transitions. */
 export function Collapsible(props: CollapsibleProps): JSX.Element {
-  const [local, rest] = splitProps(props, ['classes', 'styles', 'children', 'trigger'])
+  const rootId = useId(() => props.id, 'collapsible')
+  const contentId = createMemo(() => `${rootId()}-content`)
+  const triggerId = createMemo(() => `${rootId()}-trigger`)
+  const [open, setControlledOpen] = useControllableValue<boolean>({
+    value: () => props.open,
+    defaultValue: () => Boolean(props.defaultOpen),
+  })
+  const resolvedOpen = createMemo(() => Boolean(open()))
+  const { contentHeight, dataAttrs, disabled, setContentElement } = useDisclosureState({
+    open: resolvedOpen,
+    disabled: () => Boolean(props.disabled),
+  })
+
+  function setOpen(nextOpen: boolean): void {
+    if (disabled() || nextOpen === resolvedOpen()) {
+      return
+    }
+
+    setControlledOpen(nextOpen)
+
+    props.onOpenChange?.(nextOpen)
+  }
+
+  function onTriggerClick(event: MouseEvent): void {
+    const { defaultPrevented } = callHandler(event, undefined)
+
+    if (!defaultPrevented) {
+      setOpen(!open())
+    }
+  }
 
   return (
-    <KobalteCollapsible.Root
+    <div
+      id={rootId()}
       data-slot="root"
-      style={local.styles?.root}
-      class={cn(local.classes?.root)}
-      {...rest}
+      style={props.styles?.root}
+      class={cn(props.classes?.root)}
+      {...dataAttrs()}
     >
-      <Show when={local.trigger}>
+      <Show when={props.trigger}>
         {(render) => {
-          const context = KobalteCollapsible.useCollapsibleContext()
           return (
-            <KobalteCollapsible.Trigger
+            <button
+              id={triggerId()}
+              type="button"
+              aria-controls={contentId()}
+              aria-expanded={resolvedOpen()}
+              disabled={disabled()}
               data-slot="trigger"
-              style={local.styles?.trigger}
-              class={cn('cursor-pointer', local.classes?.trigger)}
+              style={props.styles?.trigger}
+              class={cn('cursor-pointer', props.classes?.trigger)}
+              onClick={onTriggerClick}
+              {...dataAttrs()}
             >
-              {render()({ open: context.isOpen() })}
-            </KobalteCollapsible.Trigger>
+              {render()({ open: resolvedOpen() })}
+            </button>
           )
         }}
       </Show>
 
-      <KobalteCollapsible.Content
-        data-slot="content"
-        style={local.styles?.content}
-        class={cn(
-          'h-$kb-collapsible-content-height overflow-hidden data-closed:h-0',
-          local.classes?.content,
-        )}
-      >
-        {local.children}
-      </KobalteCollapsible.Content>
-    </KobalteCollapsible.Root>
+      <Show when={props.forceMount || resolvedOpen()}>
+        <div
+          ref={setContentElement}
+          id={contentId()}
+          aria-labelledby={triggerId()}
+          data-slot="content"
+          style={{
+            '--kb-collapsible-content-height': `${contentHeight()}px`,
+            ...(props.styles?.content as JSX.CSSProperties | undefined),
+          }}
+          class={cn(
+            'h-$kb-collapsible-content-height transition-[height] overflow-hidden data-closed:h-0',
+            props.classes?.content,
+          )}
+          {...dataAttrs()}
+        >
+          {props.children}
+        </div>
+      </Show>
+    </div>
   )
 }
