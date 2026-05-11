@@ -12,6 +12,7 @@ replaced, `@kobalte/core` and `@kobalte/utils` can be dropped from dependencies 
 - **Slider**: when two thumbs overlap, it is impossible to slide in any direction
 - **Tabs / Stepper**: no keyboard loop option (pressing arrow at the last tab does not wrap back to the first)
 
+
 ## Components and Guide
 
 To inline a Kobalte package:
@@ -58,13 +59,13 @@ Multiple subcomponents with shared context and keyboard navigation, but no float
   - Affects: `Accordion` (`src/elements/accordion/accordion.tsx`)
 - [x] **`@kobalte/core/tabs`** → fuse tabs state, list, trigger, indicator, and content behavior directly into the styled components; **fix**: add keyboard loop option so arrow navigation wraps at boundaries
   - Affects: `Tabs` (`src/navigation/tabs/tabs.tsx`), `Stepper` (`src/navigation/stepper/stepper.tsx`)
+- [x] **`@kobalte/core/slider`** → inline `Slider.Root`, `Slider.Track`, `Slider.Fill`, `Slider.Thumb`, `Slider.Input`, `useSliderContext`; **fix**: allow sliding in any direction when thumbs overlap
+  - Affects: `Slider` (`src/forms/slider/slider.tsx`)
 
 ### Comprehensive
 
 Floating/positioned overlays with portals, focus traps, and complex pointer/keyboard interaction chains.
 
-- [x] **`@kobalte/core/slider`** → inline `Slider.Root`, `Slider.Track`, `Slider.Fill`, `Slider.Thumb`, `Slider.Input`, `useSliderContext`; **fix**: allow sliding in any direction when thumbs overlap
-  - Affects: `Slider` (`src/forms/slider/slider.tsx`)
 - [ ] **`@kobalte/core/dialog`** → inline `Dialog.Root`, `Dialog.Trigger`, `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.CloseButton`; includes focus trap and scroll lock
   - Affects: `Dialog` (`src/overlays/dialog/dialog.tsx`), `Sheet` (`src/overlays/sheet/sheet.tsx`), `Popup` (`src/overlays/popup/popup.tsx`)
 - [ ] **`@kobalte/core/popper`** → inline `usePopperContext` and the popper anchor/placement primitive; **prerequisite** for `popover` and `tooltip`
@@ -77,6 +78,16 @@ Floating/positioned overlays with portals, focus traps, and complex pointer/keyb
   - Affects: `DropdownMenu` (`src/overlays/dropdown-menu/dropdown-menu.tsx`), `ContextMenu` (`src/overlays/context-menu/context-menu.tsx`), `OverlayMenuBaseContent` (`src/overlays/shared-overlay-menu/menu.tsx`)
 - [ ] **`@kobalte/core/combobox`** → inline `Combobox`, `useComboboxContext`, `ComboboxContextValue`, `ComboboxRootProps`, `ComboboxSingleSelectionOptions`; most complex — requires virtualized scroll, multi-selection, and filtering support
   - Affects: `Select` (`src/forms/select/select.tsx`), `MultiSelect` (`src/forms/select/multi-select.tsx`), `CommandPalette` (`src/navigation/command-palette/command-palette.tsx`), `src/forms/select/shared/`
+
+#### Architecture Decision
+
+Port from `@kobalte/core` first, then make it non primitive and drop context usage.
+
+- `Dialog`, `Sheet`, and `Popup` share one private modal shell.
+  - The modal shell owns open state, portal mounting, overlay/content mounting, dismissal, focus trap, and scroll lock.
+- `Popover` and `Tooltip` get a separate popper-backed shell using inlined `@kobalte/core/popper`.
+- `DropdownMenu` and `ContextMenu` using inlined `@kobalte/core/dropdown-menu`.
+- `Select` / `MultiSelect` / `CommandPalette` using inlined `@kobalte/core/dropdown-menu`.
 
 # Current
 
