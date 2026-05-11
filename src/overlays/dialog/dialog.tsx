@@ -1,13 +1,13 @@
-import * as KobalteDialog from '@kobalte/core/dialog'
 import type { JSX } from 'solid-js'
-import { Show, mergeProps, splitProps } from 'solid-js'
+import { Show, createMemo, mergeProps } from 'solid-js'
 
 import { Card } from '../../elements/card'
-import { IconButton } from '../../elements/icon'
+import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
-import { Popup } from '../popup'
+import { cn, useId } from '../../shared/utils'
+import { popupContentVariants, popupOverlayVariants } from '../popup/popup.class'
+import { ModalShell } from '../shared/modal-shell'
 
 import { dialogCardVariants } from './dialog.class'
 import type { DialogCardVariantProps } from './dialog.class'
@@ -28,7 +28,7 @@ export namespace DialogT {
   export type Variant = DialogCardVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteDialog.DialogRootProps
+  export type Extend = never
 
   export interface Item {}
 
@@ -92,10 +92,10 @@ export namespace DialogT {
     close?: boolean
 
     /**
-     * Icon name for the close button.
+     * Icon name or custom content for the close button.
      * @default 'icon-close'
      */
-    closeIcon?: IconT.Name
+    closeIcon?: IconT.Name | JSX.Element
 
     /**
      * Whether the dialog can be dismissed by clicking outside or pressing Escape.
@@ -134,7 +134,7 @@ export namespace DialogT {
     styles?: Styles
 
     /**
-     * Content to render inside the dialog.
+     * Content to render inside the dialog trigger slot.
      */
     children?: JSX.Element
   }
@@ -155,135 +155,142 @@ export function Dialog(props: DialogProps): JSX.Element {
   const merged = mergeProps(
     {
       overlay: true,
-      transition: true,
       close: true,
-      closeIcon: 'icon-close',
+      closeIcon: 'icon-close' as IconT.Name,
       dismissible: true,
     },
     props,
   )
-  const [local, rest] = splitProps(merged, [
-    'overlay',
-    'scrollable',
-    'fullscreen',
-    'close',
-    'closeIcon',
-    'dismissible',
-    'onClosePrevent',
-    'title',
-    'description',
-    'header',
-    'body',
-    'footer',
-    'classes',
-    'children',
-  ])
+  const rootId = useId(() => merged.id, 'dialog')
+  const titleId = createMemo(() => (merged.title ? `${rootId()}-title` : undefined))
+  const descriptionId = createMemo(() =>
+    merged.description ? `${rootId()}-description` : undefined,
+  )
 
   const popupLayout = () => {
-    if (local.fullscreen) {
+    if (merged.fullscreen) {
       return 'fullscreen'
     }
 
-    if (local.scrollable) {
+    if (merged.scrollable) {
       return 'scrollable'
     }
 
     return 'default'
   }
 
-  const headerContent = () => {
-    if (local.header) {
-      return local.header
+  const headerContent = (close: () => void) => {
+    if (merged.header) {
+      return merged.header
     }
 
-    if (!local.title && !local.description && !local.close) {
+    if (!merged.title && !merged.description && !merged.close) {
       return undefined
     }
 
     return (
       <>
-        <Show when={local.title || local.description}>
+        <Show when={merged.title || merged.description}>
           <div
             data-slot="wrapper"
             style={merged.styles?.wrapper}
-            class={cn('flex-1 gap-1.5 grid min-w-0', local.classes?.wrapper)}
+            class={cn('flex-1 gap-1.5 grid min-w-0', merged.classes?.wrapper)}
           >
-            <Show when={local.title}>
-              <KobalteDialog.Title
+            <Show when={merged.title}>
+              <h2
+                id={titleId()}
                 data-slot="title"
                 style={merged.styles?.title}
                 class={cn(
                   'text-lg leading-none tracking-tight font-semibold',
-                  local.classes?.title,
+                  merged.classes?.title,
                 )}
               >
-                {local.title}
-              </KobalteDialog.Title>
+                {merged.title}
+              </h2>
             </Show>
 
-            <Show when={local.description}>
-              <KobalteDialog.Description
+            <Show when={merged.description}>
+              <p
+                id={descriptionId()}
                 data-slot="description"
                 style={merged.styles?.description}
-                class={cn('text-sm text-muted-foreground', local.classes?.description)}
+                class={cn('text-sm text-muted-foreground', merged.classes?.description)}
               >
-                {local.description}
-              </KobalteDialog.Description>
+                {merged.description}
+              </p>
             </Show>
           </div>
         </Show>
 
-        <Show when={local.close}>
-          <KobalteDialog.CloseButton
-            as={IconButton}
-            name={local.closeIcon}
+        <Show when={merged.close}>
+          <button
+            type="button"
             data-slot="close"
-            styles={{ root: merged.styles?.close }}
             aria-label="Close"
-            classes={{
-              root: [
-                'p-1 rounded-sm size-7 transition-opacity right-4 top-4 absolute focus-visible:effect-fv hover:bg-accent',
-                local.classes?.close,
-              ],
+            style={merged.styles?.close}
+            class={cn(
+              'text-muted-foreground p-1 rounded-sm inline-flex shrink-0 size-7 transition-colors items-center right-4 top-4 justify-center absolute focus-visible:effect-fv hover:bg-accent',
+              merged.classes?.close,
+            )}
+            onClick={() => {
+              close()
             }}
-          />
+          >
+            <Icon name={merged.closeIcon} />
+          </button>
         </Show>
       </>
     )
   }
 
   return (
-    <Popup
-      overlay={local.overlay}
-      scrollable={local.scrollable}
-      fullscreen={local.fullscreen}
-      dismissible={local.dismissible}
-      onClosePrevent={local.onClosePrevent}
-      classes={{
-        trigger: local.classes?.trigger,
-        overlay: local.classes?.overlay,
-        content: local.classes?.content,
-      }}
-      content={
+    <ModalShell
+      id={merged.id}
+      open={merged.open}
+      defaultOpen={merged.defaultOpen}
+      onOpenChange={merged.onOpenChange}
+      overlay={merged.overlay}
+      dismissible={merged.dismissible}
+      onClosePrevent={merged.onClosePrevent}
+      preventScroll={!merged.scrollable}
+      overlayContainsContent={Boolean(merged.overlay && merged.scrollable)}
+      trigger={merged.children}
+      triggerStyle={merged.styles?.trigger}
+      triggerClass={merged.classes?.trigger}
+      overlayStyle={merged.styles?.overlay}
+      overlayClass={popupOverlayVariants(
+        {
+          scrollable: merged.scrollable,
+        },
+        merged.classes?.overlay,
+      )}
+      contentStyle={merged.styles?.content}
+      contentClass={popupContentVariants(
+        {
+          layout: popupLayout(),
+        },
+        merged.classes?.content,
+      )}
+      ariaLabelledBy={titleId()}
+      ariaDescribedBy={descriptionId()}
+      content={({ close }) => (
         <Card
-          header={headerContent()}
-          footer={local.footer}
+          header={headerContent(close)}
+          footer={merged.footer}
           classes={{
             root: dialogCardVariants({ layout: popupLayout() }),
-            header: cn('p-6 flex gap-1.5 items-start', local.classes?.header),
-            body: cn('text-sm pb-6', local.classes?.body),
+            header: cn('p-6 flex gap-1.5 items-start', merged.classes?.header),
+            body: cn('text-sm pb-6', merged.classes?.body),
             footer: cn(
               'px-6 pb-6 pt-0 flex flex-col-reverse gap-2 sm:(flex-row justify-end)',
-              local.classes?.footer,
+              merged.classes?.footer,
             ),
           }}
         >
-          {local.body}
+          {merged.body}
         </Card>
-      }
-      {...rest}
-    >
-      {local.children}
-    </Popup>
+      )}
+    />
   )
 }

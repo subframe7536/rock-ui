@@ -1,11 +1,10 @@
-import * as KobalteDialog from '@kobalte/core/dialog'
-import type { DialogContentProps as KobalteDialogContentProps } from '@kobalte/core/dialog'
 import type { JSX } from 'solid-js'
-import { Show, mergeProps, onCleanup, splitProps } from 'solid-js'
+import { Show, createMemo, mergeProps } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
+import { cn, useId } from '../../shared/utils'
+import { ModalShell } from '../shared/modal-shell'
 
 import { sheetContentVariants } from './sheet.class'
 import type { SheetVariantProps } from './sheet.class'
@@ -27,7 +26,7 @@ export namespace SheetT {
   export type Variant = SheetVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteDialog.DialogRootProps
+  export type Extend = never
 
   export interface Item {}
 
@@ -145,229 +144,149 @@ export function Sheet(props: SheetProps): JSX.Element {
     },
     props,
   )
-  const [local, rest] = splitProps(merged, [
-    'overlay',
-    'transition',
-    'side',
-    'inset',
-    'close',
-    'dismissible',
-    'onClosePrevent',
-    'title',
-    'description',
-    'header',
-    'body',
-    'footer',
-    'actions',
-    'classes',
-    'children',
-  ])
-
-  const preventDismiss = () => {
-    local.onClosePrevent?.()
-  }
-
-  let hasPreventedPointerAttempt = false
-  let resetPreventedPointerAttemptTimeout: ReturnType<typeof setTimeout> | undefined
-
-  const schedulePreventedPointerAttemptReset = () => {
-    if (resetPreventedPointerAttemptTimeout !== undefined) {
-      clearTimeout(resetPreventedPointerAttemptTimeout)
-    }
-
-    resetPreventedPointerAttemptTimeout = setTimeout(() => {
-      hasPreventedPointerAttempt = false
-      resetPreventedPointerAttemptTimeout = undefined
-    }, 0)
-  }
-
-  onCleanup(() => {
-    if (resetPreventedPointerAttemptTimeout !== undefined) {
-      clearTimeout(resetPreventedPointerAttemptTimeout)
-    }
-  })
-
-  const onPointerDownOutside = (
-    event: Parameters<NonNullable<KobalteDialogContentProps['onPointerDownOutside']>>[0],
-  ) => {
-    if (local.dismissible) {
-      return
-    }
-
-    event.preventDefault()
-    hasPreventedPointerAttempt = true
-    schedulePreventedPointerAttemptReset()
-    preventDismiss()
-  }
-
-  const onInteractOutside = (
-    event: Parameters<NonNullable<KobalteDialogContentProps['onInteractOutside']>>[0],
-  ) => {
-    if (local.dismissible || event.defaultPrevented) {
-      return
-    }
-
-    if (hasPreventedPointerAttempt) {
-      event.preventDefault()
-      return
-    }
-
-    event.preventDefault()
-    preventDismiss()
-  }
-
-  const onEscapeKeyDown = (
-    event: Parameters<NonNullable<KobalteDialogContentProps['onEscapeKeyDown']>>[0],
-  ) => {
-    if (local.dismissible) {
-      return
-    }
-
-    event.preventDefault()
-    preventDismiss()
-  }
+  const rootId = useId(() => merged.id, 'sheet')
+  const titleId = createMemo(() => (merged.title ? `${rootId()}-title` : undefined))
+  const descriptionId = createMemo(() =>
+    merged.description ? `${rootId()}-description` : undefined,
+  )
 
   const hasDefaultHeader = () =>
-    Boolean(local.title || local.description || local.actions || local.close)
+    Boolean(merged.title || merged.description || merged.actions || merged.close)
 
   return (
-    <KobalteDialog.Root modal {...rest}>
-      <KobalteDialog.Trigger
-        as="span"
-        tabIndex={-1}
-        data-slot="trigger"
-        style={merged.styles?.trigger}
-        class={cn('outline-none', local.classes?.trigger)}
-      >
-        {local.children}
-      </KobalteDialog.Trigger>
-
-      <KobalteDialog.Portal>
-        <Show when={local.overlay}>
-          <KobalteDialog.Overlay
-            data-slot="overlay"
-            style={merged.styles?.overlay}
-            class={cn(
-              'bg-black/10 duration-150 inset-0 fixed z-50 backdrop-blur-xs data-closed:animate-overlay-out data-expanded:animate-overlay-in',
-              local.classes?.overlay,
-            )}
-          />
-        </Show>
-
-        <KobalteDialog.Content
-          data-slot="content"
-          style={merged.styles?.content}
-          data-side={local.side}
-          class={sheetContentVariants(
-            {
-              side: local.side,
-              inset: local.inset,
-            },
-            !local.transition &&
-              'transition-none data-expanded:animate-none data-closed:animate-none',
-            local.classes?.content,
-          )}
-          onPointerDownOutside={onPointerDownOutside}
-          onInteractOutside={onInteractOutside}
-          onEscapeKeyDown={onEscapeKeyDown}
-        >
-          <Show when={local.header || hasDefaultHeader()}>
+    <ModalShell
+      id={merged.id}
+      open={merged.open}
+      defaultOpen={merged.defaultOpen}
+      onOpenChange={merged.onOpenChange}
+      overlay={merged.overlay}
+      dismissible={merged.dismissible}
+      onClosePrevent={merged.onClosePrevent}
+      trigger={merged.children}
+      triggerStyle={merged.styles?.trigger}
+      triggerClass={merged.classes?.trigger}
+      overlayStyle={merged.styles?.overlay}
+      overlayClass={cn(
+        'bg-black/10 duration-150 inset-0 fixed z-50 backdrop-blur-xs data-closed:animate-overlay-out data-expanded:animate-overlay-in',
+        merged.classes?.overlay,
+      )}
+      contentStyle={merged.styles?.content}
+      contentClass={sheetContentVariants(
+        {
+          side: merged.side,
+          inset: merged.inset,
+        },
+        !merged.transition && 'transition-none data-expanded:animate-none data-closed:animate-none',
+        merged.classes?.content,
+      )}
+      contentAttributes={{ 'data-side': merged.side }}
+      ariaLabelledBy={titleId()}
+      ariaDescribedBy={descriptionId()}
+      content={({ close }) => (
+        <>
+          <Show when={merged.header || hasDefaultHeader()}>
             <div
               data-slot="header"
               style={merged.styles?.header}
-              class={cn('p-4 flex gap-2 items-start', local.classes?.header)}
+              class={cn('p-4 flex gap-2 items-start', merged.classes?.header)}
             >
               <Show
-                when={local.header}
+                when={merged.header}
                 fallback={
                   <>
                     <div
                       data-slot="wrapper"
                       style={merged.styles?.wrapper}
-                      class={cn('flex-1 gap-0.5 grid min-w-0', local.classes?.wrapper)}
+                      class={cn('flex-1 gap-0.5 grid min-w-0', merged.classes?.wrapper)}
                     >
-                      <Show when={local.title}>
-                        <KobalteDialog.Title
+                      <Show when={merged.title}>
+                        <h2
+                          id={titleId()}
                           data-slot="title"
                           style={merged.styles?.title}
-                          class={cn('text-base text-foreground font-medium', local.classes?.title)}
+                          class={cn('text-base text-foreground font-medium', merged.classes?.title)}
                         >
-                          {local.title}
-                        </KobalteDialog.Title>
+                          {merged.title}
+                        </h2>
                       </Show>
 
-                      <Show when={local.description}>
-                        <KobalteDialog.Description
+                      <Show when={merged.description}>
+                        <p
+                          id={descriptionId()}
                           data-slot="description"
                           style={merged.styles?.description}
-                          class={cn('text-sm text-muted-foreground', local.classes?.description)}
+                          class={cn('text-sm text-muted-foreground', merged.classes?.description)}
                         >
-                          {local.description}
-                        </KobalteDialog.Description>
+                          {merged.description}
+                        </p>
                       </Show>
                     </div>
 
-                    <Show when={local.actions}>
+                    <Show when={merged.actions}>
                       <div
                         data-slot="actions"
                         style={merged.styles?.actions}
                         class={cn(
                           'ms-auto inline-flex shrink-0 gap-2 items-center',
-                          local.classes?.actions,
+                          merged.classes?.actions,
                         )}
                       >
-                        {local.actions}
+                        {merged.actions}
                       </div>
                     </Show>
 
-                    <Show when={local.close !== false}>
-                      <KobalteDialog.CloseButton
+                    <Show when={merged.close !== false}>
+                      <button
+                        type="button"
                         data-slot="close"
                         style={merged.styles?.close}
                         class={cn(
                           'text-muted-foreground b-(1 transparent) rounded-md inline-flex shrink-0 size-8 transition-colors items-center justify-center hover:(text-accent-foreground bg-accent) focus-visible:effect-fv-border',
-                          local.classes?.close,
+                          merged.classes?.close,
                         )}
                         aria-label="Close"
+                        onClick={() => {
+                          close()
+                        }}
                       >
-                        <Show when={local.close === true} fallback={local.close}>
+                        <Show when={merged.close === true} fallback={merged.close}>
                           <Icon name="icon-close" />
                         </Show>
-                      </KobalteDialog.CloseButton>
+                      </button>
                     </Show>
                   </>
                 }
               >
-                {local.header}
+                {merged.header}
               </Show>
             </div>
           </Show>
 
-          <Show when={local.body}>
+          <Show when={merged.body}>
             <div
               data-slot="body"
               style={merged.styles?.body}
               class={cn(
                 'flex-1 overflow-auto',
-                local.header || hasDefaultHeader() ? 'px-4 pb-4 pt-0' : 'p-4',
-                local.classes?.body,
+                merged.header || hasDefaultHeader() ? 'px-4 pb-4 pt-0' : 'p-4',
+                merged.classes?.body,
               )}
             >
-              {local.body}
+              {merged.body}
             </div>
           </Show>
 
-          <Show when={local.footer}>
+          <Show when={merged.footer}>
             <div
               data-slot="footer"
               style={merged.styles?.footer}
-              class={cn('mt-auto p-4 flex flex-col gap-2', local.classes?.footer)}
+              class={cn('mt-auto p-4 flex flex-col gap-2', merged.classes?.footer)}
             >
-              {local.footer}
+              {merged.footer}
             </div>
           </Show>
-        </KobalteDialog.Content>
-      </KobalteDialog.Portal>
-    </KobalteDialog.Root>
+        </>
+      )}
+    />
   )
 }

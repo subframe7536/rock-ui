@@ -12,7 +12,6 @@ replaced, `@kobalte/core` and `@kobalte/utils` can be dropped from dependencies 
 - **Slider**: when two thumbs overlap, it is impossible to slide in any direction
 - **Tabs / Stepper**: no keyboard loop option (pressing arrow at the last tab does not wrap back to the first)
 
-
 ## Components and Guide
 
 To inline a Kobalte package:
