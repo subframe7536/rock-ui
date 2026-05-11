@@ -254,7 +254,6 @@ export function Dialog(props: DialogProps): JSX.Element {
       dismissible={merged.dismissible}
       onClosePrevent={merged.onClosePrevent}
       preventScroll={!merged.scrollable}
-      overlayContainsContent={Boolean(merged.overlay && merged.scrollable)}
       trigger={merged.children}
       triggerStyle={merged.styles?.trigger}
       triggerClass={merged.classes?.trigger}
@@ -274,9 +273,9 @@ export function Dialog(props: DialogProps): JSX.Element {
       )}
       ariaLabelledBy={titleId()}
       ariaDescribedBy={descriptionId()}
-      content={({ close }) => (
+      content={(context) => (
         <Card
-          header={headerContent(close)}
+          header={headerContent(context.close)}
           footer={merged.footer}
           classes={{
             root: dialogCardVariants({ layout: popupLayout() }),

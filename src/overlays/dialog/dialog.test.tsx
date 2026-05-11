@@ -3,6 +3,21 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { Dialog } from './dialog'
 
+async function finishExitMotion(): Promise<void> {
+  const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
+  const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement | null
+
+  if (content) {
+    await fireEvent.animationEnd(content)
+    await fireEvent.transitionEnd(content)
+  }
+
+  if (overlay) {
+    await fireEvent.animationEnd(overlay)
+    await fireEvent.transitionEnd(overlay)
+  }
+}
+
 describe('Modal', () => {
   test('renders default shell with title, description, body, footer and close button', () => {
     render(() => (
@@ -108,6 +123,10 @@ describe('Modal', () => {
 
     const closeButton = document.body.querySelector('[data-slot="close"]') as HTMLElement
     await fireEvent.click(closeButton)
+
+    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+
+    await finishExitMotion()
 
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
@@ -233,6 +252,8 @@ describe('Modal', () => {
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
     content.focus()
     await fireEvent.keyDown(content, { key: 'Escape' })
+
+    await finishExitMotion()
 
     await waitFor(() => {
       expect(onClosePrevent).not.toHaveBeenCalled()

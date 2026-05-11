@@ -4,6 +4,7 @@ import { Show, createEffect, createMemo, onCleanup } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
 import { useControllableValue } from '../../shared/use-controllable-value'
+import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { cn, useId } from '../../shared/utils'
 
 const FOCUSABLE_SELECTOR = [
@@ -95,9 +96,8 @@ export interface ModalShellProps {
   onClosePrevent?: () => void
   preventScroll?: boolean
   overlay?: boolean
-  overlayContainsContent?: boolean
   trigger?: JSX.Element
-  content?: JSX.Element | ((context: ModalShellContentContext) => JSX.Element)
+  content?: JSX.Element | ((context: { close: VoidFunction }) => JSX.Element)
   triggerClass?: ClassValue
   overlayClass?: ClassValue
   contentClass?: ClassValue
@@ -107,10 +107,6 @@ export interface ModalShellProps {
   contentAttributes?: Record<string, string | number | boolean | undefined>
   ariaLabelledBy?: string
   ariaDescribedBy?: string
-}
-
-export interface ModalShellContentContext {
-  close: () => void
 }
 
 export function ModalShell(props: ModalShellProps): JSX.Element {
@@ -184,8 +180,37 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
     }
   }
 
+  const resolvedContent = createMemo(() =>
+    typeof props.content === 'function'
+      ? props.content({
+          close: () => {
+            updateOpen(false)
+          },
+        })
+      : props.content,
+  )
+
+  const overlayPresence = useTransitionPresence({
+    open: () => Boolean(isOpen() && props.overlay),
+    mode: () => 'both',
+  })
+  const contentPresence = useTransitionPresence({
+    open: () => Boolean(isOpen() && resolvedContent()),
+    mode: () => 'both',
+  })
+  const isPresent = createMemo(() => overlayPresence.present() || contentPresence.present())
+
   createEffect(() => {
-    if (!isOpen() || typeof document === 'undefined') {
+    if (contentPresence.present()) {
+      return
+    }
+
+    contentElement = undefined
+    contentPresence.setElement(undefined)
+  })
+
+  createEffect(() => {
+    if (!isPresent() || typeof document === 'undefined') {
       return
     }
 
@@ -249,72 +274,36 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
     })
   })
 
-  const close = () => {
-    updateOpen(false)
+  function ContentSlot(): JSX.Element {
+    return (
+      <Show when={resolvedContent()}>
+        {(content) => (
+          <Show when={contentPresence.present()}>
+            <div
+              {...props.contentAttributes}
+              {...contentPresence.dataAttrs()}
+              ref={(element) => {
+                contentElement = element
+                contentPresence.setElement(element)
+              }}
+              id={contentId()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={props.ariaLabelledBy}
+              aria-describedby={props.ariaDescribedBy}
+              tabIndex={-1}
+              data-slot="content"
+              style={props.contentStyle}
+              class={cn(props.contentClass)}
+              onKeyDown={onContentKeyDown}
+            >
+              {content()}
+            </div>
+          </Show>
+        )}
+      </Show>
+    )
   }
-
-  const content = createMemo<JSX.Element | undefined>(() => {
-    const resolvedContent =
-      typeof props.content === 'function' ? props.content({ close }) : props.content
-
-    if (resolvedContent === undefined || resolvedContent === null) {
-      return undefined
-    }
-
-    return (
-      <div
-        {...props.contentAttributes}
-        ref={(element) => {
-          contentElement = element
-        }}
-        id={contentId()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={props.ariaLabelledBy}
-        aria-describedby={props.ariaDescribedBy}
-        tabIndex={-1}
-        data-slot="content"
-        data-expanded=""
-        style={props.contentStyle}
-        class={cn(props.contentClass)}
-        onKeyDown={onContentKeyDown}
-      >
-        {resolvedContent}
-      </div>
-    )
-  })
-
-  const portalContent = createMemo<JSX.Element>(() => {
-    const renderedContent = content()
-
-    if (props.overlay && props.overlayContainsContent) {
-      return (
-        <div
-          data-slot="overlay"
-          data-expanded=""
-          style={props.overlayStyle}
-          class={cn(props.overlayClass)}
-        >
-          {renderedContent}
-        </div>
-      )
-    }
-
-    return (
-      <>
-        <Show when={props.overlay}>
-          <div
-            data-slot="overlay"
-            data-expanded=""
-            style={props.overlayStyle}
-            class={cn(props.overlayClass)}
-          />
-        </Show>
-
-        {renderedContent}
-      </>
-    )
-  })
 
   return (
     <>
@@ -335,8 +324,24 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
         </span>
       </Show>
 
-      <Show when={isOpen()}>
-        <Portal>{portalContent()}</Portal>
+      <Show when={isPresent()}>
+        <Portal>
+          <Show when={props.overlay} fallback={<ContentSlot />}>
+            <Show when={overlayPresence.present() || contentPresence.present()}>
+              <div
+                data-slot="overlay"
+                {...overlayPresence.dataAttrs()}
+                ref={(element) => {
+                  overlayPresence.setElement(element)
+                }}
+                style={props.overlayStyle}
+                class={cn(props.overlayClass)}
+              >
+                <ContentSlot />
+              </div>
+            </Show>
+          </Show>
+        </Portal>
       </Show>
     </>
   )

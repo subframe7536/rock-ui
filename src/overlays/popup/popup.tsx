@@ -121,7 +121,6 @@ export function Popup(props: PopupProps): JSX.Element {
       defaultOpen={merged.defaultOpen}
       onOpenChange={merged.onOpenChange}
       overlay={merged.overlay}
-      overlayContainsContent={Boolean(merged.overlay && merged.scrollable)}
       dismissible={merged.dismissible}
       onClosePrevent={merged.onClosePrevent}
       preventScroll={!merged.scrollable}

@@ -4,6 +4,21 @@ import { describe, expect, test, vi } from 'vitest'
 import { Sheet } from './sheet'
 import type { SheetProps } from './sheet'
 
+async function finishExitMotion(): Promise<void> {
+  const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
+  const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement | null
+
+  if (content) {
+    await fireEvent.animationEnd(content)
+    await fireEvent.transitionEnd(content)
+  }
+
+  if (overlay) {
+    await fireEvent.animationEnd(overlay)
+    await fireEvent.transitionEnd(overlay)
+  }
+}
+
 describe('Sheet', () => {
   test.each([
     ['left', 'left-0', 'animate-sheet-side-left'],
@@ -138,6 +153,10 @@ describe('Sheet', () => {
     const closeButton = document.body.querySelector('[data-slot="close"]') as HTMLElement
     await fireEvent.click(closeButton)
 
+    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+
+    await finishExitMotion()
+
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
       expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
@@ -226,6 +245,8 @@ describe('Sheet', () => {
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
     content.focus()
     await fireEvent.keyDown(content, { key: 'Escape' })
+
+    await finishExitMotion()
 
     await waitFor(() => {
       expect(onClosePrevent).not.toHaveBeenCalled()
