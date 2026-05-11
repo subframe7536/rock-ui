@@ -65,7 +65,7 @@ Multiple subcomponents with shared context and keyboard navigation, but no float
 
 Floating/positioned overlays with portals, focus traps, and complex pointer/keyboard interaction chains.
 
-- [ ] **`@kobalte/core/dialog`** → inline `Dialog.Root`, `Dialog.Trigger`, `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.CloseButton`; includes focus trap and scroll lock
+- [x] **`@kobalte/core/dialog`** → inline `Dialog.Root`, `Dialog.Trigger`, `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.CloseButton`; includes focus trap and scroll lock
   - Affects: `Dialog` (`src/overlays/dialog/dialog.tsx`), `Sheet` (`src/overlays/sheet/sheet.tsx`), `Popup` (`src/overlays/popup/popup.tsx`)
 - [ ] **`@kobalte/core/popper`** → inline `usePopperContext` and the popper anchor/placement primitive; **prerequisite** for `popover` and `tooltip`
   - Affects: `Popover` (`src/overlays/popover/popover.tsx`), `Tooltip` (`src/overlays/tooltip/tooltip.tsx`)
