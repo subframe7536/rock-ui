@@ -1,13 +1,13 @@
-import { usePopperContext } from '@kobalte/core/popper'
-import * as KobalteTooltip from '@kobalte/core/tooltip'
 import type { JSX } from 'solid-js'
-import { Show, createMemo, mergeProps, splitProps } from 'solid-js'
+import { Show, createMemo, mergeProps, onCleanup } from 'solid-js'
 
 import { Kbd } from '../../elements/kbd'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
 import type { OverlayMenuSide } from '../shared-overlay-menu/utils'
+import { PopperShell } from '../shared/popper-shell'
+import type { PopperShellContentContext, PopperShellProps } from '../shared/popper-shell'
 
 import { tooltipContentVariants } from './tooltip.class'
 import type { TooltipVariantProps } from './tooltip.class'
@@ -17,7 +17,10 @@ export namespace TooltipT {
   export type Variant = TooltipVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteTooltip.TooltipRootProps
+  export type Extend = Pick<
+    PopperShellProps,
+    'id' | 'open' | 'defaultOpen' | 'onOpenChange' | 'disabled' | 'placement' | 'forceMount'
+  >
 
   export interface Item {}
 
@@ -25,6 +28,18 @@ export namespace TooltipT {
    * Base props for the Tooltip component.
    */
   export interface Base {
+    /**
+     * Delay before opening on hover or focus.
+     * @default 0
+     */
+    openDelay?: number
+
+    /**
+     * Delay before closing after leaving trigger or content.
+     * @default 0
+     */
+    closeDelay?: number
+
     /**
      * Primary text content or element to display.
      */
@@ -63,80 +78,123 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     },
     props,
   )
-  const [local, rest] = splitProps(merged, [
-    'side',
-    'invert',
-    'text',
-    'kbds',
-    'classes',
-    'styles',
-    'children',
-    'placement',
-  ])
 
-  function Content(): JSX.Element {
-    const popperContext = usePopperContext()
+  let openTimer: ReturnType<typeof setTimeout> | undefined
+  let closeTimer: ReturnType<typeof setTimeout> | undefined
+
+  onCleanup(() => {
+    clearTimeout(openTimer)
+    clearTimeout(closeTimer)
+  })
+
+  function Content(context: PopperShellContentContext): JSX.Element {
     const resolvedSide = createMemo<OverlayMenuSide>(() => {
-      const runtimePlacement = popperContext.currentPlacement()
+      const runtimePlacement = context.currentPlacement()
 
       if (runtimePlacement) {
         return resolveOverlayMenuSide(runtimePlacement)
       }
 
-      if (local.side) {
-        return local.side
+      if (merged.side) {
+        return merged.side
       }
 
-      return resolveOverlayMenuSide(local.placement)
+      return resolveOverlayMenuSide(merged.placement)
     })
 
     return (
-      <KobalteTooltip.Content
+      <div
         data-slot="content"
-        style={local.styles?.content}
+        style={merged.styles?.content}
         class={tooltipContentVariants(
-          { side: resolvedSide(), invert: local.invert },
-          local.classes?.content,
+          { side: resolvedSide(), invert: merged.invert },
+          merged.classes?.content,
         )}
+        {...context.contentProps}
       >
-        <Show when={typeof local.text === 'string'} fallback={local.text}>
+        <Show when={typeof merged.text === 'string'} fallback={merged.text}>
           <span
             data-slot="text"
-            style={local.styles?.text}
-            class={cn('leading-4 text-pretty', local.classes?.text)}
+            style={merged.styles?.text}
+            class={cn('leading-4 text-pretty', merged.classes?.text)}
           >
-            {local.text}
+            {merged.text}
           </span>
         </Show>
 
         <Kbd
-          variant={local.invert ? 'invert' : undefined}
+          variant={merged.invert ? 'invert' : undefined}
           size="sm"
-          value={local.kbds}
+          value={merged.kbds}
           classes={{
-            root: [local.text && 'ms-1', local.classes?.kbds],
-            item: local.classes?.kbd,
+            root: [merged.text && 'ms-1', merged.classes?.kbds],
+            item: merged.classes?.kbd,
           }}
         />
-      </KobalteTooltip.Content>
+      </div>
     )
   }
 
-  return (
-    <KobalteTooltip.Root overflowPadding={4} placement={resolveOverlayMenuSide()} {...rest}>
-      <KobalteTooltip.Trigger
-        as="span"
-        tabIndex={-1}
-        data-slot="trigger"
-        style={local.styles?.trigger}
-        class={cn('outline-none', local.classes?.trigger)}
-      >
-        {local.children}
-      </KobalteTooltip.Trigger>
+  function scheduleOpen(open: () => void): void {
+    if (merged.disabled) {
+      return
+    }
 
-      <KobalteTooltip.Portal>
-        <Content />
-      </KobalteTooltip.Portal>
-    </KobalteTooltip.Root>
+    clearTimeout(closeTimer)
+    closeTimer = undefined
+    clearTimeout(openTimer)
+    openTimer = setTimeout(() => {
+      open()
+      openTimer = undefined
+    }, merged.openDelay)
+  }
+
+  function scheduleClose(close: () => void): void {
+    clearTimeout(openTimer)
+    openTimer = undefined
+    clearTimeout(closeTimer)
+    closeTimer = setTimeout(() => {
+      close()
+      closeTimer = undefined
+    }, merged.closeDelay)
+  }
+
+  return (
+    <PopperShell
+      id={merged.id}
+      open={merged.open}
+      defaultOpen={merged.defaultOpen}
+      onOpenChange={merged.onOpenChange}
+      disabled={merged.disabled}
+      placement={merged.placement ?? 'top'}
+      forceMount={merged.forceMount}
+      overflowPadding={4}
+      role="tooltip"
+      toggleOnClick={false}
+      describeTrigger
+      trigger={merged.children}
+      triggerStyle={merged.styles?.trigger}
+      triggerClass={cn(merged.classes?.trigger)}
+      onTriggerFocus={({ open }) => {
+        scheduleOpen(open)
+      }}
+      onTriggerBlur={({ close }) => {
+        scheduleClose(close)
+      }}
+      onTriggerPointerEnter={({ open }) => {
+        scheduleOpen(open)
+      }}
+      onTriggerPointerLeave={({ close }) => {
+        scheduleClose(close)
+      }}
+      onContentPointerEnter={() => {
+        clearTimeout(closeTimer)
+        closeTimer = undefined
+      }}
+      onContentPointerLeave={({ close }) => {
+        scheduleClose(close)
+      }}
+      content={Content}
+    />
   )
 }

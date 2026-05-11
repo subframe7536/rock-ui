@@ -7,97 +7,12 @@ import { useControllableValue } from '../../shared/use-controllable-value'
 import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { cn, useId } from '../../shared/utils'
 
-const FOCUSABLE_SELECTOR = [
-  'a[href]',
-  'area[href]',
-  'button:not([disabled])',
-  'input:not([disabled]):not([type="hidden"])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  'iframe',
-  'object',
-  'embed',
-  '[contenteditable]',
-  '[tabindex]:not([tabindex="-1"])',
-].join(',')
-
-let scrollLockDepth = 0
-let previousBodyOverflow = ''
-
-function acquireBodyScrollLock(): () => void {
-  if (typeof document === 'undefined') {
-    return () => undefined
-  }
-
-  if (scrollLockDepth === 0) {
-    previousBodyOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-  }
-
-  scrollLockDepth += 1
-
-  let released = false
-
-  return () => {
-    if (released) {
-      return
-    }
-
-    released = true
-    scrollLockDepth = Math.max(0, scrollLockDepth - 1)
-
-    if (scrollLockDepth === 0) {
-      document.body.style.overflow = previousBodyOverflow
-      previousBodyOverflow = ''
-    }
-  }
-}
-
-function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (element) => {
-      if (element.tabIndex < 0) {
-        return false
-      }
-
-      if (element.hasAttribute('disabled') || element.getAttribute('aria-hidden') === 'true') {
-        return false
-      }
-
-      return (element as HTMLElement & { inert?: boolean }).inert !== true
-    },
-  )
-}
-
-function focusContent(container: HTMLElement | undefined): void {
-  if (!container) {
-    return
-  }
-
-  const [firstFocusable] = getFocusableElements(container)
-  focusWithoutScrolling(firstFocusable ?? container)
-}
-
-function focusTrigger(triggerElement: HTMLElement | undefined): void {
-  if (!triggerElement) {
-    return
-  }
-
-  const [firstFocusable] = getFocusableElements(triggerElement)
-  focusWithoutScrolling(firstFocusable ?? triggerElement)
-}
-
-function focusWithoutScrolling(element: HTMLElement | undefined): void {
-  if (!element) {
-    return
-  }
-
-  try {
-    element.focus({ preventScroll: true })
-  } catch {
-    element.focus()
-  }
-}
+import {
+  acquireBodyScrollLock,
+  focusContent,
+  focusTrigger,
+  getFocusableElements,
+} from './overlay-shell.utils'
 
 type ModalShellSlot = 'trigger' | 'overlay' | 'content'
 

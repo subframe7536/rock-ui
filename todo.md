@@ -67,11 +67,11 @@ Floating/positioned overlays with portals, focus traps, and complex pointer/keyb
 
 - [x] **`@kobalte/core/dialog`** → inline `Dialog.Root`, `Dialog.Trigger`, `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.CloseButton`; includes focus trap and scroll lock
   - Affects: `Dialog` (`src/overlays/dialog/dialog.tsx`), `Sheet` (`src/overlays/sheet/sheet.tsx`), `Popup` (`src/overlays/popup/popup.tsx`)
-- [ ] **`@kobalte/core/popper`** → inline `usePopperContext` and the popper anchor/placement primitive; **prerequisite** for `popover` and `tooltip`
+- [x] **`@kobalte/core/popper`** → inline `usePopperContext` and the popper anchor/placement primitive; **prerequisite** for `popover` and `tooltip`
   - Affects: `Popover` (`src/overlays/popover/popover.tsx`), `Tooltip` (`src/overlays/tooltip/tooltip.tsx`)
-- [ ] **`@kobalte/core/popover`** → inline `Popover.Root`, `Popover.Trigger`, `Popover.Portal`, `Popover.Content`, `Popover.Arrow`; depends on `popper` being inlined first
+- [x] **`@kobalte/core/popover`** → inline `Popover.Root`, `Popover.Trigger`, `Popover.Portal`, `Popover.Content`, `Popover.Arrow`; depends on `popper` being inlined first
   - Affects: `Popover` (`src/overlays/popover/popover.tsx`)
-- [ ] **`@kobalte/core/tooltip`** → inline `Tooltip.Root`, `Tooltip.Trigger`, `Tooltip.Portal`, `Tooltip.Content`, `Tooltip.Arrow`; depends on `popper` being inlined first
+- [x] **`@kobalte/core/tooltip`** → inline `Tooltip.Root`, `Tooltip.Trigger`, `Tooltip.Portal`, `Tooltip.Content`, `Tooltip.Arrow`; depends on `popper` being inlined first
   - Affects: `Tooltip` (`src/overlays/tooltip/tooltip.tsx`)
 - [ ] **`@kobalte/core/dropdown-menu`** → inline all exports (`Root`, `Trigger`, `Content`, `Item`, `CheckboxItem`, `Group`, `GroupLabel`, `Sub`, `SubTrigger`, `SubContent`, `Separator`, `ItemIndicator`, `Portal`); **fix**: prevent submenu from closing prematurely during pointer movement toward submenu
   - Affects: `DropdownMenu` (`src/overlays/dropdown-menu/dropdown-menu.tsx`), `ContextMenu` (`src/overlays/context-menu/context-menu.tsx`), `OverlayMenuBaseContent` (`src/overlays/shared-overlay-menu/menu.tsx`)

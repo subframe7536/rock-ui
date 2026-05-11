@@ -59,6 +59,7 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.6",
     "@kobalte/core": "~0.13.11",
     "@kobalte/utils": "*",
     "cls-variant": "^1.2.0"
@@ -108,6 +109,6 @@
     }
   },
   "inlinedDependencies": {
-    "valibot": "1.4.0"
+    "valibot": "1.3.1"
   }
 }

@@ -152,11 +152,11 @@ export function Collapsible(props: CollapsibleProps): JSX.Element {
           aria-labelledby={triggerId()}
           data-slot="content"
           style={{
-            '--kb-collapsible-content-height': `${contentHeight()}px`,
+            '--mo-collapsible-content-height': `${contentHeight()}px`,
             ...(props.styles?.content as JSX.CSSProperties | undefined),
           }}
           class={cn(
-            'h-$kb-collapsible-content-height transition-[height] overflow-hidden data-closed:h-0',
+            'h-$mo-collapsible-content-height transition-[height] overflow-hidden data-closed:h-0',
             props.classes?.content,
           )}
           {...dataAttrs()}

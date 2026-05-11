@@ -63,7 +63,7 @@ describe('DropdownMenu', () => {
 
     const rootContent = document.body.querySelector('[data-slot="content"]') as HTMLElement
 
-    expect(rootContent.className).toContain('mt-$kb-popper-content-overflow-padding')
+    expect(rootContent.className).toContain('mt-$mo-popper-content-overflow-padding')
     expect(rootContent.className).toContain('data-expanded:animate-menu-in')
     expect(rootContent.className).toContain('data-closed:animate-menu-out')
     expect(rootContent.className).toContain('animate-menu-side-bottom')
@@ -140,7 +140,7 @@ describe('DropdownMenu', () => {
     expect(document.body.querySelector('[data-testid="avatar-node"]')).not.toBeNull()
     expect(document.body.querySelector('[data-slot="itemIndicator"]')).not.toBeNull()
 
-    expect(rootContent?.className).toContain('mr-$kb-popper-content-overflow-padding')
+    expect(rootContent?.className).toContain('mr-$mo-popper-content-overflow-padding')
     expect(rootContent?.className).toContain('surface-overlay')
     expect(rootContent?.className).toContain('data-expanded:animate-menu-in')
     expect(rootContent?.className).toContain('data-closed:animate-menu-out')

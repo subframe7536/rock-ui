@@ -239,7 +239,7 @@ describe('animations', () => {
   test('accordion-down animation resolves', async () => {
     const css = await compileCSS(['animate-accordion-down'])
     expect(css).toContain('@keyframes accordion-down')
-    expect(css).toContain('var(--kb-accordion-content-height)')
+    expect(css).toContain('var(--mo-collapsible-content-height)')
     expect(css).toContain('animation: accordion-down 150ms ease-in-out 1')
   })
 

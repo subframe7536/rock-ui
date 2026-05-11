@@ -294,11 +294,11 @@ export function Accordion(props: AccordionProps): JSX.Element {
                       ref={setContentElement}
                       data-slot="content"
                       style={{
-                        '--kb-collapsible-content-height': `${contentHeight()}px`,
+                        '--mo-collapsible-content-height': `${contentHeight()}px`,
                         ...(merged.styles?.content as JSX.CSSProperties | undefined),
                       }}
                       class={cn(
-                        'style-accordion-content pb-2.5 h-$kb-collapsible-content-height',
+                        'style-accordion-content pb-2.5 h-$mo-collapsible-content-height',
                         merged.classes?.content,
                       )}
                     >

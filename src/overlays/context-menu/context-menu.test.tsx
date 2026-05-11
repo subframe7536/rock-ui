@@ -159,7 +159,7 @@ describe('ContextMenu', () => {
 
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
 
-    expect(content.className).toContain('ml-$kb-popper-content-overflow-padding')
+    expect(content.className).toContain('ml-$mo-popper-content-overflow-padding')
     expect(content.className).toContain('data-expanded:animate-menu-in')
     expect(content.className).toContain('data-closed:animate-menu-out')
     expect(content.className).toContain('animate-menu-side-right')
@@ -325,7 +325,7 @@ describe('ContextMenu', () => {
     expect(document.body.querySelector('[data-testid="avatar-node"]')).not.toBeNull()
     expect(document.body.querySelector('[data-slot="itemIndicator"]')).not.toBeNull()
 
-    expect(rootContent?.className).toContain('mt-$kb-popper-content-overflow-padding')
+    expect(rootContent?.className).toContain('mt-$mo-popper-content-overflow-padding')
     expect(rootContent?.className).toContain('surface-overlay')
     expect(rootContent?.className).toContain('data-expanded:animate-menu-in')
     expect(rootContent?.className).toContain('data-closed:animate-menu-out')

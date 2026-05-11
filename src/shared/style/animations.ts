@@ -35,10 +35,10 @@ export const MORAINE_KEYFRAMES: Record<string, KeyframeFrames> = {
   },
   'accordion-down': {
     from: { height: '0' },
-    to: { height: 'var(--kb-accordion-content-height)' },
+    to: { height: 'var(--mo-collapsible-content-height)' },
   },
   'accordion-up': {
-    from: { height: 'var(--kb-accordion-content-height)' },
+    from: { height: 'var(--mo-collapsible-content-height)' },
     to: { height: '0' },
   },
   carousel: {
