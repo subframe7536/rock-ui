@@ -75,7 +75,7 @@ function focusContent(container: HTMLElement | undefined): void {
   }
 
   const [firstFocusable] = getFocusableElements(container)
-  ;(firstFocusable ?? container).focus()
+  focusWithoutScrolling(firstFocusable ?? container)
 }
 
 function focusTrigger(triggerElement: HTMLElement | undefined): void {
@@ -84,7 +84,19 @@ function focusTrigger(triggerElement: HTMLElement | undefined): void {
   }
 
   const [firstFocusable] = getFocusableElements(triggerElement)
-  ;(firstFocusable ?? triggerElement).focus()
+  focusWithoutScrolling(firstFocusable ?? triggerElement)
+}
+
+function focusWithoutScrolling(element: HTMLElement | undefined): void {
+  if (!element) {
+    return
+  }
+
+  try {
+    element.focus({ preventScroll: true })
+  } catch {
+    element.focus()
+  }
 }
 
 type ModalShellSlot = 'trigger' | 'overlay' | 'content'
@@ -137,7 +149,6 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
 
   let triggerElement: HTMLSpanElement | undefined
   let contentElement: HTMLDivElement | undefined
-  let previousFocusedElement: HTMLElement | null = null
 
   function updateOpen(nextOpen: boolean): void {
     if (nextOpen === isOpen()) {
@@ -231,9 +242,6 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
       return
     }
 
-    previousFocusedElement =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null
-
     queueMicrotask(() => {
       focusContent(contentElement)
     })
@@ -250,6 +258,7 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
         return
       }
 
+      event.preventDefault()
       requestClose(event)
     }
     const onDocumentFocusIn = (event: FocusEvent) => {
@@ -280,14 +289,7 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
       document.removeEventListener('focusin', onDocumentFocusIn, true)
       document.removeEventListener('keydown', onDocumentKeyDown, true)
       releaseScrollLock?.()
-
-      if (previousFocusedElement?.isConnected) {
-        previousFocusedElement.focus()
-      } else {
-        focusTrigger(triggerElement)
-      }
-
-      previousFocusedElement = null
+      focusTrigger(triggerElement)
     })
   })
 
