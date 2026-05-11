@@ -8,6 +8,7 @@ import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { popupContentVariants, popupOverlayVariants } from '../popup/popup.class'
 import { ModalShell } from '../shared/modal-shell'
+import type { ModalShellProps } from '../shared/modal-shell'
 
 import { dialogCardVariants } from './dialog.class'
 import type { DialogCardVariantProps } from './dialog.class'
@@ -28,7 +29,10 @@ export namespace DialogT {
   export type Variant = DialogCardVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = never
+  export type Extend = Pick<
+    ModalShellProps,
+    'id' | 'open' | 'defaultOpen' | 'onOpenChange' | 'overlay' | 'dismissible' | 'onClosePrevent'
+  >
 
   export interface Item {}
 
@@ -36,27 +40,6 @@ export namespace DialogT {
    * Base props for the Dialog component.
    */
   export interface Base {
-    /**
-     * Unique identifier for the dialog.
-     */
-    id?: string
-
-    /**
-     * Controlled open state of the dialog.
-     */
-    open?: boolean
-
-    /**
-     * Initial open state when uncontrolled.
-     * @default false
-     */
-    defaultOpen?: boolean
-
-    /**
-     * Callback triggered when the open state changes.
-     */
-    onOpenChange?: (open: boolean) => void
-
     /**
      * Primary title displayed in the dialog header.
      */
@@ -66,12 +49,6 @@ export namespace DialogT {
      * Secondary description displayed below the title.
      */
     description?: JSX.Element
-
-    /**
-     * Whether to show a background overlay.
-     * @default true
-     */
-    overlay?: boolean
 
     /**
      * Whether the dialog content body should be scrollable.
@@ -96,17 +73,6 @@ export namespace DialogT {
      * @default 'icon-close'
      */
     closeIcon?: IconT.Name | JSX.Element
-
-    /**
-     * Whether the dialog can be dismissed by clicking outside or pressing Escape.
-     * @default true
-     */
-    dismissible?: boolean
-
-    /**
-     * Callback triggered when a dismissal action is prevented.
-     */
-    onClosePrevent?: () => void
 
     /**
      * Custom element to render in the header slot.
@@ -136,7 +102,7 @@ export namespace DialogT {
     /**
      * Content to render inside the dialog trigger slot.
      */
-    children?: JSX.Element
+    children: JSX.Element
   }
 
   /**
@@ -255,22 +221,26 @@ export function Dialog(props: DialogProps): JSX.Element {
       onClosePrevent={merged.onClosePrevent}
       preventScroll={!merged.scrollable}
       trigger={merged.children}
-      triggerStyle={merged.styles?.trigger}
-      triggerClass={merged.classes?.trigger}
-      overlayStyle={merged.styles?.overlay}
-      overlayClass={popupOverlayVariants(
-        {
-          scrollable: merged.scrollable,
-        },
-        merged.classes?.overlay,
-      )}
-      contentStyle={merged.styles?.content}
-      contentClass={popupContentVariants(
-        {
-          layout: popupLayout(),
-        },
-        merged.classes?.content,
-      )}
+      classes={{
+        trigger: merged.classes?.trigger,
+        overlay: popupOverlayVariants(
+          {
+            scrollable: merged.scrollable,
+          },
+          merged.classes?.overlay,
+        ),
+        content: popupContentVariants(
+          {
+            layout: popupLayout(),
+          },
+          merged.classes?.content,
+        ),
+      }}
+      styles={{
+        trigger: merged.styles?.trigger,
+        overlay: merged.styles?.overlay,
+        content: merged.styles?.content,
+      }}
       ariaLabelledBy={titleId()}
       ariaDescribedBy={descriptionId()}
       content={(context) => (

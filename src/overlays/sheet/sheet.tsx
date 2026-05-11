@@ -5,6 +5,7 @@ import { Icon } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
 import { ModalShell } from '../shared/modal-shell'
+import type { ModalShellProps } from '../shared/modal-shell'
 
 import { sheetContentVariants } from './sheet.class'
 import type { SheetVariantProps } from './sheet.class'
@@ -26,7 +27,10 @@ export namespace SheetT {
   export type Variant = SheetVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = never
+  export type Extend = Pick<
+    ModalShellProps,
+    'id' | 'open' | 'defaultOpen' | 'onOpenChange' | 'overlay' | 'dismissible' | 'onClosePrevent'
+  >
 
   export interface Item {}
 
@@ -34,27 +38,6 @@ export namespace SheetT {
    * Base props for the Sheet component.
    */
   export interface Base {
-    /**
-     * Unique identifier for the sheet.
-     */
-    id?: string
-
-    /**
-     * Controlled open state of the sheet.
-     */
-    open?: boolean
-
-    /**
-     * Initial open state when uncontrolled.
-     * @default false
-     */
-    defaultOpen?: boolean
-
-    /**
-     * Callback triggered when the open state changes.
-     */
-    onOpenChange?: (open: boolean) => void
-
     /**
      * Primary title displayed in the sheet header.
      */
@@ -64,12 +47,6 @@ export namespace SheetT {
      * Secondary description displayed below the title.
      */
     description?: JSX.Element
-
-    /**
-     * Whether to display a backdrop overlay.
-     * @default true
-     */
-    overlay?: boolean
 
     /**
      * Whether to enable transition animations.
@@ -82,17 +59,6 @@ export namespace SheetT {
      * @default true
      */
     close?: boolean | JSX.Element
-
-    /**
-     * Whether the sheet should close when interacting outside or pressing Escape.
-     * @default true
-     */
-    dismissible?: boolean
-
-    /**
-     * Callback triggered when a dismissal action is prevented.
-     */
-    onClosePrevent?: () => void
 
     /**
      * Custom element to render in the header slot.
@@ -163,22 +129,27 @@ export function Sheet(props: SheetProps): JSX.Element {
       dismissible={merged.dismissible}
       onClosePrevent={merged.onClosePrevent}
       trigger={merged.children}
-      triggerStyle={merged.styles?.trigger}
-      triggerClass={merged.classes?.trigger}
-      overlayStyle={merged.styles?.overlay}
-      overlayClass={cn(
-        'bg-black/10 duration-150 inset-0 fixed z-50 backdrop-blur-xs data-closed:animate-overlay-out data-expanded:animate-overlay-in',
-        merged.classes?.overlay,
-      )}
-      contentStyle={merged.styles?.content}
-      contentClass={sheetContentVariants(
-        {
-          side: merged.side,
-          inset: merged.inset,
-        },
-        !merged.transition && 'transition-none data-expanded:animate-none data-closed:animate-none',
-        merged.classes?.content,
-      )}
+      classes={{
+        trigger: merged.classes?.trigger,
+        overlay: cn(
+          'bg-black/10 duration-150 inset-0 fixed z-50 backdrop-blur-xs data-closed:animate-overlay-out data-expanded:animate-overlay-in',
+          merged.classes?.overlay,
+        ),
+        content: sheetContentVariants(
+          {
+            side: merged.side,
+            inset: merged.inset,
+          },
+          !merged.transition &&
+            'transition-none data-expanded:animate-none data-closed:animate-none',
+          merged.classes?.content,
+        ),
+      }}
+      styles={{
+        trigger: merged.styles?.trigger,
+        overlay: merged.styles?.overlay,
+        content: merged.styles?.content,
+      }}
       contentAttributes={{ 'data-side': merged.side }}
       ariaLabelledBy={titleId()}
       ariaDescribedBy={descriptionId()}

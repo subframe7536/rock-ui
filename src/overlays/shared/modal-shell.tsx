@@ -1,8 +1,8 @@
-import type { ClassValue } from 'cls-variant'
 import type { JSX } from 'solid-js'
 import { Show, createEffect, createMemo, onCleanup } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
+import type { SlotClasses, SlotStyles } from '../../shared/types'
 import { useControllableValue } from '../../shared/use-controllable-value'
 import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { cn, useId } from '../../shared/utils'
@@ -87,25 +87,42 @@ function focusTrigger(triggerElement: HTMLElement | undefined): void {
   ;(firstFocusable ?? triggerElement).focus()
 }
 
+type ModalShellSlot = 'trigger' | 'overlay' | 'content'
+
+export interface ModalShellContentContext {
+  close: () => void
+}
+
 export interface ModalShellProps {
+  /** Unique identifier used to derive the content id. */
   id?: string
+  /** Controlled open state. */
   open?: boolean
+  /** Initial open state when uncontrolled. */
   defaultOpen?: boolean
+  /** Called whenever the open state changes. */
   onOpenChange?: (open: boolean) => void
+  /** Whether outside interaction and Escape should dismiss the shell. */
   dismissible?: boolean
+  /** Called when a dismissal attempt is blocked. */
   onClosePrevent?: () => void
+  /** Whether body scroll should be locked while the shell is present. */
   preventScroll?: boolean
+  /** Whether to render the overlay element. */
   overlay?: boolean
+  /** Trigger content rendered inside the opener wrapper. */
   trigger?: JSX.Element
-  content?: JSX.Element | ((context: { close: VoidFunction }) => JSX.Element)
-  triggerClass?: ClassValue
-  overlayClass?: ClassValue
-  contentClass?: ClassValue
-  triggerStyle?: JSX.CSSProperties
-  overlayStyle?: JSX.CSSProperties
-  contentStyle?: JSX.CSSProperties
+  /** Modal content rendered inside the content surface. */
+  content?: JSX.Element | ((context: ModalShellContentContext) => JSX.Element)
+  /** Slot-based class overrides for the trigger, overlay, and content elements. */
+  classes?: SlotClasses<ModalShellSlot>
+  /** Slot-based style overrides for the trigger, overlay, and content elements. */
+  styles?: SlotStyles<ModalShellSlot>
+  /** Additional attributes applied to the content element. */
   contentAttributes?: Record<string, string | number | boolean | undefined>
+  /** Id of the label element for the content. */
   ariaLabelledBy?: string
+  /** Id of the description element for the content. */
   ariaDescribedBy?: string
 }
 
@@ -293,8 +310,8 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
               aria-describedby={props.ariaDescribedBy}
               tabIndex={-1}
               data-slot="content"
-              style={props.contentStyle}
-              class={cn(props.contentClass)}
+              style={props.styles?.content}
+              class={cn(props.classes?.content)}
               onKeyDown={onContentKeyDown}
             >
               {content()}
@@ -314,8 +331,8 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
           }}
           tabIndex={-1}
           data-slot="trigger"
-          style={props.triggerStyle}
-          class={cn('outline-none', props.triggerClass)}
+          style={props.styles?.trigger}
+          class={cn('outline-none', props.classes?.trigger)}
           onClick={() => {
             updateOpen(true)
           }}
@@ -334,8 +351,8 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
                 ref={(element) => {
                   overlayPresence.setElement(element)
                 }}
-                style={props.overlayStyle}
-                class={cn(props.overlayClass)}
+                style={props.styles?.overlay}
+                class={cn(props.classes?.overlay)}
               >
                 <ContentSlot />
               </div>

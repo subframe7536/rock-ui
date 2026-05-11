@@ -3,6 +3,7 @@ import { mergeProps } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { ModalShell } from '../shared/modal-shell'
+import type { ModalShellProps } from '../shared/modal-shell'
 
 import { popupContentVariants, popupOverlayVariants } from './popup.class'
 import type { PopupVariantProps } from './popup.class'
@@ -12,7 +13,17 @@ export namespace PopupT {
   export type Variant = PopupVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = never
+  export type Extend = Pick<
+    ModalShellProps,
+    | 'id'
+    | 'open'
+    | 'defaultOpen'
+    | 'onOpenChange'
+    | 'overlay'
+    | 'dismissible'
+    | 'onClosePrevent'
+    | 'content'
+  >
 
   export interface Item {}
 
@@ -20,33 +31,6 @@ export namespace PopupT {
    * Base props for the Popup component.
    */
   export interface Base {
-    /**
-     * Unique identifier for the popup.
-     */
-    id?: string
-
-    /**
-     * Controlled open state of the popup.
-     */
-    open?: boolean
-
-    /**
-     * Initial open state when uncontrolled.
-     * @default false
-     */
-    defaultOpen?: boolean
-
-    /**
-     * Callback triggered when the open state changes.
-     */
-    onOpenChange?: (open: boolean) => void
-
-    /**
-     * Whether to display a backdrop overlay.
-     * @default true
-     */
-    overlay?: boolean
-
     /**
      * Whether to allow scrolling within the popup.
      * @default false
@@ -60,25 +44,9 @@ export namespace PopupT {
     fullscreen?: boolean
 
     /**
-     * Whether the popup should close on outside interaction or Escape key.
-     * @default true
-     */
-    dismissible?: boolean
-
-    /**
-     * Callback triggered when a dismissal is prevented.
-     */
-    onClosePrevent?: () => void
-
-    /**
-     * Main content to render inside the popup.
-     */
-    content?: JSX.Element
-
-    /**
      * Element that triggers the popup or additional content.
      */
-    children?: JSX.Element
+    children: JSX.Element
   }
 
   /**
@@ -125,22 +93,26 @@ export function Popup(props: PopupProps): JSX.Element {
       onClosePrevent={merged.onClosePrevent}
       preventScroll={!merged.scrollable}
       trigger={merged.children}
-      triggerStyle={merged.styles?.trigger}
-      triggerClass={merged.classes?.trigger}
-      overlayStyle={merged.styles?.overlay}
-      overlayClass={popupOverlayVariants(
-        {
-          scrollable: merged.scrollable,
-        },
-        merged.classes?.overlay,
-      )}
-      contentStyle={merged.styles?.content}
-      contentClass={popupContentVariants(
-        {
-          layout: contentLayout(),
-        },
-        merged.classes?.content,
-      )}
+      classes={{
+        trigger: merged.classes?.trigger,
+        overlay: popupOverlayVariants(
+          {
+            scrollable: merged.scrollable,
+          },
+          merged.classes?.overlay,
+        ),
+        content: popupContentVariants(
+          {
+            layout: contentLayout(),
+          },
+          merged.classes?.content,
+        ),
+      }}
+      styles={{
+        trigger: merged.styles?.trigger,
+        overlay: merged.styles?.overlay,
+        content: merged.styles?.content,
+      }}
       content={merged.content}
     />
   )
