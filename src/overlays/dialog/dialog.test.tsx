@@ -3,6 +3,21 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { Dialog } from './dialog'
 
+async function finishExitMotion(): Promise<void> {
+  const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
+  const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement | null
+
+  if (content) {
+    await fireEvent.animationEnd(content)
+    await fireEvent.transitionEnd(content)
+  }
+
+  if (overlay) {
+    await fireEvent.animationEnd(overlay)
+    await fireEvent.transitionEnd(overlay)
+  }
+}
+
 describe('Modal', () => {
   test('renders default shell with title, description, body, footer and close button', () => {
     render(() => (
@@ -109,6 +124,10 @@ describe('Modal', () => {
     const closeButton = document.body.querySelector('[data-slot="close"]') as HTMLElement
     await fireEvent.click(closeButton)
 
+    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+
+    await finishExitMotion()
+
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
       expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
@@ -214,6 +233,37 @@ describe('Modal', () => {
     })
   })
 
+  test('clears text selection when dismissed by outside pointer interaction', async () => {
+    const onOpenChange = vi.fn()
+
+    const screen = render(() => (
+      <>
+        <button type="button" data-testid="outside">
+          Outside target
+        </button>
+        <Dialog onOpenChange={onOpenChange} defaultOpen title="Dialog title" body="Dialog body">
+          <button type="button">Trigger</button>
+        </Dialog>
+      </>
+    ))
+
+    const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
+    window.getSelection()?.selectAllChildren(content)
+
+    expect(window.getSelection()?.toString()).toContain('Dialog title')
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await fireEvent.pointerDown(screen.getByTestId('outside'))
+
+    await finishExitMotion()
+
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false)
+      expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
+      expect(window.getSelection()?.toString()).toBe('')
+    })
+  })
+
   test('allows close when dismissible=true', async () => {
     const onClosePrevent = vi.fn()
     const onOpenChange = vi.fn()
@@ -233,6 +283,8 @@ describe('Modal', () => {
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
     content.focus()
     await fireEvent.keyDown(content, { key: 'Escape' })
+
+    await finishExitMotion()
 
     await waitFor(() => {
       expect(onClosePrevent).not.toHaveBeenCalled()
