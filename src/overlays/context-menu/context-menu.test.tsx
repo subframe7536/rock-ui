@@ -4,6 +4,19 @@ import { describe, expect, test, vi } from 'vitest'
 import { ContextMenu } from './context-menu'
 import type { ContextMenuProps } from './context-menu'
 
+async function finishMenuExitMotion(): Promise<void> {
+  const contents = Array.from(
+    document.body.querySelectorAll('[data-slot="content"]'),
+  ) as HTMLElement[]
+
+  await Promise.all(
+    contents.map(async (content) => {
+      await fireEvent.animationEnd(content)
+      await fireEvent.transitionEnd(content)
+    }),
+  )
+}
+
 describe('ContextMenu', () => {
   test('uses explicit id as id base', async () => {
     const screen = render(() => (
@@ -67,6 +80,38 @@ describe('ContextMenu', () => {
 
     await fireEvent.keyDown(highlighted!, { key: 'Enter' })
     expect(onSelect).toHaveBeenCalledTimes(1)
+  })
+
+  test('focuses content on open, supports typeahead, and restores trigger wrapper focus on escape', async () => {
+    const screen = render(() => (
+      <ContextMenu items={[{ label: 'Archive' }, { label: 'Duplicate' }, { label: 'Delete' }]}>
+        <div>Row Item</div>
+      </ContextMenu>
+    ))
+
+    const row = screen.getByText('Row Item')
+    await fireEvent.contextMenu(row, { clientX: 12, clientY: 18 })
+
+    await waitFor(() => {
+      const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
+      expect(content).not.toBeNull()
+      expect(document.activeElement).toBe(content)
+    })
+
+    const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
+    await fireEvent.keyDown(content, { key: 'd' })
+
+    await waitFor(() => {
+      const highlighted = document.body.querySelector('[data-slot="item"][data-highlighted]')
+      expect(highlighted?.textContent).toContain('Duplicate')
+    })
+
+    await fireEvent.keyDown(content, { key: 'Escape' })
+    await finishMenuExitMotion()
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(row.closest('[data-slot="trigger"]'))
+    })
   })
 
   test('does not open on left click', async () => {
@@ -221,6 +266,10 @@ describe('ContextMenu', () => {
       screen.getByText('Row Item').closest('[data-slot="trigger"]')?.getAttribute('aria-expanded'),
     ).toBe('false')
     expect(document.body.querySelector('[data-slot="content"][data-expanded]')).toBeNull()
+    expect(document.body.querySelector('[data-slot="content"][data-closed]')).not.toBeNull()
+
+    await finishMenuExitMotion()
+
     expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
   })
 
@@ -251,6 +300,10 @@ describe('ContextMenu', () => {
     expect(event.defaultPrevented).toBe(true)
     expect(row.closest('[data-slot="trigger"]')?.getAttribute('aria-expanded')).toBe('false')
     expect(document.body.querySelector('[data-slot="content"][data-expanded]')).toBeNull()
+    expect(document.body.querySelector('[data-slot="content"][data-closed]')).not.toBeNull()
+
+    await finishMenuExitMotion()
+
     expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
   })
 
@@ -494,6 +547,133 @@ describe('ContextMenu', () => {
 
     const leading = document.body.querySelector('[data-slot="itemLeading"]') as HTMLElement
     expect(leading.className).not.toContain('text-muted-foreground')
+  })
+
+  test('keeps submenu open while pointer moves through the submenu grace area', async () => {
+    const screen = render(() => (
+      <ContextMenu
+        items={[
+          {
+            label: 'More',
+            defaultOpen: true,
+            children: [{ label: 'Nested action' }],
+          },
+          { label: 'Sibling action' },
+        ]}
+      >
+        <div>Row Item</div>
+      </ContextMenu>
+    ))
+
+    await fireEvent.contextMenu(screen.getByText('Row Item'), { clientX: 16, clientY: 16 })
+
+    await waitFor(() => {
+      expect(document.body.querySelectorAll('[data-slot="content"]').length).toBeGreaterThanOrEqual(
+        2,
+      )
+    })
+
+    const items = Array.from(document.body.querySelectorAll('[data-slot="item"]'))
+    const subTrigger = items.find((item) => item.textContent?.includes('More')) as HTMLElement
+    const sibling = items.find((item) =>
+      item.textContent?.includes('Sibling action'),
+    ) as HTMLElement
+    const subContent = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
+      (content) => content.textContent?.includes('Nested action'),
+    ) as HTMLElement
+
+    subContent.getBoundingClientRect = () =>
+      ({
+        bottom: 120,
+        height: 80,
+        left: 60,
+        right: 140,
+        top: 40,
+        width: 80,
+        x: 60,
+        y: 40,
+        toJSON: () => ({}),
+      }) as DOMRect
+
+    await fireEvent.pointerLeave(subTrigger, { clientX: 50, clientY: 80, pointerType: 'mouse' })
+    await fireEvent.pointerEnter(sibling, { clientX: 80, clientY: 80, pointerType: 'mouse' })
+
+    expect(sibling.hasAttribute('data-highlighted')).toBe(false)
+    expect(subTrigger.getAttribute('data-expanded')).toBe('')
+    expect(document.body.textContent).toContain('Nested action')
+  })
+
+  test('restores submenu selection after pointer grace when moving toward another submenu', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const screen = render(() => (
+        <ContextMenu
+          items={[
+            {
+              label: 'More',
+              defaultOpen: true,
+              children: [{ label: 'Nested action' }],
+            },
+            {
+              label: 'More tools',
+              children: [{ label: 'Second nested action' }],
+            },
+          ]}
+        >
+          <div>Row Item</div>
+        </ContextMenu>
+      ))
+
+      await fireEvent.contextMenu(screen.getByText('Row Item'), { clientX: 16, clientY: 16 })
+
+      await waitFor(() => {
+        expect(document.body.textContent).toContain('Nested action')
+      })
+
+      const items = Array.from(document.body.querySelectorAll('[data-slot="item"]'))
+      const firstTrigger = items.find((item) => item.textContent?.includes('More')) as HTMLElement
+      const secondTrigger = items.find((item) =>
+        item.textContent?.includes('More tools'),
+      ) as HTMLElement
+      const firstContent = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
+        (content) => content.textContent?.includes('Nested action'),
+      ) as HTMLElement
+
+      firstContent.getBoundingClientRect = () =>
+        ({
+          bottom: 120,
+          height: 80,
+          left: 60,
+          right: 140,
+          top: 40,
+          width: 80,
+          x: 60,
+          y: 40,
+          toJSON: () => ({}),
+        }) as DOMRect
+
+      await fireEvent.pointerLeave(firstTrigger, { clientX: 50, clientY: 80, pointerType: 'mouse' })
+      await fireEvent.pointerEnter(secondTrigger, {
+        clientX: 80,
+        clientY: 80,
+        pointerType: 'mouse',
+      })
+
+      expect(secondTrigger.hasAttribute('data-highlighted')).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(301)
+
+      expect(secondTrigger.getAttribute('data-highlighted')).toBe('')
+
+      await vi.advanceTimersByTimeAsync(100)
+
+      await waitFor(() => {
+        expect(document.body.textContent).toContain('Second nested action')
+      })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   test('applies styles override to content', async () => {

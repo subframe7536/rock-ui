@@ -1,26 +1,22 @@
-import * as KobalteDropdownMenu from '@kobalte/core/dropdown-menu'
 import type { JSX } from 'solid-js'
-import { mergeProps, splitProps } from 'solid-js'
+import { createMemo, createSignal, mergeProps } from 'solid-js'
 
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
-import { OverlayMenuBaseContent } from '../shared-overlay-menu/menu'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { cn, useId } from '../../shared/utils'
+import { OverlayMenu } from '../shared-overlay-menu/menu'
+import type { OverlayMenuFocusStrategy, OverlayMenuRootProps } from '../shared-overlay-menu/menu'
 import type { OverlayMenuItemVariantProps } from '../shared-overlay-menu/menu.class'
-import type {
-  OverlayMenuSharedItem,
-  OverlayMenuSharedItemRenderContext,
-  OverlayMenuSharedSlots,
-} from '../shared-overlay-menu/types'
-import type { OverlayMenuContentSlot, OverlayMenuPlacement } from '../shared-overlay-menu/utils'
-import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
+import type { OverlayMenuSharedItem, OverlayMenuSharedSlots } from '../shared-overlay-menu/types'
+import type { OverlayMenuPlacement } from '../shared-overlay-menu/utils'
 
 export namespace DropdownMenuT {
   export type Slot = OverlayMenuSharedSlots
   export type Variant = Pick<OverlayMenuItemVariantProps, 'size'>
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteDropdownMenu.DropdownMenuRootProps
+  export type Extend = OverlayMenuRootProps<Item>
 
   export interface Item extends OverlayMenuSharedItem<Item> {}
 
@@ -29,77 +25,7 @@ export namespace DropdownMenuT {
    */
   export interface Base {
     /**
-     * Unique identifier for the dropdown menu.
-     */
-    id?: string
-
-    /**
-     * Controlled open state of the dropdown.
-     */
-    open?: boolean
-
-    /**
-     * Initial open state when uncontrolled.
-     * @default false
-     */
-    defaultOpen?: boolean
-
-    /**
-     * Callback triggered when the open state changes.
-     */
-    onOpenChange?: (open: boolean) => void
-
-    /**
-     * Preferred placement of the dropdown menu relative to the trigger.
-     * @default 'bottom'
-     */
-    placement?: OverlayMenuPlacement
-
-    /**
-     * Distance in pixels between the dropdown menu and the trigger.
-     */
-    gutter?: number
-
-    /**
-     * Whether the dropdown menu is disabled.
-     * @default false
-     */
-    disabled?: boolean
-
-    /**
-     * Items to display in the dropdown menu.
-     */
-    items?: Item[]
-
-    /**
-     * Icon name for checked selection states.
-     * @default 'icon-check'
-     */
-    checkedIcon?: IconT.Name
-
-    /**
-     * Icon name for submenu indicators.
-     * @default 'icon-chevron-right'
-     */
-    submenuIcon?: IconT.Name
-
-    /**
-     * Custom renderer for individual dropdown menu items.
-     */
-    itemRender?: (context: OverlayMenuSharedItemRenderContext<Item>) => JSX.Element
-
-    /**
-     * Content to render at the top of the dropdown menu body.
-     */
-    contentTop?: OverlayMenuContentSlot
-
-    /**
-     * Content to render at the bottom of the dropdown menu body.
-     */
-    contentBottom?: OverlayMenuContentSlot
-
-    /**
-     * Trigger element that opens the dropdown menu.
+     * Trigger content used to open the dropdown menu.
      */
     children: JSX.Element
   }
@@ -107,13 +33,7 @@ export namespace DropdownMenuT {
   /**
    * Props for the DropdownMenu component.
    */
-  export interface Props extends BaseProps<
-    Base,
-    Variant,
-    Extend,
-    Slot,
-    'arrowPadding' | 'getAnchorRect'
-  > {}
+  export interface Props extends BaseProps<Base, Variant, Extend, Slot> {}
 }
 
 /**
@@ -121,56 +41,136 @@ export namespace DropdownMenuT {
  */
 export interface DropdownMenuProps extends DropdownMenuT.Props {}
 
-/** Trigger-activated dropdown menu with nested items, checkboxes, and radio groups. */
+/**
+ * Triggered action menu anchored to its child content.
+ */
 export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
   const merged = mergeProps(
     {
       size: 'md' as const,
       checkedIcon: 'icon-check' as IconT.Name,
       submenuIcon: 'icon-chevron-right' as IconT.Name,
+      placement: 'bottom-start' as OverlayMenuPlacement,
+      gutter: 0,
     },
     props,
   )
-  const [local, rest] = splitProps(merged, [
-    'size',
-    'disabled',
-    'items',
-    'checkedIcon',
-    'submenuIcon',
-    'itemRender',
-    'contentTop',
-    'contentBottom',
-    'classes',
-    'styles',
-    'children',
-  ])
+  const resolvedId = useId(() => merged.id, 'dropdownmenu')
+  const contentId = createMemo(() => `${resolvedId()}-content`)
+  const [openState, setOpenState] = useControllableValue<boolean>({
+    value: () => merged.open,
+    defaultValue: () => merged.defaultOpen ?? false,
+  })
+  const isOpen = createMemo(() => Boolean(openState()))
+  const [autoFocusStrategy, setAutoFocusStrategy] =
+    createSignal<OverlayMenuFocusStrategy>('content')
+  let triggerElement: HTMLElement | undefined
+
+  const commitOpen = (open: boolean): void => {
+    if (open && merged.disabled) {
+      return
+    }
+
+    if (merged.open === undefined) {
+      setOpenState(open)
+    }
+
+    if (!open) {
+      setAutoFocusStrategy('none')
+    }
+
+    merged.onOpenChange?.(open)
+  }
+
+  const openWithStrategy = (strategy: OverlayMenuFocusStrategy): void => {
+    if (merged.disabled) {
+      return
+    }
+
+    setAutoFocusStrategy(strategy)
+    commitOpen(true)
+  }
 
   return (
-    <KobalteDropdownMenu.Root overflowPadding={4} {...rest}>
-      <KobalteDropdownMenu.Trigger
-        as="span"
-        tabIndex={-1}
+    <>
+      <span
+        ref={(element) => {
+          triggerElement = element
+        }}
         data-slot="trigger"
-        style={local.styles?.trigger}
-        class={cn('outline-none', local.classes?.trigger)}
-        disabled={local.disabled}
-      >
-        {local.children}
-      </KobalteDropdownMenu.Trigger>
+        tabIndex={-1}
+        aria-haspopup="menu"
+        aria-controls={isOpen() ? contentId() : undefined}
+        aria-expanded={isOpen() ? 'true' : 'false'}
+        style={merged.styles?.trigger}
+        class={cn('outline-none', merged.classes?.trigger)}
+        onClick={(event) => {
+          if (event.defaultPrevented || merged.disabled) {
+            return
+          }
 
-      <OverlayMenuBaseContent<DropdownMenuT.Item>
-        content={KobalteDropdownMenu.Content}
-        classes={local.classes}
-        styles={local.styles}
-        size={local.size}
-        items={local.items}
-        checkedIcon={local.checkedIcon}
-        submenuIcon={local.submenuIcon}
-        itemRender={local.itemRender}
-        contentTop={local.contentTop}
-        contentBottom={local.contentBottom}
-        rootSide={resolveOverlayMenuSide(rest.placement ?? 'bottom')}
+          if (isOpen()) {
+            commitOpen(false)
+            return
+          }
+
+          openWithStrategy('content')
+        }}
+        onKeyDown={(event) => {
+          if (event.defaultPrevented || merged.disabled) {
+            return
+          }
+
+          if (event.key === 'ArrowDown') {
+            event.preventDefault()
+            openWithStrategy('first')
+            return
+          }
+
+          if (event.key === 'ArrowUp') {
+            event.preventDefault()
+            openWithStrategy('last')
+            return
+          }
+
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+
+            if (isOpen()) {
+              commitOpen(false)
+              return
+            }
+
+            openWithStrategy('first')
+          }
+        }}
+      >
+        {merged.children}
+      </span>
+
+      <OverlayMenu<DropdownMenuT.Item>
+        id={resolvedId()}
+        open={isOpen()}
+        onClose={() => {
+          commitOpen(false)
+        }}
+        triggerElement={triggerElement}
+        placement={merged.placement}
+        gutter={merged.gutter}
+        autoFocusStrategy={autoFocusStrategy()}
+        onAutoFocusHandled={() => {
+          setAutoFocusStrategy('none')
+        }}
+        classes={merged.classes}
+        styles={merged.styles}
+        size={merged.size}
+        items={merged.items}
+        checkedIcon={merged.checkedIcon}
+        submenuIcon={merged.submenuIcon}
+        itemRender={merged.itemRender}
+        contentTop={merged.contentTop}
+        contentBottom={merged.contentBottom}
       />
-    </KobalteDropdownMenu.Root>
+    </>
   )
 }

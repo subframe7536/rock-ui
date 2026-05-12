@@ -73,8 +73,9 @@ Floating/positioned overlays with portals, focus traps, and complex pointer/keyb
   - Affects: `Popover` (`src/overlays/popover/popover.tsx`)
 - [x] **`@kobalte/core/tooltip`** → inline `Tooltip.Root`, `Tooltip.Trigger`, `Tooltip.Portal`, `Tooltip.Content`, `Tooltip.Arrow`; depends on `popper` being inlined first
   - Affects: `Tooltip` (`src/overlays/tooltip/tooltip.tsx`)
-- [ ] **`@kobalte/core/dropdown-menu`** → inline all exports (`Root`, `Trigger`, `Content`, `Item`, `CheckboxItem`, `Group`, `GroupLabel`, `Sub`, `SubTrigger`, `SubContent`, `Separator`, `ItemIndicator`, `Portal`); **fix**: prevent submenu from closing prematurely during pointer movement toward submenu
+- [x] **`@kobalte/core/dropdown-menu`** → inline all exports (`Root`, `Trigger`, `Content`, `Item`, `CheckboxItem`, `Group`, `GroupLabel`, `Sub`, `SubTrigger`, `SubContent`, `Separator`, `ItemIndicator`, `Portal`); **fix**: prevent submenu from closing prematurely during pointer movement toward another submenu
   - Affects: `DropdownMenu` (`src/overlays/dropdown-menu/dropdown-menu.tsx`), `ContextMenu` (`src/overlays/context-menu/context-menu.tsx`), `OverlayMenuBaseContent` (`src/overlays/shared-overlay-menu/menu.tsx`)
+  - [ ] move outside main menu should close all submenus, but currently it doesn't close the immediate parent submenu until pointer moves over another item
 - [ ] **`@kobalte/core/combobox`** → inline `Combobox`, `useComboboxContext`, `ComboboxContextValue`, `ComboboxRootProps`, `ComboboxSingleSelectionOptions`; most complex — requires virtualized scroll, multi-selection, and filtering support
   - Affects: `Select` (`src/forms/select/select.tsx`), `MultiSelect` (`src/forms/select/multi-select.tsx`), `CommandPalette` (`src/navigation/command-palette/command-palette.tsx`), `src/forms/select/shared/`
 
