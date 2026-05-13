@@ -22,7 +22,11 @@ import { Kbd } from '../../elements/kbd'
 import { useControllableValue } from '../../shared/use-controllable-value'
 import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { callHandler, cn, useId } from '../../shared/utils'
-import { focusTrigger, focusWithoutScrolling } from '../shared/overlay-shell.utils'
+import {
+  acquireBodyScrollLock,
+  focusTrigger,
+  focusWithoutScrolling,
+} from '../shared/overlay-shell.utils'
 
 import { overlayMenuContentVariants, overlayMenuItemVariants } from './menu.class'
 import type { OverlayMenuItemVariantProps } from './menu.class'
@@ -78,6 +82,7 @@ interface OverlayMenuLayerProps<
   gutter: number
   id: string
   onAutoFocusHandled?: () => void
+  onContentPointerDown?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
   onContextMenu?: JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>
   open: boolean
   overflowPadding: number
@@ -101,10 +106,12 @@ export interface OverlayMenuProps<
   id?: string
   onAutoFocusHandled?: () => void
   onClose: () => void
+  onContentPointerDown?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
   onContentContextMenu?: JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>
   open: boolean
   overflowPadding?: number
   placement?: OverlayMenuPlacement
+  preventScroll?: boolean
   triggerElement?: HTMLElement
 }
 
@@ -176,6 +183,12 @@ export interface OverlayMenuRootProps<TItem extends OverlayMenuSharedItem<TItem>
    * Content rendered after the resolved item groups.
    */
   contentBottom?: OverlayMenuContentSlot
+
+  /**
+   * Whether body scroll should be locked while the menu is open.
+   * @default true
+   */
+  preventScroll?: boolean
 }
 
 function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
@@ -925,6 +938,9 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
         tabIndex={layer.highlightedItemId() === undefined ? 0 : -1}
         style={props.styles?.content}
         class={overlayMenuContentVariants({ side: side() }, props.classes?.content)}
+        onPointerDown={(event) => {
+          callHandler(event, props.onContentPointerDown)
+        }}
         onContextMenu={(event) => {
           callHandler(event, props.onContextMenu)
         }}
@@ -969,6 +985,7 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
       gutter: 0,
       overflowPadding: 4,
       placement: 'bottom-start' as OverlayMenuPlacement,
+      preventScroll: true,
     },
     props,
   )
@@ -980,6 +997,9 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
   })
   const branches = new Set<HTMLElement>()
   const [restoreFocusOnClose, setRestoreFocusOnClose] = createSignal(false)
+  const [rootLayerState, setRootLayerState] = createSignal<OverlayMenuLayerState | undefined>(
+    undefined,
+  )
 
   createEffect(() => {
     if (contentPresence.present()) {
@@ -1002,6 +1022,26 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
     })
   })
 
+  createEffect(() => {
+    if (merged.open) {
+      return
+    }
+
+    rootLayerState()?.closeSubmenus()
+  })
+
+  createEffect(() => {
+    if (!contentPresence.present()) {
+      return
+    }
+
+    const releaseScrollLock = merged.preventScroll ? acquireBodyScrollLock() : undefined
+
+    onCleanup(() => {
+      releaseScrollLock?.()
+    })
+  })
+
   const containsTarget = (node: Node): boolean => {
     if (merged.triggerElement?.contains(node)) {
       return true
@@ -1015,13 +1055,33 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
 
     return false
   }
+  const containsBranchTarget = (node: Node): boolean => {
+    for (const branch of branches) {
+      if (branch.contains(node)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  const closeRoot = (options?: OverlayMenuCloseOptions): void => {
+    if (options?.restoreFocus) {
+      setRestoreFocusOnClose(true)
+    }
+
+    rootLayerState()?.closeSubmenus()
+    merged.onClose()
+  }
 
   useOverlayMenuDismiss({
+    containsPointerMoveTarget: containsBranchTarget,
     containsTarget,
     onClose: () => {
-      merged.onClose()
+      closeRoot()
     },
     open: () => merged.open,
+    shouldIgnorePointerMove: (event) => rootLayerState()?.shouldBlockPointerEnter(event) ?? false,
   })
 
   const getReferenceElement = (): ReferenceElement | undefined => {
@@ -1034,17 +1094,16 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
     return merged.triggerElement
   }
 
-  const closeRoot = (options?: OverlayMenuCloseOptions): void => {
-    if (options?.restoreFocus) {
-      setRestoreFocusOnClose(true)
-    }
-
-    merged.onClose()
-  }
-
   return (
     <Show when={contentPresence.present()}>
       <Portal>
+        <Show when={merged.preventScroll}>
+          <div
+            data-slot="overlay"
+            style={merged.styles?.overlay}
+            class={cn('inset-0 fixed z-40', merged.classes?.overlay)}
+          />
+        </Show>
         <OverlayMenuLayer<TItem>
           id={contentId()}
           open={merged.open}
@@ -1075,7 +1134,9 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
           setPresenceElement={contentPresence.setElement}
           autoFocusStrategy={merged.autoFocusStrategy}
           onAutoFocusHandled={merged.onAutoFocusHandled}
+          onContentPointerDown={merged.onContentPointerDown}
           onContextMenu={merged.onContentContextMenu}
+          refState={setRootLayerState}
         />
       </Portal>
     </Show>

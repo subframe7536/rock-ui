@@ -307,6 +307,55 @@ describe('ContextMenu', () => {
     expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
   })
 
+  test('dismisses menu when pressing the trigger again with a different pointer button', async () => {
+    const screen = render(() => (
+      <ContextMenu items={[{ label: 'Pinned action' }]}>
+        <div>Row Item</div>
+      </ContextMenu>
+    ))
+
+    const row = screen.getByText('Row Item')
+
+    await fireEvent.contextMenu(row, { clientX: 12, clientY: 18 })
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+    })
+
+    await fireEvent.pointerDown(row, { button: 0, pointerType: 'mouse' })
+
+    expect(row.closest('[data-slot="trigger"]')?.getAttribute('aria-expanded')).toBe('false')
+    expect(document.body.querySelector('[data-slot="content"][data-expanded]')).toBeNull()
+    expect(document.body.querySelector('[data-slot="content"][data-closed]')).not.toBeNull()
+
+    await finishMenuExitMotion()
+
+    expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
+  })
+
+  test('locks body scroll and renders an overlay layer while open', async () => {
+    const screen = render(() => (
+      <ContextMenu items={[{ label: 'Pinned action' }]}>
+        <div>Row Item</div>
+      </ContextMenu>
+    ))
+
+    await fireEvent.contextMenu(screen.getByText('Row Item'), { clientX: 12, clientY: 18 })
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="overlay"]')).not.toBeNull()
+    })
+
+    expect(document.body.style.overflow).toBe('hidden')
+
+    const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement
+    await fireEvent.pointerDown(overlay, { pointerType: 'mouse' })
+    await finishMenuExitMotion()
+
+    expect(document.body.querySelector('[data-slot="overlay"]')).toBeNull()
+    expect(document.body.style.overflow).toBe('')
+  })
+
   test('renders item matrix, nested submenu, and content slots', async () => {
     const contentTop = vi.fn((props: { sub: boolean }) => (
       <div data-testid={props.sub ? 'content-top-sub' : 'content-top-root'}>

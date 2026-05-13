@@ -69,6 +69,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   const resolvedId = useId(() => merged.id, 'contextmenu')
   const contentId = createMemo(() => `${resolvedId()}-content`)
   let longPressTimeoutId = 0
+  let suppressNextContextMenu = false
   let triggerElement: HTMLElement | undefined
 
   const commitOpen = (open: boolean): void => {
@@ -91,6 +92,23 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     setAutoFocusStrategy('content')
     setAnchorPoint({ x, y })
     commitOpen(true)
+  }
+
+  const consumeSuppressedContextMenu = (event: MouseEvent): boolean => {
+    if (!suppressNextContextMenu) {
+      return false
+    }
+
+    suppressNextContextMenu = false
+    event.preventDefault()
+    event.stopPropagation()
+    return true
+  }
+
+  const suppressContextMenuFromPointer = (event: PointerEvent): void => {
+    if (event.button === 2 || isTouchOrPen(event.pointerType)) {
+      suppressNextContextMenu = true
+    }
   }
 
   const clearLongPressTimeout = (): void => {
@@ -122,6 +140,10 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
 
   onMount(() => {
     const onDocumentContextMenuCapture = (event: MouseEvent): void => {
+      if (consumeSuppressedContextMenu(event)) {
+        return
+      }
+
       if (merged.disabled) {
         return
       }
@@ -153,6 +175,10 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   })
 
   const onContextMenu = (event: MouseEvent): void => {
+    if (consumeSuppressedContextMenu(event)) {
+      return
+    }
+
     if (event.defaultPrevented || merged.disabled) {
       return
     }
@@ -164,6 +190,10 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   }
 
   const onContentContextMenu = (event: MouseEvent): void => {
+    if (consumeSuppressedContextMenu(event)) {
+      return
+    }
+
     event.preventDefault()
     event.stopPropagation()
 
@@ -173,11 +203,22 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   }
 
   const onPointerDown = (event: PointerEvent): void => {
-    if (merged.disabled || !isTouchOrPen(event.pointerType)) {
+    if (merged.disabled) {
       return
     }
 
     clearLongPressTimeout()
+
+    if (resolvedOpen()) {
+      suppressContextMenuFromPointer(event)
+      commitOpen(false)
+      return
+    }
+
+    if (!isTouchOrPen(event.pointerType)) {
+      return
+    }
+
     setAnchorPoint({ x: event.clientX, y: event.clientY })
 
     const isUncontrolled = merged.open === undefined
@@ -272,6 +313,18 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
         placement={merged.placement}
         gutter={merged.gutter}
         autoFocusStrategy={autoFocusStrategy()}
+        onContentPointerDown={(event) => {
+          if (!(event.target instanceof Element) || event.target.closest('[data-slot="item"]')) {
+            return
+          }
+
+          if (!resolvedOpen()) {
+            return
+          }
+
+          suppressContextMenuFromPointer(event)
+          commitOpen(false)
+        }}
         onContentContextMenu={onContentContextMenu}
         classes={merged.classes}
         styles={merged.styles}

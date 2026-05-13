@@ -668,4 +668,80 @@ describe('DropdownMenu', () => {
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
     expect(content?.style.width).toBe('200px')
   })
+
+  test('dismisses the full menu tree when the pointer leaves every menu panel', async () => {
+    render(() => (
+      <DropdownMenu
+        defaultOpen
+        items={[
+          {
+            label: 'More',
+            defaultOpen: true,
+            children: [{ label: 'Nested action' }],
+          },
+        ]}
+      >
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Nested action')
+    })
+
+    const contents = Array.from(document.body.querySelectorAll('[data-slot="content"]'))
+    const root = contents[0] as HTMLElement
+    const sub = contents.find((content) => content.textContent?.includes('Nested action')) as HTMLElement
+
+    root.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: 24,
+        clientY: 24,
+        pointerType: 'mouse',
+      }),
+    )
+    sub.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: 96,
+        clientY: 64,
+        pointerType: 'mouse',
+      }),
+    )
+
+    document.body.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: 220,
+        clientY: 220,
+        pointerType: 'mouse',
+      }),
+    )
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="content"][data-expanded]')).toBeNull()
+    })
+  })
+
+  test('locks body scroll and renders an overlay layer while open', async () => {
+    render(() => (
+      <DropdownMenu defaultOpen items={[{ label: 'Archive' }]}>
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="overlay"]')).not.toBeNull()
+    })
+
+    expect(document.body.style.overflow).toBe('hidden')
+
+    const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement
+    await fireEvent.pointerDown(overlay, { pointerType: 'mouse' })
+    await finishMenuExitMotion()
+
+    expect(document.body.querySelector('[data-slot="overlay"]')).toBeNull()
+    expect(document.body.style.overflow).toBe('')
+  })
 })

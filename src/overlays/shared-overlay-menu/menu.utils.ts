@@ -544,9 +544,11 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
 }
 
 export function useOverlayMenuDismiss(options: {
+  containsPointerMoveTarget?: (node: Node) => boolean
   containsTarget: (node: Node) => boolean
   onClose: () => void
   open: Accessor<boolean>
+  shouldIgnorePointerMove?: (event: PointerEvent) => boolean
 }): void {
   createEffect(() => {
     if (!options.open() || typeof document === 'undefined') {
@@ -585,13 +587,35 @@ export function useOverlayMenuDismiss(options: {
       event.preventDefault()
       options.onClose()
     }
+    const onDocumentPointerMove = (event: PointerEvent): void => {
+      if (event.pointerType && event.pointerType !== 'mouse') {
+        return
+      }
+
+      const target = event.target
+
+      if (
+        target instanceof Node &&
+        (options.containsPointerMoveTarget ?? options.containsTarget)(target)
+      ) {
+        return
+      }
+
+      if (options.shouldIgnorePointerMove?.(event)) {
+        return
+      }
+
+      options.onClose()
+    }
 
     document.addEventListener('pointerdown', onDocumentPointerDown, true)
+    document.addEventListener('pointermove', onDocumentPointerMove, true)
     document.addEventListener('focusin', onDocumentFocusIn, true)
     document.addEventListener('keydown', onDocumentKeyDown, true)
 
     onCleanup(() => {
       document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+      document.removeEventListener('pointermove', onDocumentPointerMove, true)
       document.removeEventListener('focusin', onDocumentFocusIn, true)
       document.removeEventListener('keydown', onDocumentKeyDown, true)
     })

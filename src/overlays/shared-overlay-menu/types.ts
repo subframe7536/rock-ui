@@ -86,6 +86,7 @@ export interface OverlayMenuSharedItem<TItem> {
 
 export type OverlayMenuSharedSlots =
   | 'trigger'
+  | 'overlay'
   | 'content'
   | 'group'
   | 'label'
