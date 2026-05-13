@@ -2,8 +2,8 @@ import type { JSX } from 'solid-js'
 import { mergeProps } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { ModalShell } from '../shared/modal-shell'
-import type { ModalShellProps } from '../shared/modal-shell'
+import { Modal } from '../base/modal'
+import type { ModalProps } from '../base/modal'
 
 import { popupContentVariants, popupOverlayVariants } from './popup.class'
 import type { PopupVariantProps } from './popup.class'
@@ -14,7 +14,7 @@ export namespace PopupT {
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
   export type Extend = Pick<
-    ModalShellProps,
+    ModalProps,
     | 'id'
     | 'open'
     | 'defaultOpen'
@@ -83,7 +83,7 @@ export function Popup(props: PopupProps): JSX.Element {
   }
 
   return (
-    <ModalShell
+    <Modal
       id={merged.id}
       open={merged.open}
       defaultOpen={merged.defaultOpen}

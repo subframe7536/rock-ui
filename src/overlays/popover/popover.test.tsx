@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { setPopperTestPlacementAccessor } from '../shared/popper-shell'
+import { setPopperTestPlacementAccessor } from '../base/popper'
 
 import { Popover } from './popover'
 import type { PopoverProps } from './popover'

@@ -4,8 +4,8 @@ import { Show, createMemo, mergeProps } from 'solid-js'
 import { Icon } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
-import { ModalShell } from '../shared/modal-shell'
-import type { ModalShellProps } from '../shared/modal-shell'
+import { Modal } from '../base/modal'
+import type { ModalProps } from '../base/modal'
 
 import { sheetContentVariants } from './sheet.class'
 import type { SheetVariantProps } from './sheet.class'
@@ -28,7 +28,7 @@ export namespace SheetT {
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
   export type Extend = Pick<
-    ModalShellProps,
+    ModalProps,
     'id' | 'open' | 'defaultOpen' | 'onOpenChange' | 'overlay' | 'dismissible' | 'onClosePrevent'
   >
 
@@ -120,7 +120,7 @@ export function Sheet(props: SheetProps): JSX.Element {
     Boolean(merged.title || merged.description || merged.actions || merged.close)
 
   return (
-    <ModalShell
+    <Modal
       id={merged.id}
       open={merged.open}
       defaultOpen={merged.defaultOpen}

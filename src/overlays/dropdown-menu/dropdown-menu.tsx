@@ -5,11 +5,15 @@ import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { useControllableValue } from '../../shared/use-controllable-value'
 import { cn, useId } from '../../shared/utils'
-import { OverlayMenu } from '../shared-overlay-menu/menu'
-import type { OverlayMenuFocusStrategy, OverlayMenuRootProps } from '../shared-overlay-menu/menu'
-import type { OverlayMenuItemVariantProps } from '../shared-overlay-menu/menu.class'
-import type { OverlayMenuSharedItem, OverlayMenuSharedSlots } from '../shared-overlay-menu/types'
-import type { OverlayMenuPlacement } from '../shared-overlay-menu/utils'
+import { OverlayMenu } from '../base/menu'
+import type {
+  OverlayMenuFocusStrategy,
+  OverlayMenuItemVariantProps,
+  OverlayMenuPlacement,
+  OverlayMenuRootProps,
+  OverlayMenuSharedItem,
+  OverlayMenuSharedSlots,
+} from '../base/menu'
 
 export namespace DropdownMenuT {
   export type Slot = OverlayMenuSharedSlots

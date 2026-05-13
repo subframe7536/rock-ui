@@ -1,9 +1,27 @@
 import type { JSX } from 'solid-js'
 
-import type { IconT } from '../../elements/icon'
-import type { SlotClasses, SlotStyles } from '../../shared/types'
+import type { IconT } from '../../../elements/icon'
+import type { SlotClasses, SlotStyles } from '../../../shared/types'
 
 import type { OverlayMenuItemVariantProps } from './menu.class'
+
+export type OverlayMenuSide = 'top' | 'right' | 'bottom' | 'left'
+
+export type OverlayMenuPlacement =
+  | 'top'
+  | 'top-start'
+  | 'top-end'
+  | 'right'
+  | 'right-start'
+  | 'right-end'
+  | 'bottom'
+  | 'bottom-start'
+  | 'bottom-end'
+  | 'left'
+  | 'left-start'
+  | 'left-end'
+
+export type OverlayMenuContentSlot = (context: { sub: boolean }) => JSX.Element
 
 export type OverlayMenuItemType = 'item' | 'separator' | 'checkbox' | 'group'
 

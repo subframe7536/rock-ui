@@ -9,7 +9,7 @@ import { For, Match, Show, Switch, createMemo } from 'solid-js'
 
 import { Icon, IconButton } from '../../../elements/icon'
 import type { IconT } from '../../../elements/icon'
-import { overlayMenuContentVariants } from '../../../overlays/shared-overlay-menu/menu.class'
+import { overlayMenuContentVariants } from '../../../overlays/base/menu'
 import { cn } from '../../../shared/utils'
 import { selectItemVariants } from '../select.class'
 

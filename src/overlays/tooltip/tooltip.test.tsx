@@ -2,7 +2,7 @@ import { render } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
-import { setPopperTestPlacementAccessor } from '../shared/popper-shell'
+import { setPopperTestPlacementAccessor } from '../base/popper'
 
 import { Tooltip } from './tooltip'
 import type { TooltipProps } from './tooltip'

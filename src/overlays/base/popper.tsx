@@ -21,29 +21,29 @@ import {
   acquireBodyScrollLock,
   focusContent,
   focusTrigger,
-  getFocusableElements,
-} from './overlay-shell.utils'
-
-type FloatingSide = 'top' | 'right' | 'bottom' | 'left'
+  getTransformOrigin,
+  resolveDirection,
+  trapFocusInContainer,
+} from './utils'
 
 export type PopperPlacement = Placement
 
 let popperTestPlacementAccessor: Accessor<string> | undefined
 
-interface PopperShellControls {
+interface PopperControls {
   close: () => void
   isOpen: boolean
   open: () => void
   toggle: () => void
 }
 
-interface PopperShellInteractOutsideEvent {
+interface PopperInteractOutsideEvent {
   defaultPrevented: boolean
   originalEvent: FocusEvent
   preventDefault: () => void
 }
 
-interface PopperShellContentProps {
+interface PopperContentProps {
   'aria-describedby'?: string
   'aria-labelledby'?: string
   'aria-modal'?: true
@@ -62,11 +62,11 @@ interface PopperShellContentProps {
   tabIndex: number
 }
 
-export interface PopperShellProps {
+export interface PopperProps {
   ariaDescribedBy?: string
   ariaLabelledBy?: string
   closeOnOutsideFocus?: boolean
-  content: (context: PopperShellContentContext) => JSX.Element
+  content: (context: PopperContentContext) => JSX.Element
   defaultOpen?: boolean
   describeTrigger?: boolean
   detachedPadding?: number
@@ -81,17 +81,17 @@ export interface PopperShellProps {
   modal?: boolean
   onClosePrevent?: () => void
   onEscapeKeyDown?: (event: KeyboardEvent) => void
-  onInteractOutside?: (event: PopperShellInteractOutsideEvent) => void
+  onInteractOutside?: (event: PopperInteractOutsideEvent) => void
   onOpenChange?: (open: boolean) => void
   onPointerDownOutside?: (event: PointerEvent) => void
-  onTriggerBlur?: (controls: PopperShellControls) => void
-  onTriggerFocus?: (controls: PopperShellControls) => void
-  onTriggerPointerEnter?: (controls: PopperShellControls) => void
-  onTriggerPointerLeave?: (controls: PopperShellControls) => void
-  onContentBlur?: (controls: PopperShellControls) => void
-  onContentFocus?: (controls: PopperShellControls) => void
-  onContentPointerEnter?: (controls: PopperShellControls) => void
-  onContentPointerLeave?: (controls: PopperShellControls) => void
+  onTriggerBlur?: (controls: PopperControls) => void
+  onTriggerFocus?: (controls: PopperControls) => void
+  onTriggerPointerEnter?: (controls: PopperControls) => void
+  onTriggerPointerLeave?: (controls: PopperControls) => void
+  onContentBlur?: (controls: PopperControls) => void
+  onContentFocus?: (controls: PopperControls) => void
+  onContentPointerEnter?: (controls: PopperControls) => void
+  onContentPointerLeave?: (controls: PopperControls) => void
   open?: boolean
   overlap?: boolean
   overflowPadding?: number
@@ -109,54 +109,17 @@ export interface PopperShellProps {
   triggerStyle?: JSX.CSSProperties
 }
 
-export interface PopperShellContentContext {
+export interface PopperContentContext {
   close: () => void
-  contentProps: PopperShellContentProps
+  contentProps: PopperContentProps
   currentPlacement: Accessor<string>
-}
-
-const REVERSE_BASE_PLACEMENT: Record<FloatingSide, FloatingSide> = {
-  top: 'bottom',
-  right: 'left',
-  bottom: 'top',
-  left: 'right',
-}
-
-function resolveDirection(): 'ltr' | 'rtl' {
-  if (typeof document === 'undefined') {
-    return 'ltr'
-  }
-
-  return (document.dir || document.documentElement.dir || 'ltr') === 'rtl' ? 'rtl' : 'ltr'
-}
-
-function getTransformOrigin(placement: PopperPlacement, direction: 'ltr' | 'rtl'): string {
-  const [basePlacement, alignment] = placement.split('-') as [
-    FloatingSide,
-    'start' | 'end' | undefined,
-  ]
-  const reversePlacement = REVERSE_BASE_PLACEMENT[basePlacement]
-
-  if (!alignment) {
-    return `${reversePlacement} center`
-  }
-
-  if (basePlacement === 'left' || basePlacement === 'right') {
-    return `${reversePlacement} ${alignment === 'start' ? 'top' : 'bottom'}`
-  }
-
-  if (alignment === 'start') {
-    return `${reversePlacement} ${direction === 'rtl' ? 'right' : 'left'}`
-  }
-
-  return `${reversePlacement} ${direction === 'rtl' ? 'left' : 'right'}`
 }
 
 export function setPopperTestPlacementAccessor(accessor: Accessor<string> | undefined): void {
   popperTestPlacementAccessor = accessor
 }
 
-export function PopperShell(props: PopperShellProps): JSX.Element {
+export function Popper(props: PopperProps): JSX.Element {
   const merged = mergeProps(
     {
       closeOnOutsideFocus: true,
@@ -209,7 +172,7 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
     merged.onOpenChange?.(nextOpen)
   }
 
-  function getControls(): PopperShellControls {
+  function getControls(): PopperControls {
     return {
       close: () => {
         setOpen(false)
@@ -419,7 +382,7 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
         return
       }
 
-      const interactEvent: PopperShellInteractOutsideEvent = {
+      const interactEvent: PopperInteractOutsideEvent = {
         defaultPrevented: false,
         originalEvent: event,
         preventDefault() {
@@ -485,44 +448,11 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
   })
 
   function onContentKeyDown(event: KeyboardEvent): void {
-    const currentContent = contentElement()
-
-    if (event.key !== 'Tab' || !currentContent || !merged.modal) {
+    if (!merged.modal) {
       return
     }
 
-    const focusableElements = getFocusableElements(currentContent)
-
-    if (focusableElements.length === 0) {
-      event.preventDefault()
-      currentContent.focus()
-      return
-    }
-
-    const firstFocusable = focusableElements[0]
-    const lastFocusable = focusableElements[focusableElements.length - 1]
-
-    if (!firstFocusable || !lastFocusable) {
-      event.preventDefault()
-      currentContent.focus()
-      return
-    }
-
-    const activeElement = document.activeElement
-
-    if (event.shiftKey) {
-      if (activeElement === currentContent || activeElement === firstFocusable) {
-        event.preventDefault()
-        lastFocusable.focus()
-      }
-
-      return
-    }
-
-    if (activeElement === lastFocusable) {
-      event.preventDefault()
-      firstFocusable.focus()
-    }
+    trapFocusInContainer(event, contentElement())
   }
 
   return (

@@ -4,10 +4,14 @@ import { createMemo, createSignal, mergeProps, onCleanup, onMount, untrack } fro
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
-import { OverlayMenu } from '../shared-overlay-menu/menu'
-import type { OverlayMenuFocusStrategy, OverlayMenuRootProps } from '../shared-overlay-menu/menu'
-import type { OverlayMenuItemVariantProps } from '../shared-overlay-menu/menu.class'
-import type { OverlayMenuSharedItem, OverlayMenuSharedSlots } from '../shared-overlay-menu/types'
+import { OverlayMenu } from '../base/menu'
+import type {
+  OverlayMenuFocusStrategy,
+  OverlayMenuItemVariantProps,
+  OverlayMenuRootProps,
+  OverlayMenuSharedItem,
+  OverlayMenuSharedSlots,
+} from '../base/menu'
 
 export namespace ContextMenuT {
   export type Slot = OverlayMenuSharedSlots

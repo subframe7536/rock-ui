@@ -6,9 +6,9 @@ import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
+import { Modal } from '../base/modal'
+import type { ModalProps } from '../base/modal'
 import { popupContentVariants, popupOverlayVariants } from '../popup/popup.class'
-import { ModalShell } from '../shared/modal-shell'
-import type { ModalShellProps } from '../shared/modal-shell'
 
 import { dialogCardVariants } from './dialog.class'
 import type { DialogCardVariantProps } from './dialog.class'
@@ -30,7 +30,7 @@ export namespace DialogT {
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
   export type Extend = Pick<
-    ModalShellProps,
+    ModalProps,
     'id' | 'open' | 'defaultOpen' | 'onOpenChange' | 'overlay' | 'dismissible' | 'onClosePrevent'
   >
 
@@ -211,7 +211,7 @@ export function Dialog(props: DialogProps): JSX.Element {
   }
 
   return (
-    <ModalShell
+    <Modal
       id={merged.id}
       open={merged.open}
       defaultOpen={merged.defaultOpen}

@@ -16,28 +16,32 @@ import {
 } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
-import { Icon } from '../../elements/icon'
-import type { IconT } from '../../elements/icon'
-import { Kbd } from '../../elements/kbd'
-import { useControllableValue } from '../../shared/use-controllable-value'
-import { useTransitionPresence } from '../../shared/use-transition-presence'
-import { callHandler, cn, useId } from '../../shared/utils'
+import { Icon } from '../../../elements/icon'
+import type { IconT } from '../../../elements/icon'
+import { Kbd } from '../../../elements/kbd'
+import { useControllableValue } from '../../../shared/use-controllable-value'
+import { useTransitionPresence } from '../../../shared/use-transition-presence'
+import { callHandler, cn, useId } from '../../../shared/utils'
 import {
   acquireBodyScrollLock,
   focusTrigger,
   focusWithoutScrolling,
-} from '../shared/overlay-shell.utils'
+  getTransformOrigin,
+  resolveDirection,
+  resolveOverlayMenuSide,
+} from '../utils'
 
 import { overlayMenuContentVariants, overlayMenuItemVariants } from './menu.class'
 import type { OverlayMenuItemVariantProps } from './menu.class'
 import {
   createVirtualReference,
+  getOverlayMenuTextValue,
   focusElement,
   focusLayerFromStrategy,
   getPointerGraceArea,
-  getTransformOrigin,
+  hasOverlayMenuChildren,
   onLayerKeyDown,
-  resolveDirection,
+  resolveMenuGroups,
   useOverlayMenuDismiss,
   useOverlayMenuFloatingPosition,
   useOverlayMenuLayerState,
@@ -52,10 +56,10 @@ import type {
   OverlayMenuSharedClasses,
   OverlayMenuSharedItem,
   OverlayMenuSharedItemRenderContext,
+  OverlayMenuContentSlot,
+  OverlayMenuPlacement,
   OverlayMenuSharedStyles,
 } from './types'
-import type { OverlayMenuContentSlot, OverlayMenuPlacement } from './utils'
-import { getOverlayMenuTextValue, resolveMenuGroups, resolveOverlayMenuSide } from './utils'
 
 export type { OverlayMenuAnchorRect, OverlayMenuFocusStrategy } from './menu.utils'
 
@@ -211,6 +215,7 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     undefined,
   )
   const [isPositioned, setIsPositioned] = createSignal(false)
+  const groups = createMemo(() => resolveMenuGroups(props.items))
   const subtreeBranches = new Set<HTMLElement>()
 
   /** Track this layer's own positioner plus all descendant submenu branches while forwarding registration upward. */
@@ -868,67 +873,6 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     )
   }
 
-  function RenderGroups(): JSX.Element {
-    return (
-      <For each={resolveMenuGroups(props.items)}>
-        {(group) => (
-          <div
-            data-slot="group"
-            role="group"
-            style={props.styles?.group}
-            class={cn(props.classes?.group)}
-          >
-            <Show when={group.label}>
-              <div
-                data-slot="label"
-                style={props.styles?.label}
-                class={cn(
-                  'text-xs text-muted-foreground font-medium px-1.5 py-1 inline-flex',
-                  props.classes?.label,
-                )}
-              >
-                {group.label}
-              </div>
-            </Show>
-
-            <For each={group.items}>
-              {(item) => (
-                <Show
-                  when={
-                    item.type !== 'group' &&
-                    Boolean(
-                      item.children?.some(
-                        (item) => item.type !== 'group' || Boolean(item.children?.length),
-                      ),
-                    )
-                  }
-                  fallback={
-                    <Switch fallback={<LeafItem item={item} />}>
-                      <Match when={item.type === 'separator'}>
-                        <div
-                          data-slot="separator"
-                          role="separator"
-                          style={props.styles?.separator}
-                          class={cn('mx--1 my-1 b-t-border h-px', props.classes?.separator)}
-                        />
-                      </Match>
-
-                      <Match when={item.type === 'checkbox'}>
-                        <CheckboxMenuItem item={item} />
-                      </Match>
-                    </Switch>
-                  }
-                >
-                  <SubmenuItem item={item} />
-                </Show>
-              )}
-            </For>
-          </div>
-        )}
-      </For>
-    )
-  }
-
   const side = createMemo(() => resolveOverlayMenuSide(layer.currentPlacement()))
   const closeParentKey = createMemo(() =>
     props.parentLayer ? (side() === 'left' ? 'ArrowRight' : 'ArrowLeft') : undefined,
@@ -1006,7 +950,52 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
         }}
       >
         <Show when={props.contentTop}>{(slot) => slot()({ sub: props.depth > 0 })}</Show>
-        <RenderGroups />
+        <For each={groups()}>
+          {(group) => (
+            <div
+              data-slot="group"
+              role="group"
+              style={props.styles?.group}
+              class={cn(props.classes?.group)}
+            >
+              <Show when={group.label}>
+                <div
+                  data-slot="label"
+                  style={props.styles?.label}
+                  class={cn(
+                    'text-xs text-muted-foreground font-medium px-1.5 py-1 inline-flex',
+                    props.classes?.label,
+                  )}
+                >
+                  {group.label}
+                </div>
+              </Show>
+
+              <For each={group.items}>
+                {(item) => (
+                  <Switch fallback={<LeafItem item={item} />}>
+                    <Match when={item.type === 'separator'}>
+                      <div
+                        data-slot="separator"
+                        role="separator"
+                        style={props.styles?.separator}
+                        class={cn('mx--1 my-1 b-t-border h-px', props.classes?.separator)}
+                      />
+                    </Match>
+
+                    <Match when={item.type === 'checkbox'}>
+                      <CheckboxMenuItem item={item} />
+                    </Match>
+
+                    <Match when={hasOverlayMenuChildren(item)}>
+                      <SubmenuItem item={item} />
+                    </Match>
+                  </Switch>
+                )}
+              </For>
+            </div>
+          )}
+        </For>
         <Show when={props.contentBottom}>{(slot) => slot()({ sub: props.depth > 0 })}</Show>
       </div>
     </div>

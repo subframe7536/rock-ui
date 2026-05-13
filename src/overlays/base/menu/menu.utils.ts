@@ -1,9 +1,78 @@
 import { autoUpdate, computePosition, flip, offset, platform, shift, size } from '@floating-ui/dom'
 import type { Middleware, Placement, ReferenceElement, VirtualElement } from '@floating-ui/dom'
-import type { Accessor } from 'solid-js'
+import type { Accessor, JSX } from 'solid-js'
 import { createEffect, createSignal, onCleanup, untrack } from 'solid-js'
 
-import { focusWithoutScrolling } from '../shared/overlay-shell.utils'
+import { focusWithoutScrolling, getTransformOrigin, resolveDirection } from '../utils'
+
+export function getOverlayMenuTextValue(item: {
+  label?: JSX.Element
+  description?: JSX.Element
+}): string | undefined {
+  if (typeof item.label === 'string') {
+    return item.label
+  }
+
+  if (typeof item.description === 'string') {
+    return item.description
+  }
+
+  return undefined
+}
+
+export function hasOverlayMenuChildren<TItem extends { type?: string; children?: TItem[] }>(
+  item: TItem,
+): boolean {
+  if (item.type === 'group') {
+    return false
+  }
+
+  return Boolean(
+    item.children?.some((child) => child.type !== 'group' || Boolean(child.children?.length)),
+  )
+}
+
+interface OverlayMenuGroup<TItem> {
+  label?: JSX.Element
+  items: TItem[]
+}
+
+export function resolveMenuGroups<
+  TItem extends { type?: string; children?: any[]; label?: JSX.Element },
+>(items?: TItem[]): OverlayMenuGroup<TItem>[] {
+  if (!items || items.length === 0) {
+    return []
+  }
+
+  const groups: OverlayMenuGroup<TItem>[] = []
+  let defaultGroup: TItem[] = []
+
+  for (const item of items) {
+    if (item.type === 'group') {
+      if (defaultGroup.length > 0) {
+        groups.push({ items: defaultGroup })
+        defaultGroup = []
+      }
+
+      if (item.children?.length) {
+        groups.push({
+          label: item.label,
+          items: item.children,
+        })
+      }
+
+      continue
+    }
+
+    defaultGroup.push(item)
+  }
+
+  if (defaultGroup.length > 0) {
+    groups.push({ items: defaultGroup })
+  }
+
+  return groups
+}
 
 export type OverlayMenuFocusStrategy = 'content' | 'first' | 'last' | 'none'
 
@@ -57,15 +126,6 @@ export interface OverlayMenuLayerState {
 
 export interface OverlayMenuCloseOptions {
   restoreFocus?: boolean
-}
-
-type FloatingSide = 'top' | 'right' | 'bottom' | 'left'
-
-const REVERSE_BASE_PLACEMENT: Record<FloatingSide, FloatingSide> = {
-  top: 'bottom',
-  right: 'left',
-  bottom: 'top',
-  left: 'right',
 }
 
 function isPointInPolygon(point: [number, number], polygon: Array<[number, number]>): boolean {
@@ -130,36 +190,6 @@ export function getPointerGraceArea(
         [rect.left - POINTER_GRACE_SHADOW_PADDING, rect.bottom],
       ]
   }
-}
-
-export function resolveDirection(): 'ltr' | 'rtl' {
-  if (typeof document === 'undefined') {
-    return 'ltr'
-  }
-
-  return (document.dir || document.documentElement.dir || 'ltr') === 'rtl' ? 'rtl' : 'ltr'
-}
-
-export function getTransformOrigin(placement: Placement, direction: 'ltr' | 'rtl'): string {
-  const [basePlacement, alignment] = placement.split('-') as [
-    FloatingSide,
-    'start' | 'end' | undefined,
-  ]
-  const reversePlacement = REVERSE_BASE_PLACEMENT[basePlacement]
-
-  if (!alignment) {
-    return `${reversePlacement} center`
-  }
-
-  if (basePlacement === 'left' || basePlacement === 'right') {
-    return `${reversePlacement} ${alignment === 'start' ? 'top' : 'bottom'}`
-  }
-
-  if (alignment === 'start') {
-    return `${reversePlacement} ${direction === 'rtl' ? 'right' : 'left'}`
-  }
-
-  return `${reversePlacement} ${direction === 'rtl' ? 'left' : 'right'}`
 }
 
 function toDomRect(rect: OverlayMenuAnchorRect): DOMRect {

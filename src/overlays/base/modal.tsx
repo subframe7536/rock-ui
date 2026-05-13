@@ -7,20 +7,15 @@ import { useControllableValue } from '../../shared/use-controllable-value'
 import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { cn, useId } from '../../shared/utils'
 
-import {
-  acquireBodyScrollLock,
-  focusContent,
-  focusTrigger,
-  getFocusableElements,
-} from './overlay-shell.utils'
+import { acquireBodyScrollLock, focusContent, focusTrigger, trapFocusInContainer } from './utils'
 
-type ModalShellSlot = 'trigger' | 'overlay' | 'content'
+type ModalSlot = 'trigger' | 'overlay' | 'content'
 
-export interface ModalShellContentContext {
+export interface ModalContentContext {
   close: () => void
 }
 
-export interface ModalShellProps {
+export interface ModalProps {
   /** Unique identifier used to derive the content id. */
   id?: string
   /** Controlled open state. */
@@ -40,11 +35,11 @@ export interface ModalShellProps {
   /** Trigger content rendered inside the opener wrapper. */
   trigger?: JSX.Element
   /** Modal content rendered inside the content surface. */
-  content?: JSX.Element | ((context: ModalShellContentContext) => JSX.Element)
+  content?: JSX.Element | ((context: ModalContentContext) => JSX.Element)
   /** Slot-based class overrides for the trigger, overlay, and content elements. */
-  classes?: SlotClasses<ModalShellSlot>
+  classes?: SlotClasses<ModalSlot>
   /** Slot-based style overrides for the trigger, overlay, and content elements. */
-  styles?: SlotStyles<ModalShellSlot>
+  styles?: SlotStyles<ModalSlot>
   /** Additional attributes applied to the content element. */
   contentAttributes?: Record<string, string | number | boolean | undefined>
   /** Id of the label element for the content. */
@@ -53,20 +48,19 @@ export interface ModalShellProps {
   ariaDescribedBy?: string
 }
 
-export function ModalShell(props: ModalShellProps): JSX.Element {
+export function Modal(props: ModalProps): JSX.Element {
   const rootId = useId(() => props.id, 'modal')
   const contentId = createMemo(() => `${rootId()}-content`)
   const [open, setOpen] = useControllableValue<boolean>({
     value: () => props.open,
     defaultValue: () => props.defaultOpen ?? false,
   })
-  const isOpen = createMemo(() => Boolean(open()))
 
   let triggerElement: HTMLSpanElement | undefined
   let contentElement: HTMLDivElement | undefined
 
   function updateOpen(nextOpen: boolean): void {
-    if (nextOpen === isOpen()) {
+    if (nextOpen === !!open()) {
       return
     }
 
@@ -85,42 +79,7 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
   }
 
   function onContentKeyDown(event: KeyboardEvent): void {
-    if (event.key !== 'Tab' || !contentElement) {
-      return
-    }
-
-    const focusableElements = getFocusableElements(contentElement)
-
-    if (focusableElements.length === 0) {
-      event.preventDefault()
-      contentElement.focus()
-      return
-    }
-
-    const firstFocusable = focusableElements[0]
-    const lastFocusable = focusableElements[focusableElements.length - 1]
-
-    if (!firstFocusable || !lastFocusable) {
-      event.preventDefault()
-      contentElement.focus()
-      return
-    }
-
-    const activeElement = document.activeElement
-
-    if (event.shiftKey) {
-      if (activeElement === contentElement || activeElement === firstFocusable) {
-        event.preventDefault()
-        lastFocusable.focus()
-      }
-
-      return
-    }
-
-    if (activeElement === lastFocusable) {
-      event.preventDefault()
-      firstFocusable.focus()
-    }
+    trapFocusInContainer(event, contentElement)
   }
 
   const resolvedContent = createMemo(() =>
@@ -134,11 +93,11 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
   )
 
   const overlayPresence = useTransitionPresence({
-    open: () => Boolean(isOpen() && props.overlay),
+    open: () => Boolean(open() && props.overlay),
     mode: () => 'both',
   })
   const contentPresence = useTransitionPresence({
-    open: () => Boolean(isOpen() && resolvedContent()),
+    open: () => Boolean(open() && resolvedContent()),
     mode: () => 'both',
   })
   const isPresent = createMemo(() => overlayPresence.present() || contentPresence.present())
@@ -208,40 +167,36 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
     })
   })
 
-  function ContentSlot(): JSX.Element {
+  function renderContent(content: () => JSX.Element): JSX.Element {
     return (
-      <Show when={resolvedContent()}>
-        {(content) => (
-          <Show when={contentPresence.present()}>
-            <div
-              {...props.contentAttributes}
-              {...contentPresence.dataAttrs()}
-              ref={(element) => {
-                contentElement = element
-                contentPresence.setElement(element)
-              }}
-              id={contentId()}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby={props.ariaLabelledBy}
-              aria-describedby={props.ariaDescribedBy}
-              tabIndex={-1}
-              data-slot="content"
-              style={props.styles?.content}
-              class={cn(props.classes?.content)}
-              onKeyDown={onContentKeyDown}
-            >
-              {content()}
-            </div>
-          </Show>
-        )}
+      <Show when={contentPresence.present()}>
+        <div
+          {...props.contentAttributes}
+          {...contentPresence.dataAttrs()}
+          ref={(element) => {
+            contentElement = element
+            contentPresence.setElement(element)
+          }}
+          id={contentId()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={props.ariaLabelledBy}
+          aria-describedby={props.ariaDescribedBy}
+          tabIndex={-1}
+          data-slot="content"
+          style={props.styles?.content}
+          class={cn(props.classes?.content)}
+          onKeyDown={onContentKeyDown}
+        >
+          {content()}
+        </div>
       </Show>
     )
   }
 
   return (
     <>
-      <Show when={props.trigger !== undefined && props.trigger !== null}>
+      <Show when={props.trigger}>
         <span
           ref={(element) => {
             triggerElement = element
@@ -260,7 +215,10 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
 
       <Show when={isPresent()}>
         <Portal>
-          <Show when={props.overlay} fallback={<ContentSlot />}>
+          <Show
+            when={props.overlay}
+            fallback={<Show when={resolvedContent()}>{(content) => renderContent(content)}</Show>}
+          >
             <Show when={overlayPresence.present() || contentPresence.present()}>
               <div
                 data-slot="overlay"
@@ -271,7 +229,7 @@ export function ModalShell(props: ModalShellProps): JSX.Element {
                 style={props.styles?.overlay}
                 class={cn(props.classes?.overlay)}
               >
-                <ContentSlot />
+                <Show when={resolvedContent()}>{(content) => renderContent(content)}</Show>
               </div>
             </Show>
           </Show>

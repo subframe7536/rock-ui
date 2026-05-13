@@ -4,10 +4,8 @@ import { Show, createMemo, mergeProps, onCleanup } from 'solid-js'
 import { Kbd } from '../../elements/kbd'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
-import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
-import type { OverlayMenuSide } from '../shared-overlay-menu/utils'
-import { PopperShell } from '../shared/popper-shell'
-import type { PopperShellContentContext, PopperShellProps } from '../shared/popper-shell'
+import { Popper, resolveOverlayMenuSide } from '../base'
+import type { OverlayMenuSide, PopperContentContext, PopperProps } from '../base'
 
 import { tooltipContentVariants } from './tooltip.class'
 import type { TooltipVariantProps } from './tooltip.class'
@@ -18,7 +16,7 @@ export namespace TooltipT {
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
   export type Extend = Pick<
-    PopperShellProps,
+    PopperProps,
     'id' | 'open' | 'defaultOpen' | 'onOpenChange' | 'disabled' | 'placement' | 'forceMount'
   >
 
@@ -87,7 +85,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     clearTimeout(closeTimer)
   })
 
-  function Content(context: PopperShellContentContext): JSX.Element {
+  function Content(context: PopperContentContext): JSX.Element {
     const resolvedSide = createMemo<OverlayMenuSide>(() => {
       const runtimePlacement = context.currentPlacement()
 
@@ -160,7 +158,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
   }
 
   return (
-    <PopperShell
+    <Popper
       id={merged.id}
       open={merged.open}
       defaultOpen={merged.defaultOpen}

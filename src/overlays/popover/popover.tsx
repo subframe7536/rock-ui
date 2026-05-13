@@ -3,10 +3,8 @@ import { Show, createMemo, mergeProps, onCleanup } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
-import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
-import type { OverlayMenuSide } from '../shared-overlay-menu/utils'
-import { PopperShell } from '../shared/popper-shell'
-import type { PopperShellContentContext, PopperShellProps } from '../shared/popper-shell'
+import { Popper, resolveOverlayMenuSide } from '../base'
+import type { OverlayMenuSide, PopperContentContext, PopperProps } from '../base'
 
 import { popoverContentVariants } from './popover.class'
 import type { PopoverContentVariantProps } from './popover.class'
@@ -19,7 +17,7 @@ export namespace PopoverT {
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
   export type Extend = Pick<
-    PopperShellProps,
+    PopperProps,
     | 'id'
     | 'open'
     | 'defaultOpen'
@@ -104,7 +102,7 @@ export function Popover(props: PopoverProps): JSX.Element {
     clearTimeout(closeTimer)
   })
 
-  function Content(context: PopperShellContentContext): JSX.Element {
+  function Content(context: PopperContentContext): JSX.Element {
     const resolvedSide = createMemo<PopoverSide>(() => {
       const runtimePlacement = context.currentPlacement()
 
@@ -143,7 +141,7 @@ export function Popover(props: PopoverProps): JSX.Element {
   }
 
   return (
-    <PopperShell
+    <Popper
       id={merged.id}
       placement={merged.placement}
       open={merged.open}
