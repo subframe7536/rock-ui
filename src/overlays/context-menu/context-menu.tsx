@@ -65,11 +65,11 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   const [autoFocusStrategy, setAutoFocusStrategy] =
     createSignal<OverlayMenuFocusStrategy>('content')
   const [anchorPoint, setAnchorPoint] = createSignal<{ x: number; y: number } | null>(null)
+  const [suppressNextContextMenu, setSuppressNextContextMenu] = createSignal(false)
   const resolvedOpen = createMemo(() => merged.open ?? uncontrolledOpen())
   const resolvedId = useId(() => merged.id, 'contextmenu')
   const contentId = createMemo(() => `${resolvedId()}-content`)
   let longPressTimeoutId = 0
-  let suppressNextContextMenu = false
   let triggerElement: HTMLElement | undefined
 
   const commitOpen = (open: boolean): void => {
@@ -95,19 +95,20 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   }
 
   const consumeSuppressedContextMenu = (event: MouseEvent): boolean => {
-    if (!suppressNextContextMenu) {
+    if (!suppressNextContextMenu()) {
       return false
     }
 
-    suppressNextContextMenu = false
+    setSuppressNextContextMenu(false)
     event.preventDefault()
     event.stopPropagation()
     return true
   }
 
+  /** Suppress the follow-up contextmenu event after dismissing from secondary click or long-press input. */
   const suppressContextMenuFromPointer = (event: PointerEvent): void => {
     if (event.button === 2 || isTouchOrPen(event.pointerType)) {
-      suppressNextContextMenu = true
+      setSuppressNextContextMenu(true)
     }
   }
 
@@ -314,7 +315,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
         gutter={merged.gutter}
         autoFocusStrategy={autoFocusStrategy()}
         onContentPointerDown={(event) => {
-          if (!(event.target instanceof Element) || event.target.closest('[data-slot="item"]')) {
+          if (event.target instanceof Element && event.target.closest('[data-slot="item"]')) {
             return
           }
 

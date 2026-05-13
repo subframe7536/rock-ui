@@ -201,6 +201,11 @@ function getTypeaheadCharacter(key: string): string {
   return ''
 }
 
+/** PointerEvent.pointerType may be an empty string for mouse input, so treat both as mouse pointers. */
+function isMousePointer(pointerType: string): boolean {
+  return pointerType === '' || pointerType === 'mouse'
+}
+
 export function useOverlayMenuFloatingPosition(options: {
   contentElement: Accessor<HTMLElement | undefined>
   floatingElement: Accessor<HTMLElement | undefined>
@@ -544,10 +549,12 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
 }
 
 export function useOverlayMenuDismiss(options: {
+  /** Narrower pointer-move containment check used for hover dismissal, excluding targets like the trigger. */
   containsPointerMoveTarget?: (node: Node) => boolean
   containsTarget: (node: Node) => boolean
   onClose: () => void
   open: Accessor<boolean>
+  /** Optional escape hatch for transient pointer paths such as submenu grace areas. */
   shouldIgnorePointerMove?: (event: PointerEvent) => boolean
 }): void {
   createEffect(() => {
@@ -588,7 +595,7 @@ export function useOverlayMenuDismiss(options: {
       options.onClose()
     }
     const onDocumentPointerMove = (event: PointerEvent): void => {
-      if (event.pointerType && event.pointerType !== 'mouse') {
+      if (!isMousePointer(event.pointerType)) {
         return
       }
 

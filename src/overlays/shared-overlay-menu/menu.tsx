@@ -1035,10 +1035,10 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
       return
     }
 
-    const releaseScrollLock = merged.preventScroll ? acquireBodyScrollLock() : undefined
+    const releaseBodyScrollLock = merged.preventScroll ? acquireBodyScrollLock() : undefined
 
     onCleanup(() => {
-      releaseScrollLock?.()
+      releaseBodyScrollLock?.()
     })
   })
 

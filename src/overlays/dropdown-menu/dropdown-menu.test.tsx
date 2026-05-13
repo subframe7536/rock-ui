@@ -691,7 +691,9 @@ describe('DropdownMenu', () => {
 
     const contents = Array.from(document.body.querySelectorAll('[data-slot="content"]'))
     const root = contents[0] as HTMLElement
-    const sub = contents.find((content) => content.textContent?.includes('Nested action')) as HTMLElement
+    const sub = contents.find((content) =>
+      content.textContent?.includes('Nested action'),
+    ) as HTMLElement
 
     root.dispatchEvent(
       new PointerEvent('pointermove', {
