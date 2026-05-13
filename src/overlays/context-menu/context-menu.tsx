@@ -94,6 +94,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     commitOpen(true)
   }
 
+  /** Consume the deferred native contextmenu event emitted after dismissing from right-click or long-press input. */
   const consumeSuppressedContextMenu = (event: MouseEvent): boolean => {
     if (!suppressNextContextMenu()) {
       return false
@@ -107,9 +108,18 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
 
   /** Suppress the follow-up contextmenu event after dismissing from secondary click or long-press input. */
   const suppressContextMenuFromPointer = (event: PointerEvent): void => {
-    if (event.button === 2 || isTouchOrPen(event.pointerType)) {
+    if (isTouchOrPen(event.pointerType) || event.button === 2) {
       setSuppressNextContextMenu(true)
     }
+  }
+
+  const onContentPointerDown = (event: PointerEvent): void => {
+    if (event.target instanceof Element && event.target.closest('[data-slot="item"]')) {
+      return
+    }
+
+    suppressContextMenuFromPointer(event)
+    commitOpen(false)
   }
 
   const clearLongPressTimeout = (): void => {
@@ -314,18 +324,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
         placement={merged.placement}
         gutter={merged.gutter}
         autoFocusStrategy={autoFocusStrategy()}
-        onContentPointerDown={(event) => {
-          if (event.target instanceof Element && event.target.closest('[data-slot="item"]')) {
-            return
-          }
-
-          if (!resolvedOpen()) {
-            return
-          }
-
-          suppressContextMenuFromPointer(event)
-          commitOpen(false)
-        }}
+        onContentPointerDown={onContentPointerDown}
         onContentContextMenu={onContentContextMenu}
         classes={merged.classes}
         styles={merged.styles}

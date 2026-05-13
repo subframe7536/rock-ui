@@ -41,6 +41,7 @@ import {
   useOverlayMenuDismiss,
   useOverlayMenuFloatingPosition,
   useOverlayMenuLayerState,
+  useOverlayMenuSubmenuDismiss,
 } from './menu.utils'
 import type {
   OverlayMenuAnchorRect,
@@ -199,6 +200,29 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     undefined,
   )
   const [isPositioned, setIsPositioned] = createSignal(false)
+  const subtreeBranches = new Set<HTMLElement>()
+
+  /** Track this layer's own positioner plus all descendant submenu branches while forwarding registration upward. */
+  const registerLayerBranch = (element: HTMLElement): (() => void) => {
+    subtreeBranches.add(element)
+    const unregisterBranch = props.registerBranch(element)
+
+    return () => {
+      subtreeBranches.delete(element)
+      unregisterBranch()
+    }
+  }
+
+  /** Check whether a node is inside this layer's panel subtree, including nested submenu branches. */
+  const containsSubtreeTarget = (node: Node): boolean => {
+    for (const branch of subtreeBranches) {
+      if (branch.contains(node)) {
+        return true
+      }
+    }
+
+    return false
+  }
 
   createEffect(() => {
     layer.setCurrentPlacement(props.placement)
@@ -223,7 +247,16 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
       return
     }
 
-    onCleanup(props.registerBranch(branchElement))
+    onCleanup(registerLayerBranch(branchElement))
+  })
+
+  useOverlayMenuSubmenuDismiss({
+    containsTarget: containsSubtreeTarget,
+    onCloseSubmenus: () => {
+      layer.closeSubmenus()
+    },
+    open: () => props.open,
+    shouldIgnorePointerMove: (event) => layer.shouldBlockPointerEnter(event),
   })
 
   createEffect(() => {
@@ -813,7 +846,7 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
               overflowPadding={props.overflowPadding}
               parentLayer={layer}
               presenceDataAttrs={contentPresence.dataAttrs}
-              registerBranch={props.registerBranch}
+              registerBranch={registerLayerBranch}
               setPresenceElement={contentPresence.setElement}
               autoFocusStrategy={autoFocusStrategy()}
               onAutoFocusHandled={() => {
@@ -1055,15 +1088,6 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
 
     return false
   }
-  const containsBranchTarget = (node: Node): boolean => {
-    for (const branch of branches) {
-      if (branch.contains(node)) {
-        return true
-      }
-    }
-
-    return false
-  }
 
   const closeRoot = (options?: OverlayMenuCloseOptions): void => {
     if (options?.restoreFocus) {
@@ -1075,13 +1099,11 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
   }
 
   useOverlayMenuDismiss({
-    containsPointerMoveTarget: containsBranchTarget,
     containsTarget,
     onClose: () => {
       closeRoot()
     },
     open: () => merged.open,
-    shouldIgnorePointerMove: (event) => rootLayerState()?.shouldBlockPointerEnter(event) ?? false,
   })
 
   const getReferenceElement = (): ReferenceElement | undefined => {

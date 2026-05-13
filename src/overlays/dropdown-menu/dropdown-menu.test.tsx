@@ -669,7 +669,7 @@ describe('DropdownMenu', () => {
     expect(content?.style.width).toBe('200px')
   })
 
-  test('dismisses the full menu tree when the pointer leaves every menu panel', async () => {
+  test('keeps the root menu open while dismissing its submenus when the pointer leaves the tree', async () => {
     render(() => (
       <DropdownMenu
         defaultOpen
@@ -722,8 +722,67 @@ describe('DropdownMenu', () => {
     )
 
     await waitFor(() => {
-      expect(document.body.querySelector('[data-slot="content"][data-expanded]')).toBeNull()
+      expect(
+        Array.from(document.body.querySelectorAll('[data-slot="content"][data-expanded]')).some(
+          (content) => content.textContent?.includes('Nested action'),
+        ),
+      ).toBe(false)
     })
+
+    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-slot="item"][aria-expanded="false"]')).not.toBeNull()
+  })
+
+  test('keeps a submenu open while dismissing only its child submenus', async () => {
+    render(() => (
+      <DropdownMenu
+        defaultOpen
+        items={[
+          {
+            label: 'More',
+            defaultOpen: true,
+            children: [
+              {
+                label: 'Deep',
+                defaultOpen: true,
+                children: [{ label: 'Leaf action' }],
+              },
+            ],
+          },
+        ]}
+      >
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Leaf action')
+    })
+
+    const rootContent = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
+      (content) =>
+        !content.textContent?.includes('Leaf action') && !content.textContent?.includes('Deep'),
+    ) as HTMLElement
+
+    rootContent.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: 24,
+        clientY: 24,
+        pointerType: 'mouse',
+      }),
+    )
+
+    await waitFor(() => {
+      expect(
+        Array.from(document.body.querySelectorAll('[data-slot="content"][data-expanded]')).some(
+          (content) => content.textContent?.includes('Leaf action'),
+        ),
+      ).toBe(false)
+    })
+
+    expect(document.body.textContent).toContain('Deep')
+    expect(document.body.querySelector('[data-slot="item"][aria-expanded="false"]')).not.toBeNull()
   })
 
   test('locks body scroll and renders an overlay layer while open', async () => {

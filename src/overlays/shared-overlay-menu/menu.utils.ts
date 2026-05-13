@@ -201,7 +201,7 @@ function getTypeaheadCharacter(key: string): string {
   return ''
 }
 
-/** PointerEvent.pointerType may be an empty string for mouse input, so treat both as mouse pointers. */
+/** Treat unknown/empty pointer types like mouse so hover-based dismissal still runs in nonstandard environments. */
 function isMousePointer(pointerType: string): boolean {
   return pointerType === '' || pointerType === 'mouse'
 }
@@ -549,13 +549,9 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
 }
 
 export function useOverlayMenuDismiss(options: {
-  /** Narrower pointer-move containment check used for hover dismissal, excluding targets like the trigger. */
-  containsPointerMoveTarget?: (node: Node) => boolean
   containsTarget: (node: Node) => boolean
   onClose: () => void
   open: Accessor<boolean>
-  /** Optional escape hatch for transient pointer paths such as submenu grace areas. */
-  shouldIgnorePointerMove?: (event: PointerEvent) => boolean
 }): void {
   createEffect(() => {
     if (!options.open() || typeof document === 'undefined') {
@@ -594,6 +590,31 @@ export function useOverlayMenuDismiss(options: {
       event.preventDefault()
       options.onClose()
     }
+
+    document.addEventListener('pointerdown', onDocumentPointerDown, true)
+    document.addEventListener('focusin', onDocumentFocusIn, true)
+    document.addEventListener('keydown', onDocumentKeyDown, true)
+
+    onCleanup(() => {
+      document.removeEventListener('pointerdown', onDocumentPointerDown, true)
+      document.removeEventListener('focusin', onDocumentFocusIn, true)
+      document.removeEventListener('keydown', onDocumentKeyDown, true)
+    })
+  })
+}
+
+export function useOverlayMenuSubmenuDismiss(options: {
+  containsTarget: (node: Node) => boolean
+  onCloseSubmenus: () => void
+  open: Accessor<boolean>
+  /** Optional escape hatch for transient pointer paths such as submenu grace areas. */
+  shouldIgnorePointerMove?: (event: PointerEvent) => boolean
+}): void {
+  createEffect(() => {
+    if (!options.open() || typeof document === 'undefined') {
+      return
+    }
+
     const onDocumentPointerMove = (event: PointerEvent): void => {
       if (!isMousePointer(event.pointerType)) {
         return
@@ -601,10 +622,7 @@ export function useOverlayMenuDismiss(options: {
 
       const target = event.target
 
-      if (
-        target instanceof Node &&
-        (options.containsPointerMoveTarget ?? options.containsTarget)(target)
-      ) {
+      if (target instanceof Node && options.containsTarget(target)) {
         return
       }
 
@@ -612,19 +630,13 @@ export function useOverlayMenuDismiss(options: {
         return
       }
 
-      options.onClose()
+      options.onCloseSubmenus()
     }
 
-    document.addEventListener('pointerdown', onDocumentPointerDown, true)
     document.addEventListener('pointermove', onDocumentPointerMove, true)
-    document.addEventListener('focusin', onDocumentFocusIn, true)
-    document.addEventListener('keydown', onDocumentKeyDown, true)
 
     onCleanup(() => {
-      document.removeEventListener('pointerdown', onDocumentPointerDown, true)
       document.removeEventListener('pointermove', onDocumentPointerMove, true)
-      document.removeEventListener('focusin', onDocumentFocusIn, true)
-      document.removeEventListener('keydown', onDocumentKeyDown, true)
     })
   })
 }
