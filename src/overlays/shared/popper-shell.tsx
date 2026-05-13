@@ -246,18 +246,7 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
       return
     }
 
-    const detachedPadding = merged.detachedPadding
     const direction = resolveDirection()
-    const fitViewport = merged.fitViewport
-    const flipValue = merged.flip
-    const gutter = merged.gutter
-    const hideWhenDetached = merged.hideWhenDetached
-    const overflowPadding = merged.overflowPadding
-    const overlap = merged.overlap
-    const placement = merged.placement
-    const sameWidth = merged.sameWidth
-    const shiftAmount = merged.shift
-    const slide = merged.slide
 
     const updatePosition = async () => {
       if (!triggerElement() || !positionerElement()) {
@@ -272,42 +261,43 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
       }
 
       const middleware: Middleware[] = [
-        offset(({ placement }) => {
-          const hasAlignment = Boolean(placement.split('-')[1])
+        // oxlint-disable-next-line subf/solid-reactivity
+        offset((opt) => {
+          const hasAlignment = Boolean(opt.placement.split('-')[1])
 
           return {
-            mainAxis: gutter,
-            crossAxis: !hasAlignment ? shiftAmount : undefined,
-            alignmentAxis: shiftAmount,
+            mainAxis: merged.gutter,
+            crossAxis: !hasAlignment ? merged.shift : undefined,
+            alignmentAxis: merged.shift,
           }
         }),
       ]
 
-      if (flipValue !== false) {
+      if (merged.flip !== false) {
         middleware.push(
           flip({
-            padding: overflowPadding,
+            padding: merged.overflowPadding,
             fallbackPlacements:
-              typeof flipValue === 'string'
-                ? (flipValue.split(' ') as PopperPlacement[])
+              typeof merged.flip === 'string'
+                ? (merged.flip.split(' ') as PopperPlacement[])
                 : undefined,
           }),
         )
       }
 
-      if (slide || overlap) {
+      if (merged.slide || merged.overlap) {
         middleware.push(
           shift({
-            mainAxis: slide,
-            crossAxis: overlap,
-            padding: overflowPadding,
+            mainAxis: merged.slide,
+            crossAxis: merged.overlap,
+            padding: merged.overflowPadding,
           }),
         )
       }
 
       middleware.push(
         size({
-          padding: overflowPadding,
+          padding: merged.overflowPadding,
           apply({ availableHeight, availableWidth, rects }) {
             const referenceWidth = Math.round(rects.reference.width)
 
@@ -322,14 +312,14 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
             )
             nextPositioner.style.setProperty(
               '--mo-popper-content-overflow-padding',
-              `${overflowPadding}px`,
+              `${merged.overflowPadding}px`,
             )
 
-            if (sameWidth) {
+            if (merged.sameWidth) {
               nextPositioner.style.width = `${referenceWidth}px`
             }
 
-            if (fitViewport) {
+            if (merged.fitViewport) {
               nextPositioner.style.maxWidth = `${Math.floor(availableWidth)}px`
               nextPositioner.style.maxHeight = `${Math.floor(availableHeight)}px`
             }
@@ -337,12 +327,12 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
         }),
       )
 
-      if (hideWhenDetached) {
-        middleware.push(hide({ padding: detachedPadding }))
+      if (merged.hideWhenDetached) {
+        middleware.push(hide({ padding: merged.detachedPadding }))
       }
 
       const position = await computePosition(nextTrigger, nextPositioner, {
-        placement,
+        placement: merged.placement,
         strategy: 'absolute',
         middleware,
         platform: {
@@ -362,7 +352,9 @@ export function PopperShell(props: PopperShellProps): JSX.Element {
         top: '0',
         transform: `translate3d(${Math.round(position.x)}px, ${Math.round(position.y)}px, 0)`,
         visibility:
-          hideWhenDetached && position.middlewareData.hide?.referenceHidden ? 'hidden' : 'visible',
+          merged.hideWhenDetached && position.middlewareData.hide?.referenceHidden
+            ? 'hidden'
+            : 'visible',
       })
     }
 

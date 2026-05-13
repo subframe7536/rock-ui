@@ -41,7 +41,6 @@ import {
   useOverlayMenuDismiss,
   useOverlayMenuFloatingPosition,
   useOverlayMenuLayerState,
-  useOverlayMenuSubmenuDismiss,
 } from './menu.utils'
 import type {
   OverlayMenuAnchorRect,
@@ -213,17 +212,6 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     }
   }
 
-  /** Check whether a node is inside this layer's panel subtree, including nested submenu branches. */
-  const containsSubtreeTarget = (node: Node): boolean => {
-    for (const branch of subtreeBranches) {
-      if (branch.contains(node)) {
-        return true
-      }
-    }
-
-    return false
-  }
-
   createEffect(() => {
     layer.setCurrentPlacement(props.placement)
   })
@@ -250,13 +238,17 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     onCleanup(registerLayerBranch(branchElement))
   })
 
-  useOverlayMenuSubmenuDismiss({
-    containsTarget: containsSubtreeTarget,
-    onCloseSubmenus: () => {
-      layer.closeSubmenus()
-    },
-    open: () => props.open,
-    shouldIgnorePointerMove: (event) => layer.shouldBlockPointerEnter(event),
+  createEffect(() => {
+    const positioner = positionerElement()
+    const content = layer.contentElement()
+
+    if (!positioner || !content) {
+      return
+    }
+
+    queueMicrotask(() => {
+      positioner.style.zIndex = getComputedStyle(content).zIndex
+    })
   })
 
   createEffect(() => {
@@ -659,6 +651,7 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
       onCleanup(
         layer.registerSubmenu({
           close: () => {
+            submenuLayerState?.closeSubmenus()
             setOpenState(false)
             setAutoFocusStrategy('none')
           },
@@ -672,6 +665,7 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     })
 
     const closeSubmenu = (): void => {
+      submenuLayerState?.closeSubmenus()
       setOpenState(false)
       setAutoFocusStrategy('none')
       layer.setHighlightedItemId(submenuId())
@@ -997,9 +991,6 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
           if (!event.defaultPrevented) {
             onLayerKeyDown(event, layer, props.close, closeParentKey())
           }
-        }}
-        onPointerEnter={() => {
-          props.parentLayer?.setPointerGraceIntent(null)
         }}
       >
         <Show when={props.contentTop}>{(slot) => slot()({ sub: props.depth > 0 })}</Show>

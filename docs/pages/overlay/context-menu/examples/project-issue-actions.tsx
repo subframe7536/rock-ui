@@ -39,6 +39,11 @@ export function ProjectIssueActions() {
                   description: 'Overlay primitives',
                   icon: 'i-lucide-user',
                 },
+                {
+                  label: 'John Smith',
+                  description: 'Test',
+                  icon: 'i-lucide-circle',
+                },
               ],
             },
           ],

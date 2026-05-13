@@ -155,6 +155,65 @@ describe('DropdownMenu', () => {
     expect(document.activeElement).toBe(subTrigger)
   })
 
+  test('dismisses the deepest submenu first', async () => {
+    const closeOrder: string[] = []
+    const originalSetAttribute = HTMLElement.prototype.setAttribute
+    const setAttributeSpy = vi.spyOn(HTMLElement.prototype, 'setAttribute').mockImplementation(
+      function (this: HTMLElement, name: string, value: string) {
+        if (name === 'data-closed' && value === '' && this.getAttribute('data-slot') === 'content') {
+          closeOrder.push(this.id)
+        }
+
+        return originalSetAttribute.call(this, name, value)
+      },
+    )
+
+    try {
+      render(() => (
+        <DropdownMenu
+          id="dismiss-order"
+          defaultOpen
+          items={[
+            {
+              label: 'More',
+              defaultOpen: true,
+              children: [
+                {
+                  label: 'Deep',
+                  defaultOpen: true,
+                  children: [{ label: 'Leaf action' }],
+                },
+              ],
+            },
+          ]}
+        >
+          <button type="button">Actions</button>
+        </DropdownMenu>
+      ))
+
+      await waitFor(() => {
+        expect(document.body.querySelectorAll('[data-slot="content"]')).toHaveLength(3)
+      })
+
+      const contents = Array.from(document.body.querySelectorAll('[data-slot="content"]')) as HTMLElement[]
+      const [rootContent, middleContent, deepestContent] = contents as [
+        HTMLElement,
+        HTMLElement,
+        HTMLElement,
+      ]
+
+      await fireEvent.keyDown(rootContent, { key: 'Escape' })
+
+      await waitFor(() => {
+        expect(closeOrder).toHaveLength(3)
+      })
+
+      expect(closeOrder).toEqual([deepestContent.id, middleContent.id, rootContent.id])
+    } finally {
+      setAttributeSpy.mockRestore()
+    }
+  })
+
   test('moves focus into submenu when submenu opens by click', async () => {
     render(() => (
       <DropdownMenu
@@ -669,121 +728,6 @@ describe('DropdownMenu', () => {
     expect(content?.style.width).toBe('200px')
   })
 
-  test('keeps the root menu open while dismissing its submenus when the pointer leaves the tree', async () => {
-    render(() => (
-      <DropdownMenu
-        defaultOpen
-        items={[
-          {
-            label: 'More',
-            defaultOpen: true,
-            children: [{ label: 'Nested action' }],
-          },
-        ]}
-      >
-        <button type="button">Actions</button>
-      </DropdownMenu>
-    ))
-
-    await waitFor(() => {
-      expect(document.body.textContent).toContain('Nested action')
-    })
-
-    const contents = Array.from(document.body.querySelectorAll('[data-slot="content"]'))
-    const root = contents[0] as HTMLElement
-    const sub = contents.find((content) =>
-      content.textContent?.includes('Nested action'),
-    ) as HTMLElement
-
-    root.dispatchEvent(
-      new PointerEvent('pointermove', {
-        bubbles: true,
-        clientX: 24,
-        clientY: 24,
-        pointerType: 'mouse',
-      }),
-    )
-    sub.dispatchEvent(
-      new PointerEvent('pointermove', {
-        bubbles: true,
-        clientX: 96,
-        clientY: 64,
-        pointerType: 'mouse',
-      }),
-    )
-
-    document.body.dispatchEvent(
-      new PointerEvent('pointermove', {
-        bubbles: true,
-        clientX: 220,
-        clientY: 220,
-        pointerType: 'mouse',
-      }),
-    )
-
-    await waitFor(() => {
-      expect(
-        Array.from(document.body.querySelectorAll('[data-slot="content"][data-expanded]')).some(
-          (content) => content.textContent?.includes('Nested action'),
-        ),
-      ).toBe(false)
-    })
-
-    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
-    expect(document.body.querySelector('[data-slot="item"][aria-expanded="false"]')).not.toBeNull()
-  })
-
-  test('keeps a submenu open while dismissing only its child submenus', async () => {
-    render(() => (
-      <DropdownMenu
-        defaultOpen
-        items={[
-          {
-            label: 'More',
-            defaultOpen: true,
-            children: [
-              {
-                label: 'Deep',
-                defaultOpen: true,
-                children: [{ label: 'Leaf action' }],
-              },
-            ],
-          },
-        ]}
-      >
-        <button type="button">Actions</button>
-      </DropdownMenu>
-    ))
-
-    await waitFor(() => {
-      expect(document.body.textContent).toContain('Leaf action')
-    })
-
-    const rootContent = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
-      (content) =>
-        !content.textContent?.includes('Leaf action') && !content.textContent?.includes('Deep'),
-    ) as HTMLElement
-
-    rootContent.dispatchEvent(
-      new PointerEvent('pointermove', {
-        bubbles: true,
-        clientX: 24,
-        clientY: 24,
-        pointerType: 'mouse',
-      }),
-    )
-
-    await waitFor(() => {
-      expect(
-        Array.from(document.body.querySelectorAll('[data-slot="content"][data-expanded]')).some(
-          (content) => content.textContent?.includes('Leaf action'),
-        ),
-      ).toBe(false)
-    })
-
-    expect(document.body.textContent).toContain('Deep')
-    expect(document.body.querySelector('[data-slot="item"][aria-expanded="false"]')).not.toBeNull()
-  })
 
   test('locks body scroll and renders an overlay layer while open', async () => {
     render(() => (
@@ -796,6 +740,8 @@ describe('DropdownMenu', () => {
       expect(document.body.querySelector('[data-slot="overlay"]')).not.toBeNull()
     })
 
+    const positioner = document.body.querySelector('[data-slot="positioner"]') as HTMLElement
+    expect(positioner.className).not.toContain('z-50')
     expect(document.body.style.overflow).toBe('hidden')
 
     const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement

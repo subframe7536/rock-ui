@@ -32,6 +32,8 @@ export interface OverlayMenuPointerGraceIntent {
   area: Array<[number, number]>
 }
 
+const POINTER_GRACE_SHADOW_PADDING = 12
+
 export interface OverlayMenuLayerState {
   clearQueuedPointerEnter: (element?: HTMLElement) => void
   closeSubmenus: (exceptId?: string) => void
@@ -98,34 +100,34 @@ export function getPointerGraceArea(
     case 'top':
       return [
         [event.clientX, event.clientY + 5],
-        [rect.left, rect.bottom],
+        [rect.left, rect.bottom + POINTER_GRACE_SHADOW_PADDING],
         [rect.left, rect.top],
         [rect.right, rect.top],
-        [rect.right, rect.bottom],
+        [rect.right, rect.bottom + POINTER_GRACE_SHADOW_PADDING],
       ]
     case 'left':
       return [
         [event.clientX + 5, event.clientY],
-        [rect.right, rect.bottom],
+        [rect.right + POINTER_GRACE_SHADOW_PADDING, rect.bottom],
         [rect.left, rect.bottom],
         [rect.left, rect.top],
-        [rect.right, rect.top],
+        [rect.right + POINTER_GRACE_SHADOW_PADDING, rect.top],
       ]
     case 'bottom':
       return [
         [event.clientX, event.clientY - 5],
-        [rect.right, rect.top],
+        [rect.right, rect.top - POINTER_GRACE_SHADOW_PADDING],
         [rect.right, rect.bottom],
         [rect.left, rect.bottom],
-        [rect.left, rect.top],
+        [rect.left, rect.top - POINTER_GRACE_SHADOW_PADDING],
       ]
     default:
       return [
         [event.clientX - 5, event.clientY],
-        [rect.left, rect.top],
+        [rect.left - POINTER_GRACE_SHADOW_PADDING, rect.top],
         [rect.right, rect.top],
         [rect.right, rect.bottom],
-        [rect.left, rect.bottom],
+        [rect.left - POINTER_GRACE_SHADOW_PADDING, rect.bottom],
       ]
   }
 }
@@ -199,11 +201,6 @@ function getTypeaheadCharacter(key: string): string {
   }
 
   return ''
-}
-
-/** Treat unknown/empty pointer types like mouse so hover-based dismissal still runs in nonstandard environments. */
-function isMousePointer(pointerType: string): boolean {
-  return pointerType === '' || pointerType === 'mouse'
 }
 
 export function useOverlayMenuFloatingPosition(options: {
@@ -330,7 +327,7 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
     | undefined
 
   const closeSubmenus = (exceptId?: string): void => {
-    for (const submenu of submenus()) {
+    for (const submenu of [...submenus()].reverse()) {
       if (submenu.id === exceptId || !submenu.isOpen()) {
         continue
       }
@@ -599,44 +596,6 @@ export function useOverlayMenuDismiss(options: {
       document.removeEventListener('pointerdown', onDocumentPointerDown, true)
       document.removeEventListener('focusin', onDocumentFocusIn, true)
       document.removeEventListener('keydown', onDocumentKeyDown, true)
-    })
-  })
-}
-
-export function useOverlayMenuSubmenuDismiss(options: {
-  containsTarget: (node: Node) => boolean
-  onCloseSubmenus: () => void
-  open: Accessor<boolean>
-  /** Optional escape hatch for transient pointer paths such as submenu grace areas. */
-  shouldIgnorePointerMove?: (event: PointerEvent) => boolean
-}): void {
-  createEffect(() => {
-    if (!options.open() || typeof document === 'undefined') {
-      return
-    }
-
-    const onDocumentPointerMove = (event: PointerEvent): void => {
-      if (!isMousePointer(event.pointerType)) {
-        return
-      }
-
-      const target = event.target
-
-      if (target instanceof Node && options.containsTarget(target)) {
-        return
-      }
-
-      if (options.shouldIgnorePointerMove?.(event)) {
-        return
-      }
-
-      options.onCloseSubmenus()
-    }
-
-    document.addEventListener('pointermove', onDocumentPointerMove, true)
-
-    onCleanup(() => {
-      document.removeEventListener('pointermove', onDocumentPointerMove, true)
     })
   })
 }
