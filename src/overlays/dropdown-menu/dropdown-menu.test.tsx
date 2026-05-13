@@ -158,15 +158,19 @@ describe('DropdownMenu', () => {
   test('dismisses the deepest submenu first', async () => {
     const closeOrder: string[] = []
     const originalSetAttribute = HTMLElement.prototype.setAttribute
-    const setAttributeSpy = vi.spyOn(HTMLElement.prototype, 'setAttribute').mockImplementation(
-      function (this: HTMLElement, name: string, value: string) {
-        if (name === 'data-closed' && value === '' && this.getAttribute('data-slot') === 'content') {
+    const setAttributeSpy = vi
+      .spyOn(HTMLElement.prototype, 'setAttribute')
+      .mockImplementation(function (this: HTMLElement, name: string, value: string) {
+        if (
+          name === 'data-closed' &&
+          value === '' &&
+          this.getAttribute('data-slot') === 'content'
+        ) {
           closeOrder.push(this.id)
         }
 
         return originalSetAttribute.call(this, name, value)
-      },
-    )
+      })
 
     try {
       render(() => (
@@ -195,7 +199,9 @@ describe('DropdownMenu', () => {
         expect(document.body.querySelectorAll('[data-slot="content"]')).toHaveLength(3)
       })
 
-      const contents = Array.from(document.body.querySelectorAll('[data-slot="content"]')) as HTMLElement[]
+      const contents = Array.from(
+        document.body.querySelectorAll('[data-slot="content"]'),
+      ) as HTMLElement[]
       const [rootContent, middleContent, deepestContent] = contents as [
         HTMLElement,
         HTMLElement,
@@ -727,7 +733,6 @@ describe('DropdownMenu', () => {
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
     expect(content?.style.width).toBe('200px')
   })
-
 
   test('locks body scroll and renders an overlay layer while open', async () => {
     render(() => (

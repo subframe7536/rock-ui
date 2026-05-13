@@ -170,6 +170,8 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
         itemRender={merged.itemRender}
         contentTop={merged.contentTop}
         contentBottom={merged.contentBottom}
+        preventScroll={merged.preventScroll}
+        overflowPadding={merged.overflowPadding}
       />
     </>
   )
