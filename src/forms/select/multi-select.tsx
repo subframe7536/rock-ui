@@ -229,7 +229,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
   const [local] = splitProps(merged, MULTI_SELECT_SPLIT_KEYS)
-  const listboxId = useId(() => local.id ? `${local.id}-listbox` : undefined, 'multi-select-listbox')
+  const listboxId = useId(() => local.id && `${local.id}-listbox`, 'multi-select-listbox')
 
   const field = useSelectField(() => ({
     id: local.id,

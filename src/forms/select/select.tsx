@@ -205,7 +205,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
 
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
   const [local] = splitProps(merged, SELECT_SPLIT_KEYS)
-  const listboxId = useId(() => local.id ? `${local.id}-listbox` : undefined, 'select-listbox')
+  const listboxId = useId(() => local.id && `${local.id}-listbox`, 'select-listbox')
 
   const field = useSelectField(() => ({
     id: local.id,
