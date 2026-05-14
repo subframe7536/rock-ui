@@ -209,12 +209,17 @@ export namespace MultiSelectT {
     scrollBottomThreshold?: number
   }
 
-  export interface Props<TItem extends Value = Value>
-    extends BaseProps<Base<TItem>, Variant, Extend, Slot> {}
+  export interface Props<TItem extends Value = Value> extends BaseProps<
+    Base<TItem>,
+    Variant,
+    Extend,
+    Slot
+  > {}
 }
 
-export interface MultiSelectProps<TItem extends MultiSelectT.Value = MultiSelectT.Value>
-  extends MultiSelectT.Props<TItem> {}
+export interface MultiSelectProps<
+  TItem extends MultiSelectT.Value = MultiSelectT.Value,
+> extends MultiSelectT.Props<TItem> {}
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -268,9 +273,15 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 
   const [currentInputText, setCurrentInputText] = createSignal(local.defaultSearchValue ?? '')
   const [highlightedKey, setHighlightedKey] = createSignal<string | undefined>(undefined)
-  syncSelectSearchInputValue(local, () => inputRef, (searchValue) => setCurrentInputText(searchValue))
+  syncSelectSearchInputValue(
+    local,
+    () => inputRef,
+    (searchValue) => setCurrentInputText(searchValue),
+  )
 
-  const selectedValueSet = createMemo(() => new Set((selectedValues() ?? []).map((value) => String(value))))
+  const selectedValueSet = createMemo(
+    () => new Set((selectedValues() ?? []).map((value) => String(value))),
+  )
   const selectedOptions = createMemo(() =>
     allFlatOptions().filter((option) => selectedValueSet().has(option.value)),
   )
@@ -283,28 +294,29 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 
     return base.map((item) => {
       if (item.isGroup) {
-        return {
-          ...item,
-          options: item.options.map((option) => ({
-            ...option,
-            disabled: selectedValueSet().has(option.value) ? option.disabled : true,
-          })),
-        }
+        return Object.assign({}, item, {
+          options: item.options.map((option) =>
+            Object.assign({}, option, {
+              disabled: selectedValueSet().has(option.value) ? option.disabled : true,
+            }),
+          ),
+        })
       }
 
-      return {
-        ...item,
+      return Object.assign({}, item, {
         disabled: selectedValueSet().has(item.value) ? item.disabled : true,
-      }
+      })
     })
   })
 
-  const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, MultiSelectT.Item<TItem>>({
-    isSearchable,
-    filterOption: () => local.filterOption,
-    allOptions: allFlatOptions,
-    inputValue: currentInputText,
-  })
+  const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, MultiSelectT.Item<TItem>>(
+    {
+      isSearchable,
+      filterOption: () => local.filterOption,
+      allOptions: allFlatOptions,
+      inputValue: currentInputText,
+    },
+  )
 
   const visibleOptions = createMemo(() =>
     filterNormalizedOptions(effectiveOptions(), currentInputText(), kobalteFilter()),
@@ -558,7 +570,8 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 
   const selectionManager = {
     focusedKey: highlightedKey,
-    isDisabled: (key: string) => Boolean(visibleFlatOptions().find((option) => option.key === key)?.disabled),
+    isDisabled: (key: string) =>
+      Boolean(visibleFlatOptions().find((option) => option.key === key)?.disabled),
     select: (key: string) => {
       const option = visibleFlatOptions().find((item) => item.key === key)
       if (option) {
@@ -701,7 +714,9 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
       class={cn('inline-flex h-fit w-full relative', local.classes?.root)}
     >
       <div
-        ref={controlRef}
+        ref={(el) => {
+          controlRef = el
+        }}
         data-slot="control"
         style={merged.styles?.control}
         data-invalid={field.invalid() ? '' : undefined}
@@ -796,7 +811,9 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             aria-expanded={open() ? 'true' : 'false'}
             aria-haspopup="listbox"
             aria-autocomplete="list"
-            aria-activedescendant={highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined}
+            aria-activedescendant={
+              highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+            }
             data-slot="input"
             style={merged.styles?.input}
             data-readonly={!isSearchable()}
@@ -877,7 +894,9 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
               context={() => ({
                 inputValue: currentInputText(),
                 hasMatches: hasMatches(),
-                selectedValues: selectedOptions().map((option) => mapNormalizedToRawValue(option) as TItem),
+                selectedValues: selectedOptions().map(
+                  (option) => mapNormalizedToRawValue(option) as TItem,
+                ),
                 isAtMaxCount: isAtMaxCount(),
                 create: (value?: string) => createTag(value),
                 close: closeMenu,
@@ -895,7 +914,13 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
                     item={item as NormalizedOption}
                     isSelected={selectedValueSet().has((item as NormalizedOption).value)}
                     isHighlighted={highlightedKey() === (item as NormalizedOption).key}
-                    posinset={local.virtualized ? visibleFlatOptions().findIndex((option) => option.key === (item as NormalizedOption).key) + 1 : undefined}
+                    posinset={
+                      local.virtualized
+                        ? visibleFlatOptions().findIndex(
+                            (option) => option.key === (item as NormalizedOption).key,
+                          ) + 1
+                        : undefined
+                    }
                     setsize={local.virtualized ? visibleFlatOptions().length : undefined}
                     onPointerDown={(event) => event.preventDefault()}
                     onPointerMove={() => {
@@ -916,7 +941,12 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
                         item={option}
                         isSelected={selectedValueSet().has(option.value)}
                         isHighlighted={highlightedKey() === option.key}
-                        posinset={local.virtualized ? visibleFlatOptions().findIndex((entry) => entry.key === option.key) + 1 : undefined}
+                        posinset={
+                          local.virtualized
+                            ? visibleFlatOptions().findIndex((entry) => entry.key === option.key) +
+                              1
+                            : undefined
+                        }
                         setsize={local.virtualized ? visibleFlatOptions().length : undefined}
                         onPointerDown={(event) => event.preventDefault()}
                         onPointerMove={() => {

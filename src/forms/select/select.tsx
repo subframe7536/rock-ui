@@ -189,12 +189,17 @@ export namespace SelectT {
     scrollBottomThreshold?: number
   }
 
-  export interface Props<TItem extends Value = Value>
-    extends BaseProps<Base<TItem>, Variant, Extend, Slot> {}
+  export interface Props<TItem extends Value = Value> extends BaseProps<
+    Base<TItem>,
+    Variant,
+    Extend,
+    Slot
+  > {}
 }
 
-export interface SelectProps<TItem extends SelectT.Value = SelectT.Value>
-  extends SelectT.Props<TItem> {}
+export interface SelectProps<
+  TItem extends SelectT.Value = SelectT.Value,
+> extends SelectT.Props<TItem> {}
 
 /** Dropdown select component with search and custom item rendering. */
 export function Select<TItem extends SelectT.Value = SelectT.Value>(
@@ -212,12 +217,15 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     name: local.name,
     size: local.size,
     disabled: local.disabled,
-    initialValue: local.defaultValue == null ? '' : local.defaultValue,
+    initialValue:
+      local.defaultValue === null || local.defaultValue === undefined ? '' : local.defaultValue,
   }))
   const menuControl = useSelectMenuControl(() => local.openOnClick)
   const isSearchable = createMemo(() => Boolean(local.search))
 
-  const normalizedOptions = createMemo(() => normalizeOptions(local.options as SelectT.Item<TItem>[]))
+  const normalizedOptions = createMemo(() =>
+    normalizeOptions(local.options as SelectT.Item<TItem>[]),
+  )
   const allFlatOptions = createMemo(() => flattenOptions(normalizedOptions()))
   const findOptionByValue = createFindOptionByValue<SelectT.Item<TItem>>(() => allFlatOptions())
 
@@ -236,7 +244,11 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   const [currentInputText, setCurrentInputText] = createSignal(local.defaultSearchValue ?? '')
   const [highlightedKey, setHighlightedKey] = createSignal<string | undefined>(undefined)
 
-  syncSelectSearchInputValue(local, () => inputRef, (searchValue) => setCurrentInputText(searchValue))
+  syncSelectSearchInputValue(
+    local,
+    () => inputRef,
+    (searchValue) => setCurrentInputText(searchValue),
+  )
 
   const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Item<TItem>>({
     isSearchable,
@@ -347,7 +359,8 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
 
   const selectionManager = {
     focusedKey: highlightedKey,
-    isDisabled: (key: string) => Boolean(visibleFlatOptions().find((option) => option.key === key)?.disabled),
+    isDisabled: (key: string) =>
+      Boolean(visibleFlatOptions().find((option) => option.key === key)?.disabled),
     select: (key: string) => {
       const option = visibleFlatOptions().find((item) => item.key === key)
       if (option) {
@@ -451,7 +464,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     }
 
     const selected = selectedOption()
-    return typeof selected?.label === 'string' ? selected.label : selected?.key ?? ''
+    return typeof selected?.label === 'string' ? selected.label : (selected?.key ?? '')
   })
 
   return (
@@ -460,7 +473,9 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
       class={cn('inline-flex h-fit w-full relative', local.classes?.root)}
     >
       <div
-        ref={controlRef}
+        ref={(el) => {
+          controlRef = el
+        }}
         data-slot="control"
         style={merged.styles?.control}
         data-invalid={field.invalid() ? '' : undefined}
@@ -496,7 +511,9 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
           aria-expanded={open() ? 'true' : 'false'}
           aria-haspopup="listbox"
           aria-autocomplete="list"
-          aria-activedescendant={highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined}
+          aria-activedescendant={
+            highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+          }
           data-slot="input"
           data-readonly={!isSearchable()}
           style={merged.styles?.input}
@@ -592,7 +609,13 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                     item={item as NormalizedOption}
                     isSelected={selectedOption()?.key === (item as NormalizedOption).key}
                     isHighlighted={highlightedKey() === (item as NormalizedOption).key}
-                    posinset={local.virtualized ? visibleFlatOptions().findIndex((option) => option.key === (item as NormalizedOption).key) + 1 : undefined}
+                    posinset={
+                      local.virtualized
+                        ? visibleFlatOptions().findIndex(
+                            (option) => option.key === (item as NormalizedOption).key,
+                          ) + 1
+                        : undefined
+                    }
                     setsize={local.virtualized ? visibleFlatOptions().length : undefined}
                     onPointerDown={(event) => event.preventDefault()}
                     onPointerMove={() => {
@@ -613,7 +636,12 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                         item={option}
                         isSelected={selectedOption()?.key === option.key}
                         isHighlighted={highlightedKey() === option.key}
-                        posinset={local.virtualized ? visibleFlatOptions().findIndex((entry) => entry.key === option.key) + 1 : undefined}
+                        posinset={
+                          local.virtualized
+                            ? visibleFlatOptions().findIndex((entry) => entry.key === option.key) +
+                              1
+                            : undefined
+                        }
                         setsize={local.virtualized ? visibleFlatOptions().length : undefined}
                         onPointerDown={(event) => event.preventDefault()}
                         onPointerMove={() => {

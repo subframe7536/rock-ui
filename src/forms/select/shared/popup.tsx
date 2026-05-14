@@ -1,9 +1,12 @@
-import type { JSX } from 'solid-js'
 import { Show, createSignal } from 'solid-js'
-import type { Accessor } from 'solid-js'
+import type { Accessor, JSX } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
-import { overlayMenuContentVariants, useOverlayMenuDismiss, useOverlayMenuFloatingPosition } from '../../../overlays/base/menu'
+import {
+  overlayMenuContentVariants,
+  useOverlayMenuDismiss,
+  useOverlayMenuFloatingPosition,
+} from '../../../overlays/base/menu'
 import { cn } from '../../../shared/utils'
 
 export interface SelectPopupProps {
@@ -22,14 +25,16 @@ export interface SelectPopupProps {
 }
 
 export function SelectPopup(props: SelectPopupProps): JSX.Element {
-  const [positionerElement, setPositionerElement] = createSignal<HTMLDivElement | undefined>(undefined)
+  const [positionerElement, setPositionerElement] = createSignal<HTMLDivElement | undefined>(
+    undefined,
+  )
   const [contentElement, setContentElement] = createSignal<HTMLDivElement | undefined>(undefined)
   let hasReachedScrollBottom = false
 
   useOverlayMenuFloatingPosition({
     contentElement,
     floatingElement: positionerElement,
-    getReferenceElement: props.anchorElement,
+    getReferenceElement: () => props.anchorElement(),
     gutter: () => 0,
     onPositionedChange: () => undefined,
     onPlacementChange: () => undefined,
@@ -74,7 +79,10 @@ export function SelectPopup(props: SelectPopupProps): JSX.Element {
   return (
     <Show when={props.open}>
       <Portal>
-        <div ref={setPositionerElement} style={{ position: 'fixed', visibility: 'hidden', 'z-index': 50 }}>
+        <div
+          ref={setPositionerElement}
+          style={{ position: 'fixed', visibility: 'hidden', 'z-index': 50 }}
+        >
           <div
             ref={setContentElement}
             data-slot="content"

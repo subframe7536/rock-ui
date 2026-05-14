@@ -1,5 +1,14 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createEffect, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
+import {
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  onMount,
+} from 'solid-js'
 
 import { Icon, IconButton } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
@@ -261,7 +270,9 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     return current ? [current] : (merged.items ?? [])
   })
 
-  const normalizedGroups = createMemo(() => createNormalizedGroups(currentGroups(), warnDuplicateValue))
+  const normalizedGroups = createMemo(() =>
+    createNormalizedGroups(currentGroups(), warnDuplicateValue),
+  )
   const visibleGroups = createMemo(() => {
     const term = currentSearchTerm().trim().toLowerCase()
     if (term === '') {
@@ -269,10 +280,11 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     }
 
     return normalizedGroups()
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => item.searchText.includes(term)),
-      }))
+      .map((group) =>
+        Object.assign({}, group, {
+          items: group.items.filter((item) => item.searchText.includes(term)),
+        }),
+      )
       .filter((group) => group.items.length > 0)
   })
   const visibleItems = createMemo(() => visibleGroups().flatMap((group) => group.items))
@@ -467,16 +479,26 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           role="listbox"
           data-slot="listbox"
           style={merged.styles?.listbox}
-          class={cn('p-1 max-h-36vh overflow-x-hidden overflow-y-auto focus:outline-none', merged.classes?.listbox)}
+          class={cn(
+            'p-1 max-h-36vh overflow-x-hidden overflow-y-auto focus:outline-none',
+            merged.classes?.listbox,
+          )}
         >
           <For each={visibleGroups()}>
             {(group) => (
-              <div data-slot="group" style={merged.styles?.group} class={cn('mt-2 p-1', merged.classes?.group)}>
+              <div
+                data-slot="group"
+                style={merged.styles?.group}
+                class={cn('mt-2 p-1', merged.classes?.group)}
+              >
                 <Show when={group.label}>
                   <span
                     data-slot="label"
                     style={merged.styles?.label}
-                    class={cn('text-sm text-muted-foreground font-semibold px-1.5', merged.classes?.label)}
+                    class={cn(
+                      'text-sm text-muted-foreground font-semibold px-1.5',
+                      merged.classes?.label,
+                    )}
                   >
                     {group.label}
                   </span>
@@ -511,26 +533,38 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
                             name={item.icon}
                             slotName="itemLeading"
                             style={merged.styles?.itemLeading}
-                            class={cn('text-muted-foreground shrink-0', merged.classes?.itemLeading)}
+                            class={cn(
+                              'text-muted-foreground shrink-0',
+                              merged.classes?.itemLeading,
+                            )}
                           />
                         </Show>
 
                         <span
                           data-slot="itemWrapper"
                           style={merged.styles?.itemWrapper}
-                          class={cn('text-start flex flex-1 flex-col min-w-0', merged.classes?.itemWrapper)}
+                          class={cn(
+                            'text-start flex flex-1 flex-col min-w-0',
+                            merged.classes?.itemWrapper,
+                          )}
                         >
                           <Show when={item.prefix || item.itemLabel || item.suffix}>
                             <span
                               data-slot="itemLabel"
                               style={merged.styles?.itemLabel}
-                              class={cn('text-sm inline-flex gap-2 truncate items-baseline', merged.classes?.itemLabel)}
+                              class={cn(
+                                'text-sm inline-flex gap-2 truncate items-baseline',
+                                merged.classes?.itemLabel,
+                              )}
                             >
                               <Show when={item.prefix}>
                                 <span
                                   data-slot="itemLabelPrefix"
                                   style={merged.styles?.itemLabelPrefix}
-                                  class={cn('text-muted-foreground shrink-0', merged.classes?.itemLabelPrefix)}
+                                  class={cn(
+                                    'text-muted-foreground shrink-0',
+                                    merged.classes?.itemLabelPrefix,
+                                  )}
                                 >
                                   {item.prefix}
                                 </span>
@@ -546,7 +580,10 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
                                 <span
                                   data-slot="itemLabelSuffix"
                                   style={merged.styles?.itemLabelSuffix}
-                                  class={cn('text-xs text-muted-foreground shrink-0', merged.classes?.itemLabelSuffix)}
+                                  class={cn(
+                                    'text-xs text-muted-foreground shrink-0',
+                                    merged.classes?.itemLabelSuffix,
+                                  )}
                                 >
                                   {item.suffix}
                                 </span>
@@ -557,7 +594,10 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
                             <span
                               data-slot="itemDescription"
                               style={merged.styles?.itemDescription}
-                              class={cn('text-xs text-muted-foreground truncate', merged.classes?.itemDescription)}
+                              class={cn(
+                                'text-xs text-muted-foreground truncate',
+                                merged.classes?.itemDescription,
+                              )}
                             >
                               {item.description}
                             </span>
@@ -581,7 +621,10 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
                             name={merged.childIcon}
                             slotName="itemTrailing"
                             style={merged.styles?.itemTrailing}
-                            class={cn('text-muted-foreground shrink-0', merged.classes?.itemTrailing)}
+                            class={cn(
+                              'text-muted-foreground shrink-0',
+                              merged.classes?.itemTrailing,
+                            )}
                           />
                         </Show>
                       </div>

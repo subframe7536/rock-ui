@@ -14,9 +14,9 @@ export interface SelectItemComponentProps<TItems> {
   isHighlighted: boolean
   isSelected: boolean
   item: NormalizedOption<TItems>
-  onClick?: JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>
-  onPointerDown?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
-  onPointerMove?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
+  onClick?: JSX.EventHandler<HTMLDivElement, MouseEvent>
+  onPointerDown?: JSX.EventHandler<HTMLDivElement, PointerEvent>
+  onPointerMove?: JSX.EventHandler<HTMLDivElement, PointerEvent>
   posinset?: number
   setsize?: number
 }
@@ -132,9 +132,9 @@ export function createSelectComponents<
         aria-posinset={itemProps.posinset}
         aria-setsize={itemProps.setsize}
         style={props.styles?.()?.item}
-        onClick={itemProps.onClick}
-        onPointerDown={itemProps.onPointerDown}
-        onPointerMove={itemProps.onPointerMove}
+        onClick={(event) => itemProps.onClick?.(event)}
+        onPointerDown={(event) => itemProps.onPointerDown?.(event)}
+        onPointerMove={(event) => itemProps.onPointerMove?.(event)}
         class={selectItemVariants(
           {
             size: props.size() as 'xs' | 'sm' | 'md' | 'lg' | 'xl' | undefined,
