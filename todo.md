@@ -16,7 +16,7 @@ replaced, `@kobalte/core` and `@kobalte/utils` can be dropped from dependencies 
 
 To inline a Kobalte package:
 
-1. Copy the relevant source from `node_modules/@kobalte/core/src/<component>/` into a new `src/shared/primitives/<component>/` directory (or alongside the consuming component)
+1. Copy the relevant source from `kobalte/packages/core/src/<component>/` into a new `src/shared/primitives/<component>/` directory (or alongside the consuming component)
 2. Replace the `@kobalte/core/<component>` import(s) with the local path
 3. Fix any known bugs listed in "Existing Bugs" for the affected component
 4. Ensure all accessibility attributes (ARIA roles, keyboard navigation, focus management) are preserved
