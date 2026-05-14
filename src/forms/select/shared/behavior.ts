@@ -223,10 +223,10 @@ const SELECT_FILTER_STRATEGIES: Record<SelectFilterMode, (text: string, input: s
   contains: (text, input) => text.includes(input),
 }
 
-function matchesFilter<TRaw>(
-  option: SelectFilterableOption<TRaw>,
+function matchesFilter<TOption extends SelectFilterableOption<unknown>>(
+  option: TOption,
   inputValue: string,
-  filter: SelectFilterMode | ((option: SelectFilterableOption<TRaw>, inputValue: string) => boolean),
+  filter: SelectFilterMode | ((option: TOption, inputValue: string) => boolean),
 ): boolean {
   if (typeof filter === 'function') {
     return filter(option, inputValue)

@@ -265,11 +265,14 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     }
 
     const highlighted = highlightedKey()
-    if (highlighted && visibleFlatOptions().some((option) => option.key === highlighted && !option.disabled)) {
+    if (
+      highlighted &&
+      visibleFlatOptions().some((option) => option.key === highlighted && !option.disabled)
+    ) {
       return
     }
 
-    setHighlightedKey(visibleFlatOptions().find((option) => !option.disabled)?.key)
+    setHighlightedKey(undefined)
   })
 
   function setMenuOpen(nextOpen: boolean): void {

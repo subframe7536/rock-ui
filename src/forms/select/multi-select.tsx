@@ -25,7 +25,6 @@ import {
 } from './select.class'
 import {
   createComboboxInputHandlers,
-  createFindOptionByValue,
   createSelectComponents,
   emitSelectValueChange,
   filterNormalizedOptions,
@@ -255,8 +254,6 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     return base
   })
   const allFlatOptions = createMemo(() => flattenOptions(normalizedOptions()))
-  const findOptionByValue = createFindOptionByValue<MultiSelectT.Item<TItem>>(() => allFlatOptions())
-
   const [selectedValues, setSelectedValues] = useControllableValue<TItem[]>({
     value: () => local.value,
     defaultValue: () => local.defaultValue ?? [],
@@ -321,11 +318,14 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     }
 
     const highlighted = highlightedKey()
-    if (highlighted && visibleFlatOptions().some((option) => option.key === highlighted && !option.disabled)) {
+    if (
+      highlighted &&
+      visibleFlatOptions().some((option) => option.key === highlighted && !option.disabled)
+    ) {
       return
     }
 
-    setHighlightedKey(visibleFlatOptions().find((option) => !option.disabled)?.key)
+    setHighlightedKey(undefined)
   })
 
   function setMenuOpen(nextOpen: boolean): void {
@@ -623,10 +623,25 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
         if (text) {
           const match = findOptionByText(text)
           if (match) {
-            toggleOption(match)
-            input.value = ''
-            setCurrentInputText('')
-            handleInputChange('')
+            const current = selectedOptions()
+            const isSelected = current.some((option) => option.value === match.value)
+
+            if (isSelected) {
+              handleMultipleChange(current.filter((option) => option.value !== match.value))
+              input.value = ''
+              setCurrentInputText('')
+              handleInputChange('')
+              event.preventDefault()
+              return
+            }
+
+            const appendResult = appendOptionIfAllowed(current, match)
+            if (appendResult.appended) {
+              handleMultipleChange(appendResult.next)
+              input.value = ''
+              setCurrentInputText('')
+              handleInputChange('')
+            }
             event.preventDefault()
             return
           }
