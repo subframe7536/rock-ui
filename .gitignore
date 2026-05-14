@@ -6,3 +6,4 @@ kobalte
 .worktrees
 *.local.*
 docs/api-doc
+package-lock.json

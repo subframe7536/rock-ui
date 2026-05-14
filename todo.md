@@ -86,7 +86,7 @@ Port from `@kobalte/core` first, then make it non primitive and drop context usa
   - The modal shell owns open state, portal mounting, overlay/content mounting, dismissal, focus trap, and scroll lock.
 - `Popover` and `Tooltip` get a separate popper-backed shell using inlined `@kobalte/core/popper`.
 - `DropdownMenu` and `ContextMenu` using inlined `@kobalte/core/dropdown-menu`.
-- `Select` / `MultiSelect` / `CommandPalette` using inlined `@kobalte/core/dropdown-menu`.
+- `Select` / `MultiSelect` / `CommandPalette` using inlined `@kobalte/core/combobox`.
 
 # Current
 
