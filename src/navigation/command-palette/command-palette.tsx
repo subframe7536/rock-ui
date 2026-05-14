@@ -257,7 +257,8 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
 
   const currentGroups = createMemo<CommandPaletteT.Item[]>(() => {
     const stack = history()
-    return stack.length > 0 ? [stack[stack.length - 1]! ] : (merged.items ?? [])
+    const current = stack.at(-1)
+    return current ? [current] : (merged.items ?? [])
   })
 
   const normalizedGroups = createMemo(() => createNormalizedGroups(currentGroups(), warnDuplicateValue))

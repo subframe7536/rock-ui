@@ -307,7 +307,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
   })
 
   const visibleOptions = createMemo(() =>
-    filterNormalizedOptions(effectiveOptions(), currentInputText(), kobalteFilter() as any),
+    filterNormalizedOptions(effectiveOptions(), currentInputText(), kobalteFilter()),
   )
   const visibleFlatOptions = createMemo(() => flattenOptions(visibleOptions()))
 

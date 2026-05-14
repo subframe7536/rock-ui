@@ -212,7 +212,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     name: local.name,
     size: local.size,
     disabled: local.disabled,
-    initialValue: local.defaultValue ?? '',
+    initialValue: local.defaultValue == null ? '' : local.defaultValue,
   }))
   const menuControl = useSelectMenuControl(() => local.openOnClick)
   const isSearchable = createMemo(() => Boolean(local.search))
@@ -246,7 +246,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   })
 
   const visibleOptions = createMemo(() =>
-    filterNormalizedOptions(normalizedOptions(), currentInputText(), kobalteFilter() as any),
+    filterNormalizedOptions(normalizedOptions(), currentInputText(), kobalteFilter()),
   )
   const visibleFlatOptions = createMemo(() => flattenOptions(visibleOptions()))
 

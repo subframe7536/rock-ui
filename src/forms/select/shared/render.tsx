@@ -128,7 +128,7 @@ export function createSelectComponents<
         data-disabled={itemProps.item.disabled ? '' : undefined}
         data-highlighted={itemProps.isHighlighted ? '' : undefined}
         aria-disabled={itemProps.item.disabled || undefined}
-        aria-selected={itemProps.isSelected}
+        aria-selected={itemProps.isSelected ? 'true' : 'false'}
         aria-posinset={itemProps.posinset}
         aria-setsize={itemProps.setsize}
         style={props.styles?.()?.item}
