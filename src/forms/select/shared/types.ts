@@ -45,6 +45,9 @@ export interface SelectControlState<TItems> {
 
 export const SELECT_SPLIT_KEYS = [
   ...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS,
+  'open',
+  'defaultOpen',
+  'onOpenChange',
   'onChange',
   'search',
   'searchValue',
@@ -91,15 +94,4 @@ export const SELECT_COMMON_DEFAULT_PROPS = {
   loadingIcon: 'icon-loading' as const,
   filterOption: true,
   openOnClick: 'control' as const,
-}
-
-export const SELECT_COMMON_COMBOBOX_PROPS = {
-  optionValue: 'value' as const,
-  optionLabel: 'label' as const,
-  optionDisabled: 'disabled' as const,
-  optionTextValue: 'key' as const,
-  triggerMode: 'manual' as const,
-  allowsEmptyCollection: true,
-  shouldFocusWrap: true,
-  overflowPadding: -2,
 }

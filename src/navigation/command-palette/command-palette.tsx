@@ -1,14 +1,5 @@
-import { Combobox } from '@kobalte/core/combobox'
 import type { JSX } from 'solid-js'
-import {
-  Show,
-  createEffect,
-  createMemo,
-  createSignal,
-  mergeProps,
-  onCleanup,
-  onMount,
-} from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 
 import { Icon, IconButton } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
@@ -16,67 +7,29 @@ import { Kbd } from '../../elements/kbd'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
 
-// ─── Public types ─────────────────────────────────────────────────────────────
-
 export namespace CommandPaletteT {
-  /**
-   * An individual item in the command palette.
-   */
   export interface SubItem {
-    /**
-     * Unique value for the item.
-     */
+    /** Unique value for the item. */
     value: string
-
-    /**
-     * Primary label for the item.
-     */
+    /** Primary label for the item. */
     label?: string
-
-    /**
-     * Optional prefix text shown before the label.
-     */
+    /** Optional prefix text shown before the label. */
     prefix?: string
-
-    /**
-     * Optional suffix text shown after the label.
-     */
+    /** Optional suffix text shown after the label. */
     suffix?: string
-
-    /**
-     * Secondary description text shown below the label.
-     */
+    /** Secondary description text shown below the label. */
     description?: string
-
-    /**
-     * UnoCSS icon class or name to display.
-     * @example 'icon-search'
-     */
+    /** UnoCSS icon class or name to display. */
     icon?: string
-
-    /**
-     * Array of keyboard shortcuts to display.
-     */
+    /** Array of keyboard shortcuts to display. */
     kbds?: string[]
-
-    /**
-     * Whether to force the item into an active (highlighted) state.
-     */
+    /** Whether to force the item into an active (highlighted) state. */
     active?: boolean
-
-    /**
-     * Whether the item is disabled and cannot be selected.
-     */
+    /** Whether the item is disabled and cannot be selected. */
     disabled?: boolean
-
-    /**
-     * Selecting this item drills into a nested group of items.
-     */
+    /** Selecting this item drills into a nested group of items. */
     children?: SubItem[]
-
-    /**
-     * Callback triggered when the item is selected.
-     */
+    /** Callback triggered when the item is selected. */
     onSelect?: () => void
   }
 
@@ -108,129 +61,54 @@ export namespace CommandPaletteT {
   export type Styles = SlotStyles<Slot>
   export type Extend = never
 
-  /**
-   * A grouped collection of items in the command palette.
-   */
   export interface Item {
-    /**
-     * Unique identifier for the group.
-     */
+    /** Unique identifier for the group. */
     id: string
-
-    /**
-     * Display name for the group header.
-     */
+    /** Display name for the group header. */
     label?: string
-
-    /**
-     * Items belonging to this group.
-     */
+    /** Items belonging to this group. */
     children?: SubItem[]
   }
 
-  /**
-   * Base props for the CommandPalette component.
-   */
   export interface Base {
-    /**
-     * Command groups to display initially.
-     */
+    /** Command groups to display initially. */
     items?: Item[]
-
-    /**
-     * Placeholder text for the search input.
-     * @default 'Search...'
-     */
+    /** Placeholder text for the search input. */
     placeholder?: string
-
-    /**
-     * Controlled search term.
-     */
+    /** Controlled search term. */
     searchTerm?: string
-
-    /**
-     * Callback triggered when the search term changes.
-     */
+    /** Callback triggered when the search term changes. */
     onSearchTermChange?: (term: string) => void
-
-    /**
-     * Maximum allowed length for the search text.
-     */
+    /** Maximum allowed length for the search text. */
     searchMaxLength?: number
-
-    /**
-     * Whether to focus the search input automatically on mount.
-     * @default true
-     */
+    /** Whether to focus the search input automatically on mount. */
     autofocus?: boolean
-
-    /**
-     * Icon name for the search indicator.
-     * @default 'icon-search'
-     */
+    /** Icon name for the search indicator. */
     searchIcon?: IconT.Name
-
-    /**
-     * Icon name for the loading state.
-     * @default 'icon-loading'
-     */
+    /** Icon name for the loading state. */
     loadingIcon?: IconT.Name
-
-    /**
-     * Icon name for items with sub-groups.
-     * @default 'icon-chevron-right'
-     */
+    /** Icon name for items with sub-groups. */
     childIcon?: IconT.Name
-
-    /**
-     * Icon name for the group navigation back button.
-     * @default 'icon-arrow-left'
-     */
+    /** Icon name for the group navigation back button. */
     backIcon?: IconT.Name
-
-    /**
-     * Icon name for the palette close button.
-     * @default 'icon-close'
-     */
+    /** Icon name for the palette close button. */
     closeIcon?: IconT.Name
-
-    /**
-     * Whether to show a close button in the header.
-     * @default false
-     */
+    /** Whether to show a close button in the header. */
     close?: boolean
-
-    /**
-     * Callback triggered when the close button is clicked.
-     */
+    /** Callback triggered when the close button is clicked. */
     onClose?: () => void
-
-    /**
-     * Whether the palette is in a loading state.
-     */
+    /** Whether the palette is in a loading state. */
     loading?: boolean
-
-    /**
-     * Elements to show when no items match the search.
-     * @default 'No results.'
-     */
+    /** Elements to show when no items match the search. */
     empty?: JSX.Element
-
-    /**
-     * Content to render at bottom of the palette.
-     */
+    /** Content to render at bottom of the palette. */
     footer?: JSX.Element
   }
 
   export interface Props extends BaseProps<Base, Variant, Extend, Slot> {}
 }
 
-/**
- * Props for the CommandPalette component.
- */
 export interface CommandPaletteProps extends CommandPaletteT.Props {}
-
-// ─── Internal normalized types ────────────────────────────────────────────────
 
 interface NormalizedItem {
   key: string
@@ -251,8 +129,6 @@ interface NormalizedGroup {
   label: string
   items: NormalizedItem[]
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildItemLabel(item: CommandPaletteT.SubItem): string {
   const text = [item.prefix, item.label, item.suffix]
@@ -277,7 +153,6 @@ function createNormalizedGroups(
 
     let suffix = 0
     let key = `${value}::${groupId}:${itemIndex}`
-
     while (seenKeys.has(key)) {
       suffix += 1
       key = `${value}::${groupId}:${itemIndex}:${suffix}`
@@ -315,10 +190,6 @@ function createNormalizedGroups(
   }))
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-/**
- * Keyboard-driven command palette with search, grouping, and nested page navigation.
- */
 export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   const merged = mergeProps(
     {
@@ -335,16 +206,12 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     props,
   )
 
-  // ── History stack for sub-navigation ──────────────────────────────────────
   const [history, setHistory] = createSignal<CommandPaletteT.Item[]>([])
-
-  // ── Input ref — cleared visually after navigation ─────────────────────────
-  let inputRef: HTMLInputElement | undefined
-
-  // ── Search term ───────────────────────────────────────────────────────────
   const [internalSearch, setInternalSearch] = createSignal('')
+  const [highlightedKey, setHighlightedKey] = createSignal<string | undefined>(undefined)
   const currentSearchTerm = createMemo(() => merged.searchTerm ?? internalSearch())
   const warnedDuplicateValues = new Set<string>()
+  let inputRef: HTMLInputElement | undefined
 
   const warnDuplicateValue = (value: string): void => {
     if (process.env.NODE_ENV === 'production' || warnedDuplicateValues.has(value)) {
@@ -358,37 +225,12 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     )
   }
 
-  // Absorbs the one `onInputChange` call Kobalte fires after item selection
-  // (setting the input to the selected item's label), which would overwrite
-  // the '' we just set during navigation.
-  let suppressInputChange = false
-
   function applySearchValue(value: string): void {
     if (merged.searchTerm === undefined) {
       setInternalSearch(value)
     }
     merged.onSearchTermChange?.(value)
   }
-
-  function updateSearchFromInput(value: string): void {
-    if (suppressInputChange) {
-      suppressInputChange = false
-      return
-    }
-
-    applySearchValue(value)
-  }
-
-  createEffect(() => {
-    if (merged.searchTerm === undefined || !inputRef) {
-      return
-    }
-
-    const nextValue = merged.searchTerm
-    if (inputRef.value !== nextValue) {
-      inputRef.value = nextValue
-    }
-  })
 
   onMount(() => {
     let dialogAutofocusTimer: ReturnType<typeof setTimeout> | undefined
@@ -407,56 +249,63 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     })
   })
 
-  // ── Custom filter: reads the effective search term ──────────────────────────
-  function filter(option: NormalizedItem): boolean {
-    const term = currentSearchTerm().trim().toLowerCase()
-    return term === '' || option.searchText.includes(term)
-  }
-
-  // ── Current groups: last history entry or root ─────────────────────────────
-  const currentGroups = createMemo<CommandPaletteT.Item[]>(() => {
-    const hist = history()
-    return (
-      hist.length > 0 ? [hist[hist.length - 1]] : (merged.items ?? [])
-    ) as CommandPaletteT.Item[]
+  createEffect(() => {
+    if (merged.searchTerm !== undefined && inputRef && inputRef.value !== merged.searchTerm) {
+      inputRef.value = merged.searchTerm
+    }
   })
 
-  const normalizedGroups = createMemo<NormalizedGroup[]>(() =>
-    createNormalizedGroups(currentGroups(), warnDuplicateValue),
-  )
+  const currentGroups = createMemo<CommandPaletteT.Item[]>(() => {
+    const stack = history()
+    return stack.length > 0 ? [stack[stack.length - 1]! ] : (merged.items ?? [])
+  })
 
-  const hasItems = createMemo(() => normalizedGroups().some((g) => g.items.length > 0))
+  const normalizedGroups = createMemo(() => createNormalizedGroups(currentGroups(), warnDuplicateValue))
+  const visibleGroups = createMemo(() => {
+    const term = currentSearchTerm().trim().toLowerCase()
+    if (term === '') {
+      return normalizedGroups()
+    }
 
-  // ── Navigation ────────────────────────────────────────────────────────────
+    return normalizedGroups()
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item.searchText.includes(term)),
+      }))
+      .filter((group) => group.items.length > 0)
+  })
+  const visibleItems = createMemo(() => visibleGroups().flatMap((group) => group.items))
+  const hasItems = createMemo(() => visibleItems().length > 0)
+
+  createEffect(() => {
+    const items = visibleItems().filter((item) => !item.disabled)
+    const highlighted = highlightedKey()
+    if (highlighted && items.some((item) => item.key === highlighted)) {
+      return
+    }
+    setHighlightedKey(items[0]?.key)
+  })
+
   function navigateBack(): void {
-    setHistory((h) => h.slice(0, -1))
+    setHistory((stack) => stack.slice(0, -1))
     applySearchValue('')
-    // Clear the DOM input after Kobalte's sync updates finish
-    queueMicrotask(() => {
-      if (inputRef) {
-        inputRef.value = ''
-      }
-    })
+    setHighlightedKey(undefined)
   }
 
-  function handleChange(item: NormalizedItem | null): void {
-    if (!item) {
+  function activateItem(item: NormalizedItem): void {
+    if (item.disabled) {
       return
     }
 
     if ((item.children?.length ?? 0) > 0) {
-      setHistory((h) => [
-        ...h,
+      setHistory((stack) => [
+        ...stack,
         { id: `history-${item.key}`, label: item.itemLabel, children: item.children! },
       ])
       applySearchValue('')
-      // Suppress the onInputChange('More') Kobalte fires after selection
-      suppressInputChange = true
+      setHighlightedKey(undefined)
       queueMicrotask(() => {
-        suppressInputChange = false
-        if (inputRef) {
-          inputRef.value = ''
-        }
+        inputRef?.focus()
       })
       return
     }
@@ -464,168 +313,72 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
     item.onSelect?.()
   }
 
-  function handleKeyDown(e: KeyboardEvent): void {
-    if (e.key === 'Backspace' && !currentSearchTerm()) {
+  function focusByOffset(delta: number): void {
+    const items = visibleItems().filter((item) => !item.disabled)
+    if (items.length === 0) {
+      return
+    }
+
+    const currentIndex = items.findIndex((item) => item.key === highlightedKey())
+    const nextIndex =
+      currentIndex === -1
+        ? delta > 0
+          ? 0
+          : items.length - 1
+        : (currentIndex + delta + items.length) % items.length
+    setHighlightedKey(items[nextIndex]?.key)
+  }
+
+  function handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Backspace' && !currentSearchTerm()) {
       navigateBack()
+      return
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      focusByOffset(1)
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      focusByOffset(-1)
+      return
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault()
+      setHighlightedKey(visibleItems().find((item) => !item.disabled)?.key)
+      return
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault()
+      const items = visibleItems().filter((item) => !item.disabled)
+      setHighlightedKey(items[items.length - 1]?.key)
+      return
+    }
+
+    if (event.key === 'Enter') {
+      const highlighted = visibleItems().find((item) => item.key === highlightedKey())
+      if (highlighted) {
+        event.preventDefault()
+        activateItem(highlighted)
+      }
     }
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <Combobox<NormalizedItem, NormalizedGroup>
-      options={normalizedGroups()}
-      optionValue="key"
-      optionLabel="label"
-      optionTextValue="label"
-      optionDisabled="disabled"
-      optionGroupChildren="items"
-      defaultFilter={filter}
-      triggerMode="manual"
-      open={true}
-      onOpenChange={() => {}}
-      value={null}
+    <div
       data-slot="root"
       style={merged.styles?.root}
       class={cn(
         'rounded-xl bg-background flex flex-col min-h-0 divide-(border y)',
         merged.classes?.root,
       )}
-      onChange={handleChange}
-      onInputChange={updateSearchFromInput}
-      allowsEmptyCollection={true}
-      closeOnSelection={false}
-      shouldFocusWrap={true}
-      itemComponent={(itemProps) => {
-        const option = (): NormalizedItem => itemProps.item.rawValue
-        const hasChildren = (): boolean => (option().children?.length ?? 0) > 0
-
-        return (
-          <Combobox.Item
-            item={itemProps.item}
-            data-slot="item"
-            style={merged.styles?.item}
-            class={cn(
-              'p-2 outline-none rounded-md flex gap-2 w-full cursor-default select-none items-center relative data-highlighted:(text-accent-foreground bg-accent) data-disabled:effect-dis',
-              merged.classes?.item,
-            )}
-            onPointerDown={(e: PointerEvent) => e.preventDefault()}
-          >
-            {/* Leading: loading spinner or icon */}
-            <Show when={option().icon}>
-              <Icon
-                name={option().icon}
-                slotName="itemLeading"
-                style={merged.styles?.itemLeading}
-                class={cn('text-muted-foreground shrink-0', merged.classes?.itemLeading)}
-              />
-            </Show>
-
-            {/* Content wrapper */}
-            <span
-              data-slot="itemWrapper"
-              style={merged.styles?.itemWrapper}
-              class={cn('text-start flex flex-1 flex-col min-w-0', merged.classes?.itemWrapper)}
-            >
-              <Show when={option().prefix || option().itemLabel || option().suffix}>
-                <span
-                  data-slot="itemLabel"
-                  style={merged.styles?.itemLabel}
-                  class={cn(
-                    'text-sm inline-flex gap-2 truncate items-baseline',
-                    merged.classes?.itemLabel,
-                  )}
-                >
-                  <Show when={option().prefix}>
-                    <span
-                      data-slot="itemLabelPrefix"
-                      style={merged.styles?.itemLabelPrefix}
-                      class={cn('text-muted-foreground shrink-0', merged.classes?.itemLabelPrefix)}
-                    >
-                      {option().prefix}
-                    </span>
-                  </Show>
-                  <span
-                    data-slot="itemLabelBase"
-                    style={merged.styles?.itemLabelBase}
-                    class={cn(merged.classes?.itemLabelBase)}
-                  >
-                    {option().itemLabel}
-                  </span>
-                  <Show when={option().suffix}>
-                    <span
-                      data-slot="itemLabelSuffix"
-                      style={merged.styles?.itemLabelSuffix}
-                      class={cn(
-                        'text-xs text-muted-foreground shrink-0',
-                        merged.classes?.itemLabelSuffix,
-                      )}
-                    >
-                      {option().suffix}
-                    </span>
-                  </Show>
-                </span>
-              </Show>
-              <Show when={option().description}>
-                <span
-                  data-slot="itemDescription"
-                  style={merged.styles?.itemDescription}
-                  class={cn(
-                    'text-xs text-muted-foreground truncate',
-                    merged.classes?.itemDescription,
-                  )}
-                >
-                  {option().description}
-                </span>
-              </Show>
-            </span>
-
-            {/* Trailing: children indicator or kbds */}
-            <Show
-              when={hasChildren()}
-              fallback={
-                <Kbd
-                  slotPrefix="itemTrailing"
-                  value={option().kbds}
-                  classes={{
-                    root: merged.classes?.itemTrailingKbds,
-                    item: merged.classes?.itemTrailingKbd,
-                  }}
-                />
-              }
-            >
-              <Icon
-                name={merged.childIcon}
-                slotName="itemTrailing"
-                style={merged.styles?.itemTrailing}
-                class={cn('text-muted-foreground shrink-0', merged.classes?.itemTrailing)}
-              />
-            </Show>
-          </Combobox.Item>
-        )
-      }}
-      sectionComponent={(sectionProps) => (
-        <Combobox.Section
-          data-slot="group"
-          style={merged.styles?.group}
-          class={cn('mt-2 p-1', merged.classes?.group)}
-        >
-          <Show when={sectionProps.section.rawValue.label}>
-            <span
-              data-slot="label"
-              style={merged.styles?.label}
-              class={cn(
-                'text-sm text-muted-foreground font-semibold px-1.5',
-                merged.classes?.label,
-              )}
-            >
-              {sectionProps.section.rawValue.label}
-            </span>
-          </Show>
-        </Combobox.Section>
-      )}
     >
-      {/* ── Input area ─────────────────────────────────────────────────── */}
-      <Combobox.Control<NormalizedItem>
+      <div
         data-slot="inputWrapper"
         style={merged.styles?.inputWrapper}
         class={cn('px-3 flex gap-2 h-12 items-center', merged.classes?.inputWrapper)}
@@ -662,8 +415,10 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           />
         </Show>
 
-        <Combobox.Input
-          ref={(el: any) => (inputRef = el)}
+        <input
+          ref={(el) => {
+            inputRef = el
+          }}
           data-slot="input"
           style={merged.styles?.input}
           class={cn(
@@ -673,6 +428,8 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           placeholder={merged.placeholder}
           autofocus={merged.autofocus}
           maxLength={merged.searchMaxLength}
+          value={currentSearchTerm()}
+          onInput={(event) => applySearchValue(event.currentTarget.value)}
           onKeyDown={handleKeyDown}
         />
 
@@ -691,9 +448,8 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             aria-label="Close"
           />
         </Show>
-      </Combobox.Control>
+      </div>
 
-      {/* ── List ───────────────────────────────────────────────────────── */}
       <Show
         when={hasItems()}
         fallback={
@@ -706,14 +462,135 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           </div>
         }
       >
-        <Combobox.Listbox
+        <div
+          role="listbox"
           data-slot="listbox"
           style={merged.styles?.listbox}
-          class={cn(
-            'p-1 max-h-36vh overflow-x-hidden overflow-y-auto focus:outline-none',
-            merged.classes?.listbox,
-          )}
-        />
+          class={cn('p-1 max-h-36vh overflow-x-hidden overflow-y-auto focus:outline-none', merged.classes?.listbox)}
+        >
+          <For each={visibleGroups()}>
+            {(group) => (
+              <div data-slot="group" style={merged.styles?.group} class={cn('mt-2 p-1', merged.classes?.group)}>
+                <Show when={group.label}>
+                  <span
+                    data-slot="label"
+                    style={merged.styles?.label}
+                    class={cn('text-sm text-muted-foreground font-semibold px-1.5', merged.classes?.label)}
+                  >
+                    {group.label}
+                  </span>
+                </Show>
+
+                <For each={group.items}>
+                  {(item) => {
+                    const hasChildren = () => (item.children?.length ?? 0) > 0
+                    return (
+                      <div
+                        role="option"
+                        tabIndex={-1}
+                        data-slot="item"
+                        data-disabled={item.disabled ? '' : undefined}
+                        data-highlighted={highlightedKey() === item.key ? '' : undefined}
+                        aria-disabled={item.disabled || undefined}
+                        style={merged.styles?.item}
+                        class={cn(
+                          'p-2 outline-none rounded-md flex gap-2 w-full cursor-default select-none items-center relative data-highlighted:(text-accent-foreground bg-accent) data-disabled:effect-dis',
+                          merged.classes?.item,
+                        )}
+                        onPointerMove={() => {
+                          if (!item.disabled) {
+                            setHighlightedKey(item.key)
+                          }
+                        }}
+                        onPointerDown={(event) => event.preventDefault()}
+                        onClick={() => activateItem(item)}
+                      >
+                        <Show when={item.icon}>
+                          <Icon
+                            name={item.icon}
+                            slotName="itemLeading"
+                            style={merged.styles?.itemLeading}
+                            class={cn('text-muted-foreground shrink-0', merged.classes?.itemLeading)}
+                          />
+                        </Show>
+
+                        <span
+                          data-slot="itemWrapper"
+                          style={merged.styles?.itemWrapper}
+                          class={cn('text-start flex flex-1 flex-col min-w-0', merged.classes?.itemWrapper)}
+                        >
+                          <Show when={item.prefix || item.itemLabel || item.suffix}>
+                            <span
+                              data-slot="itemLabel"
+                              style={merged.styles?.itemLabel}
+                              class={cn('text-sm inline-flex gap-2 truncate items-baseline', merged.classes?.itemLabel)}
+                            >
+                              <Show when={item.prefix}>
+                                <span
+                                  data-slot="itemLabelPrefix"
+                                  style={merged.styles?.itemLabelPrefix}
+                                  class={cn('text-muted-foreground shrink-0', merged.classes?.itemLabelPrefix)}
+                                >
+                                  {item.prefix}
+                                </span>
+                              </Show>
+                              <span
+                                data-slot="itemLabelBase"
+                                style={merged.styles?.itemLabelBase}
+                                class={cn(merged.classes?.itemLabelBase)}
+                              >
+                                {item.itemLabel}
+                              </span>
+                              <Show when={item.suffix}>
+                                <span
+                                  data-slot="itemLabelSuffix"
+                                  style={merged.styles?.itemLabelSuffix}
+                                  class={cn('text-xs text-muted-foreground shrink-0', merged.classes?.itemLabelSuffix)}
+                                >
+                                  {item.suffix}
+                                </span>
+                              </Show>
+                            </span>
+                          </Show>
+                          <Show when={item.description}>
+                            <span
+                              data-slot="itemDescription"
+                              style={merged.styles?.itemDescription}
+                              class={cn('text-xs text-muted-foreground truncate', merged.classes?.itemDescription)}
+                            >
+                              {item.description}
+                            </span>
+                          </Show>
+                        </span>
+
+                        <Show
+                          when={hasChildren()}
+                          fallback={
+                            <Kbd
+                              slotPrefix="itemTrailing"
+                              value={item.kbds}
+                              classes={{
+                                root: merged.classes?.itemTrailingKbds,
+                                item: merged.classes?.itemTrailingKbd,
+                              }}
+                            />
+                          }
+                        >
+                          <Icon
+                            name={merged.childIcon}
+                            slotName="itemTrailing"
+                            style={merged.styles?.itemTrailing}
+                            class={cn('text-muted-foreground shrink-0', merged.classes?.itemTrailing)}
+                          />
+                        </Show>
+                      </div>
+                    )
+                  }}
+                </For>
+              </div>
+            )}
+          </For>
+        </div>
       </Show>
 
       <Show when={merged.footer}>
@@ -725,6 +602,6 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
           {merged.footer}
         </div>
       </Show>
-    </Combobox>
+    </div>
   )
 }

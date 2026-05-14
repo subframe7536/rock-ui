@@ -1,19 +1,29 @@
-import { Combobox, useComboboxContext } from '@kobalte/core/combobox'
-import type {
-  ComboboxRootItemComponentProps,
-  ComboboxRootSectionComponentProps,
-} from '@kobalte/core/combobox'
 import type { ClassValue } from 'cls-variant'
 import type { JSX } from 'solid-js'
-import { For, Match, Show, Switch, createMemo } from 'solid-js'
+import { Show, createMemo } from 'solid-js'
 
 import { Icon, IconButton } from '../../../elements/icon'
 import type { IconT } from '../../../elements/icon'
-import { overlayMenuContentVariants } from '../../../overlays/base/menu'
 import { cn } from '../../../shared/utils'
 import { selectItemVariants } from '../select.class'
 
-import type { NormalizedGroup, NormalizedOption, SelectControlState } from './types'
+import type { NormalizedGroup, NormalizedOption } from './types'
+
+export interface SelectItemComponentProps<TItems> {
+  id?: string
+  isHighlighted: boolean
+  isSelected: boolean
+  item: NormalizedOption<TItems>
+  onClick?: JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>
+  onPointerDown?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
+  onPointerMove?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
+  posinset?: number
+  setsize?: number
+}
+
+export interface SelectSectionComponentProps<TItems> {
+  section: NormalizedGroup<TItems>
+}
 
 interface SelectClearButtonRenderProps {
   show: boolean
@@ -39,29 +49,6 @@ interface SelectEmptyRenderProps<TContext> {
   context: () => TContext
   style?: JSX.CSSProperties
   class?: ClassValue
-}
-
-interface SelectComboboxFrameProps<TItems> {
-  controlStyle?: JSX.CSSProperties
-  controlClass?: ClassValue
-  invalid: boolean
-  disabled: boolean
-  renderTriggerContent: (state: SelectControlState<TItems>) => JSX.Element
-  hasMatches: () => boolean
-  emptyNode: JSX.Element
-  virtualized: boolean
-  contentStyle?: JSX.CSSProperties
-  contentClass?: ClassValue
-  listboxStyle?: JSX.CSSProperties
-  listboxClass?: ClassValue
-  onContentInteractOutside?: (event: Event) => void
-  onContentCloseAutoFocus?: (event: Event) => void
-  onListboxScrollBottom?: () => void
-  scrollBottomThreshold?: number
-  sectionComponent: (
-    props: ComboboxRootSectionComponentProps<NormalizedGroup<TItems>>,
-  ) => JSX.Element
-  itemComponent: (props: ComboboxRootItemComponentProps<NormalizedOption<TItems>>) => JSX.Element
 }
 
 interface SelectComponentStyles {
@@ -103,17 +90,13 @@ export function createSelectComponents<
   TItems extends { icon?: IconT.Name; description?: string | JSX.Element },
   TState = BaseOptionRenderState,
 >(props: CreateSelectComponentsProps<TItems, TState>) {
-  const ItemComponent = (
-    itemProps: ComboboxRootItemComponentProps<NormalizedOption<TItems>>,
-  ): JSX.Element => {
-    const context = useComboboxContext()
-    const raw = (): TItems => itemProps.item.rawValue.raw
+  const ItemComponent = (itemProps: SelectItemComponentProps<TItems>): JSX.Element => {
+    const raw = (): TItems => itemProps.item.raw
     const renderState = createMemo<TState>(() => {
-      const selectionManager = context.listState().selectionManager()
       const state: BaseOptionRenderState = {
-        isSelected: selectionManager.isSelected(itemProps.item.key),
-        isHighlighted: selectionManager.focusedKey() === itemProps.item.key,
-        isDisabled: itemProps.item.rawValue.disabled,
+        isSelected: itemProps.isSelected,
+        isHighlighted: itemProps.isHighlighted,
+        isDisabled: itemProps.item.disabled,
       }
 
       return state as TState
@@ -125,23 +108,33 @@ export function createSelectComponents<
     const optionDescription = createMemo(() => raw().description)
 
     const renderLabel = (): JSX.Element => (
-      <Combobox.ItemLabel
+      <span
         data-slot="itemLabel"
         style={props.styles?.()?.itemLabel}
         class={cn('col-start-1 truncate', props.classes?.()?.itemLabel)}
       >
-        <Show when={labelRender()} keyed fallback={itemProps.item.rawValue.label}>
+        <Show when={labelRender()} keyed fallback={itemProps.item.label}>
           {(render) => render(raw())}
         </Show>
-      </Combobox.ItemLabel>
+      </span>
     )
 
     return (
-      <Combobox.Item
-        item={itemProps.item}
+      <div
+        id={itemProps.id}
+        role="option"
+        tabIndex={-1}
         data-slot="item"
+        data-disabled={itemProps.item.disabled ? '' : undefined}
+        data-highlighted={itemProps.isHighlighted ? '' : undefined}
+        aria-disabled={itemProps.item.disabled || undefined}
+        aria-selected={itemProps.isSelected}
+        aria-posinset={itemProps.posinset}
+        aria-setsize={itemProps.setsize}
         style={props.styles?.()?.item}
-        onPointerDown={(event) => event.preventDefault()}
+        onClick={itemProps.onClick}
+        onPointerDown={itemProps.onPointerDown}
+        onPointerMove={itemProps.onPointerMove}
         class={selectItemVariants(
           {
             size: props.size() as 'xs' | 'sm' | 'md' | 'lg' | 'xl' | undefined,
@@ -165,7 +158,7 @@ export function createSelectComponents<
 
               <Show when={optionDescription()}>
                 {(desc) => (
-                  <Combobox.ItemDescription
+                  <span
                     data-slot="itemDescription"
                     style={props.styles?.()?.itemDescription}
                     class={cn(
@@ -174,34 +167,35 @@ export function createSelectComponents<
                     )}
                   >
                     {desc()}
-                  </Combobox.ItemDescription>
+                  </span>
                 )}
               </Show>
 
-              <Combobox.ItemIndicator
-                data-slot="itemTrailing"
-                style={props.styles?.()?.itemTrailing}
-                class={cn(
-                  'text-sm inline-flex col-start-2 items-center justify-center',
-                  props.classes?.()?.itemTrailing,
-                )}
-              >
-                <Icon name="icon-check" />
-              </Combobox.ItemIndicator>
+              <Show when={itemProps.isSelected}>
+                <span
+                  data-slot="itemTrailing"
+                  style={props.styles?.()?.itemTrailing}
+                  class={cn(
+                    'text-sm inline-flex col-start-2 items-center justify-center',
+                    props.classes?.()?.itemTrailing,
+                  )}
+                >
+                  <Icon name="icon-check" />
+                </span>
+              </Show>
             </>
           }
         >
           {(render) => render({ ...raw(), ...renderState() } as TItems & TState)}
         </Show>
-      </Combobox.Item>
+      </div>
     )
   }
 
-  const SectionComponent = (
-    sectionProps: ComboboxRootSectionComponentProps<NormalizedGroup<TItems>>,
-  ): JSX.Element => (
-    <Combobox.Section
+  const SectionComponent = (sectionProps: SelectSectionComponentProps<TItems>): JSX.Element => (
+    <div
       data-slot="group"
+      role="group"
       style={props.styles?.()?.group}
       class={cn('[&:not(:first-child)]:mt-1.5', props.classes?.()?.group)}
     >
@@ -213,9 +207,9 @@ export function createSelectComponents<
           props.classes?.()?.label,
         )}
       >
-        {sectionProps.section.rawValue.label}
+        {sectionProps.section.label}
       </span>
-    </Combobox.Section>
+    </div>
   )
 
   return {
@@ -242,22 +236,17 @@ export function RenderSelectClearButton(props: SelectClearButtonRenderProps): JS
 
 export function RenderSelectTriggerButton(props: SelectTriggerButtonRenderProps): JSX.Element {
   return (
-    <Combobox.Trigger
-      as={(triggerProps: Record<string, unknown>) => (
-        <IconButton
-          {...triggerProps}
-          data-slot="trigger"
-          styles={{ root: props.style }}
-          name={props.name}
-          size={props.size as 'xs' | 'sm' | 'md' | 'lg' | 'xl' | undefined}
-          classes={{
-            root: props.rootClass,
-          }}
-          loading={props.loading}
-          loadingIcon={props.loadingIcon}
-          tabIndex={-1}
-        />
-      )}
+    <IconButton
+      data-slot="trigger"
+      styles={{ root: props.style }}
+      name={props.name ?? 'icon-chevron-down'}
+      size={props.size as 'xs' | 'sm' | 'md' | 'lg' | 'xl' | undefined}
+      classes={{
+        root: props.rootClass,
+      }}
+      loading={props.loading}
+      loadingIcon={props.loadingIcon}
+      tabIndex={-1}
       onClick={props.onClick}
     />
   )
@@ -281,94 +270,5 @@ export function RenderSelectEmptyNode<TContext>(
     >
       {(renderEmpty) => renderEmpty()(props.context())}
     </Show>
-  )
-}
-
-export function RenderSelectComboboxFrame<TItems>(
-  props: SelectComboboxFrameProps<TItems>,
-): JSX.Element {
-  let hasReachedScrollBottom = false
-
-  function handleListboxScroll(event: Event): void {
-    const target = event.currentTarget as HTMLElement | null
-    if (!target) {
-      return
-    }
-
-    const threshold = props.scrollBottomThreshold ?? 20
-    const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - threshold
-    if (isAtBottom) {
-      if (hasReachedScrollBottom) {
-        return
-      }
-      hasReachedScrollBottom = true
-      props.onListboxScrollBottom?.()
-      return
-    }
-
-    hasReachedScrollBottom = false
-  }
-
-  return (
-    <>
-      <Combobox.Control<NormalizedOption<TItems>>
-        data-slot="control"
-        style={props.controlStyle}
-        data-invalid={props.invalid ? '' : undefined}
-        data-disabled={props.disabled ? '' : undefined}
-        class={cn(props.controlClass)}
-      >
-        {(state) => props.renderTriggerContent(state)}
-      </Combobox.Control>
-
-      <Combobox.Portal>
-        <Combobox.Content
-          data-slot="content"
-          style={props.contentStyle}
-          class={overlayMenuContentVariants({}, props.contentClass)}
-          onInteractOutside={props.onContentInteractOutside}
-          onCloseAutoFocus={props.onContentCloseAutoFocus}
-        >
-          <Show when={props.hasMatches()} fallback={props.emptyNode}>
-            <Combobox.Listbox
-              data-slot="listbox"
-              style={props.listboxStyle}
-              class={cn(
-                'outline-none max-h-$kb-popper-content-available-height overflow-y-auto',
-                props.virtualized && 'p-1',
-                props.listboxClass,
-              )}
-              onScroll={handleListboxScroll}
-            >
-              {(items) => (
-                <Show when={props.virtualized}>
-                  <For each={Array.from(items())}>
-                    {(node) => (
-                      <Switch>
-                        <Match when={node.type === 'section'}>
-                          {props.sectionComponent({
-                            section: node as ComboboxRootSectionComponentProps<
-                              NormalizedGroup<TItems>
-                            >['section'],
-                          })}
-                        </Match>
-                        <Match when={node.type === 'item'}>
-                          {props.itemComponent({
-                            item: node as ComboboxRootItemComponentProps<
-                              NormalizedOption<TItems>
-                            >['item'],
-                          })}
-                        </Match>
-                      </Switch>
-                    )}
-                  </For>
-                </Show>
-              )}
-            </Combobox.Listbox>
-          </Show>
-        </Combobox.Content>
-      </Combobox.Portal>
-      <Combobox.HiddenSelect />
-    </>
   )
 }
