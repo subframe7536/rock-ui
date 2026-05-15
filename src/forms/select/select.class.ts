@@ -4,21 +4,18 @@ import { INPUT_VARIANT } from '../../shared/cva-common.class'
 import { cva } from '../../shared/utils'
 
 export const selectControlVariants = cva(
-  'text-foreground outline-none rounded-md flex w-full transition items-center focus-within:effect-fv-border data-invalid:effect-invalid data-disabled:effect-dis focus-within:data-invalid:effect-invalid',
+  'text-foreground outline-none rounded-md flex w-full transition items-center data-invalid:effect-invalid data-disabled:effect-dis',
   {
     defaultVariants: {
-      size: 'md',
       variant: 'outline',
     },
     variants: {
-      size: {
-        xs: 'pe-1',
-        sm: 'pe-1.5',
-        md: 'pe-2',
-        lg: 'pe-2.5',
-        xl: 'pe-3',
-      },
       variant: INPUT_VARIANT,
+      search: {
+        true: 'cursor-text focus-within:effect-fv-border focus-within:data-invalid:effect-invalid',
+        false:
+          'cursor-pointer focus-visible:effect-fv-border hover:bg-muted/40 focus-visible:data-invalid:effect-invalid',
+      },
     },
   },
 )
@@ -48,7 +45,7 @@ export const selectInputVariants = cva(
 )
 
 export const selectTriggerIconVariants = cva(
-  'text-muted-foreground me-0.5 outline-none opacity-80 cursor-pointer',
+  'text-muted-foreground me-2 outline-none opacity-80 cursor-pointer',
   {
     defaultVariants: {
       size: 'md',
@@ -80,24 +77,6 @@ export const selectLeadingIconVariants = cva('text-muted-foreground shrink-0', {
   },
 })
 
-export const selectClearVariants = cva(
-  'text-muted-foreground outline-none opacity-80 transition-opacity hover:opacity-100',
-  {
-    defaultVariants: {
-      size: 'md',
-    },
-    variants: {
-      size: {
-        xs: 'text-xs me-0.5',
-        sm: 'text-xs me-1',
-        md: 'text-sm me-1.5',
-        lg: 'text-sm me-2',
-        xl: 'text-base me-2.5',
-      },
-    },
-  },
-)
-
 export const selectItemVariants = cva(
   'py-1 pe-2 ps-3 outline-none rounded-sm flex gap-2 cursor-pointer items-center justify-between data-highlighted:(text-accent-foreground bg-accent) data-disabled:effect-dis',
   {
@@ -116,4 +95,5 @@ export const selectItemVariants = cva(
   },
 )
 
-export type SelectControlVariantProps = VariantProps<typeof selectControlVariants>
+export type SelectControlVariantProps = VariantProps<typeof selectControlVariants> &
+  VariantProps<typeof selectTriggerIconVariants>

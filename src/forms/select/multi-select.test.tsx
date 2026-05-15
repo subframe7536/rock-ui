@@ -228,11 +228,9 @@ describe('MultiSelect', () => {
   })
 
   test('opens dropdown and focuses combobox when control shell is clicked', async () => {
-    const screen = render(() => (
-      <MultiSelect options={FRUITS} leadingIcon="icon-search" placeholder="Pick fruits" />
-    ))
+    const screen = render(() => <MultiSelect options={FRUITS} placeholder="Pick fruits" />)
     const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
-    const combobox = screen.getByRole('combobox') as HTMLElement
+    const combobox = screen.container.querySelector('input[role="combobox"]') as HTMLElement
 
     await fireEvent.pointerDown(control, { button: 0 })
     await fireEvent.click(control)
@@ -242,6 +240,53 @@ describe('MultiSelect', () => {
     })
 
     expect(document.activeElement).toBe(combobox)
+  })
+
+  test('non-search control does not show focus ring on pointer click', async () => {
+    const screen = render(() => <MultiSelect options={FRUITS} placeholder="Pick fruits" />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    await fireEvent.pointerDown(control, { button: 0 })
+    await fireEvent.click(control)
+
+    expect(control.className).toContain('hover:bg-muted/40')
+    expect(control.className).toContain('focus-visible:effect-fv-border')
+    expect(control.className).not.toContain('focus-within:effect-fv-border')
+  })
+
+  test('searchable control keeps focus-within ring styling', () => {
+    const screen = render(() => <MultiSelect options={FRUITS} search placeholder="Pick fruits" />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    expect(control.className).toContain('focus-within:effect-fv-border')
+    expect(control.className).not.toContain('focus-visible:effect-fv-border')
+  })
+
+  test('after trigger click, ArrowDown selects the first option', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <MultiSelect options={FRUITS} onChange={onChange} />)
+    const trigger = screen.container.querySelector('[data-slot="trigger"]') as HTMLElement
+
+    await fireEvent.click(trigger)
+    await waitFor(() => {
+      expect(queryBody('[data-slot="content"]')).not.toBeNull()
+    })
+
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+    await fireEvent.keyDown(control, { key: 'ArrowDown' })
+    await fireEvent.keyDown(control, { key: 'Enter' })
+
+    expect(onChange).toHaveBeenCalledWith(['apple'])
+  })
+
+  test('renders non-search placeholder as presentation-only text', () => {
+    const screen = render(() => <MultiSelect options={FRUITS} placeholder="Pick fruits" />)
+
+    const input = screen.container.querySelector('[data-slot="input"]') as HTMLElement
+    expect(input.tagName).toBe('INPUT')
+    expect(input.getAttribute('readonly')).not.toBeNull()
+    expect(input.getAttribute('tabindex')).toBe('-1')
+    expect(screen.container.querySelector('[data-slot="control"]')).not.toBeNull()
   })
 
   test('when menu is open, Tab toggles focused item', async () => {
@@ -264,21 +309,66 @@ describe('MultiSelect', () => {
     })
     input.dispatchEvent(tabEvent)
 
-    expect(tabEvent.defaultPrevented).toBe(true)
+    expect(tabEvent.defaultPrevented).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  test('non-search Tab leaves the multi-select and does not select', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <>
+        <MultiSelect options={FRUITS} onChange={onChange} />
+        <button type="button">Next</button>
+      </>
+    ))
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+    const nextButton = screen.getByRole('button', { name: 'Next' })
+
+    control.focus()
+    await fireEvent.click(control)
+    await waitFor(() => {
+      expect(control.getAttribute('aria-expanded')).toBe('true')
+    })
+
+    await fireEvent.keyDown(control, { key: 'ArrowDown' })
+    const tabEvent = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      bubbles: true,
+      cancelable: true,
+    })
+    control.dispatchEvent(tabEvent)
+
+    expect(tabEvent.defaultPrevented).toBe(false)
+    nextButton.focus()
+    expect(document.activeElement).toBe(nextButton)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  test('space toggles the highlighted option when menu is open', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <MultiSelect options={FRUITS} onChange={onChange} />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    await fireEvent.click(control)
+    await waitFor(() => {
+      expect(control.getAttribute('aria-expanded')).toBe('true')
+    })
+
+    await fireEvent.keyDown(control, { key: 'ArrowDown' })
+    await fireEvent.keyDown(control, { key: ' ' })
+
     expect(onChange).toHaveBeenCalledWith(['apple'])
   })
 
-  test('passes enriched emptyRender context', async () => {
-    let capturedContext: MultiSelectT.EmptyRenderContext | undefined
+  test('passes null to optionRender for empty state', async () => {
+    let receivedEmptyOption = false
     const screen = render(() => (
       <MultiSelect
         search
         options={FRUITS}
-        defaultValue={['apple']}
         defaultOpen
-        maxCount={2}
-        emptyRender={(ctx) => {
-          capturedContext = ctx
+        optionRender={(option) => {
+          receivedEmptyOption = option === null
           return <div data-testid="empty">Empty</div>
         }}
       />
@@ -288,11 +378,8 @@ describe('MultiSelect', () => {
     await fireEvent.input(input, { target: { value: 'xyznonexistent' } })
 
     await waitFor(() => {
-      expect(capturedContext).toBeDefined()
-      expect(capturedContext?.hasMatches).toBe(false)
-      expect(capturedContext?.selectedValues).toEqual(['apple'])
-      expect(capturedContext?.isAtMaxCount).toBe(false)
-      expect(typeof capturedContext?.close).toBe('function')
+      expect(receivedEmptyOption).toBe(true)
+      expect(queryBody('[data-testid="empty"]')).not.toBeNull()
     })
   })
 
@@ -311,73 +398,6 @@ describe('MultiSelect', () => {
     })
   })
 
-  test('uses emptyRender context create() to add new tag', async () => {
-    const onChange = vi.fn()
-    const screen = render(() => (
-      <MultiSelect
-        search
-        allowCreate
-        options={FRUITS}
-        defaultOpen
-        onChange={onChange}
-        emptyRender={(context) => (
-          <button data-testid="create-from-empty" onClick={() => context.create()}>
-            Create {context.inputValue}
-          </button>
-        )}
-      />
-    ))
-
-    const input = screen.getByRole('combobox') as HTMLInputElement
-    await fireEvent.input(input, { target: { value: 'Dragonfruit' } })
-
-    await waitFor(() => {
-      expect(queryBody('[data-testid="create-from-empty"]')).not.toBeNull()
-    })
-    await fireEvent.click(queryBody('[data-testid="create-from-empty"]') as HTMLElement)
-
-    expect(onChange).toHaveBeenCalledWith(['Dragonfruit'])
-    expect(input.value).toBe('')
-  })
-
-  test('emptyRender context create() returns false when maxCount is reached', async () => {
-    const onChange = vi.fn()
-    let createResult: boolean | undefined
-    const screen = render(() => (
-      <MultiSelect
-        search
-        allowCreate
-        options={FRUITS}
-        defaultOpen
-        maxCount={1}
-        defaultValue={['apple']}
-        onChange={onChange}
-        emptyRender={(context) => (
-          <button
-            data-testid="create-from-empty"
-            onClick={() => {
-              createResult = context.create()
-            }}
-          >
-            Create {context.inputValue}
-          </button>
-        )}
-      />
-    ))
-
-    const input = screen.getByRole('combobox') as HTMLInputElement
-    await fireEvent.input(input, { target: { value: 'Dragonfruit' } })
-
-    await waitFor(() => {
-      expect(queryBody('[data-testid="create-from-empty"]')).not.toBeNull()
-    })
-    await fireEvent.click(queryBody('[data-testid="create-from-empty"]') as HTMLElement)
-
-    expect(createResult).toBe(false)
-    expect(onChange).not.toHaveBeenCalled()
-    expect(input.value).toBe('Dragonfruit')
-  })
-
   test('uses tagRender for custom tag rendering', () => {
     const screen = render(() => (
       <MultiSelect
@@ -393,30 +413,6 @@ describe('MultiSelect', () => {
     ))
 
     expect(screen.getByTestId('custom-tag')).not.toBeNull()
-  })
-
-  test('openOnClick=trigger keeps tags container click from opening dropdown', async () => {
-    const screen = render(() => (
-      <MultiSelect options={FRUITS} openOnClick="trigger" placeholder="Pick fruits" />
-    ))
-    const input = screen.getByRole('combobox') as HTMLInputElement
-    const control = screen.container.querySelector('[data-slot="control"]')
-    const tagsContainer = screen.container.querySelector('[data-slot="tagsContainer"]')
-    const trigger = screen.container.querySelector('[data-slot="trigger"]') as HTMLElement
-
-    expect(control?.className).toContain('cursor-default')
-    expect(control?.className).not.toContain('cursor-pointer')
-    expect(tagsContainer?.className).toContain('cursor-default')
-    expect(input.className).toContain('cursor-default')
-    expect(screen.container.querySelector('input[data-slot="input"]')).toBeNull()
-
-    await fireEvent.pointerDown(tagsContainer as HTMLElement, { button: 0 })
-    expect(queryBody('[data-slot="content"]')).toBeNull()
-
-    await fireEvent.click(trigger)
-    await waitFor(() => {
-      expect(queryBody('[data-slot="content"]')).not.toBeNull()
-    })
   })
 
   test('types onChange payload as array', () => {
@@ -452,6 +448,8 @@ describe('MultiSelect', () => {
       expect(state.fruits).toEqual(['apple', 'banana'])
     })
 
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+    await fireEvent.mouseEnter(control)
     const clearBtn = screen.container.querySelector('[data-slot="clear"]')
     expect(clearBtn).not.toBeNull()
     await fireEvent.click(clearBtn!)
@@ -479,6 +477,8 @@ describe('MultiSelect', () => {
       expect(state.fruits).toEqual(['apple'])
     })
 
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+    await fireEvent.mouseEnter(control)
     const clearBtn = screen.container.querySelector('[data-slot="clear"]')
     expect(clearBtn).not.toBeNull()
     await fireEvent.click(clearBtn!)
@@ -486,6 +486,18 @@ describe('MultiSelect', () => {
     await waitFor(() => {
       expect(state.fruits).toEqual([])
     })
+  })
+
+  test('shows clear action instead of loading icon when selection is not empty', () => {
+    const screen = render(() => (
+      <MultiSelect options={FRUITS} value={['apple']} loading allowClear placeholder="Pick" />
+    ))
+
+    const action = screen.container.querySelector('[data-slot="clear"]') as HTMLElement | null
+    expect(action).not.toBeNull()
+    expect(action?.getAttribute('aria-label')).toBe('Clear selection')
+    expect(action?.querySelector('[data-slot="icon"]')?.className).toContain('icon-close')
+    expect(action?.querySelector('[data-slot="icon"]')?.className).not.toContain('icon-loading')
   })
 })
 

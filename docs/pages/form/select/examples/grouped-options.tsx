@@ -22,7 +22,7 @@ export function GroupedOptions() {
   ]
 
   return (
-    <div class="max-w-sm">
+    <div class="w-80">
       <Select options={GROUPED_OPTIONS} placeholder="Pick an item..." />
     </div>
   )

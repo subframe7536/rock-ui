@@ -69,14 +69,6 @@ Non-interactive state.
 name: Disabled
 :::
 
-### Trigger-Only Open
-
-Only the trigger icon can open the dropdown menu.
-
-:::example
-name: TriggerOnlyOpen
-:::
-
 ### Searchable
 
 Type to filter options.

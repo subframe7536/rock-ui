@@ -115,6 +115,18 @@ describe('Select - single mode', () => {
     expect(trigger.textContent).toBe('Pick a fruit')
   })
 
+  test('renders non-search placeholder as presentation-only text', () => {
+    const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
+
+    const placeholder = screen.container.querySelector('[data-slot="input"]') as HTMLElement
+    expect(placeholder.tagName).toBe('SPAN')
+    expect(placeholder.getAttribute('role')).toBeNull()
+    expect(placeholder.getAttribute('tabindex')).toBeNull()
+    expect(placeholder.getAttribute('aria-controls')).toBeNull()
+    expect(placeholder.getAttribute('aria-expanded')).toBeNull()
+    expect(screen.getByRole('combobox')).toBe(placeholder.closest('[data-slot="control"]'))
+  })
+
   test('opens dropdown when combobox input is clicked', async () => {
     const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
     const input = screen.getByRole('combobox')
@@ -128,8 +140,28 @@ describe('Select - single mode', () => {
     })
   })
 
+  test('non-search control does not show focus ring on pointer click', async () => {
+    const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    await fireEvent.pointerDown(control, { button: 0 })
+    await fireEvent.click(control)
+
+    expect(control.className).toContain('hover:bg-muted/40')
+    expect(control.className).toContain('focus-visible:effect-fv-border')
+    expect(control.className).not.toContain('focus-within:effect-fv-border')
+  })
+
+  test('searchable control keeps focus-within ring styling', () => {
+    const screen = render(() => <Select options={FRUITS} search placeholder="Pick a fruit" />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    expect(control.className).toContain('focus-within:effect-fv-border')
+    expect(control.className).not.toContain('focus-visible:effect-fv-border')
+  })
+
   test('opens dropdown and focuses combobox when control shell is clicked', async () => {
-    const screen = render(() => <Select options={FRUITS} leadingIcon="icon-search" />)
+    const screen = render(() => <Select options={FRUITS} />)
     const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
     const combobox = screen.getByRole('combobox') as HTMLElement
 
@@ -170,34 +202,6 @@ describe('Select - single mode', () => {
     })
   })
 
-  test('restricts control click opening when openOnClick is trigger', async () => {
-    const screen = render(() => (
-      <Select options={FRUITS} openOnClick="trigger" placeholder="Pick a fruit" />
-    ))
-    const input = screen.getByRole('combobox')
-    const trigger = screen.container.querySelector('[data-slot="trigger"]') as HTMLElement
-
-    await fireEvent.click(input)
-    expect(queryBody('[data-slot="content"]')).toBeNull()
-
-    await fireEvent.click(trigger)
-    await waitFor(() => {
-      expect(queryBody('[data-slot="content"]')).not.toBeNull()
-    })
-  })
-
-  test('uses default cursor on control in trigger mode', () => {
-    const screen = render(() => (
-      <Select options={FRUITS} openOnClick="trigger" placeholder="Pick a fruit" />
-    ))
-    const input = screen.getByRole('combobox') as HTMLInputElement
-    const control = screen.container.querySelector('[data-slot="control"]')
-
-    expect(control?.className).toContain('cursor-default')
-    expect(control?.className).not.toContain('cursor-pointer')
-    expect(input.className).toContain('cursor-default')
-  })
-
   test('shows options when opened', () => {
     render(() => <Select options={FRUITS} defaultOpen placeholder="Pick" />)
 
@@ -234,13 +238,11 @@ describe('Select - single mode', () => {
     expect(cherryItem?.getAttribute('aria-disabled')).toBe('true')
   })
 
-  test('shows loading trigger icon while loading', () => {
-    const screen = render(() => <Select options={FRUITS} loading placeholder="Pick" />)
+  test('renders a plain trigger icon', () => {
+    const screen = render(() => <Select options={FRUITS} placeholder="Pick" />)
     const trigger = screen.container.querySelector('[data-slot="trigger"]')
-    const icon = trigger?.querySelector('[data-slot="icon"]')
 
-    expect(trigger?.hasAttribute('data-loading')).toBe(true)
-    expect(icon?.className).toContain('icon-loading')
+    expect(trigger?.className).toContain('icon-chevron-down')
   })
 })
 
@@ -331,114 +333,6 @@ describe('Select - search', () => {
       const items = queryAllBody('[data-slot="item"]')
       expect(items.length).toBe(1)
       expect(items[0]?.textContent).toContain('Banana')
-    })
-  })
-
-  test('opens menu when searchable input becomes non-empty in trigger-only mode', async () => {
-    const screen = render(() => (
-      <Select options={FRUITS} search openOnClick="trigger" placeholder="Search..." />
-    ))
-    const input = screen.getByRole('combobox') as HTMLInputElement
-
-    await fireEvent.click(input)
-    expect(input.getAttribute('aria-expanded')).toBe('false')
-
-    await fireEvent.input(input, {
-      target: { value: 'app' },
-      currentTarget: { value: 'app' },
-    })
-
-    await waitFor(() => {
-      expect(input.getAttribute('aria-expanded')).toBe('true')
-    })
-  })
-})
-
-describe('Select - clear', () => {
-  test('shows clear button when allowClear and value present', () => {
-    const screen = render(() => (
-      <Select options={FRUITS} value="apple" allowClear placeholder="Pick" />
-    ))
-
-    expect(screen.container.querySelector('[data-slot="clear"]')).not.toBeNull()
-  })
-
-  test('hides clear button when no value', () => {
-    const screen = render(() => <Select options={FRUITS} allowClear placeholder="Pick" />)
-
-    expect(screen.container.querySelector('[data-slot="clear"]')).toBeNull()
-  })
-
-  test('calls onClear when clear button is clicked', async () => {
-    const onClear = vi.fn()
-    const screen = render(() => (
-      <Select
-        options={FRUITS}
-        defaultValue="apple"
-        allowClear
-        onClear={onClear}
-        placeholder="Pick"
-      />
-    ))
-
-    const clearBtn = screen.container.querySelector('[data-slot="clear"]')
-    expect(clearBtn).not.toBeNull()
-    await fireEvent.click(clearBtn!)
-
-    expect(onClear).toHaveBeenCalledTimes(1)
-  })
-
-  test('clear resets bound form value to defaultValue when provided', async () => {
-    const state = { fruit: 'apple' }
-
-    const screen = render(() => (
-      <Form state={state} validate={() => []}>
-        <FormField name="fruit" label="Fruit">
-          <Select options={FRUITS} defaultValue="apple" allowClear defaultOpen placeholder="Pick" />
-        </FormField>
-      </Form>
-    ))
-
-    const items = queryAllBody('[data-slot="item"]')
-    await fireEvent.click(items[1]!)
-
-    await waitFor(() => {
-      expect(state.fruit).toBe('banana')
-    })
-
-    const clearBtn = screen.container.querySelector('[data-slot="clear"]')
-    expect(clearBtn).not.toBeNull()
-    await fireEvent.click(clearBtn!)
-
-    await waitFor(() => {
-      expect(state.fruit).toBe('apple')
-    })
-  })
-
-  test('clear resets bound form value to empty string when no defaultValue', async () => {
-    const state = { fruit: '' }
-
-    const screen = render(() => (
-      <Form state={state} validate={() => []}>
-        <FormField name="fruit" label="Fruit">
-          <Select options={FRUITS} allowClear defaultOpen placeholder="Pick" />
-        </FormField>
-      </Form>
-    ))
-
-    const items = queryAllBody('[data-slot="item"]')
-    await fireEvent.click(items[0]!)
-
-    await waitFor(() => {
-      expect(state.fruit).toBe('apple')
-    })
-
-    const clearBtn = screen.container.querySelector('[data-slot="clear"]')
-    expect(clearBtn).not.toBeNull()
-    await fireEvent.click(clearBtn!)
-
-    await waitFor(() => {
-      expect(state.fruit).toBe('')
     })
   })
 })
@@ -547,7 +441,7 @@ describe('Select - render hooks', () => {
       <Select
         options={FRUITS}
         defaultOpen
-        optionRender={(option) => <span data-testid="custom-option">{option.label} (custom)</span>}
+        optionRender={(option) => <span data-testid="custom-option">{option?.label} (custom)</span>}
         placeholder="Pick"
       />
     ))
@@ -566,27 +460,27 @@ describe('Select - render hooks', () => {
         defaultOpen
         optionRender={(props) => {
           renderCalls.push(props)
-          return <span data-testid="custom-option">{props.label}</span>
+          return <span data-testid="custom-option">{props?.label}</span>
         }}
         placeholder="Pick"
       />
     ))
 
-    const appleState = renderCalls.find((call) => call.value === 'apple')
+    const appleState = renderCalls.find((call) => call?.value === 'apple')
     expect(appleState).toBeDefined()
     expect(appleState?.isSelected).toBe(true)
   })
 })
 
 describe('Select - keyboard and ARIA', () => {
-  test('removes trigger icon from tab order', () => {
+  test('trigger icon is not interactive', () => {
     const screen = render(() => <Select options={FRUITS} placeholder="Pick" />)
     const trigger = screen.container.querySelector('[data-slot="trigger"]')
 
-    expect(trigger?.getAttribute('tabindex')).toBe('-1')
+    expect(trigger?.getAttribute('aria-hidden')).toBe('true')
   })
 
-  test('when menu is open, first Tab selects focused single item and keeps focus', async () => {
+  test('when menu is open, Space selects focused single item and keeps focus', async () => {
     const onChange = vi.fn()
     const screen = render(() => (
       <>
@@ -604,14 +498,7 @@ describe('Select - keyboard and ARIA', () => {
 
     await fireEvent.keyDown(input, { key: 'ArrowDown' })
 
-    const firstTabEvent = new KeyboardEvent('keydown', {
-      key: 'Tab',
-      bubbles: true,
-      cancelable: true,
-    })
-    input.dispatchEvent(firstTabEvent)
-
-    expect(firstTabEvent.defaultPrevented).toBe(true)
+    await fireEvent.keyDown(input, { key: ' ' })
 
     await waitFor(() => {
       expect(input.getAttribute('aria-expanded')).toBe('false')
@@ -619,15 +506,6 @@ describe('Select - keyboard and ARIA', () => {
 
     expect(document.activeElement).toBe(input)
     expect(onChange).toHaveBeenCalledWith('apple')
-
-    const secondTabEvent = new KeyboardEvent('keydown', {
-      key: 'Tab',
-      bubbles: true,
-      cancelable: true,
-    })
-    input.dispatchEvent(secondTabEvent)
-
-    expect(secondTabEvent.defaultPrevented).toBe(false)
   })
 
   test('does not prevent Tab when menu is closed', () => {
@@ -768,14 +646,22 @@ describe('Select - form integration', () => {
   })
 })
 
-describe('Select - emptyRender string', () => {
-  test('renders string emptyRender as empty state text', async () => {
+describe('Select - empty state', () => {
+  test('renders optionRender null as empty state', async () => {
     const screen = render(() => (
       <Select
         options={FRUITS}
         search
         defaultOpen
-        emptyRender="Nothing here!"
+        optionRender={(option) =>
+          option ? (
+            <span>{option.label}</span>
+          ) : (
+            <div data-slot="empty" data-testid="custom-empty">
+              Nothing here!
+            </div>
+          )
+        }
         placeholder="Search..."
       />
     ))
@@ -784,13 +670,13 @@ describe('Select - emptyRender string', () => {
     await fireEvent.input(input, { target: { value: 'zzzzz' } })
 
     await waitFor(() => {
-      const emptyEl = queryBody('[data-slot="empty"]')
+      const emptyEl = queryBody('[data-testid="custom-empty"]')
       expect(emptyEl).not.toBeNull()
       expect(emptyEl?.textContent).toBe('Nothing here!')
     })
   })
 
-  test('renders default "No options" text when emptyRender is not provided', async () => {
+  test('renders default "No options" text when optionRender does not handle empty state', async () => {
     const screen = render(() => (
       <Select options={FRUITS} search defaultOpen placeholder="Search..." />
     ))
@@ -804,42 +690,18 @@ describe('Select - emptyRender string', () => {
       expect(emptyEl?.textContent).toBe('No options')
     })
   })
-})
-
-describe('Select - enriched emptyRender context', () => {
-  test('close from emptyRender context closes dropdown content', async () => {
+  test('clears unmatched searchable input when dismissed', async () => {
     const screen = render(() => (
-      <Select
-        search
-        options={FRUITS}
-        defaultOpen
-        emptyRender={(ctx) => (
-          <button data-testid="close-from-empty" onClick={() => ctx.close()}>
-            Close
-          </button>
-        )}
-        placeholder="Search..."
-      />
+      <Select search options={FRUITS} defaultOpen placeholder="Search..." />
     ))
 
     const input = screen.getByRole('combobox') as HTMLInputElement
     await fireEvent.input(input, { target: { value: 'zzzzz' } })
-
-    await waitFor(() => {
-      expect(queryBody('[data-testid="close-from-empty"]')).not.toBeNull()
-    })
-
-    await fireEvent.click(queryBody('[data-testid="close-from-empty"]') as HTMLElement)
+    await fireEvent.keyDown(input, { key: 'Escape' })
 
     await waitFor(() => {
       expect(input.getAttribute('aria-expanded')).toBe('false')
-      expect(queryBody('[data-slot="content"]')?.getAttribute('data-closed')).toBe('')
-    })
-
-    await finishSelectExitMotion()
-
-    await waitFor(() => {
-      expect(queryBody('[data-slot="content"]')).toBeNull()
+      expect(input.value).toBe('')
     })
   })
 })
@@ -869,7 +731,9 @@ describe('Select - popup behavior', () => {
   })
 
   test('uses shared menu transition classes and configurable overflow padding', async () => {
-    render(() => <Select options={FRUITS} defaultOpen overflowPadding={12} placeholder="Pick" />)
+    render(() => (
+      <Select options={FRUITS} defaultOpen gutter={6} overflowPadding={12} placeholder="Pick" />
+    ))
 
     await waitFor(() => {
       expect(queryBody('[data-slot="content"]')).not.toBeNull()

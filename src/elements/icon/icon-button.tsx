@@ -89,6 +89,7 @@ export function IconButton(props: IconButtonProps): JSX.Element {
       disabled={isLoading() || local.disabled}
       onClick={onClick}
       {...rest}
+      aria-label={isLoading() ? 'Loading' : rest['aria-label']}
     >
       <Icon
         data-loading={isLoading() ? '' : undefined}

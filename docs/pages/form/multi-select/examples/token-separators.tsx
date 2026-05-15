@@ -1,9 +1,9 @@
 import { MultiSelect } from '@src'
-import type { SelectT, MultiSelectT } from '@src'
+import type { MultiSelectT } from '@src'
 import { createSignal } from 'solid-js'
 
 export function TokenSeparators() {
-  const FRUIT_OPTIONS: SelectT.Item[] = [
+  const FRUIT_OPTIONS: MultiSelectT.Item[] = [
     { label: 'Apple', value: 'apple' },
     { label: 'Banana', value: 'banana' },
     { label: 'Cherry', value: 'cherry' },
@@ -15,7 +15,7 @@ export function TokenSeparators() {
   const [tagValues, setTagValues] = createSignal<MultiSelectT.Value[]>([])
 
   return (
-    <div class="max-w-sm space-y-2">
+    <div class="w-80 space-y-2">
       <MultiSelect
         search
         options={FRUIT_OPTIONS}

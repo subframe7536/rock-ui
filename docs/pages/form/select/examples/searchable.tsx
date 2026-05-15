@@ -12,7 +12,7 @@ export function Searchable() {
   ]
 
   return (
-    <div class="max-w-sm">
+    <div class="w-80">
       <Select
         options={FRUIT_OPTIONS}
         search

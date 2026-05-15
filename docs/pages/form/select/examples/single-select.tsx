@@ -15,13 +15,12 @@ export function SingleSelect() {
   const [singleValue, setSingleValue] = createSignal<SelectT.Value | null>(null)
 
   return (
-    <div class="max-w-sm space-y-2">
+    <div class="w-80 space-y-2">
       <Select
         options={FRUIT_OPTIONS}
         value={singleValue()}
         onChange={setSingleValue}
         placeholder="Pick a fruit..."
-        allowClear
       />
       <p class="text-xs text-muted-foreground">Selected: {singleValue() ?? 'none'}</p>
     </div>

@@ -41,7 +41,7 @@ content (portal)
 
 ### Multiple Select
 
-Multi-selection with chips and allowClear.
+Multiple selection with tags and `allowClear`.
 
 :::example
 name: MultipleSelect

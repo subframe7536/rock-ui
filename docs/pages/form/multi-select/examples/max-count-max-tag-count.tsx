@@ -1,8 +1,8 @@
 import { MultiSelect } from '@src'
-import type { SelectT } from '@src'
+import type { MultiSelectT } from '@src'
 
 export function MaxCountMaxTagCount() {
-  const FRUIT_OPTIONS: SelectT.Item[] = [
+  const FRUIT_OPTIONS: MultiSelectT.Item[] = [
     { label: 'Apple', value: 'apple' },
     { label: 'Banana', value: 'banana' },
     { label: 'Cherry', value: 'cherry' },
@@ -12,7 +12,7 @@ export function MaxCountMaxTagCount() {
   ]
 
   return (
-    <div class="gap-4 grid sm:grid-cols-2">
+    <div class="w-[42rem] gap-4 grid sm:grid-cols-2">
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground block">maxCount=2</label>
         <MultiSelect options={FRUIT_OPTIONS} maxCount={2} placeholder="Pick up to 2..." />

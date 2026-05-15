@@ -4,7 +4,6 @@ import type { Accessor } from 'solid-js'
 import { useId } from '../../../shared/utils'
 import { useFormField } from '../../form-field/form-field-context'
 import type { FormFieldSize, UseFormFieldReturn } from '../../form-field/form-field-context'
-import type { FormInputEventType } from '../../form/form-context'
 
 import type {
   BaseSelectItems,
@@ -24,7 +23,7 @@ interface UseSelectFieldProps {
 }
 
 interface UseSelectFieldReturn extends UseFormFieldReturn {
-  handleClear: (clearFn: () => void, onClear?: () => void) => void
+  handleClear: (clearFn: VoidFunction | undefined, onClear?: VoidFunction) => void
 }
 
 interface UseSelectFilterProps<TOption extends SelectFilterableOption<TRaw>, TRaw> {
@@ -32,13 +31,6 @@ interface UseSelectFilterProps<TOption extends SelectFilterableOption<TRaw>, TRa
   filterOption: () => SelectFilterOption<TRaw> | undefined
   allOptions: () => TOption[]
   inputValue: () => string
-}
-
-export interface SelectSelectionManager {
-  focusedKey: () => string | undefined
-  isDisabled: (key: string) => boolean
-  select: (key: string) => void
-  toggleSelection: (key: string) => void
 }
 
 /**
@@ -66,8 +58,8 @@ export function useSelectField(props: () => UseSelectFieldProps): UseSelectField
     }),
   )
 
-  function handleClear(clearFn: () => void, onClear?: () => void): void {
-    clearFn()
+  function handleClear(clearFn: VoidFunction | undefined, onClear?: VoidFunction): void {
+    clearFn?.()
     field.setFormValue(props().initialValue)
     onClear?.()
     field.emit('change')
@@ -84,14 +76,11 @@ export function useSelectField(props: () => UseSelectFieldProps): UseSelectField
  * Shared open/close control logic for select-like dropdown menus.
  */
 export function useSelectMenuControl(options: {
-  close: () => void
+  close: VoidFunction
   isOpen: Accessor<boolean>
-  mode: Accessor<'control' | 'trigger'>
-  open: () => void
+  open: VoidFunction
 }) {
   const [isDismissing, setIsDismissing] = createSignal(false)
-
-  const opensFromControlClick = createMemo(() => options.mode() !== 'trigger')
 
   function markDismissing() {
     setIsDismissing(true)
@@ -115,12 +104,6 @@ export function useSelectMenuControl(options: {
     options.open()
   }
 
-  function onTriggerClickFallback(event: MouseEvent) {
-    if (!(event.currentTarget as HTMLElement).dataset.pointerType) {
-      toggleMenu()
-    }
-  }
-
   function onContentInteractOutside() {
     markDismissing()
   }
@@ -129,9 +112,7 @@ export function useSelectMenuControl(options: {
     isDismissing,
     markDismissing,
     onContentInteractOutside,
-    onTriggerClickFallback,
     openMenu,
-    opensFromControlClick,
     toggleMenu,
   }
 }
@@ -304,61 +285,6 @@ export function useSelectFilter<TOption extends SelectFilterableOption<TRaw>, TR
   return {
     kobalteFilter,
     hasMatches,
-  }
-}
-
-interface ComboboxInputHandlerDeps {
-  isSearchable: () => boolean
-  menuControl: ReturnType<typeof useSelectMenuControl>
-  field: { emit: (event: FormInputEventType) => void }
-  isOpen: () => boolean
-  selectionManager: () => SelectSelectionManager
-  onTabSelection: (focusedKey: string) => void
-  onExtraKeyDown?: (e: KeyboardEvent) => void
-}
-
-/**
- * Returns the shared input handlers used by both Select and MultiSelect.
- */
-export function createComboboxInputHandlers(deps: ComboboxInputHandlerDeps) {
-  return {
-    onInput: (event: InputEvent): void => {
-      if (!deps.isSearchable()) {
-        return
-      }
-
-      const nextValue = (event.currentTarget as HTMLInputElement).value
-      if (nextValue.trim() !== '') {
-        deps.menuControl.openMenu()
-      }
-    },
-    onKeyDown: (e: KeyboardEvent): void => {
-      if (e.key === 'Escape' || (e.key === 'Tab' && deps.isOpen())) {
-        deps.menuControl.markDismissing()
-      }
-
-      if (e.key === 'Tab') {
-        if (deps.isOpen()) {
-          const selectionManager = deps.selectionManager()
-          const focusedKey = selectionManager.focusedKey()
-
-          if (focusedKey && !selectionManager.isDisabled(focusedKey)) {
-            deps.onTabSelection(focusedKey)
-          }
-
-          e.preventDefault()
-        }
-        return
-      }
-
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault()
-      }
-
-      deps.onExtraKeyDown?.(e)
-    },
-    onFocus: (): void => deps.field.emit('focus'),
-    onBlur: (): void => deps.field.emit('blur'),
   }
 }
 

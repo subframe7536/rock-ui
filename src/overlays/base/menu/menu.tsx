@@ -1051,11 +1051,6 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     <div
       ref={(element) => {
         setPositionerElement(element)
-
-        if (!element) {
-          return
-        }
-
         element.style.position = 'fixed'
         element.style.left = '0'
         element.style.top = '0'

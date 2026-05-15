@@ -15,7 +15,7 @@ export function InfiniteScroll() {
   const [loadingMore, setLoadingMore] = createSignal(false)
 
   return (
-    <div class="max-w-sm space-y-2">
+    <div class="w-80 space-y-2">
       <Select
         options={infiniteOptions()}
         classes={{
