@@ -39,6 +39,19 @@ function queryAllBody(selector: string): NodeListOf<Element> {
   return document.body.querySelectorAll(selector)
 }
 
+async function finishSelectExitMotion(): Promise<void> {
+  const contents = Array.from(
+    document.body.querySelectorAll('[data-slot="content"]'),
+  ) as HTMLElement[]
+
+  await Promise.all(
+    contents.map(async (content) => {
+      await fireEvent.animationEnd(content)
+      await fireEvent.transitionEnd(content)
+    }),
+  )
+}
+
 test('single Select does not accept multiple prop at type level', () => {
   // @ts-expect-error Select is single-only and should not accept `multiple`
   const node = <Select options={FRUITS} multiple />
@@ -97,9 +110,9 @@ describe('Select - single mode', () => {
   test('renders with placeholder', () => {
     const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
 
-    const input = screen.getByRole('combobox')
-    expect(input).not.toBeNull()
-    expect(input.getAttribute('placeholder')).toBe('Pick a fruit')
+    const trigger = screen.getByRole('combobox')
+    expect(trigger).not.toBeNull()
+    expect(trigger.textContent).toBe('Pick a fruit')
   })
 
   test('opens dropdown when combobox input is clicked', async () => {
@@ -113,6 +126,21 @@ describe('Select - single mode', () => {
     await waitFor(() => {
       expect(queryBody('[data-slot="content"]')).not.toBeNull()
     })
+  })
+
+  test('opens dropdown and focuses combobox when control shell is clicked', async () => {
+    const screen = render(() => <Select options={FRUITS} leadingIcon="icon-search" />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+    const combobox = screen.getByRole('combobox') as HTMLElement
+
+    await fireEvent.pointerDown(control, { button: 0 })
+    await fireEvent.click(control)
+
+    await waitFor(() => {
+      expect(queryBody('[data-slot="content"]')).not.toBeNull()
+    })
+
+    expect(document.activeElement).toBe(combobox)
   })
 
   test('opens dropdown when trigger icon is clicked', async () => {
@@ -167,7 +195,7 @@ describe('Select - single mode', () => {
 
     expect(control?.className).toContain('cursor-default')
     expect(control?.className).not.toContain('cursor-pointer')
-    expect(input.className).toContain('data-readonly:cursor-default')
+    expect(input.className).toContain('cursor-default')
   })
 
   test('shows options when opened', () => {
@@ -194,8 +222,8 @@ describe('Select - single mode', () => {
   test('keeps controlled value until parent updates', () => {
     const screen = render(() => <Select options={FRUITS} value="apple" placeholder="Pick" />)
 
-    const input = screen.getByRole('combobox') as HTMLInputElement
-    expect(input.value).toBe('Apple')
+    const trigger = screen.getByRole('combobox')
+    expect(trigger.textContent).toBe('Apple')
   })
 
   test('marks disabled options with aria-disabled', () => {
@@ -217,11 +245,11 @@ describe('Select - single mode', () => {
 })
 
 describe('Select - search', () => {
-  test('input is readonly when showSearch is false', () => {
+  test('does not render input when showSearch is false', () => {
     const screen = render(() => <Select options={FRUITS} search={false} placeholder="Pick" />)
 
-    const input = screen.getByRole('combobox') as HTMLInputElement
-    expect(input.hasAttribute('readonly')).toBe(true)
+    expect(screen.getByRole('combobox')).not.toBeNull()
+    expect(screen.container.querySelector('input[data-slot="input"]')).toBeNull()
   })
 
   test('input is editable when showSearch is true', () => {
@@ -636,8 +664,8 @@ describe('Select - keyboard and ARIA', () => {
     expect(input.getAttribute('aria-expanded')).toBe('true')
   })
 
-  test('input has combobox aria attributes', () => {
-    const screen = render(() => <Select options={FRUITS} placeholder="Pick" />)
+  test('input has combobox aria attributes when searchable', () => {
+    const screen = render(() => <Select options={FRUITS} search placeholder="Pick" />)
 
     const input = screen.getByRole('combobox')
     expect(input.getAttribute('aria-haspopup')).toBe('listbox')
@@ -805,7 +833,71 @@ describe('Select - enriched emptyRender context', () => {
 
     await waitFor(() => {
       expect(input.getAttribute('aria-expanded')).toBe('false')
+      expect(queryBody('[data-slot="content"]')?.getAttribute('data-closed')).toBe('')
+    })
+
+    await finishSelectExitMotion()
+
+    await waitFor(() => {
       expect(queryBody('[data-slot="content"]')).toBeNull()
+    })
+  })
+})
+
+describe('Select - popup behavior', () => {
+  test('keeps content mounted with closed data attrs until exit motion finishes', async () => {
+    const screen = render(() => <Select options={FRUITS} search defaultOpen placeholder="Pick" />)
+    const input = screen.getByRole('combobox')
+
+    await waitFor(() => {
+      expect(queryBody('[data-slot="content"]')).not.toBeNull()
+    })
+
+    await fireEvent.keyDown(input, { key: 'Escape' })
+
+    await waitFor(() => {
+      const content = queryBody('[data-slot="content"]')
+      expect(content).not.toBeNull()
+      expect(content?.getAttribute('data-closed')).toBe('')
+    })
+
+    await finishSelectExitMotion()
+
+    await waitFor(() => {
+      expect(queryBody('[data-slot="content"]')).toBeNull()
+    })
+  })
+
+  test('uses shared menu transition classes and configurable overflow padding', async () => {
+    render(() => <Select options={FRUITS} defaultOpen overflowPadding={12} placeholder="Pick" />)
+
+    await waitFor(() => {
+      expect(queryBody('[data-slot="content"]')).not.toBeNull()
+    })
+
+    const content = queryBody('[data-slot="content"]') as HTMLElement
+    expect(content.className).toContain('data-expanded:animate-menu-in')
+    expect(content.className).toContain('data-closed:animate-menu-out')
+    expect(content.className).toContain('animate-menu-side-bottom')
+
+    await waitFor(() => {
+      expect(content.style.getPropertyValue('--mo-popper-content-overflow-padding')).toBe('12px')
+    })
+  })
+
+  test('syncs positioner z-index from popup content style', async () => {
+    render(() => (
+      <Select
+        options={FRUITS}
+        defaultOpen
+        styles={{ content: { 'z-index': 70 } }}
+        placeholder="Pick"
+      />
+    ))
+
+    await waitFor(() => {
+      const positioner = queryBody('[data-slot="positioner"]') as HTMLElement | null
+      expect(positioner?.style.zIndex).toBe('70')
     })
   })
 })

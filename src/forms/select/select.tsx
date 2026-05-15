@@ -187,6 +187,8 @@ export namespace SelectT {
     onScrollBottom?: () => void
     /** Distance (px) from the bottom at which onScrollBottom fires. Default: 20. */
     scrollBottomThreshold?: number
+    /** Padding (px) used when calculating popup overflow and viewport collision. Default: 4. */
+    overflowPadding?: number
   }
 
   export interface Props<TItem extends Value = Value> extends BaseProps<
@@ -220,7 +222,6 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     initialValue:
       local.defaultValue === null || local.defaultValue === undefined ? '' : local.defaultValue,
   }))
-  const menuControl = useSelectMenuControl(() => local.openOnClick)
   const isSearchable = createMemo(() => Boolean(local.search))
 
   const normalizedOptions = createMemo(() =>
@@ -237,8 +238,15 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     value: () => local.open,
     defaultValue: () => local.defaultOpen ?? false,
   })
+  const menuControl = useSelectMenuControl({
+    close: closeMenu,
+    isOpen: () => Boolean(open()),
+    mode: () => local.openOnClick,
+    open: () => setMenuOpen(true),
+  })
 
   let controlRef: HTMLDivElement | undefined
+  let comboboxRef: HTMLInputElement | HTMLButtonElement | undefined
   let inputRef: HTMLInputElement | undefined
 
   const [currentInputText, setCurrentInputText] = createSignal(local.defaultSearchValue ?? '')
@@ -339,7 +347,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     }
     handleSingleChange(option)
     closeMenu()
-    queueMicrotask(() => inputRef?.focus())
+    queueMicrotask(() => comboboxRef?.focus())
   }
 
   function clearSelection(): void {
@@ -375,20 +383,12 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     },
   }
 
-  const context = {
-    close: closeMenu,
-    isOpen: () => Boolean(open()),
-    listState: () => ({
-      selectionManager: () => selectionManager,
-    }),
-    open: () => setMenuOpen(true),
-  }
-
   const inputHandlers = createComboboxInputHandlers({
     isSearchable,
     menuControl,
     field,
-    context,
+    isOpen: () => Boolean(open()),
+    selectionManager: () => selectionManager,
     onTabSelection: (key) => selectionManager.select(key),
     onExtraKeyDown: (event) => {
       if (event.key === 'ArrowDown') {
@@ -467,6 +467,23 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     return typeof selected?.label === 'string' ? selected.label : (selected?.key ?? '')
   })
 
+  function handleControlPointerDown(event: PointerEvent): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
+    }
+
+    event.preventDefault()
+    comboboxRef?.focus()
+  }
+
+  function handleControlClick(): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
+    }
+
+    menuControl.toggleMenu()
+  }
+
   return (
     <div
       style={merged.styles?.root}
@@ -480,6 +497,8 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
         style={merged.styles?.control}
         data-invalid={field.invalid() ? '' : undefined}
         data-disabled={field.disabled() ? '' : undefined}
+        onPointerDown={handleControlPointerDown}
+        onClick={handleControlClick}
         class={selectControlVariants(
           {
             size: field.size(),
@@ -501,49 +520,84 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
           )}
         </Show>
 
-        <input
-          ref={(el) => {
-            inputRef = el
-          }}
-          id={field.id()}
-          role="combobox"
-          aria-controls={listboxId()}
-          aria-expanded={open() ? 'true' : 'false'}
-          aria-haspopup="listbox"
-          aria-autocomplete="list"
-          aria-activedescendant={
-            highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+        <Show
+          when={isSearchable()}
+          fallback={
+            <button
+              ref={(el) => {
+                comboboxRef = el
+              }}
+              id={field.id()}
+              type="button"
+              role="combobox"
+              aria-controls={listboxId()}
+              aria-expanded={open() ? 'true' : 'false'}
+              aria-haspopup="listbox"
+              aria-activedescendant={
+                highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+              }
+              data-slot="input"
+              style={merged.styles?.input}
+              class={selectInputVariants(
+                {
+                  mode: 'single',
+                  size: field.size(),
+                },
+                'text-start truncate',
+                menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+                local.classes?.input,
+              )}
+              disabled={field.disabled()}
+              aria-invalid={field.invalid() ? 'true' : undefined}
+              onKeyDown={inputHandlers.onKeyDown}
+              onFocus={inputHandlers.onFocus}
+              onBlur={inputHandlers.onBlur}
+              {...field.ariaAttrs()}
+            >
+              {displayInputValue() || local.placeholder}
+            </button>
           }
-          data-slot="input"
-          data-readonly={!isSearchable()}
-          style={merged.styles?.input}
-          class={selectInputVariants(
-            {
-              mode: 'single',
-              size: field.size(),
-            },
-            menuControl.opensFromControlClick()
-              ? 'data-readonly:cursor-pointer'
-              : 'data-readonly:cursor-default',
-            local.classes?.input,
-          )}
-          readOnly={!isSearchable()}
-          maxLength={local.searchMaxLength}
-          placeholder={local.placeholder}
-          value={displayInputValue()}
-          disabled={field.disabled()}
-          required={local.required}
-          aria-invalid={field.invalid() ? 'true' : undefined}
-          onInput={(event) => {
-            handleInputChange(event.currentTarget.value)
-            inputHandlers.onInput(event)
-          }}
-          onClick={inputHandlers.onClick}
-          onKeyDown={inputHandlers.onKeyDown}
-          onFocus={inputHandlers.onFocus}
-          onBlur={inputHandlers.onBlur}
-          {...field.ariaAttrs()}
-        />
+        >
+          <input
+            ref={(el) => {
+              comboboxRef = el
+              inputRef = el
+            }}
+            id={field.id()}
+            role="combobox"
+            aria-controls={listboxId()}
+            aria-expanded={open() ? 'true' : 'false'}
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={
+              highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+            }
+            data-slot="input"
+            style={merged.styles?.input}
+            class={selectInputVariants(
+              {
+                mode: 'single',
+                size: field.size(),
+              },
+              menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+              local.classes?.input,
+            )}
+            maxLength={local.searchMaxLength}
+            placeholder={local.placeholder}
+            value={displayInputValue()}
+            disabled={field.disabled()}
+            required={local.required}
+            aria-invalid={field.invalid() ? 'true' : undefined}
+            onInput={(event) => {
+              handleInputChange(event.currentTarget.value)
+              inputHandlers.onInput(event)
+            }}
+            onKeyDown={inputHandlers.onKeyDown}
+            onFocus={inputHandlers.onFocus}
+            onBlur={inputHandlers.onBlur}
+            {...field.ariaAttrs()}
+          />
+        </Show>
 
         <RenderSelectClearButton
           show={Boolean(local.allowClear && selectedOption())}
@@ -563,7 +617,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
           rootClass={selectTriggerIconVariants({ size: field.size() }, local.classes?.trigger)}
           loading={local.loading}
           loadingIcon={local.loadingIcon}
-          onClick={(event) => menuControl.onTriggerClickFallback(event, context)}
+          onClick={(event) => menuControl.onTriggerClickFallback(event)}
         />
       </div>
 
@@ -578,6 +632,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
         onClose={closeMenu}
         onInteractOutside={menuControl.onContentInteractOutside}
         onListboxScrollBottom={local.onScrollBottom}
+        overflowPadding={local.overflowPadding}
         scrollBottomThreshold={local.scrollBottomThreshold}
       >
         <Show

@@ -61,6 +61,7 @@ export const SELECT_SPLIT_KEYS = [
   'virtualized',
   'onScrollBottom',
   'scrollBottomThreshold',
+  'overflowPadding',
   'options',
   'optionRender',
   'labelRender',

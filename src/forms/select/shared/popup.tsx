@@ -1,4 +1,4 @@
-import { Show, createSignal } from 'solid-js'
+import { Show, createEffect, createSignal } from 'solid-js'
 import type { Accessor, JSX } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
@@ -7,6 +7,7 @@ import {
   useOverlayMenuDismiss,
   useOverlayMenuFloatingPosition,
 } from '../../../overlays/base/menu'
+import { useTransitionPresence } from '../../../shared/use-transition-presence'
 import { cn } from '../../../shared/utils'
 
 export interface SelectPopupProps {
@@ -20,6 +21,7 @@ export interface SelectPopupProps {
   onInteractOutside?: () => void
   onListboxScrollBottom?: () => void
   open: boolean
+  overflowPadding?: number
   scrollBottomThreshold?: number
   children: JSX.Element
 }
@@ -29,6 +31,10 @@ export function SelectPopup(props: SelectPopupProps): JSX.Element {
     undefined,
   )
   const [contentElement, setContentElement] = createSignal<HTMLDivElement | undefined>(undefined)
+  const contentPresence = useTransitionPresence({
+    open: () => props.open,
+    mode: () => 'both',
+  })
   let hasReachedScrollBottom = false
 
   useOverlayMenuFloatingPosition({
@@ -39,8 +45,29 @@ export function SelectPopup(props: SelectPopupProps): JSX.Element {
     onPositionedChange: () => undefined,
     onPlacementChange: () => undefined,
     open: () => props.open,
-    overflowPadding: () => -2,
+    overflowPadding: () => props.overflowPadding ?? 4,
     placement: () => 'bottom-start',
+  })
+
+  createEffect(() => {
+    if (contentPresence.present()) {
+      return
+    }
+
+    contentPresence.setElement(undefined)
+  })
+
+  createEffect(() => {
+    const positioner = positionerElement()
+    const content = contentElement()
+
+    if (!positioner || !content) {
+      return
+    }
+
+    queueMicrotask(() => {
+      positioner.style.zIndex = getComputedStyle(content).zIndex
+    })
   })
 
   useOverlayMenuDismiss({
@@ -77,18 +104,32 @@ export function SelectPopup(props: SelectPopupProps): JSX.Element {
   }
 
   return (
-    <Show when={props.open}>
+    <Show when={contentPresence.present()}>
       <Portal>
         <div
-          ref={setPositionerElement}
-          style={{ position: 'fixed', visibility: 'hidden', 'z-index': 50 }}
+          ref={(element) => {
+            setPositionerElement(element)
+
+            if (!element) {
+              return
+            }
+
+            element.style.position = 'fixed'
+            element.style.visibility = 'hidden'
+          }}
+          data-slot="positioner"
+          class="left-0 top-0 fixed"
         >
           <div
-            ref={setContentElement}
+            {...contentPresence.dataAttrs()}
+            ref={(element) => {
+              setContentElement(element)
+              contentPresence.setElement(element)
+            }}
             data-slot="content"
             style={props.contentStyle}
             class={overlayMenuContentVariants(
-              {},
+              { side: 'bottom' },
               'w-$mo-popper-anchor-width min-w-$mo-popper-anchor-width max-w-$mo-popper-content-available-width',
               props.contentClass,
             )}

@@ -41,15 +41,6 @@ export interface SelectSelectionManager {
   toggleSelection: (key: string) => void
 }
 
-export interface SelectMenuContext {
-  close: () => void
-  isOpen: () => boolean
-  listState: () => {
-    selectionManager: () => SelectSelectionManager
-  }
-  open: () => void
-}
-
 /**
  * Shared form-field bridge for select-like controls.
  */
@@ -92,10 +83,15 @@ export function useSelectField(props: () => UseSelectFieldProps): UseSelectField
 /**
  * Shared open/close control logic for select-like dropdown menus.
  */
-export function useSelectMenuControl(mode: Accessor<'control' | 'trigger'>) {
+export function useSelectMenuControl(options: {
+  close: () => void
+  isOpen: Accessor<boolean>
+  mode: Accessor<'control' | 'trigger'>
+  open: () => void
+}) {
   const [isDismissing, setIsDismissing] = createSignal(false)
 
-  const opensFromControlClick = createMemo(() => mode() !== 'trigger')
+  const opensFromControlClick = createMemo(() => options.mode() !== 'trigger')
 
   function markDismissing() {
     setIsDismissing(true)
@@ -104,17 +100,24 @@ export function useSelectMenuControl(mode: Accessor<'control' | 'trigger'>) {
     })
   }
 
-  function openMenu(context: Pick<SelectMenuContext, 'isOpen' | 'open'>, fail?: () => void) {
-    if (!context.isOpen()) {
-      context.open()
-    } else {
-      fail?.()
+  function openMenu() {
+    if (!options.isOpen()) {
+      options.open()
     }
   }
 
-  function onTriggerClickFallback(event: MouseEvent, context: SelectMenuContext) {
+  function toggleMenu() {
+    if (options.isOpen()) {
+      options.close()
+      return
+    }
+
+    options.open()
+  }
+
+  function onTriggerClickFallback(event: MouseEvent) {
     if (!(event.currentTarget as HTMLElement).dataset.pointerType) {
-      openMenu(context, () => context.close())
+      toggleMenu()
     }
   }
 
@@ -122,16 +125,14 @@ export function useSelectMenuControl(mode: Accessor<'control' | 'trigger'>) {
     markDismissing()
   }
 
-  function onContentCloseAutoFocus(_event: Event) {}
-
   return {
     isDismissing,
     markDismissing,
-    onContentCloseAutoFocus,
     onContentInteractOutside,
     onTriggerClickFallback,
     openMenu,
     opensFromControlClick,
+    toggleMenu,
   }
 }
 
@@ -217,11 +218,12 @@ export function createFindOptionByValue<TItems>(
     allFlatOptions().find((option) => option.value === String(val))
 }
 
-const SELECT_FILTER_STRATEGIES: Record<SelectFilterMode, (text: string, input: string) => boolean> = {
-  startsWith: (text, input) => text.startsWith(input),
-  endsWith: (text, input) => text.endsWith(input),
-  contains: (text, input) => text.includes(input),
-}
+const SELECT_FILTER_STRATEGIES: Record<SelectFilterMode, (text: string, input: string) => boolean> =
+  {
+    startsWith: (text, input) => text.startsWith(input),
+    endsWith: (text, input) => text.endsWith(input),
+    contains: (text, input) => text.includes(input),
+  }
 
 function matchesFilter<TOption extends SelectFilterableOption<unknown>>(
   option: TOption,
@@ -309,7 +311,8 @@ interface ComboboxInputHandlerDeps {
   isSearchable: () => boolean
   menuControl: ReturnType<typeof useSelectMenuControl>
   field: { emit: (event: FormInputEventType) => void }
-  context: SelectMenuContext
+  isOpen: () => boolean
+  selectionManager: () => SelectSelectionManager
   onTabSelection: (focusedKey: string) => void
   onExtraKeyDown?: (e: KeyboardEvent) => void
 }
@@ -326,22 +329,17 @@ export function createComboboxInputHandlers(deps: ComboboxInputHandlerDeps) {
 
       const nextValue = (event.currentTarget as HTMLInputElement).value
       if (nextValue.trim() !== '') {
-        deps.menuControl.openMenu(deps.context)
-      }
-    },
-    onClick: (): void => {
-      if (deps.menuControl.opensFromControlClick()) {
-        deps.menuControl.openMenu(deps.context, () => deps.context.close())
+        deps.menuControl.openMenu()
       }
     },
     onKeyDown: (e: KeyboardEvent): void => {
-      if (e.key === 'Escape' || (e.key === 'Tab' && deps.context.isOpen())) {
+      if (e.key === 'Escape' || (e.key === 'Tab' && deps.isOpen())) {
         deps.menuControl.markDismissing()
       }
 
       if (e.key === 'Tab') {
-        if (deps.context.isOpen()) {
-          const selectionManager = deps.context.listState().selectionManager()
+        if (deps.isOpen()) {
+          const selectionManager = deps.selectionManager()
           const focusedKey = selectionManager.focusedKey()
 
           if (focusedKey && !selectionManager.isDisabled(focusedKey)) {

@@ -207,6 +207,8 @@ export namespace MultiSelectT {
     onScrollBottom?: () => void
     /** Distance (px) from the bottom at which onScrollBottom fires. Default: 20. */
     scrollBottomThreshold?: number
+    /** Padding (px) used when calculating popup overflow and viewport collision. Default: 4. */
+    overflowPadding?: number
   }
 
   export interface Props<TItem extends Value = Value> extends BaseProps<
@@ -243,7 +245,6 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     disabled: local.disabled,
     initialValue: local.defaultValue ?? [],
   }))
-  const menuControl = useSelectMenuControl(() => local.openOnClick)
   const isSearchable = () => Boolean(local.search)
 
   const [createdTags, setCreatedTags] = createSignal<NormalizedOption[]>([])
@@ -267,8 +268,15 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     value: () => local.open,
     defaultValue: () => local.defaultOpen ?? false,
   })
+  const menuControl = useSelectMenuControl({
+    close: closeMenu,
+    isOpen: () => Boolean(open()),
+    mode: () => local.openOnClick,
+    open: () => setMenuOpen(true),
+  })
 
   let controlRef: HTMLDivElement | undefined
+  let comboboxRef: HTMLInputElement | HTMLButtonElement | undefined
   let inputRef: HTMLInputElement | undefined
 
   const [currentInputText, setCurrentInputText] = createSignal(local.defaultSearchValue ?? '')
@@ -586,20 +594,12 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     },
   }
 
-  const context = {
-    close: closeMenu,
-    isOpen: () => Boolean(open()),
-    listState: () => ({
-      selectionManager: () => selectionManager,
-    }),
-    open: () => setMenuOpen(true),
-  }
-
   const inputHandlers = createComboboxInputHandlers({
     isSearchable,
     menuControl,
     field,
-    context,
+    isOpen: () => Boolean(open()),
+    selectionManager: () => selectionManager,
     onTabSelection: (key) => selectionManager.toggleSelection(key),
     onExtraKeyDown: (event) => {
       if (event.key === 'ArrowDown') {
@@ -708,6 +708,23 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     local.maxCount === undefined ? false : selectedValueSet().size >= local.maxCount,
   )
 
+  function handleControlPointerDown(event: PointerEvent): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
+    }
+
+    event.preventDefault()
+    comboboxRef?.focus()
+  }
+
+  function handleControlClick(): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
+    }
+
+    menuControl.toggleMenu()
+  }
+
   return (
     <div
       style={merged.styles?.root}
@@ -721,6 +738,8 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
         style={merged.styles?.control}
         data-invalid={field.invalid() ? '' : undefined}
         data-disabled={field.disabled() ? '' : undefined}
+        onPointerDown={handleControlPointerDown}
+        onClick={handleControlClick}
         class={cn(
           selectControlVariants(
             {
@@ -752,13 +771,6 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
             local.classes?.tagsContainer,
           )}
-          onPointerDown={(event) => {
-            event.preventDefault()
-            inputRef?.focus()
-            if (menuControl.opensFromControlClick()) {
-              menuControl.openMenu(context, () => context.close())
-            }
-          }}
         >
           <For each={visibleTags()}>
             {(option) => {
@@ -801,52 +813,84 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             </span>
           </Show>
 
-          <input
-            ref={(el) => {
-              inputRef = el
-            }}
-            id={field.id()}
-            role="combobox"
-            aria-controls={listboxId()}
-            aria-expanded={open() ? 'true' : 'false'}
-            aria-haspopup="listbox"
-            aria-autocomplete="list"
-            aria-activedescendant={
-              highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+          <Show
+            when={isSearchable()}
+            fallback={
+              <button
+                ref={(el) => {
+                  comboboxRef = el
+                }}
+                id={field.id()}
+                type="button"
+                role="combobox"
+                aria-controls={listboxId()}
+                aria-expanded={open() ? 'true' : 'false'}
+                aria-haspopup="listbox"
+                aria-activedescendant={
+                  highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+                }
+                data-slot="input"
+                style={merged.styles?.input}
+                class={selectInputVariants(
+                  {
+                    mode: 'multiSearch',
+                    size: field.size(),
+                  },
+                  'text-start truncate',
+                  menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+                  local.classes?.input,
+                )}
+                disabled={field.disabled()}
+                aria-invalid={field.invalid() ? 'true' : undefined}
+                onKeyDown={inputHandlers.onKeyDown}
+                onFocus={inputHandlers.onFocus}
+                onBlur={inputHandlers.onBlur}
+                {...field.ariaAttrs()}
+              >
+                <Show when={selectedOptions().length === 0}>{local.placeholder}</Show>
+              </button>
             }
-            data-slot="input"
-            style={merged.styles?.input}
-            data-readonly={!isSearchable()}
-            class={selectInputVariants(
-              {
-                mode: 'multiSearch',
-                size: field.size(),
-              },
-              menuControl.opensFromControlClick()
-                ? 'data-readonly:cursor-pointer'
-                : 'data-readonly:cursor-default',
-              local.classes?.input,
-            )}
-            readOnly={!isSearchable()}
-            maxLength={local.searchMaxLength}
-            value={currentInputText()}
-            placeholder={selectedOptions().length > 0 ? '' : local.placeholder}
-            disabled={field.disabled()}
-            required={local.required}
-            aria-invalid={field.invalid() ? 'true' : undefined}
-            onPointerDown={(event) => {
-              event.stopPropagation()
-            }}
-            onInput={(event) => {
-              handleInputChange(event.currentTarget.value)
-              inputHandlers.onInput(event)
-            }}
-            onClick={inputHandlers.onClick}
-            onKeyDown={inputHandlers.onKeyDown}
-            onFocus={inputHandlers.onFocus}
-            onBlur={inputHandlers.onBlur}
-            {...field.ariaAttrs()}
-          />
+          >
+            <input
+              ref={(el) => {
+                comboboxRef = el
+                inputRef = el
+              }}
+              id={field.id()}
+              role="combobox"
+              aria-controls={listboxId()}
+              aria-expanded={open() ? 'true' : 'false'}
+              aria-haspopup="listbox"
+              aria-autocomplete="list"
+              aria-activedescendant={
+                highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+              }
+              data-slot="input"
+              style={merged.styles?.input}
+              class={selectInputVariants(
+                {
+                  mode: 'multiSearch',
+                  size: field.size(),
+                },
+                menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+                local.classes?.input,
+              )}
+              maxLength={local.searchMaxLength}
+              value={currentInputText()}
+              placeholder={selectedOptions().length > 0 ? '' : local.placeholder}
+              disabled={field.disabled()}
+              required={local.required}
+              aria-invalid={field.invalid() ? 'true' : undefined}
+              onInput={(event) => {
+                handleInputChange(event.currentTarget.value)
+                inputHandlers.onInput(event)
+              }}
+              onKeyDown={inputHandlers.onKeyDown}
+              onFocus={inputHandlers.onFocus}
+              onBlur={inputHandlers.onBlur}
+              {...field.ariaAttrs()}
+            />
+          </Show>
         </div>
 
         <RenderSelectClearButton
@@ -867,7 +911,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
           rootClass={selectTriggerIconVariants({ size: field.size() }, local.classes?.trigger)}
           loading={local.loading}
           loadingIcon={local.loadingIcon}
-          onClick={(event) => menuControl.onTriggerClickFallback(event, context)}
+          onClick={(event) => menuControl.onTriggerClickFallback(event)}
         />
       </div>
 
@@ -882,6 +926,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
         onClose={closeMenu}
         onInteractOutside={menuControl.onContentInteractOutside}
         onListboxScrollBottom={local.onScrollBottom}
+        overflowPadding={local.overflowPadding}
         scrollBottomThreshold={local.scrollBottomThreshold}
       >
         <Show
