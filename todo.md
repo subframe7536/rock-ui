@@ -1,102 +1,113 @@
-# Inline Kobalte Components
-
-Kobalte is an unstyled headless component library for SolidJS used extensively throughout Moraine.
-Inlining each Kobalte package gives full control over behavior and accessibility, allows fixing
-known upstream bugs, and eliminates dead code from unused Kobalte internals. Also, it can make it easior to migrate to solid 2. Once all packages are
-replaced, `@kobalte/core` and `@kobalte/utils` can be dropped from dependencies entirely.
-
-## Existing Bugs
-
-- **Collapsible / Accordion**: content height has no CSS transition on open/close (`$kb-collapsible-content-height` CSS variable does change, but the element height itself doesn't animate)
-- **DropdownMenu / ContextMenu**: when the pointer moves from a parent menu item toward a submenu, the submenu closes too early before the pointer reaches it, because a sibling menu item becomes highlighted during pointer movement
-- **Slider**: when two thumbs overlap, it is impossible to slide in any direction
-- **Tabs / Stepper**: no keyboard loop option (pressing arrow at the last tab does not wrap back to the first)
-
-## Components and Guide
-
-To inline a Kobalte package:
-
-1. Copy the relevant source from `kobalte/packages/core/src/<component>/` into a new `src/shared/primitives/<component>/` directory (or alongside the consuming component)
-2. Replace the `@kobalte/core/<component>` import(s) with the local path
-3. Fix any known bugs listed in "Existing Bugs" for the affected component
-4. Ensure all accessibility attributes (ARIA roles, keyboard navigation, focus management) are preserved
-5. Once all usages of a package are replaced, remove it from `package.json`
-6. migrate all tests of relative components
-7. make copied components non headless and fuse it into target components, eliminate createContext usage without breaking anything if possible, refactor and organize component structure better fitting a standalone lib with resuable components and useful hooks
-8. Set `Extend` in namespace to `never` for all components to prevent external extension of props, and remove all `as` polymorphic prop support. Migrate all props except `HTMLAttributes` to `Base` with jsdoc descriptions (with `@default` if needed), drop `HTMLAttributes` from prop types, remove `splitProps` since rest is always be `{}`
-
-### Simple
-
-No external state machine, context, or positioning logic needed — replaceable with small self-contained SolidJS primitives.
-
-- [x] **`@kobalte/utils`** → inline `clamp` as a one-liner math helper; replace `createMediaQuery` with a tiny SolidJS signal/effect wrapper over `window.matchMedia`
-  - Used in: `src/elements/resizable/hook/panel.ts`, `src/elements/resizable/hook/resize.ts` (`clamp`); `src/navigation/sidebar-frame/sidebar-frame.tsx` (`createMediaQuery`)
-- [x] **`@kobalte/core/button`** → replace with a polymorphic `<button>` element handling `aria-disabled`; remove dependency on `@kobalte/core/polymorphic`
-  - Affects: `Button` (`src/elements/button/button.tsx`), `IconButton` (`src/elements/icon/icon-button.tsx`)
-- [x] **`@kobalte/core/separator`** → replace with `<div role="separator">` (or `<hr>`) and the correct `aria-orientation` attribute
-  - Affects: `Separator` (`src/elements/separator/separator.tsx`)
-
-### Complex
-
-Multiple subcomponents with shared context and keyboard navigation, but no floating/portal positioning required.
-
-- [x] **`@kobalte/core/switch`** → fuse switch input, control, thumb, and label behavior directly into the styled component
-  - Affects: `Switch` (`src/forms/switch/switch.tsx`)
-- [x] **`@kobalte/core/checkbox`** → fuse checkbox input, control, indicator, and label behavior directly into the styled component
-  - Affects: `Checkbox` (`src/forms/checkbox/checkbox.tsx`)
-- [x] **`@kobalte/core/radio-group`** → fuse radio-group state, item, input, control, indicator, and label behavior directly into the styled component
-  - Affects: `RadioGroup` (`src/forms/radio-group/radio-group.tsx`)
-- [x] **`@kobalte/core/file-field`** → fuse upload trigger, hidden input, dropzone, file list, and remove behavior directly into the styled component
-  - Affects: `FileUpload` (`src/forms/file-upload/file-upload.tsx`)
-- [x] **`@kobalte/core/number-field`** → fuse number input state, spinbutton input, and increment/decrement trigger behavior directly into the styled component
-  - Affects: `InputNumber` (`src/forms/input-number/input-number.tsx`)
-- [x] **`@kobalte/core/progress`** → fuse progress state, track, fill, status, and steps behavior directly into the styled component
-  - Affects: `Progress` (`src/elements/progress/progress.tsx`)
-- [x] **`@kobalte/core/collapsible`** → fuse collapsible state, trigger, and content behavior directly into the styled component; **fix**: add CSS height transition on content open/close
-  - Affects: `Collapsible` (`src/elements/collapsible/collapsible.tsx`), `Accordion` (`src/elements/accordion/accordion.tsx`)
-- [x] **`@kobalte/core/accordion`** → inline `Accordion.Root`, `Accordion.Item`, `Accordion.Header`, `Accordion.Trigger`, `Accordion.Content`; depends on `collapsible` being inlined first
-  - Affects: `Accordion` (`src/elements/accordion/accordion.tsx`)
-- [x] **`@kobalte/core/tabs`** → fuse tabs state, list, trigger, indicator, and content behavior directly into the styled components; **fix**: add keyboard loop option so arrow navigation wraps at boundaries
-  - Affects: `Tabs` (`src/navigation/tabs/tabs.tsx`), `Stepper` (`src/navigation/stepper/stepper.tsx`)
-- [x] **`@kobalte/core/slider`** → inline `Slider.Root`, `Slider.Track`, `Slider.Fill`, `Slider.Thumb`, `Slider.Input`, `useSliderContext`; **fix**: allow sliding in any direction when thumbs overlap
-  - Affects: `Slider` (`src/forms/slider/slider.tsx`)
-
-### Comprehensive
-
-Floating/positioned overlays with portals, focus traps, and complex pointer/keyboard interaction chains.
-
-- [x] **`@kobalte/core/dialog`** → inline `Dialog.Root`, `Dialog.Trigger`, `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Title`, `Dialog.Description`, `Dialog.CloseButton`; includes focus trap and scroll lock
-  - Affects: `Dialog` (`src/overlays/dialog/dialog.tsx`), `Sheet` (`src/overlays/sheet/sheet.tsx`), `Popup` (`src/overlays/popup/popup.tsx`)
-- [x] **`@kobalte/core/popper`** → inline `usePopperContext` and the popper anchor/placement primitive; **prerequisite** for `popover` and `tooltip`
-  - Affects: `Popover` (`src/overlays/popover/popover.tsx`), `Tooltip` (`src/overlays/tooltip/tooltip.tsx`)
-- [x] **`@kobalte/core/popover`** → inline `Popover.Root`, `Popover.Trigger`, `Popover.Portal`, `Popover.Content`, `Popover.Arrow`; depends on `popper` being inlined first
-  - Affects: `Popover` (`src/overlays/popover/popover.tsx`)
-- [x] **`@kobalte/core/tooltip`** → inline `Tooltip.Root`, `Tooltip.Trigger`, `Tooltip.Portal`, `Tooltip.Content`, `Tooltip.Arrow`; depends on `popper` being inlined first
-  - Affects: `Tooltip` (`src/overlays/tooltip/tooltip.tsx`)
-- [x] **`@kobalte/core/dropdown-menu`** → inline all exports (`Root`, `Trigger`, `Content`, `Item`, `CheckboxItem`, `Group`, `GroupLabel`, `Sub`, `SubTrigger`, `SubContent`, `Separator`, `ItemIndicator`, `Portal`); **fix**: prevent submenu from closing prematurely during pointer movement toward another submenu
-  - Affects: `DropdownMenu` (`src/overlays/dropdown-menu/dropdown-menu.tsx`), `ContextMenu` (`src/overlays/context-menu/context-menu.tsx`), `OverlayMenuBaseContent` (`src/overlays/shared-overlay-menu/menu.tsx`)
-- [ ] **`@kobalte/core/combobox`** → inline `Combobox`, `useComboboxContext`, `ComboboxContextValue`, `ComboboxRootProps`, `ComboboxSingleSelectionOptions`; most complex — requires virtualized scroll, multi-selection, and filtering support
-  - Affects: `Select` (`src/forms/select/select.tsx`), `MultiSelect` (`src/forms/select/multi-select.tsx`), `CommandPalette` (`src/navigation/command-palette/command-palette.tsx`), `src/forms/select/shared/`
-
-#### Architecture Decision
-
-Port from `@kobalte/core` first, then make it non primitive and drop context usage.
-
-- `Dialog`, `Sheet`, and `Popup` share one private modal shell.
-  - The modal shell owns open state, portal mounting, overlay/content mounting, dismissal, focus trap, and scroll lock.
-- `Popover` and `Tooltip` get a separate popper-backed shell using inlined `@kobalte/core/popper`.
-- `DropdownMenu` and `ContextMenu` using inlined `@kobalte/core/dropdown-menu`.
-- `Select` / `MultiSelect` / `CommandPalette` using inlined `@kobalte/core/combobox`.
+Keep Moraine config-driven and styled by default. Do not add Kobalte-style primitive or compound composition APIs as a product goal.
 
 # Current
 
-- [ ] remove button's icon-\* size variants, create a <IconButtonInner> component with size variants for internal use without loading logic, expose <IconButton> with loading logic (using <IconButtonInner> inside)
-- [ ] refactor to solid 2
+- [ ] Make `<Select>` support single and multiple selection through shared config-driven logic, and keep `<MultiSelect>` as the public multiple-selection wrapper.
+- [ ] Correct `<Select>` JSX structure based on shadcn/ui's Select: remove pointer-click focus ring, keep keyboard focus ring, and verify `aria-expanded`, `aria-controls`, `aria-activedescendant`, `role="combobox"`, `role="listbox"`, and `role="option"`.
+- [ ] Port practical Kobalte Select behavior into the config API: typeahead, virtualized/large-list aria metadata, grouped options, disabled options, controlled search value, clear button, no-results state, scroll-bottom callback, and robust hidden form value handling.
+- [ ] Audit all interactive components for keyboard correctness: Arrow keys, Home/End, PageUp/PageDown, Enter, Space, Escape, Tab focus exit, keyboard loop behavior, disabled item skipping, and RTL direction.
+- [ ] Audit all interactive components for ARIA correctness: stable generated ids, label/description wiring, `aria-invalid`, `aria-required`, `aria-disabled`, `aria-readonly`, `aria-current`, `aria-selected`, `aria-checked`, `aria-valuemin/max/now/text`, and hidden input form submission.
+- [ ] Audit controlled/uncontrolled behavior across components: `value` vs `defaultValue`, `open` vs `defaultOpen`, callback order, duplicate callback prevention, form reset behavior, and prop updates after mount.
+- [ ] Audit disabled/read-only/loading states across components: prevent pointer and keyboard interaction, preserve form semantics, expose correct data attributes, and avoid focus traps on disabled controls.
+- [ ] Audit overlay correctness: focus restore, focus trap, outside pointer/focus dismissal, Escape handling, nested overlays, scroll locking, portal cleanup, transition presence cleanup, and collision/flip/shift edge cases.
+- [ ] Audit menu correctness: submenu pointer grace, nested submenu dismissal, checkbox item state, future radio item support, typeahead search, disabled item skipping, and close-on-select behavior.
+- [ ] Audit form-field integration: generated id consistency, label click behavior, error message linkage, validation event timing, blur/change/input emission, and nested field path handling.
+- [ ] Audit layout edge cases: empty items, duplicate values, missing labels, very long labels, custom JSX labels, dynamic item changes, SSR-safe document access, hydration-safe ids, and cleanup of timers/listeners/object URLs.
+- [ ] Add focused tests for accessibility, keyboard navigation, form submission, controlled/uncontrolled state, disabled/read-only behavior, overlay dismissal, and edge cases before adding new visual variants.
+
+# Component Correctness Backlog
+
+## Accordion
+
+- [ ] Add ArrowUp/ArrowDown/Home/End trigger navigation.
+- [ ] Verify single vs multiple selection, non-collapsible single mode, disabled item behavior, and dynamic item removal.
+- [ ] Ensure trigger/content ids, `aria-expanded`, `aria-controls`, and content labelling stay stable.
+
+## Checkbox and CheckboxGroup
+
+- [ ] Verify indeterminate state, custom true/false values, hidden input value, required behavior, and form reset.
+- [ ] Add keyboard and aria tests for Space toggling, read-only prevention, disabled prevention, `aria-checked="mixed"`, and label/description linkage.
+
+## RadioGroup
+
+- [ ] Verify roving focus, Arrow key direction, Home/End, RTL, disabled item skipping, required semantics, and form submission.
+- [ ] Add edge-case tests for empty items, duplicate values, dynamic items, controlled value updates, and read-only groups.
+
+## Switch
+
+- [ ] Verify `role="switch"`, `aria-checked`, Space/Enter toggling, read-only behavior, disabled behavior, hidden input value, and form reset.
+
+## Input and Textarea
+
+- [ ] Verify modifier handling, IME composition, `input` vs `change` timing, autofocus timing, clearable states if added, and form-field error aria wiring.
+- [ ] Verify Textarea autoresize edge cases: min height, max height, dynamic value changes, SSR guards, and cleanup.
+
+## InputNumber
+
+- [ ] Verify min/max clamping, invalid text input, step precision, PageUp/PageDown, Home/End, wheel behavior if added, hold-repeat cleanup, and controlled raw value sync.
+- [ ] Add locale-aware formatting/parsing only if it can remain simple and config-driven.
+
+## Select and MultiSelect
+
+- [ ] Verify keyboard behavior: ArrowUp/ArrowDown, Home/End, Enter, Space, Escape, Tab, typeahead, search input focus, and disabled option skipping.
+- [ ] Verify ARIA behavior for combobox/listbox/options, active descendant, selected options, grouped options, virtualized metadata, and hidden form values.
+- [ ] Verify edge cases: empty options, duplicate values, missing labels, JSX labels with `key`, async options, dynamic selected value removal, `maxCount`, token separators, `allowCreate`, clear button, and loading state.
+
+## Slider
+
+- [ ] Verify pointer capture, keyboard increments, PageUp/PageDown, Home/End, min steps between thumbs, thumb crossing, RTL, vertical orientation, inverted axis, read-only state, and hidden inputs.
+- [ ] Verify `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext`, per-thumb labels, and multi-thumb focus order.
+
+## FileUpload
+
+- [ ] Add max file size, min file size, file count, accepted type, and duplicate file edge-case tests.
+- [ ] Verify drag enter/leave nesting, drop prevention, keyboard trigger, object URL cleanup, remove behavior, controlled value sync, and rejection payloads.
+
+## Progress and Meter
+
+- [ ] Verify determinate vs indeterminate aria values, custom value label, vertical orientation, invalid max/value handling, and step rendering.
+- [ ] Add `<Meter>` rather than overloading `<Progress>` for scalar bounded measurements.
+
+## Tabs
+
+- [ ] Verify automatic vs manual activation, Arrow key direction, Home/End, disabled tab skipping, vertical orientation, dynamic items, and controlled value updates.
+- [ ] Verify `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected`, `aria-controls`, and panel labelling.
+
+## Pagination
+
+- [ ] Verify `aria-current="page"`, navigation label, disabled previous/next buttons, link mode, page clamping, total changes, sibling edge cases, and ellipsis placement.
+
+## Breadcrumb
+
+- [ ] Verify `aria-current="page"` for the current item, separator hiding from screen readers, link vs text item semantics, and empty/single item behavior.
+
+## Dialog, Sheet, and Popup
+
+- [ ] Verify focus trap, initial focus, focus restore, Escape handling, outside dismissal, non-dismissible attempts, nested dialogs, scroll locking, portal cleanup, and labelled/described-by wiring.
+- [ ] Add AlertDialog with destructive action semantics, least-destructive focus option, and explicit cancel/action config.
+
+## Popover, Tooltip, DropdownMenu, and ContextMenu
+
+- [ ] Verify positioning updates, collision handling, viewport sizing, hidden-when-detached behavior, hover delay cleanup, focus behavior, Escape dismissal, and nested overlay interactions.
+- [ ] Verify menu typeahead, submenu keyboard navigation, pointer grace, checkbox item state, future radio item support, group labels, separators, disabled items, and close-on-select config.
+
+## Resizable
+
+- [ ] Verify pointer and keyboard resizing, min/max/collapsible panels, percent and pixel sizes, nested groups, persistence hooks if added, RTL, and aria separator values.
 
 # V1
 
+## Components
+
+- [ ] Create an `<IconButtonInner>` component with size variants for internal use without loading logic, and expose `<IconButton>` with loading logic for external use.
+- [ ] Tune motion rules: interaction enter transitions should be shorter for responsiveness, exit transitions should be longer for smoothness, and shared easing should be consistent across overlays and disclosure components.
+- [ ] Solid 2
 - [ ] NavigationMenu
 - [ ] Calendar https://ant.design/components/calendar.md
 - [ ] DatePicker https://ant.design/components/date-picker.md
 - [ ] Table: tanstack solid table
-- [ ] llm.txt
+
+## Documentation
+
+- [ ] Add documentation pages for config-driven usage, accessibility guarantees, keyboard behavior, form integration, and controlled/uncontrolled patterns.
+- [ ] Add `llm.txt`.

@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createEffect, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, mergeProps } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
@@ -33,7 +33,6 @@ import {
   RenderSelectEmptyNode,
   RenderSelectTriggerButton,
   SELECT_COMMON_DEFAULT_PROPS,
-  SELECT_SPLIT_KEYS,
   SelectPopup,
   syncSelectSearchInputValue,
   useSelectField,
@@ -211,37 +210,36 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   type NormalizedGroup = SharedNormalizedGroup<SelectT.Item<TItem>>
 
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
-  const [local] = splitProps(merged, SELECT_SPLIT_KEYS)
-  const listboxId = useId(() => local.id && `${local.id}-listbox`, 'select-listbox')
+  const listboxId = useId(() => merged.id && `${merged.id}-listbox`, 'select-listbox')
 
   const field = useSelectField(() => ({
-    id: local.id,
-    name: local.name,
-    size: local.size,
-    disabled: local.disabled,
+    id: merged.id,
+    name: merged.name,
+    size: merged.size,
+    disabled: merged.disabled,
     initialValue:
-      local.defaultValue === null || local.defaultValue === undefined ? '' : local.defaultValue,
+      merged.defaultValue === null || merged.defaultValue === undefined ? '' : merged.defaultValue,
   }))
-  const isSearchable = createMemo(() => Boolean(local.search))
+  const isSearchable = createMemo(() => Boolean(merged.search))
 
   const normalizedOptions = createMemo(() =>
-    normalizeOptions(local.options as SelectT.Item<TItem>[]),
+    normalizeOptions(merged.options as SelectT.Item<TItem>[]),
   )
   const allFlatOptions = createMemo(() => flattenOptions(normalizedOptions()))
   const findOptionByValue = createFindOptionByValue<SelectT.Item<TItem>>(() => allFlatOptions())
 
   const [selectedValue, setSelectedValue] = useControllableValue<TItem | null>({
-    value: () => local.value,
-    defaultValue: () => local.defaultValue ?? null,
+    value: () => merged.value,
+    defaultValue: () => merged.defaultValue ?? null,
   })
   const [open, setOpen] = useControllableValue<boolean>({
-    value: () => local.open,
-    defaultValue: () => local.defaultOpen ?? false,
+    value: () => merged.open,
+    defaultValue: () => merged.defaultOpen ?? false,
   })
   const menuControl = useSelectMenuControl({
     close: closeMenu,
     isOpen: () => Boolean(open()),
-    mode: () => local.openOnClick,
+    mode: () => merged.openOnClick,
     open: () => setMenuOpen(true),
   })
 
@@ -249,18 +247,18 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   let comboboxRef: HTMLInputElement | HTMLButtonElement | undefined
   let inputRef: HTMLInputElement | undefined
 
-  const [currentInputText, setCurrentInputText] = createSignal(local.defaultSearchValue ?? '')
+  const [currentInputText, setCurrentInputText] = createSignal(merged.defaultSearchValue ?? '')
   const [highlightedKey, setHighlightedKey] = createSignal<string | undefined>(undefined)
 
   syncSelectSearchInputValue(
-    local,
+    merged,
     () => inputRef,
     (searchValue) => setCurrentInputText(searchValue),
   )
 
   const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Item<TItem>>({
     isSearchable,
-    filterOption: () => local.filterOption,
+    filterOption: () => merged.filterOption,
     allOptions: allFlatOptions,
     inputValue: currentInputText,
   })
@@ -300,7 +298,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
       return
     }
     setOpen(nextOpen)
-    local.onOpenChange?.(nextOpen)
+    merged.onOpenChange?.(nextOpen)
   }
 
   function closeMenu(): void {
@@ -335,7 +333,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     const nextValue = option ? (mapNormalizedToRawValue(option) as TItem) : null
     setSelectedValue(nextValue)
     field.setFormValue(nextValue ?? '')
-    local.onChange?.(nextValue)
+    merged.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
     setCurrentInputText(option?.key ?? '')
@@ -351,9 +349,9 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   }
 
   function clearSelection(): void {
-    const resetValue = (local.defaultValue ?? null) as TItem | null
+    const resetValue = (merged.defaultValue ?? null) as TItem | null
     setSelectedValue(resetValue)
-    local.onChange?.(resetValue)
+    merged.onChange?.(resetValue)
     setCurrentInputText('')
     closeMenu()
   }
@@ -362,7 +360,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     if (!menuControl.isDismissing()) {
       setCurrentInputText(inputValue)
     }
-    local.onSearch?.(inputValue)
+    merged.onSearch?.(inputValue)
   }
 
   const selectionManager = {
@@ -453,9 +451,9 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   >({
     styles: () => merged.styles,
     size: field.size,
-    classes: () => local.classes,
-    optionRender: () => local.optionRender,
-    labelRender: () => local.labelRender,
+    classes: () => merged.classes,
+    optionRender: () => merged.optionRender,
+    labelRender: () => merged.labelRender,
   })
 
   const displayInputValue = createMemo(() => {
@@ -487,7 +485,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   return (
     <div
       style={merged.styles?.root}
-      class={cn('inline-flex h-fit w-full relative', local.classes?.root)}
+      class={cn('inline-flex h-fit w-full relative', merged.classes?.root)}
     >
       <div
         ref={(el) => {
@@ -502,20 +500,20 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
         class={selectControlVariants(
           {
             size: field.size(),
-            variant: local.variant,
+            variant: merged.variant,
           },
           menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-          local.classes?.control,
+          merged.classes?.control,
         )}
       >
-        <Show when={local.leadingIcon}>
+        <Show when={merged.leadingIcon}>
           {(icon) => (
             <Icon
               name={icon()}
               size={field.size()}
               slotName="leading"
               style={merged.styles?.leading}
-              class={selectLeadingIconVariants({ size: field.size() }, local.classes?.leading)}
+              class={selectLeadingIconVariants({ size: field.size() }, merged.classes?.leading)}
             />
           )}
         </Show>
@@ -545,7 +543,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                 },
                 'text-start truncate',
                 menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-                local.classes?.input,
+                merged.classes?.input,
               )}
               disabled={field.disabled()}
               aria-invalid={field.invalid() ? 'true' : undefined}
@@ -554,7 +552,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
               onBlur={inputHandlers.onBlur}
               {...field.ariaAttrs()}
             >
-              {displayInputValue() || local.placeholder}
+              {displayInputValue() || merged.placeholder}
             </button>
           }
         >
@@ -580,13 +578,13 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                 size: field.size(),
               },
               menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-              local.classes?.input,
+              merged.classes?.input,
             )}
-            maxLength={local.searchMaxLength}
-            placeholder={local.placeholder}
+            maxLength={merged.searchMaxLength}
+            placeholder={merged.placeholder}
             value={displayInputValue()}
             disabled={field.disabled()}
-            required={local.required}
+            required={merged.required}
             aria-invalid={field.invalid() ? 'true' : undefined}
             onInput={(event) => {
               handleInputChange(event.currentTarget.value)
@@ -600,23 +598,23 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
         </Show>
 
         <RenderSelectClearButton
-          show={Boolean(local.allowClear && selectedOption())}
+          show={Boolean(merged.allowClear && selectedOption())}
           size={field.size()}
           style={merged.styles?.clear}
-          rootClass={selectClearVariants({ size: field.size() }, local.classes?.clear)}
+          rootClass={selectClearVariants({ size: field.size() }, merged.classes?.clear)}
           onClick={(event) => {
             event.stopPropagation()
-            field.handleClear(clearSelection, local.onClear)
+            field.handleClear(clearSelection, merged.onClear)
           }}
         />
 
         <RenderSelectTriggerButton
           style={merged.styles?.trigger}
-          name={local.triggerIcon}
+          name={merged.triggerIcon}
           size={field.size()}
-          rootClass={selectTriggerIconVariants({ size: field.size() }, local.classes?.trigger)}
-          loading={local.loading}
-          loadingIcon={local.loadingIcon}
+          rootClass={selectTriggerIconVariants({ size: field.size() }, merged.classes?.trigger)}
+          loading={merged.loading}
+          loadingIcon={merged.loadingIcon}
           onClick={(event) => menuControl.onTriggerClickFallback(event)}
         />
       </div>
@@ -626,22 +624,22 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
         anchorElement={() => controlRef}
         listboxId={listboxId()}
         contentStyle={merged.styles?.content}
-        contentClass={local.classes?.content as string | undefined}
+        contentClass={merged.classes?.content as string | undefined}
         listboxStyle={merged.styles?.listbox}
-        listboxClass={local.classes?.listbox as string | undefined}
+        listboxClass={merged.classes?.listbox as string | undefined}
         onClose={closeMenu}
         onInteractOutside={menuControl.onContentInteractOutside}
-        onListboxScrollBottom={local.onScrollBottom}
-        overflowPadding={local.overflowPadding}
-        scrollBottomThreshold={local.scrollBottomThreshold}
+        onListboxScrollBottom={merged.onScrollBottom}
+        overflowPadding={merged.overflowPadding}
+        scrollBottomThreshold={merged.scrollBottomThreshold}
       >
         <Show
           when={hasMatches()}
           fallback={
             <RenderSelectEmptyNode<SelectT.EmptyRenderContext<TItem>>
-              emptyRender={local.emptyRender}
+              emptyRender={merged.emptyRender}
               style={merged.styles?.empty}
-              class={local.classes?.empty}
+              class={merged.classes?.empty}
               context={() => ({
                 inputValue: currentInputText(),
                 hasMatches: hasMatches(),
@@ -665,13 +663,13 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                     isSelected={selectedOption()?.key === (item as NormalizedOption).key}
                     isHighlighted={highlightedKey() === (item as NormalizedOption).key}
                     posinset={
-                      local.virtualized
+                      merged.virtualized
                         ? visibleFlatOptions().findIndex(
                             (option) => option.key === (item as NormalizedOption).key,
                           ) + 1
                         : undefined
                     }
-                    setsize={local.virtualized ? visibleFlatOptions().length : undefined}
+                    setsize={merged.virtualized ? visibleFlatOptions().length : undefined}
                     onPointerDown={(event) => event.preventDefault()}
                     onPointerMove={() => {
                       if (!(item as NormalizedOption).disabled) {
@@ -692,12 +690,12 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                         isSelected={selectedOption()?.key === option.key}
                         isHighlighted={highlightedKey() === option.key}
                         posinset={
-                          local.virtualized
+                          merged.virtualized
                             ? visibleFlatOptions().findIndex((entry) => entry.key === option.key) +
                               1
                             : undefined
                         }
-                        setsize={local.virtualized ? visibleFlatOptions().length : undefined}
+                        setsize={merged.virtualized ? visibleFlatOptions().length : undefined}
                         onPointerDown={(event) => event.preventDefault()}
                         onPointerMove={() => {
                           if (!option.disabled) {

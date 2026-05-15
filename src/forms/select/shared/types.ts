@@ -1,7 +1,5 @@
 import type { JSX } from 'solid-js'
 
-import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../../form-field/form-options'
-
 export interface BaseSelectItems<TItems> {
   value?: string | number
   label?: string | JSX.Element
@@ -42,50 +40,6 @@ export interface SelectControlState<TItems> {
   remove: (option: NormalizedOption<TItems>) => void
   clear: () => void
 }
-
-export const SELECT_SPLIT_KEYS = [
-  ...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS,
-  'open',
-  'defaultOpen',
-  'onOpenChange',
-  'onChange',
-  'search',
-  'searchValue',
-  'defaultSearchValue',
-  'onSearch',
-  'searchMaxLength',
-  'filterOption',
-  'openOnClick',
-  'allowClear',
-  'onClear',
-  'virtualized',
-  'onScrollBottom',
-  'scrollBottomThreshold',
-  'overflowPadding',
-  'options',
-  'optionRender',
-  'labelRender',
-  'emptyRender',
-  'placeholder',
-  'loading',
-  'loadingIcon',
-  'leadingIcon',
-  'triggerIcon',
-  'closeIcon',
-  'size',
-  'variant',
-  'classes',
-] as const
-
-export const MULTI_SELECT_SPLIT_KEYS = [
-  ...SELECT_SPLIT_KEYS,
-  'tokenSeparators',
-  'allowCreate',
-  'maxCount',
-  'maxTagCount',
-  'tagRender',
-  'tagVariant',
-] as const
 
 export const SELECT_COMMON_DEFAULT_PROPS = {
   variant: 'outline' as const,
