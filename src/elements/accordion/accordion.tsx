@@ -154,6 +154,14 @@ export function Accordion(props: AccordionProps): JSX.Element {
     })),
   )
 
+  function getTriggerId(itemValue: string): string {
+    return `${rootId()}-${itemValue}-trigger`
+  }
+
+  function getContentId(itemValue: string): string {
+    return `${rootId()}-${itemValue}-content`
+  }
+
   function setValue(nextValue: string[]): void {
     setSelectedValues(nextValue)
 
@@ -183,6 +191,54 @@ export function Accordion(props: AccordionProps): JSX.Element {
     setValue([itemValue])
   }
 
+  function focusTrigger(itemValue: string): void {
+    const trigger = document.getElementById(getTriggerId(itemValue))
+
+    trigger?.focus()
+  }
+
+  function focusTriggerByKey(
+    currentValue: string,
+    key: 'ArrowDown' | 'ArrowUp' | 'Home' | 'End',
+  ): void {
+    const items = normalizedItems()
+    const enabledItems = items.filter((item) => !item.disabled)
+
+    if (enabledItems.length === 0) {
+      return
+    }
+
+    if (key === 'Home') {
+      const firstItem = enabledItems[0]
+      if (firstItem) {
+        focusTrigger(firstItem.value)
+      }
+      return
+    }
+
+    if (key === 'End') {
+      const lastItem = enabledItems[enabledItems.length - 1]
+      if (lastItem) {
+        focusTrigger(lastItem.value)
+      }
+      return
+    }
+
+    const currentIndex = items.findIndex((item) => item.value === currentValue)
+    const startIndex = currentIndex === -1 ? 0 : currentIndex
+    const direction = key === 'ArrowDown' ? 1 : -1
+
+    for (let offset = 1; offset <= items.length; offset += 1) {
+      const nextIndex = (startIndex + offset * direction + items.length) % items.length
+      const nextItem = items[nextIndex]
+
+      if (nextItem && !nextItem.disabled) {
+        focusTrigger(nextItem.value)
+        return
+      }
+    }
+  }
+
   return (
     <div
       id={rootId()}
@@ -197,8 +253,8 @@ export function Accordion(props: AccordionProps): JSX.Element {
             open: expanded,
             disabled: () => entry.disabled,
           })
-          const triggerId = createMemo(() => `${rootId()}-${entry.value}-trigger`)
-          const contentId = createMemo(() => `${rootId()}-${entry.value}-content`)
+          const triggerId = createMemo(() => getTriggerId(entry.value))
+          const contentId = createMemo(() => getContentId(entry.value))
 
           function onTriggerClick(event: MouseEvent): void {
             const { defaultPrevented } = callHandler(event, undefined)
@@ -209,15 +265,27 @@ export function Accordion(props: AccordionProps): JSX.Element {
           }
 
           function onTriggerKeyDown(event: KeyboardEvent): void {
-            if (event.key !== 'Enter' && event.key !== ' ') {
+            if (
+              event.key !== 'Enter' &&
+              event.key !== ' ' &&
+              event.key !== 'ArrowDown' &&
+              event.key !== 'ArrowUp' &&
+              event.key !== 'Home' &&
+              event.key !== 'End'
+            ) {
               return
             }
 
             event.preventDefault()
 
-            if (!entry.disabled) {
-              toggleValue(entry.value)
+            if (event.key === 'Enter' || event.key === ' ') {
+              if (!entry.disabled) {
+                toggleValue(entry.value)
+              }
+              return
             }
+
+            focusTriggerByKey(entry.value, event.key)
           }
 
           return (

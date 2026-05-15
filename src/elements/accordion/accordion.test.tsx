@@ -116,6 +116,79 @@ describe('Accordion', () => {
     expect(triggerOne.getAttribute('aria-expanded')).toBe('true')
   })
 
+  test('navigates triggers with ArrowDown, ArrowUp, Home, and End', async () => {
+    const screen = render(() => <Accordion items={BASE_ITEMS} />)
+
+    const triggerOne = screen.getByRole('button', { name: 'One' })
+    const triggerTwo = screen.getByRole('button', { name: 'Two' })
+    const triggerThree = screen.getByRole('button', { name: 'Three' })
+
+    triggerOne.focus()
+
+    await fireEvent.keyDown(triggerOne, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(triggerTwo)
+
+    await fireEvent.keyDown(triggerTwo, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(triggerThree)
+
+    await fireEvent.keyDown(triggerThree, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(triggerOne)
+
+    await fireEvent.keyDown(triggerOne, { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(triggerThree)
+
+    await fireEvent.keyDown(triggerThree, { key: 'Home' })
+    expect(document.activeElement).toBe(triggerOne)
+
+    await fireEvent.keyDown(triggerOne, { key: 'End' })
+    expect(document.activeElement).toBe(triggerThree)
+  })
+
+  test('keyboard navigation skips disabled triggers and tolerates all disabled items', async () => {
+    const screen = render(() => (
+      <Accordion
+        items={[
+          BASE_ITEMS[0],
+          {
+            ...BASE_ITEMS[1],
+            disabled: true,
+          },
+          BASE_ITEMS[2],
+        ]}
+      />
+    ))
+
+    const triggerOne = screen.getByRole('button', { name: 'One' })
+    const triggerThree = screen.getByRole('button', { name: 'Three' })
+
+    triggerOne.focus()
+
+    await fireEvent.keyDown(triggerOne, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(triggerThree)
+
+    await fireEvent.keyDown(triggerThree, { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(triggerOne)
+
+    const disabledScreen = render(() => <Accordion items={BASE_ITEMS} disabled />)
+    const disabledTriggerOne = disabledScreen.getByRole('button', { name: 'One' })
+
+    expect(() => fireEvent.keyDown(disabledTriggerOne, { key: 'ArrowDown' })).not.toThrow()
+  })
+
+  test('uses stable aria ids for trigger and content relationships', () => {
+    const screen = render(() => (
+      <Accordion id="settings" items={BASE_ITEMS} defaultValue={['one']} />
+    ))
+
+    const triggerOne = screen.getByRole('button', { name: 'One' })
+    const contentOne = screen.getByRole('region', { name: 'One' })
+
+    expect(triggerOne.id).toBe('settings-one-trigger')
+    expect(contentOne.id).toBe('settings-one-content')
+    expect(triggerOne.getAttribute('aria-controls')).toBe(contentOne.id)
+    expect(contentOne.getAttribute('aria-labelledby')).toBe(triggerOne.id)
+  })
+
   test('single controlled mode emits onChange and keeps controlled UI state', async () => {
     const onChange = vi.fn()
 
