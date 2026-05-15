@@ -215,6 +215,9 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     undefined,
   )
   const [isPositioned, setIsPositioned] = createSignal(false)
+  const [radioGroupValues, setRadioGroupValues] = createSignal<Record<string, string | undefined>>(
+    {},
+  )
   const groups = createMemo(() => resolveMenuGroups(props.items))
   const subtreeBranches = new Set<HTMLElement>()
 
@@ -231,6 +234,24 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
 
   createEffect(() => {
     layer.setCurrentPlacement(resolvedPlacement())
+  })
+
+  createEffect(() => {
+    const nextValues: Record<string, string | undefined> = {}
+
+    for (const group of groups()) {
+      for (const item of group.items) {
+        if (item.type !== 'radio' || !item.group || item.value === undefined) {
+          continue
+        }
+
+        if (item.checked ?? item.defaultChecked) {
+          nextValues[item.group] = item.value
+        }
+      }
+    }
+
+    setRadioGroupValues((currentValues) => ({ ...currentValues, ...nextValues }))
   })
 
   useOverlayMenuFloatingPosition({
@@ -330,6 +351,7 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
     checked?: Accessor<boolean>
     hasChildren: boolean
     isCheckbox: boolean
+    isRadio: boolean
     item: TItem
   }): JSX.Element {
     return (
@@ -340,6 +362,7 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
           depth: props.depth,
           hasChildren: contentProps.hasChildren,
           isCheckbox: contentProps.isCheckbox,
+          isRadio: contentProps.isRadio,
         })}
       >
         <Show when={contentProps.item.icon}>
@@ -406,7 +429,9 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
             />
           </Show>
 
-          <Show when={contentProps.isCheckbox && contentProps.checked?.()}>
+          <Show
+            when={(contentProps.isCheckbox || contentProps.isRadio) && contentProps.checked?.()}
+          >
             <span
               data-slot="itemIndicator"
               style={props.styles?.itemIndicator}
@@ -517,7 +542,12 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
           layer.focusContent()
         }}
       >
-        <RenderItemContent item={itemProps.item} hasChildren={false} isCheckbox={false} />
+        <RenderItemContent
+          item={itemProps.item}
+          hasChildren={false}
+          isCheckbox={false}
+          isRadio={false}
+        />
       </div>
     )
   }
@@ -633,6 +663,140 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
           checked={checked}
           hasChildren={false}
           isCheckbox={true}
+          isRadio={false}
+        />
+      </div>
+    )
+  }
+
+  function RadioMenuItem(itemProps: { item: TItem }): JSX.Element {
+    const itemId = useId(undefined, `${props.id}-radio`)
+    const [element, setElement] = createSignal<HTMLDivElement | undefined>(undefined)
+    const [checkedState, setCheckedState] = useControllableValue<boolean>({
+      value: () => itemProps.item.checked,
+      defaultValue: () => itemProps.item.defaultChecked ?? false,
+    })
+    const checked = createMemo(() => {
+      if (itemProps.item.group && itemProps.item.value !== undefined) {
+        return radioGroupValues()[itemProps.item.group] === itemProps.item.value
+      }
+
+      return Boolean(checkedState())
+    })
+
+    onMount(() => {
+      onCleanup(
+        layer.registerItem({
+          disabled: () => Boolean(itemProps.item.disabled),
+          element,
+          hasSubmenu: false,
+          id: itemId(),
+          textValue: () => getOverlayMenuTextValue(itemProps.item) ?? element()?.textContent,
+        }),
+      )
+    })
+
+    const select = (): void => {
+      if (itemProps.item.disabled) {
+        return
+      }
+
+      if (!checked() && itemProps.item.checked === undefined) {
+        setCheckedState(true)
+      }
+
+      if (itemProps.item.group && itemProps.item.value !== undefined) {
+        setRadioGroupValues((values) => ({
+          ...values,
+          [itemProps.item.group!]: itemProps.item.value,
+        }))
+      }
+
+      itemProps.item.onCheckedChange?.(true)
+
+      if (itemProps.item.value !== undefined) {
+        itemProps.item.onValueChange?.(itemProps.item.value)
+      }
+
+      itemProps.item.onSelect?.()
+    }
+
+    const onPointerMove = (): void => {
+      layer.closeSubmenus()
+      layer.setHighlightedItemId(itemId())
+      focusElement(element())
+    }
+
+    return (
+      <div
+        ref={setElement}
+        data-slot="item"
+        role="menuitemradio"
+        tabIndex={layer.highlightedItemId() === itemId() ? 0 : -1}
+        aria-checked={checked() ? 'true' : 'false'}
+        aria-disabled={itemProps.item.disabled ? 'true' : undefined}
+        data-disabled={itemProps.item.disabled ? '' : undefined}
+        data-highlighted={layer.highlightedItemId() === itemId() ? '' : undefined}
+        style={props.styles?.item}
+        class={getItemClass(itemProps.item, props.classes?.item)}
+        onClick={select}
+        onFocus={() => {
+          layer.closeSubmenus()
+          layer.setHighlightedItemId(itemId())
+        }}
+        onKeyDown={(event) => {
+          if (event.repeat) {
+            return
+          }
+
+          if (itemProps.item.disabled) {
+            return
+          }
+
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            select()
+          }
+        }}
+        onPointerEnter={(event) => {
+          if (itemProps.item.disabled) {
+            layer.focusContent()
+            return
+          }
+
+          if (layer.shouldBlockPointerEnter(event)) {
+            layer.queuePointerEnter(event.currentTarget, onPointerMove)
+            event.preventDefault()
+            return
+          }
+
+          onPointerMove()
+        }}
+        onPointerMove={(event) => {
+          if (itemProps.item.disabled) {
+            layer.focusContent()
+            return
+          }
+
+          if (layer.shouldBlockPointerEnter(event)) {
+            layer.queuePointerEnter(event.currentTarget, onPointerMove)
+            event.preventDefault()
+            return
+          }
+
+          onPointerMove()
+        }}
+        onPointerLeave={(event) => {
+          layer.clearQueuedPointerEnter(event.currentTarget)
+          layer.focusContent()
+        }}
+      >
+        <RenderItemContent
+          item={itemProps.item}
+          checked={checked}
+          hasChildren={false}
+          isCheckbox={false}
+          isRadio={true}
         />
       </div>
     )
@@ -827,7 +991,12 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
             })
           }}
         >
-          <RenderItemContent item={itemProps.item} hasChildren={true} isCheckbox={false} />
+          <RenderItemContent
+            item={itemProps.item}
+            hasChildren={true}
+            isCheckbox={false}
+            isRadio={false}
+          />
         </div>
 
         <Show when={contentPresence.present()}>
@@ -985,6 +1154,10 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
 
                     <Match when={item.type === 'checkbox'}>
                       <CheckboxMenuItem item={item} />
+                    </Match>
+
+                    <Match when={item.type === 'radio'}>
+                      <RadioMenuItem item={item} />
                     </Match>
 
                     <Match when={hasOverlayMenuChildren(item)}>

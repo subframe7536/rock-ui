@@ -543,6 +543,71 @@ describe('DropdownMenu', () => {
     expect(onDisabledSelect).not.toHaveBeenCalled()
   })
 
+  test('supports radio items with grouped selection and disabled prevention', async () => {
+    const onCompactSelect = vi.fn()
+    const onComfortableValueChange = vi.fn()
+    const onDisabledSelect = vi.fn()
+
+    render(() => (
+      <DropdownMenu
+        defaultOpen
+        items={[
+          {
+            type: 'radio',
+            group: 'density',
+            value: 'compact',
+            label: 'Compact',
+            checked: true,
+            onSelect: onCompactSelect,
+          },
+          {
+            type: 'radio',
+            group: 'density',
+            value: 'comfortable',
+            label: 'Comfortable',
+            onValueChange: onComfortableValueChange,
+          },
+          {
+            type: 'radio',
+            group: 'density',
+            value: 'spacious',
+            label: 'Spacious',
+            disabled: true,
+            onSelect: onDisabledSelect,
+          },
+        ]}
+      >
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    const radioItems = Array.from(
+      document.body.querySelectorAll('[role="menuitemradio"]'),
+    ) as HTMLElement[]
+    const [compactItem, comfortableItem, disabledItem] = radioItems as [
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+    ]
+
+    expect(compactItem.getAttribute('aria-checked')).toBe('true')
+    expect(comfortableItem.getAttribute('aria-checked')).toBe('false')
+    expect(disabledItem.getAttribute('aria-disabled')).toBe('true')
+
+    await fireEvent.click(comfortableItem)
+
+    expect(compactItem.getAttribute('aria-checked')).toBe('false')
+    expect(comfortableItem.getAttribute('aria-checked')).toBe('true')
+    expect(onComfortableValueChange).toHaveBeenCalledWith('comfortable')
+
+    await fireEvent.click(disabledItem)
+
+    expect(disabledItem.getAttribute('aria-checked')).toBe('false')
+    expect(comfortableItem.getAttribute('aria-checked')).toBe('true')
+    expect(onDisabledSelect).not.toHaveBeenCalled()
+    expect(onCompactSelect).not.toHaveBeenCalled()
+  })
+
   test('destructive item icon does not force muted color class', async () => {
     render(() => (
       <DropdownMenu

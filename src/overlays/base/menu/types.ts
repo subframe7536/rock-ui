@@ -23,7 +23,7 @@ export type OverlayMenuPlacement =
 
 export type OverlayMenuContentSlot = (context: { sub: boolean }) => JSX.Element
 
-export type OverlayMenuItemType = 'item' | 'separator' | 'checkbox' | 'group'
+export type OverlayMenuItemType = 'item' | 'separator' | 'checkbox' | 'radio' | 'group'
 
 /**
  * Shared interface for menu items used in overlays like ContextMenu and DropdownMenu.
@@ -67,14 +67,24 @@ export interface OverlayMenuSharedItem<TItem> {
   disabled?: boolean
 
   /**
-   * Controlled checked state for checkbox items.
+   * Controlled checked state for checkbox and radio items.
    */
   checked?: boolean
 
   /**
-   * Initial checked state for uncontrolled checkbox items.
+   * Initial checked state for uncontrolled checkbox and radio items.
    */
   defaultChecked?: boolean
+
+  /**
+   * Radio group identifier. Radio items with the same group are mutually exclusive.
+   */
+  group?: string
+
+  /**
+   * Radio item value reported by onValueChange and used for grouped selection.
+   */
+  value?: string
 
   /**
    * Controlled open state for submenus.
@@ -100,6 +110,11 @@ export interface OverlayMenuSharedItem<TItem> {
    * Event handler called when a checkbox item's state changes.
    */
   onCheckedChange?: (checked: boolean) => void
+
+  /**
+   * Event handler called when a radio item is selected.
+   */
+  onValueChange?: (value: string) => void
 }
 
 export type OverlayMenuSharedSlots =
@@ -141,6 +156,11 @@ export interface OverlayMenuSharedItemRenderContext<TItem> {
    * Whether the item is being rendered as a checkbox.
    */
   isCheckbox: boolean
+
+  /**
+   * Whether the item is being rendered as a radio item.
+   */
+  isRadio: boolean
 
   /**
    * Whether the item has nested children and triggers a submenu.

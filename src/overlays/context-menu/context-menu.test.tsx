@@ -581,6 +581,66 @@ describe('ContextMenu', () => {
     expect(onDisabledSelect).not.toHaveBeenCalled()
   })
 
+  test('supports radio items with grouped keyboard selection and disabled prevention', async () => {
+    const onValueChange = vi.fn()
+    const onDisabledSelect = vi.fn()
+
+    const screen = render(() => (
+      <ContextMenu
+        items={[
+          {
+            type: 'radio',
+            group: 'sort',
+            value: 'name',
+            label: 'Name',
+            defaultChecked: true,
+          },
+          {
+            type: 'radio',
+            group: 'sort',
+            value: 'date',
+            label: 'Date',
+            onValueChange,
+          },
+          {
+            type: 'radio',
+            group: 'sort',
+            value: 'size',
+            label: 'Size',
+            disabled: true,
+            onSelect: onDisabledSelect,
+          },
+        ]}
+      >
+        <div>Row Item</div>
+      </ContextMenu>
+    ))
+
+    await fireEvent.contextMenu(screen.getByText('Row Item'), { clientX: 24, clientY: 32 })
+
+    const radioItems = Array.from(
+      document.body.querySelectorAll('[role="menuitemradio"]'),
+    ) as HTMLElement[]
+    const [nameItem, dateItem, disabledItem] = radioItems as [HTMLElement, HTMLElement, HTMLElement]
+
+    expect(nameItem.getAttribute('aria-checked')).toBe('true')
+    expect(dateItem.getAttribute('aria-checked')).toBe('false')
+
+    dateItem.focus()
+    await fireEvent.keyDown(dateItem, { key: 'Enter' })
+
+    expect(nameItem.getAttribute('aria-checked')).toBe('false')
+    expect(dateItem.getAttribute('aria-checked')).toBe('true')
+    expect(onValueChange).toHaveBeenCalledWith('date')
+
+    disabledItem.focus()
+    await fireEvent.keyDown(disabledItem, { key: 'Enter' })
+
+    expect(disabledItem.getAttribute('aria-checked')).toBe('false')
+    expect(dateItem.getAttribute('aria-checked')).toBe('true')
+    expect(onDisabledSelect).not.toHaveBeenCalled()
+  })
+
   test('destructive item icon does not force muted color class', async () => {
     const screen = render(() => (
       <ContextMenu items={[{ label: 'Delete', color: 'destructive', icon: 'icon-trash-2' }]}>
