@@ -32,7 +32,12 @@ import {
   fileUploadWrapperVariants,
 } from './file-upload.class'
 
-type FileError = 'TOO_MANY_FILES' | 'FILE_INVALID_TYPE' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL'
+type FileError =
+  | 'TOO_MANY_FILES'
+  | 'FILE_INVALID_TYPE'
+  | 'FILE_TOO_LARGE'
+  | 'FILE_TOO_SMALL'
+  | 'FILE_DUPLICATE'
 
 interface FileRejection {
   file: File
@@ -152,6 +157,16 @@ export namespace FileUploadT {
     maxFiles?: number
 
     /**
+     * Minimum accepted file size in bytes.
+     */
+    minSize?: number
+
+    /**
+     * Maximum accepted file size in bytes.
+     */
+    maxSize?: number
+
+    /**
      * Callback when the selected files change.
      */
     onValueChange?: (value: Value) => void
@@ -249,22 +264,49 @@ function createRejection(file: File, error: FileError): FileRejection {
   }
 }
 
+function getFileIdentity(file: File): string {
+  return [file.name, file.size, file.type, file.lastModified].join('\0')
+}
+
 function filterAcceptedFiles(
   files: File[],
-  accept: string | undefined,
+  options: {
+    accept: string | undefined
+    existingFiles: File[]
+    minSize: number | undefined
+    maxSize: number | undefined
+  },
 ): {
   accepted: File[]
   rejected: FileRejection[]
 } {
   const accepted: File[] = []
   const rejected: FileRejection[] = []
+  const seenFiles = new Set(options.existingFiles.map(getFileIdentity))
 
   for (const file of files) {
-    if (!isAcceptedFileType(file, accept)) {
+    if (!isAcceptedFileType(file, options.accept)) {
       rejected.push(createRejection(file, 'FILE_INVALID_TYPE'))
       continue
     }
 
+    if (options.minSize !== undefined && file.size < options.minSize) {
+      rejected.push(createRejection(file, 'FILE_TOO_SMALL'))
+      continue
+    }
+
+    if (options.maxSize !== undefined && file.size > options.maxSize) {
+      rejected.push(createRejection(file, 'FILE_TOO_LARGE'))
+      continue
+    }
+
+    const fileIdentity = getFileIdentity(file)
+    if (seenFiles.has(fileIdentity)) {
+      rejected.push(createRejection(file, 'FILE_DUPLICATE'))
+      continue
+    }
+
+    seenFiles.add(fileIdentity)
     accepted.push(file)
   }
 
@@ -400,10 +442,15 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
       return
     }
 
-    const { accepted, rejected } = filterAcceptedFiles(files, merged.accept)
+    const currentFiles = selectedFiles()
+    const { accepted, rejected } = filterAcceptedFiles(files, {
+      accept: merged.accept,
+      existingFiles: currentFiles,
+      minSize: merged.minSize,
+      maxSize: merged.maxSize,
+    })
 
     if (merged.multiple) {
-      const currentFiles = selectedFiles()
       const bounded = constrainMultipleFiles(accepted, currentFiles.length, resolvedMaxFiles())
       rejected.push(...bounded.rejected)
 

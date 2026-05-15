@@ -8,8 +8,13 @@ import { FormField } from '../form-field'
 import { FileUpload } from './file-upload'
 import type { FileUploadProps } from './file-upload'
 
-function createFile(name: string, type = 'text/plain', content = 'content'): File {
-  return new File([content], name, { type })
+function createFile(
+  name: string,
+  type = 'text/plain',
+  content = 'content',
+  lastModified = 1,
+): File {
+  return new File([content], name, { type, lastModified })
 }
 
 function getFileInput(container: HTMLElement): HTMLInputElement {
@@ -370,6 +375,91 @@ describe('FileUpload', () => {
     await setInputFiles(input, [createFile('a.txt'), createFile('b.txt')])
 
     expect(onFileReject).toHaveBeenCalledTimes(1)
+  })
+
+  test('rejects files smaller than minSize', async () => {
+    const onValueChange = vi.fn()
+    const onFileReject = vi.fn()
+    const screen = render(() => (
+      <FileUpload multiple minSize={4} onValueChange={onValueChange} onFileReject={onFileReject} />
+    ))
+    const input = getFileInput(screen.container)
+    const small = createFile('small.txt', 'text/plain', 'abc')
+    const valid = createFile('valid.txt', 'text/plain', 'abcd')
+
+    await setInputFiles(input, [small, valid])
+
+    expect(onValueChange).toHaveBeenCalledTimes(1)
+    expect(onValueChange).toHaveBeenLastCalledWith([valid])
+    expect(onFileReject).toHaveBeenCalledWith([{ file: small, errors: ['FILE_TOO_SMALL'] }])
+  })
+
+  test('rejects files larger than maxSize', async () => {
+    const onValueChange = vi.fn()
+    const onFileReject = vi.fn()
+    const screen = render(() => (
+      <FileUpload multiple maxSize={4} onValueChange={onValueChange} onFileReject={onFileReject} />
+    ))
+    const input = getFileInput(screen.container)
+    const valid = createFile('valid.txt', 'text/plain', 'abcd')
+    const large = createFile('large.txt', 'text/plain', 'abcde')
+
+    await setInputFiles(input, [valid, large])
+
+    expect(onValueChange).toHaveBeenCalledTimes(1)
+    expect(onValueChange).toHaveBeenLastCalledWith([valid])
+    expect(onFileReject).toHaveBeenCalledWith([{ file: large, errors: ['FILE_TOO_LARGE'] }])
+  })
+
+  test('rejects duplicate files from the same batch and existing list', async () => {
+    const onValueChange = vi.fn()
+    const onFileReject = vi.fn()
+    const screen = render(() => (
+      <FileUpload multiple onValueChange={onValueChange} onFileReject={onFileReject} />
+    ))
+    const input = getFileInput(screen.container)
+    const first = createFile('same.txt', 'text/plain', 'content', 100)
+    const duplicateInBatch = createFile('same.txt', 'text/plain', 'content', 100)
+    const duplicateExisting = createFile('same.txt', 'text/plain', 'content', 100)
+
+    await setInputFiles(input, [first, duplicateInBatch])
+    await setInputFiles(input, [duplicateExisting])
+
+    expect(onValueChange).toHaveBeenCalledTimes(1)
+    expect(onValueChange).toHaveBeenLastCalledWith([first])
+    expect(onFileReject).toHaveBeenNthCalledWith(1, [
+      { file: duplicateInBatch, errors: ['FILE_DUPLICATE'] },
+    ])
+    expect(onFileReject).toHaveBeenNthCalledWith(2, [
+      { file: duplicateExisting, errors: ['FILE_DUPLICATE'] },
+    ])
+  })
+
+  test('keeps accepted type and maxFiles rejection behavior', async () => {
+    const onValueChange = vi.fn()
+    const onFileReject = vi.fn()
+    const screen = render(() => (
+      <FileUpload
+        multiple
+        accept="image/*"
+        maxFiles={1}
+        onValueChange={onValueChange}
+        onFileReject={onFileReject}
+      />
+    ))
+    const input = getFileInput(screen.container)
+    const image = createFile('image.png', 'image/png', 'img')
+    const text = createFile('note.txt', 'text/plain', 'text')
+    const extra = createFile('extra.png', 'image/png', 'extra')
+
+    await setInputFiles(input, [image, text, extra])
+
+    expect(onValueChange).toHaveBeenCalledTimes(1)
+    expect(onValueChange).toHaveBeenLastCalledWith([image])
+    expect(onFileReject).toHaveBeenCalledWith([
+      { file: text, errors: ['FILE_INVALID_TYPE'] },
+      { file: extra, errors: ['TOO_MANY_FILES'] },
+    ])
   })
 
   test('readOnly keeps selected files and disables removal', async () => {
