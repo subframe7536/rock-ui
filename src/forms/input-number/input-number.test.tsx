@@ -69,6 +69,85 @@ describe('InputNumber', () => {
     expect(spinbutton.value).toBe('-100')
   })
 
+  test('does not change value with wheel by default', () => {
+    const screen = render(() => <InputNumber defaultValue={5} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    const wheelEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+
+    spinbutton.dispatchEvent(wheelEvent)
+
+    expect(spinbutton.value).toBe('5')
+    expect(wheelEvent.defaultPrevented).toBe(false)
+  })
+
+  test('changes value with wheel when enabled and focused', () => {
+    const screen = render(() => <InputNumber defaultValue={5} step={2} wheel />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    const wheelUpEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+    spinbutton.dispatchEvent(wheelUpEvent)
+
+    expect(spinbutton.value).toBe('7')
+    expect(wheelUpEvent.defaultPrevented).toBe(true)
+
+    const wheelDownEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: 100,
+    })
+    spinbutton.dispatchEvent(wheelDownEvent)
+
+    expect(spinbutton.value).toBe('5')
+    expect(wheelDownEvent.defaultPrevented).toBe(true)
+  })
+
+  test('does not change value with enabled wheel when disabled or readOnly', () => {
+    const disabledScreen = render(() => <InputNumber defaultValue={5} disabled wheel />)
+    const disabledSpinbutton = disabledScreen.getByRole('spinbutton') as HTMLInputElement
+
+    disabledSpinbutton.focus()
+
+    const disabledWheelEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+    disabledSpinbutton.dispatchEvent(disabledWheelEvent)
+
+    expect(disabledSpinbutton.value).toBe('5')
+    expect(disabledWheelEvent.defaultPrevented).toBe(true)
+
+    disabledScreen.unmount()
+
+    const readOnlyScreen = render(() => <InputNumber defaultValue={5} readOnly wheel />)
+    const readOnlySpinbutton = readOnlyScreen.getByRole('spinbutton') as HTMLInputElement
+
+    readOnlySpinbutton.focus()
+
+    const readOnlyWheelEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+    readOnlySpinbutton.dispatchEvent(readOnlyWheelEvent)
+
+    expect(readOnlySpinbutton.value).toBe('5')
+    expect(readOnlyWheelEvent.defaultPrevented).toBe(true)
+  })
+
   test('keeps hidden input value in sync with the visible input', async () => {
     const screen = render(() => <InputNumber defaultValue={4} />)
     const input = screen.getByRole('spinbutton') as HTMLInputElement

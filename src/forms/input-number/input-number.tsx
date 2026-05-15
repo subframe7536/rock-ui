@@ -173,6 +173,12 @@ export namespace InputNumberT {
     autofocus?: boolean
 
     /**
+     * Whether mouse wheel changes the value while the input is focused.
+     * @default false
+     */
+    wheel?: boolean
+
+    /**
      * Delay in milliseconds before focusing the input.
      * @default 0
      */
@@ -648,6 +654,27 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     field.emit('focus')
   }
 
+  const onWheel: JSX.EventHandlerUnion<HTMLInputElement, WheelEvent> = (event) => {
+    if (!merged.wheel || (document.activeElement !== inputEl && !field.disabled())) {
+      return
+    }
+
+    if (event.cancelable) {
+      event.preventDefault()
+    }
+
+    if (field.disabled() || readOnly() || event.deltaY === 0) {
+      return
+    }
+
+    if (event.deltaY < 0) {
+      incrementValue()
+      return
+    }
+
+    decrementValue()
+  }
+
   onMount(() => {
     if (!merged.autofocus) {
       return
@@ -753,6 +780,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
         }}
         onBlur={onBlur}
         onFocus={onFocus}
+        onWheel={onWheel}
         {...field.ariaAttrs()}
       />
 
