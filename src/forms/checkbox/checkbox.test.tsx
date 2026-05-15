@@ -40,6 +40,40 @@ describe('Checkbox', () => {
     expect(checkbox.checked).toBe(false)
   })
 
+  test('toggles with Space key', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <Checkbox label="Keyboard" onChange={onChange} />)
+    const checkbox = screen.getByRole('checkbox', { name: 'Keyboard' }) as HTMLInputElement
+
+    await fireEvent.keyDown(checkbox, { key: ' ' })
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenLastCalledWith(true)
+    expect(checkbox.checked).toBe(true)
+
+    await fireEvent.keyDown(checkbox, { key: ' ' })
+
+    expect(onChange).toHaveBeenCalledTimes(2)
+    expect(onChange).toHaveBeenLastCalledWith(false)
+    expect(checkbox.checked).toBe(false)
+  })
+
+  test('does not toggle when disabled', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <Checkbox disabled label="Disabled" onChange={onChange} />)
+    const checkbox = screen.getByRole('checkbox', { name: 'Disabled' }) as HTMLInputElement
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    expect(checkbox.disabled).toBe(true)
+
+    await fireEvent.click(checkbox)
+    await fireEvent.click(control)
+    await fireEvent.keyDown(checkbox, { key: ' ' })
+
+    expect(checkbox.checked).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   test('renders controlled indeterminate state with indeterminate icon', async () => {
     const screen = render(() => (
       <Checkbox
@@ -56,6 +90,7 @@ describe('Checkbox', () => {
     await waitFor(() => {
       expect(checkbox.indeterminate).toBe(true)
       expect(checkbox.checked).toBe(false)
+      expect(checkbox.getAttribute('aria-checked')).toBe('mixed')
       expect(root?.getAttribute('data-indeterminate')).not.toBeNull()
       expect(screen.getByTestId('indeterminate-icon').textContent).toBe('I')
     })
@@ -123,6 +158,11 @@ describe('Checkbox', () => {
 
     expect(checkbox.checked).toBe(true)
     expect(onChange).not.toHaveBeenCalled()
+
+    await fireEvent.keyDown(checkbox, { key: ' ' })
+
+    expect(checkbox.checked).toBe(true)
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   test('does not toggle an uncontrolled readonly checkbox', async () => {
@@ -135,6 +175,11 @@ describe('Checkbox', () => {
     }) as HTMLInputElement
 
     await fireEvent.click(checkbox)
+
+    expect(checkbox.checked).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+
+    await fireEvent.keyDown(checkbox, { key: ' ' })
 
     expect(checkbox.checked).toBe(false)
     expect(onChange).not.toHaveBeenCalled()
@@ -328,6 +373,35 @@ describe('Checkbox', () => {
     await waitFor(() => {
       expect(state.agree).toBe(true)
       expect(screen.queryByText('You must agree')).toBeNull()
+    })
+  })
+
+  test('submits hidden checkbox value only when checked and resets to default state', async () => {
+    const onSubmit = vi.fn()
+    const screen = render(() => (
+      <form onSubmit={onSubmit}>
+        <Checkbox name="agree" value="yes" defaultChecked label="Agree" />
+        <button type="reset">Reset</button>
+        <button type="submit">Submit</button>
+      </form>
+    ))
+
+    const form = screen.container.querySelector('form') as HTMLFormElement
+    const checkbox = screen.getByRole('checkbox', { name: 'Agree' }) as HTMLInputElement
+
+    expect(checkbox.checked).toBe(true)
+    expect(new FormData(form).get('agree')).toBe('yes')
+
+    await fireEvent.click(checkbox)
+
+    expect(checkbox.checked).toBe(false)
+    expect(new FormData(form).has('agree')).toBe(false)
+
+    form.reset()
+
+    await waitFor(() => {
+      expect(checkbox.checked).toBe(true)
+      expect(new FormData(form).get('agree')).toBe('yes')
     })
   })
 

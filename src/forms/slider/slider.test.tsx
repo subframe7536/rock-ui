@@ -187,6 +187,76 @@ describe('Slider', () => {
     expect(invertedChange).toHaveBeenLastCalledWith(44)
   })
 
+  test('horizontal arrow keys follow RTL direction', async () => {
+    const previousDir = document.documentElement.dir
+    document.documentElement.dir = 'rtl'
+
+    try {
+      const onValueChange = vi.fn()
+      const screen = render(() => <Slider defaultValue={45} onValueChange={onValueChange} />)
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+      await fireEvent.focus(thumb)
+      await fireEvent.keyDown(thumb, { key: 'ArrowRight' })
+
+      expect(onValueChange).toHaveBeenLastCalledWith(44)
+
+      await fireEvent.keyDown(thumb, { key: 'ArrowLeft' })
+
+      expect(onValueChange).toHaveBeenLastCalledWith(45)
+    } finally {
+      document.documentElement.dir = previousDir
+    }
+  })
+
+  test('PageUp and PageDown move by one tenth of the range snapped to step', async () => {
+    const onValueChange = vi.fn()
+    const screen = render(() => (
+      <Slider min={0} max={100} step={5} defaultValue={50} onValueChange={onValueChange} />
+    ))
+    const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+    await fireEvent.focus(thumb)
+    await fireEvent.keyDown(thumb, { key: 'PageUp' })
+
+    expect(onValueChange).toHaveBeenLastCalledWith(60)
+
+    await fireEvent.keyDown(thumb, { key: 'PageDown' })
+
+    expect(onValueChange).toHaveBeenLastCalledWith(50)
+  })
+
+  test('readOnly prevents keyboard and pointer value changes', async () => {
+    const onValueChange = vi.fn()
+    const screen = render(() => <Slider readOnly defaultValue={50} onValueChange={onValueChange} />)
+    const thumb = getThumbs(screen.container)[0] as HTMLElement
+    const track = screen.container.querySelector('[data-slot="track"]') as HTMLElement
+    const root = screen.container.querySelector('[data-slot="root"]') as HTMLElement
+
+    mockPointerCapture(thumb)
+    mockTrackRect(track)
+
+    expect(root.getAttribute('data-readonly')).toBe('')
+    expect(thumb.getAttribute('aria-readonly')).toBe('true')
+
+    await fireEvent.focus(thumb)
+    await fireEvent.keyDown(thumb, { key: 'ArrowRight' })
+    await fireEvent.pointerDown(thumb, {
+      button: 0,
+      pointerId: 1,
+      clientX: 50,
+      clientY: 0,
+    })
+    await fireEvent.pointerMove(thumb, {
+      pointerId: 1,
+      clientX: 80,
+      clientY: 0,
+    })
+
+    expect(onValueChange).not.toHaveBeenCalled()
+    expect(thumb.getAttribute('aria-valuenow')).toBe('50')
+  })
+
   test('single uncontrolled emits number for input and commit phases', async () => {
     const onValueChange = vi.fn()
     const onChange = vi.fn()

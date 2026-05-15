@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { Show, createEffect, createMemo, mergeProps } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps, onCleanup, onMount } from 'solid-js'
 
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
@@ -284,8 +284,38 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
 
   createEffect(() => {
     if (inputEl) {
+      inputEl.checked = Boolean(resolvedChecked())
       inputEl.indeterminate = indeterminate()
     }
+  })
+
+  onMount(() => {
+    const form = inputEl?.form
+    if (!form) {
+      return
+    }
+
+    function onReset(): void {
+      // oxlint-disable-next-line subf/solid-reactivity
+      queueMicrotask(() => {
+        const nextChecked = defaultCheckedState()
+        setChecked(nextChecked)
+
+        if (inputEl) {
+          inputEl.checked = nextChecked === true
+          inputEl.indeterminate = nextChecked === 'indeterminate'
+        }
+
+        if (merged.formFieldBind !== false) {
+          field.setFormValue(nextChecked === true ? merged.trueValue : merged.falseValue)
+        }
+      })
+    }
+
+    form.addEventListener('reset', onReset)
+    onCleanup(() => {
+      form.removeEventListener('reset', onReset)
+    })
   })
 
   function toggle(): void {
@@ -295,6 +325,15 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
 
     onChange(!resolvedChecked())
     inputEl?.focus()
+  }
+
+  function onInputKeyDown(event: KeyboardEvent): void {
+    if (event.key !== ' ') {
+      return
+    }
+
+    event.preventDefault()
+    toggle()
   }
 
   function onRootPointerDown(event: PointerEvent): void {
@@ -371,6 +410,7 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
             event.currentTarget.checked = Boolean(resolvedChecked())
             event.currentTarget.indeterminate = indeterminate()
           }}
+          onKeyDown={onInputKeyDown}
           {...dataAttrs()}
           {...field.ariaAttrs()}
         />
