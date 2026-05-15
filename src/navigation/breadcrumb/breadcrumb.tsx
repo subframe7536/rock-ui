@@ -136,7 +136,7 @@ export namespace BreadcrumbT {
  */
 export interface BreadcrumbProps extends BreadcrumbT.Props {}
 
-/** Breadcrumb navigation trail with separator icons and collapsible overflow. */
+/** Breadcrumb navigation trail with separator icons and optional wrapping. */
 export function Breadcrumb(props: BreadcrumbProps): JSX.Element {
   const merged = mergeProps(
     {

@@ -1,7 +1,8 @@
-import type * as KPopper from '@kobalte/core/popper'
 import { fireEvent, render, waitFor } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+
+import { setPopperTestPlacementAccessor } from '../base/popper'
 
 import { Popover } from './popover'
 import type { PopoverProps } from './popover'
@@ -9,25 +10,25 @@ import type { PopoverProps } from './popover'
 let getMockPlacement: () => string = () => 'bottom'
 let setMockPlacement: (value: string) => void = () => undefined
 
-vi.mock('@kobalte/core/popper', async () => {
-  const actual = await vi.importActual<typeof KPopper>('@kobalte/core/popper')
+async function finishExitMotion(): Promise<void> {
+  const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
 
-  return {
-    ...actual,
-    usePopperContext: () => ({
-      currentPlacement: () => getMockPlacement(),
-      contentRef: () => undefined,
-      setPositionerRef: () => undefined,
-      setArrowRef: () => undefined,
-    }),
+  if (content) {
+    await fireEvent.animationEnd(content)
+    await fireEvent.transitionEnd(content)
   }
-})
+}
 
 describe('Popover', () => {
   beforeEach(() => {
     const [placement, setPlacement] = createSignal('bottom')
     getMockPlacement = placement
     setMockPlacement = setPlacement
+    setPopperTestPlacementAccessor(getMockPlacement)
+  })
+
+  afterEach(() => {
+    setPopperTestPlacementAccessor(undefined)
   })
 
   test('supports click mode and renders content', () => {
@@ -68,10 +69,10 @@ describe('Popover', () => {
   })
 
   test.each([
-    ['top-start', 'mb-$kb-popper-content-overflow-padding'],
-    ['right-start', 'ml-$kb-popper-content-overflow-padding'],
-    ['bottom-start', 'mt-$kb-popper-content-overflow-padding'],
-    ['left-start', 'mr-$kb-popper-content-overflow-padding'],
+    ['top-start', 'mb-$mo-popper-content-overflow-padding'],
+    ['right-start', 'ml-$mo-popper-content-overflow-padding'],
+    ['bottom-start', 'mt-$mo-popper-content-overflow-padding'],
+    ['left-start', 'mr-$mo-popper-content-overflow-padding'],
   ] as const)('applies side class for placement %s', (placement, expectedClass) => {
     setMockPlacement(placement)
 
@@ -237,6 +238,10 @@ describe('Popover', () => {
     content.focus()
     await fireEvent.keyDown(content, { key: 'Escape' })
 
+    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+
+    await finishExitMotion()
+
     await waitFor(() => {
       expect(onClosePrevent).not.toHaveBeenCalled()
       expect(onOpenChange).toHaveBeenCalledWith(false)
@@ -244,6 +249,48 @@ describe('Popover', () => {
 
       const trigger = document.body.querySelector('[data-slot="trigger"]')
       expect(trigger?.getAttribute('aria-expanded')).toBe('false')
+    })
+  })
+
+  test('closes popover on outside pointer interaction in click mode', async () => {
+    const onOpenChange = vi.fn()
+
+    const screen = render(() => (
+      <>
+        <button type="button" data-testid="outside">
+          Outside target
+        </button>
+        <Popover defaultOpen onOpenChange={onOpenChange} content="Closable">
+          <button type="button">Trigger</button>
+        </Popover>
+      </>
+    ))
+
+    await fireEvent.pointerDown(screen.getByTestId('outside'))
+
+    expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+
+    await finishExitMotion()
+
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false)
+      expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
+    })
+  })
+
+  test('positions defaultOpen popover on initial mount', async () => {
+    render(() => (
+      <Popover defaultOpen content="Positioned">
+        <button type="button">Trigger</button>
+      </Popover>
+    ))
+
+    await waitFor(() => {
+      const positioner = document.body.querySelector(
+        '[data-slot="positioner"]',
+      ) as HTMLElement | null
+
+      expect(positioner?.style.transform).toContain('translate3d(')
     })
   })
 

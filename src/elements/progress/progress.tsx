@@ -1,6 +1,5 @@
-import * as KobalteProgress from '@kobalte/core/progress'
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createMemo, mergeProps } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 
@@ -41,7 +40,7 @@ export namespace ProgressT {
   export type Variant = ProgressVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteProgress.ProgressRootProps
+  export type Extend = never
 
   export interface Item {}
   /**
@@ -69,7 +68,7 @@ export namespace ProgressT {
     /**
      * Callback to get a localized label for the current value.
      */
-    getValueLabel?: KobalteProgress.ProgressRootProps['getValueLabel']
+    getValueLabel?: (params: { value: number; min: number; max: number }) => string
 
     /**
      * Custom render function for the status label.
@@ -108,6 +107,10 @@ function resolveMaxValue(max: ProgressProps['max']): number {
   return 100
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
 /** Determinate or indeterminate progress indicator with optional step labels. */
 export function Progress(props: ProgressProps): JSX.Element {
   const merged = mergeProps(
@@ -122,210 +125,209 @@ export function Progress(props: ProgressProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    'value',
-    'max',
-    'status',
-    'orientation',
-    'animation',
-    'renderStatus',
-    'renderStep',
-    'size',
-    'classes',
-  ])
-
-  const steps = createMemo<string[]>(() => (Array.isArray(local.max) ? local.max : []))
+  const steps = createMemo<string[]>(() => (Array.isArray(merged.max) ? merged.max : []))
   const hasSteps = createMemo(() => steps().length > 0)
-  const realMax = createMemo(() => resolveMaxValue(local.max))
-  const isIndeterminate = createMemo(() => local.value === null || local.value === undefined)
+  const realMax = createMemo(() => resolveMaxValue(merged.max))
+  const isIndeterminate = createMemo(() => merged.value === null || merged.value === undefined)
 
-  const kobalteMax = createMemo(() => (realMax() <= 0 ? 1 : realMax()))
-  const kobalteValue = createMemo(() => {
+  const minValue = 0
+  const resolvedMax = createMemo(() => (realMax() <= 0 ? 1 : realMax()))
+  const resolvedValue = createMemo(() => {
     if (isIndeterminate()) {
-      return 0
+      return minValue
     }
 
-    const value = Number(local.value)
+    const value = Number(merged.value)
     if (!Number.isFinite(value)) {
-      return 0
+      return minValue
     }
 
-    return value
+    return clamp(value, minValue, resolvedMax())
   })
 
-  function ProgressContent(): JSX.Element {
-    const context = KobalteProgress.useProgressContext()
-    const percent = createMemo<number | undefined>(() => {
-      if (isIndeterminate()) {
-        return undefined
-      }
-
-      const ratio = context.valuePercent()
-      if (!Number.isFinite(ratio)) {
-        return 0
-      }
-
-      const bounded = Math.min(Math.max(ratio, 0), 1)
-      return Math.round(bounded * 100)
-    })
-
-    const statusStyle = createMemo<JSX.CSSProperties>(() => {
-      const currentPercent = Math.max(percent() ?? 0, 0)
-      if (local.orientation === 'vertical') {
-        return { height: `${100 - currentPercent}%` }
-      }
-
-      return { width: `${currentPercent}%` }
-    })
-
-    const indicatorStyle = createMemo<JSX.CSSProperties | undefined>(() => {
-      const currentPercent = percent()
-      if (currentPercent === undefined) {
-        return undefined
-      }
-
-      const distance = 100 - currentPercent
-      if (local.orientation === 'vertical') {
-        return {
-          transform: `translateY(${distance}%)`,
-        }
-      }
-
-      return {
-        transform: `translateX(-${distance}%)`,
-      }
-    })
-
-    function stepState(index: number): ProgressT.StepRenderContext['state'] {
-      const value = context.value()
-      const activeIndex = Number.isFinite(value) ? Math.round(value) : 0
-      const isActive = !isIndeterminate() && index === activeIndex
-      const lastIndex = steps().length - 1
-
-      if (isActive && index === 0) {
-        return 'first'
-      }
-
-      if (isActive && index === lastIndex) {
-        return 'last'
-      }
-
-      if (isActive) {
-        return 'active'
-      }
-
-      return 'other'
+  const percent = createMemo<number | undefined>(() => {
+    if (isIndeterminate()) {
+      return undefined
     }
 
-    return (
-      <>
-        <Show when={!isIndeterminate() && (local.status || local.renderStatus)}>
-          <div
-            data-slot="status"
-            class={progressStatusVariants(
-              {
-                orientation: local.orientation,
-                size: local.size,
-              },
-              local.classes?.status,
-            )}
-            style={{
-              ...statusStyle(),
-              ...merged.styles?.status,
-            }}
-          >
-            {local.renderStatus ? local.renderStatus({ percent: percent() }) : `${percent() ?? 0}%`}
-          </div>
-        </Show>
+    const range = resolvedMax() - minValue
+    if (range <= 0) {
+      return 0
+    }
 
-        <KobalteProgress.Track
-          data-slot="track"
-          style={merged.styles?.track}
-          class={progressBaseVariants(
-            {
-              orientation: local.orientation,
-              size: local.size,
-            },
-            local.classes?.track,
-          )}
-        >
-          <KobalteProgress.Fill
-            data-slot="indicator"
-            class={progressIndicatorVariants(
-              {
-                orientation: local.orientation,
-                animation: local.animation,
-              },
-              local.classes?.indicator,
-            )}
-            style={{
-              ...indicatorStyle(),
-              ...merged.styles?.indicator,
-            }}
-          />
-        </KobalteProgress.Track>
+    const ratio = (resolvedValue() - minValue) / range
+    const bounded = Math.min(Math.max(ratio, 0), 1)
+    return Math.round(bounded * 100)
+  })
 
-        <Show when={hasSteps()}>
-          <div
-            data-slot="steps"
-            style={merged.styles?.steps}
-            class={progressStepsVariants(
-              {
-                orientation: local.orientation,
-                size: local.size,
-              },
-              local.classes?.steps,
-            )}
-          >
-            <For each={steps()}>
-              {(step, index) => (
-                <div
-                  data-slot="step"
-                  style={merged.styles?.step}
-                  class={progressStepVariants(
-                    {
-                      state: stepState(index()),
-                      size: local.size,
-                    },
-                    local.classes?.step,
-                  )}
-                >
-                  <Show when={local.renderStep} fallback={step}>
-                    {(renderStep) =>
-                      renderStep()({
-                        step,
-                        index: index(),
-                        state: stepState(index()),
-                      })
-                    }
-                  </Show>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
-      </>
-    )
+  const dataAttrs = createMemo(() => ({
+    'data-indeterminate': isIndeterminate() ? '' : undefined,
+  }))
+
+  const valueText = createMemo(() => {
+    if (isIndeterminate()) {
+      return undefined
+    }
+
+    if (merged.getValueLabel) {
+      return merged.getValueLabel({ value: resolvedValue(), min: minValue, max: resolvedMax() })
+    }
+
+    return `${percent() ?? 0}%`
+  })
+
+  const statusStyle = createMemo<JSX.CSSProperties>(() => {
+    const currentPercent = Math.max(percent() ?? 0, 0)
+    if (merged.orientation === 'vertical') {
+      return { height: `${100 - currentPercent}%` }
+    }
+
+    return { width: `${currentPercent}%` }
+  })
+
+  const indicatorStyle = createMemo<JSX.CSSProperties | undefined>(() => {
+    const currentPercent = percent()
+    if (currentPercent === undefined) {
+      return undefined
+    }
+
+    const distance = 100 - currentPercent
+    if (merged.orientation === 'vertical') {
+      return {
+        transform: `translateY(${distance}%)`,
+      }
+    }
+
+    return {
+      transform: `translateX(-${distance}%)`,
+    }
+  })
+
+  function stepState(index: number): ProgressT.StepRenderContext['state'] {
+    const activeIndex = Number.isFinite(resolvedValue()) ? Math.round(resolvedValue()) : 0
+    const isActive = !isIndeterminate() && index === activeIndex
+    const lastIndex = steps().length - 1
+
+    if (isActive && index === 0) {
+      return 'first'
+    }
+
+    if (isActive && index === lastIndex) {
+      return 'last'
+    }
+
+    if (isActive) {
+      return 'active'
+    }
+
+    return 'other'
   }
 
   return (
-    <KobalteProgress.Root
-      minValue={0}
-      maxValue={kobalteMax()}
-      value={kobalteValue()}
-      indeterminate={isIndeterminate()}
+    <div
+      role="progressbar"
+      aria-valuemin={isIndeterminate() ? undefined : minValue}
+      aria-valuemax={isIndeterminate() ? undefined : resolvedMax()}
+      aria-valuenow={isIndeterminate() ? undefined : resolvedValue()}
+      aria-valuetext={valueText()}
       data-slot="root"
       style={merged.styles?.root}
-      data-orientation={local.orientation}
+      data-orientation={merged.orientation}
+      {...dataAttrs()}
       class={progressRootVariants(
         {
-          orientation: local.orientation,
+          orientation: merged.orientation,
         },
-        local.classes?.root,
+        merged.classes?.root,
       )}
-      {...rest}
     >
-      <ProgressContent />
-    </KobalteProgress.Root>
+      <Show when={!isIndeterminate() && (merged.status || merged.renderStatus)}>
+        <div
+          data-slot="status"
+          class={progressStatusVariants(
+            {
+              orientation: merged.orientation,
+              size: merged.size,
+            },
+            merged.classes?.status,
+          )}
+          style={{
+            ...statusStyle(),
+            ...merged.styles?.status,
+          }}
+        >
+          {merged.renderStatus ? merged.renderStatus({ percent: percent() }) : `${percent() ?? 0}%`}
+        </div>
+      </Show>
+
+      <div
+        data-slot="track"
+        style={merged.styles?.track}
+        class={progressBaseVariants(
+          {
+            orientation: merged.orientation,
+            size: merged.size,
+          },
+          merged.classes?.track,
+        )}
+        {...dataAttrs()}
+      >
+        <div
+          data-slot="indicator"
+          class={progressIndicatorVariants(
+            {
+              orientation: merged.orientation,
+              animation: merged.animation,
+            },
+            merged.classes?.indicator,
+          )}
+          style={{
+            ...indicatorStyle(),
+            ...merged.styles?.indicator,
+          }}
+          {...dataAttrs()}
+        />
+      </div>
+
+      <Show when={hasSteps()}>
+        <div
+          data-slot="steps"
+          style={merged.styles?.steps}
+          class={progressStepsVariants(
+            {
+              orientation: merged.orientation,
+              size: merged.size,
+            },
+            merged.classes?.steps,
+          )}
+        >
+          <For each={steps()}>
+            {(step, index) => (
+              <div
+                data-slot="step"
+                style={merged.styles?.step}
+                class={progressStepVariants(
+                  {
+                    state: stepState(index()),
+                    size: merged.size,
+                  },
+                  merged.classes?.step,
+                )}
+              >
+                <Show when={merged.renderStep} fallback={step}>
+                  {(renderStep) =>
+                    renderStep()({
+                      step,
+                      index: index(),
+                      state: stepState(index()),
+                    })
+                  }
+                </Show>
+              </div>
+            )}
+          </For>
+        </div>
+      </Show>
+    </div>
   )
 }

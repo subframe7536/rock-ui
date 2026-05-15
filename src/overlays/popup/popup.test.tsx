@@ -3,6 +3,21 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { Popup } from './popup'
 
+async function finishExitMotion(): Promise<void> {
+  const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
+  const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement | null
+
+  if (content) {
+    await fireEvent.animationEnd(content)
+    await fireEvent.transitionEnd(content)
+  }
+
+  if (overlay) {
+    await fireEvent.animationEnd(overlay)
+    await fireEvent.transitionEnd(overlay)
+  }
+}
+
 describe('Popup', () => {
   test('renders popup content when open', () => {
     render(() => (
@@ -180,6 +195,8 @@ describe('Popup', () => {
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
     content.focus()
     await fireEvent.keyDown(content, { key: 'Escape' })
+
+    await finishExitMotion()
 
     await waitFor(() => {
       expect(onClosePrevent).not.toHaveBeenCalled()

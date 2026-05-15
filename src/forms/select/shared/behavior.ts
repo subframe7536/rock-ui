@@ -1,10 +1,9 @@
-import type { ComboboxContextValue } from '@kobalte/core/combobox'
 import { createEffect, createMemo, createSignal, on } from 'solid-js'
 import type { Accessor } from 'solid-js'
 
 import { useId } from '../../../shared/utils'
 import { useFormField } from '../../form-field/form-field-context'
-import type { UseFormFieldReturn, FormFieldSize } from '../../form-field/form-field-context'
+import type { FormFieldSize, UseFormFieldReturn } from '../../form-field/form-field-context'
 import type { FormInputEventType } from '../../form/form-context'
 
 import type {
@@ -35,7 +34,12 @@ interface UseSelectFilterProps<TOption extends SelectFilterableOption<TRaw>, TRa
   inputValue: () => string
 }
 
-type SelectMenuContext = Pick<ComboboxContextValue, 'close' | 'isOpen' | 'open'>
+export interface SelectSelectionManager {
+  focusedKey: () => string | undefined
+  isDisabled: (key: string) => boolean
+  select: (key: string) => void
+  toggleSelection: (key: string) => void
+}
 
 /**
  * Shared form-field bridge for select-like controls.
@@ -79,11 +83,15 @@ export function useSelectField(props: () => UseSelectFieldProps): UseSelectField
 /**
  * Shared open/close control logic for select-like dropdown menus.
  */
-export function useSelectMenuControl(mode: Accessor<'control' | 'trigger'>) {
+export function useSelectMenuControl(options: {
+  close: () => void
+  isOpen: Accessor<boolean>
+  mode: Accessor<'control' | 'trigger'>
+  open: () => void
+}) {
   const [isDismissing, setIsDismissing] = createSignal(false)
-  let closedByInteractOutside = false
 
-  const opensFromControlClick = createMemo(() => mode() !== 'trigger')
+  const opensFromControlClick = createMemo(() => options.mode() !== 'trigger')
 
   function markDismissing() {
     setIsDismissing(true)
@@ -92,40 +100,39 @@ export function useSelectMenuControl(mode: Accessor<'control' | 'trigger'>) {
     })
   }
 
-  function openMenu(context: SelectMenuContext, fail?: () => void) {
-    if (!context.isOpen()) {
-      context.open(false, 'manual')
-    } else {
-      fail?.()
+  function openMenu() {
+    if (!options.isOpen()) {
+      options.open()
     }
   }
 
-  function onTriggerClickFallback(event: MouseEvent, context: SelectMenuContext) {
+  function toggleMenu() {
+    if (options.isOpen()) {
+      options.close()
+      return
+    }
+
+    options.open()
+  }
+
+  function onTriggerClickFallback(event: MouseEvent) {
     if (!(event.currentTarget as HTMLElement).dataset.pointerType) {
-      openMenu(context, () => context.close())
+      toggleMenu()
     }
   }
 
   function onContentInteractOutside() {
-    closedByInteractOutside = true
     markDismissing()
-  }
-
-  function onContentCloseAutoFocus(event: Event) {
-    if (closedByInteractOutside) {
-      event.preventDefault()
-      closedByInteractOutside = false
-    }
   }
 
   return {
     isDismissing,
     markDismissing,
-    onContentCloseAutoFocus,
     onContentInteractOutside,
     onTriggerClickFallback,
     openMenu,
     opensFromControlClick,
+    toggleMenu,
   }
 }
 
@@ -218,6 +225,49 @@ const SELECT_FILTER_STRATEGIES: Record<SelectFilterMode, (text: string, input: s
     contains: (text, input) => text.includes(input),
   }
 
+function matchesFilter<TOption extends SelectFilterableOption<unknown>>(
+  option: TOption,
+  inputValue: string,
+  filter: SelectFilterMode | ((option: TOption, inputValue: string) => boolean),
+): boolean {
+  if (typeof filter === 'function') {
+    return filter(option, inputValue)
+  }
+
+  const input = inputValue.toLowerCase()
+  const text = option.key.toLowerCase()
+
+  return (SELECT_FILTER_STRATEGIES[filter] ?? SELECT_FILTER_STRATEGIES.contains)(text, input)
+}
+
+export function filterNormalizedOptions<TRaw>(
+  items: Array<NormalizedOption<TRaw> | NormalizedGroup<TRaw>>,
+  inputValue: string,
+  filter: SelectFilterMode | ((option: NormalizedOption<TRaw>, inputValue: string) => boolean),
+): Array<NormalizedOption<TRaw> | NormalizedGroup<TRaw>> {
+  if (inputValue.trim() === '') {
+    return items
+  }
+
+  const result: Array<NormalizedOption<TRaw> | NormalizedGroup<TRaw>> = []
+
+  for (const item of items) {
+    if (item.isGroup) {
+      const options = item.options.filter((option) => matchesFilter(option, inputValue, filter))
+      if (options.length > 0) {
+        result.push({ ...item, options })
+      }
+      continue
+    }
+
+    if (matchesFilter(item, inputValue, filter)) {
+      result.push(item)
+    }
+  }
+
+  return result
+}
+
 /**
  * Shared filtering logic for select-like components.
  */
@@ -229,7 +279,6 @@ export function useSelectFilter<TOption extends SelectFilterableOption<TRaw>, TR
   >(() => {
     const filterOption = props.filterOption()
 
-    // Bypass filtering when search is disabled or explicitly disabled via filterOption={false}.
     if (!props.isSearchable() || filterOption === false) {
       return (): boolean => true
     }
@@ -249,16 +298,7 @@ export function useSelectFilter<TOption extends SelectFilterableOption<TRaw>, TR
     const inputValue = props.inputValue()
     const filter = kobalteFilter()
 
-    return props.allOptions().some((option) => {
-      if (typeof filter === 'function') {
-        return filter(option, inputValue)
-      }
-
-      const input = inputValue.toLowerCase()
-      const text = option.key.toLowerCase()
-
-      return (SELECT_FILTER_STRATEGIES[filter] ?? SELECT_FILTER_STRATEGIES.contains)(text, input)
-    })
+    return props.allOptions().some((option) => matchesFilter(option, inputValue, filter))
   })
 
   return {
@@ -267,28 +307,18 @@ export function useSelectFilter<TOption extends SelectFilterableOption<TRaw>, TR
   }
 }
 
-// ---------------------------------------------------------------------------
-// Shared Combobox.Input event handlers
-// ---------------------------------------------------------------------------
-
 interface ComboboxInputHandlerDeps {
   isSearchable: () => boolean
   menuControl: ReturnType<typeof useSelectMenuControl>
   field: { emit: (event: FormInputEventType) => void }
-  context: Pick<ComboboxContextValue, 'isOpen' | 'open' | 'close' | 'listState'>
-  /**
-   * Called when Tab is pressed with the menu open and a non-disabled key is focused.
-   * Single-select uses `selectionManager.select(key)`,
-   * Multi-select uses `selectionManager.toggleSelection(key)`.
-   */
+  isOpen: () => boolean
+  selectionManager: () => SelectSelectionManager
   onTabSelection: (focusedKey: string) => void
-  /** Optional extra handler for KeyDown events not consumed by Tab/Escape/Arrow. */
   onExtraKeyDown?: (e: KeyboardEvent) => void
 }
 
 /**
- * Returns the shared `onInput`, `onClick`, `onKeyDown`, `onFocus`, and `onBlur`
- * handlers for `Combobox.Input` used by both Select and MultiSelect.
+ * Returns the shared input handlers used by both Select and MultiSelect.
  */
 export function createComboboxInputHandlers(deps: ComboboxInputHandlerDeps) {
   return {
@@ -299,37 +329,28 @@ export function createComboboxInputHandlers(deps: ComboboxInputHandlerDeps) {
 
       const nextValue = (event.currentTarget as HTMLInputElement).value
       if (nextValue.trim() !== '') {
-        deps.menuControl.openMenu(deps.context)
-      }
-    },
-    onClick: (): void => {
-      if (deps.menuControl.opensFromControlClick()) {
-        deps.menuControl.openMenu(deps.context, () => deps.context.close())
+        deps.menuControl.openMenu()
       }
     },
     onKeyDown: (e: KeyboardEvent): void => {
-      // Flag dismiss keys so handleInputChange skips setCurrentInputText
-      // during Kobalte's synchronous resetInputValue call that follows.
-      if (e.key === 'Escape' || (e.key === 'Tab' && deps.context.isOpen())) {
+      if (e.key === 'Escape' || (e.key === 'Tab' && deps.isOpen())) {
         deps.menuControl.markDismissing()
       }
 
       if (e.key === 'Tab') {
-        if (deps.context.isOpen()) {
-          const selectionManager = deps.context.listState().selectionManager()
+        if (deps.isOpen()) {
+          const selectionManager = deps.selectionManager()
           const focusedKey = selectionManager.focusedKey()
 
           if (focusedKey && !selectionManager.isDisabled(focusedKey)) {
             deps.onTabSelection(focusedKey)
           }
 
-          // Keep focus on the select after the first Tab when menu is open.
           e.preventDefault()
         }
         return
       }
 
-      // Prevent page scroll when navigating with arrow keys.
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault()
       }

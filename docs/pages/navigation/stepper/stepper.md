@@ -28,7 +28,7 @@ root
 
 ### Sizes
 
-Preview the Stepper across all supported sizes using the default linear, non-clickable behavior.
+Preview the Stepper across all supported sizes using the default linear, non-clickable tab navigation.
 
 :::example
 name: Sizes
@@ -42,9 +42,9 @@ Manage the active step externally and allow jumping to any step.
 name: ControlledNonLinear
 :::
 
-### Clickable vs Read-Only
+### Clickable vs Non-Clickable
 
-Compare the default read-only mode with explicit click-enabled interaction.
+Compare the default non-clickable mode with explicit click-enabled navigation.
 
 :::example
 name: ClickableVsReadOnly
@@ -60,7 +60,7 @@ name: LinearCheckout
 
 ### Vertical
 
-Render the stepper vertically as a read-only progress indicator.
+Render the tab-structured step navigation vertically.
 
 :::example
 name: Vertical

@@ -62,14 +62,46 @@ export const sliderRangeVariants = cva('rounded-full bg-primary select-none abso
 })
 
 export const sliderThumbVariants = cva(
-  'outline-none surface-border rounded-full bg-background shrink-0 block cursor-pointer select-none shadow-xs/5 transition-[box-shadow,transform] relative focus-visible:effect-fv hover:effect-fv dark:bg-foreground data-dragging:scale-120 not-dark:bg-clip-padding',
+  'outline-none surface-border rounded-full bg-background shrink-0 block cursor-pointer select-none shadow-xs/5 transition-[box-shadow,transform] absolute touch-none focus-visible:effect-fv hover:effect-fv dark:bg-foreground data-dragging:(scale-120 z-10) not-dark:bg-clip-padding',
   {
     defaultVariants: {
+      orientation: 'horizontal',
+      inverted: false,
       size: 'md',
     },
     variants: {
+      orientation: {
+        horizontal: '',
+        vertical: '',
+      },
+      inverted: {
+        true: '',
+        false: '',
+      },
       size: CHECKABLE_BASE_SIZE_VARIANT,
     },
+    compoundVariants: [
+      {
+        orientation: 'horizontal',
+        inverted: false,
+        class: '-translate-x-1/2',
+      },
+      {
+        orientation: 'horizontal',
+        inverted: true,
+        class: 'translate-x-1/2',
+      },
+      {
+        orientation: 'vertical',
+        inverted: false,
+        class: '-translate-y-1/2',
+      },
+      {
+        orientation: 'vertical',
+        inverted: true,
+        class: 'translate-y-1/2',
+      },
+    ],
   },
 )
 

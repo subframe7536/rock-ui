@@ -43,6 +43,125 @@ describe('InputNumber', () => {
     expect(spinbutton.value).toBe('5')
   })
 
+  test('supports PageUp and PageDown using largeStep', async () => {
+    const screen = render(() => <InputNumber defaultValue={0} step={4} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    await fireEvent.keyDown(spinbutton, { key: 'PageUp' })
+    expect(spinbutton.value).toBe('40')
+
+    await fireEvent.keyDown(spinbutton, { key: 'PageDown' })
+    expect(spinbutton.value).toBe('0')
+  })
+
+  test('supports Home and End keyboard shortcuts for min and max', async () => {
+    const screen = render(() => <InputNumber defaultValue={20} minValue={-100} maxValue={100} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    await fireEvent.keyDown(spinbutton, { key: 'End' })
+    expect(spinbutton.value).toBe('100')
+
+    await fireEvent.keyDown(spinbutton, { key: 'Home' })
+    expect(spinbutton.value).toBe('-100')
+  })
+
+  test('does not change value with wheel by default', () => {
+    const screen = render(() => <InputNumber defaultValue={5} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    const wheelEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+
+    spinbutton.dispatchEvent(wheelEvent)
+
+    expect(spinbutton.value).toBe('5')
+    expect(wheelEvent.defaultPrevented).toBe(false)
+  })
+
+  test('changes value with wheel when enabled and focused', () => {
+    const screen = render(() => <InputNumber defaultValue={5} step={2} wheel />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+    spinbutton.focus()
+
+    const wheelUpEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+    spinbutton.dispatchEvent(wheelUpEvent)
+
+    expect(spinbutton.value).toBe('7')
+    expect(wheelUpEvent.defaultPrevented).toBe(true)
+
+    const wheelDownEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: 100,
+    })
+    spinbutton.dispatchEvent(wheelDownEvent)
+
+    expect(spinbutton.value).toBe('5')
+    expect(wheelDownEvent.defaultPrevented).toBe(true)
+  })
+
+  test('does not change value with enabled wheel when disabled or readOnly', () => {
+    const disabledScreen = render(() => <InputNumber defaultValue={5} disabled wheel />)
+    const disabledSpinbutton = disabledScreen.getByRole('spinbutton') as HTMLInputElement
+
+    disabledSpinbutton.focus()
+
+    const disabledWheelEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+    disabledSpinbutton.dispatchEvent(disabledWheelEvent)
+
+    expect(disabledSpinbutton.value).toBe('5')
+    expect(disabledWheelEvent.defaultPrevented).toBe(true)
+
+    disabledScreen.unmount()
+
+    const readOnlyScreen = render(() => <InputNumber defaultValue={5} readOnly wheel />)
+    const readOnlySpinbutton = readOnlyScreen.getByRole('spinbutton') as HTMLInputElement
+
+    readOnlySpinbutton.focus()
+
+    const readOnlyWheelEvent = new WheelEvent('wheel', {
+      bubbles: true,
+      cancelable: true,
+      deltaY: -100,
+    })
+    readOnlySpinbutton.dispatchEvent(readOnlyWheelEvent)
+
+    expect(readOnlySpinbutton.value).toBe('5')
+    expect(readOnlyWheelEvent.defaultPrevented).toBe(true)
+  })
+
+  test('keeps hidden input value in sync with the visible input', async () => {
+    const screen = render(() => <InputNumber defaultValue={4} />)
+    const input = screen.getByRole('spinbutton') as HTMLInputElement
+    const hiddenInput = screen.container.querySelector('input[type="hidden"]') as HTMLInputElement
+
+    expect(input.value).toBe('4')
+    expect(hiddenInput.value).toBe('4')
+
+    await fireEvent.input(input, { currentTarget: { value: '40' }, target: { value: '40' } })
+
+    expect(input.value).toBe('40')
+    expect(hiddenInput.value).toBe('40')
+  })
+
   test('repeats increment while the trigger is held', async () => {
     vi.useFakeTimers()
 
@@ -353,6 +472,16 @@ describe('InputNumber', () => {
     await waitFor(() => {
       expect(spinbutton.value).toBe('5')
     })
+  })
+
+  test('focuses the input after trigger clicks', async () => {
+    const screen = render(() => <InputNumber defaultValue={0} />)
+    const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+    const incrementButton = screen.getByRole('button', { name: 'Increment' })
+
+    await fireEvent.click(incrementButton)
+
+    expect(document.activeElement).toBe(spinbutton)
   })
 
   test('uses vertical orientation behavior with both controls', async () => {

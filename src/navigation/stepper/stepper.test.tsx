@@ -126,6 +126,54 @@ describe('Stepper', () => {
     expect(screen.getByRole('tab', { name: 'Address' }).getAttribute('aria-selected')).toBe('false')
   })
 
+  test('supports Home and End keyboard navigation when clickable', () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <Stepper items={ITEMS} defaultValue="shipping" linear={false} clickable onChange={onChange} />
+    ))
+
+    const shipping = screen.getByRole('tab', { name: 'Shipping' })
+    const address = screen.getByRole('tab', { name: 'Address' })
+    const checkout = screen.getByRole('tab', { name: 'Checkout' })
+
+    shipping.focus()
+    fireEvent.keyDown(shipping, { key: 'End' })
+    expect(checkout.getAttribute('aria-selected')).toBe('true')
+
+    fireEvent.keyDown(checkout, { key: 'Home' })
+    expect(address.getAttribute('aria-selected')).toBe('true')
+    expect(onChange).toHaveBeenCalledWith('checkout')
+    expect(onChange).toHaveBeenCalledWith('address')
+  })
+
+  test('supports manual activation mode via Enter', () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <Stepper
+        items={ITEMS}
+        defaultValue="address"
+        linear={false}
+        clickable
+        activationMode="manual"
+        onChange={onChange}
+      />
+    ))
+
+    const address = screen.getByRole('tab', { name: 'Address' })
+    const shipping = screen.getByRole('tab', { name: 'Shipping' })
+
+    address.focus()
+    fireEvent.keyDown(address, { key: 'ArrowRight' })
+
+    expect(document.activeElement).toBe(shipping)
+    expect(shipping.getAttribute('aria-selected')).toBe('false')
+
+    fireEvent.keyDown(shipping, { key: 'Enter' })
+
+    expect(shipping.getAttribute('aria-selected')).toBe('true')
+    expect(onChange).toHaveBeenCalledWith('shipping')
+  })
+
   test('applies orientation classes and slot overrides', () => {
     const screen = render(() => (
       <Stepper

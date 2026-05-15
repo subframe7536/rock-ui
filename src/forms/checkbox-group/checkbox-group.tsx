@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, createSignal, mergeProps } from 'solid-js'
+import { For, Show, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn, useId } from '../../shared/utils'
@@ -9,6 +9,7 @@ import { useFormField } from '../form-field/form-field-context'
 import type {
   FormDisableOption,
   FormIdentityOptions,
+  FormReadOnlyOption,
   FormRequiredOption,
   FormValueOptions,
 } from '../form-field/form-options'
@@ -74,7 +75,12 @@ export namespace CheckboxGroupT {
    * Base props for the CheckboxGroup component.
    */
   export interface Base<TTrue = boolean, TFalse = boolean>
-    extends FormIdentityOptions, FormValueOptions<string[]>, FormRequiredOption, FormDisableOption {
+    extends
+      FormIdentityOptions,
+      FormValueOptions<string[]>,
+      FormRequiredOption,
+      FormDisableOption,
+      FormReadOnlyOption {
     /**
      * Legend for the checkbox group.
      */
@@ -169,6 +175,7 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
   const [uncontrolledValue, setUncontrolledValue] = createSignal<string[]>(
     merged.defaultValue ?? [],
   )
+  let fieldsetEl: HTMLFieldSetElement | undefined
 
   const selectedValues = createMemo(() => merged.value ?? uncontrolledValue())
   const legendId = createMemo(() => `${groupId()}-legend`)
@@ -218,6 +225,27 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
     field.emit('input')
   }
 
+  onMount(() => {
+    const form = fieldsetEl?.closest('form')
+    if (!form) {
+      return
+    }
+
+    function onReset(): void {
+      // oxlint-disable-next-line subf/solid-reactivity
+      queueMicrotask(() => {
+        const nextValue = merged.defaultValue ?? []
+        setUncontrolledValue(nextValue)
+        field.setFormValue(nextValue)
+      })
+    }
+
+    form.addEventListener('reset', onReset)
+    onCleanup(() => {
+      form.removeEventListener('reset', onReset)
+    })
+  })
+
   return (
     <div
       id={`${groupId()}-root`}
@@ -226,6 +254,9 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
       class={cn('relative', merged.classes?.root)}
     >
       <fieldset
+        ref={(element) => {
+          fieldsetEl = element
+        }}
         id={groupId()}
         data-slot="fieldset"
         style={merged.styles?.fieldset}
@@ -263,10 +294,12 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
               name={field.name()}
               formFieldBind={false}
               checked={selectedValues().includes(item.value)}
+              defaultChecked={merged.defaultValue?.includes(item.value)}
               value={item.value}
               label={item.label}
               description={item.description}
               disabled={item.disabled || field.disabled()}
+              readOnly={merged.readOnly}
               indeterminate={item.indeterminate}
               required={merged.required}
               size={field.size()}

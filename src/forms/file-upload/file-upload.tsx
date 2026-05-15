@@ -1,28 +1,19 @@
-import * as KobalteFileField from '@kobalte/core/file-field'
-import type { FileError, FileRejection } from '@kobalte/core/file-field'
 import type { JSX, ValidComponent } from 'solid-js'
-import {
-  For,
-  Show,
-  createEffect,
-  createMemo,
-  createSignal,
-  mergeProps,
-  onCleanup,
-  splitProps,
-} from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, mergeProps, onCleanup } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
+import { HiddenInput } from '../../shared/hidden-input'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { useId } from '../../shared/utils'
+import { callHandler, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
   FormDisableOption,
   FormIdentityOptions,
+  FormReadOnlyOption,
   FormRequiredOption,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_DISABLED_KEYS } from '../form-field/form-options'
 
 import type { FileUploadVariantProps } from './file-upload.class'
 import {
@@ -40,6 +31,18 @@ import {
   fileUploadSizeVariants,
   fileUploadWrapperVariants,
 } from './file-upload.class'
+
+type FileError =
+  | 'TOO_MANY_FILES'
+  | 'FILE_INVALID_TYPE'
+  | 'FILE_TOO_LARGE'
+  | 'FILE_TOO_SMALL'
+  | 'FILE_DUPLICATE'
+
+interface FileRejection {
+  file: File
+  errors: FileError[]
+}
 
 export namespace FileUploadT {
   export type Value = File | File[] | null
@@ -62,14 +65,46 @@ export namespace FileUploadT {
   export type Variant = FileUploadVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteFileField.FileFieldRootProps
+  export type Extend = never
 
   export interface Item {}
 
   /**
    * Base props for the FileUpload component.
    */
-  export interface Base extends FormIdentityOptions, FormRequiredOption, FormDisableOption {
+  export interface Base
+    extends FormIdentityOptions, FormRequiredOption, FormDisableOption, FormReadOnlyOption {
+    /**
+     * The HTML element or component to render as.
+     * @default 'div'
+     */
+    as?: ValidComponent
+
+    /**
+     * Click handler for the upload control.
+     */
+    onClick?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>
+
+    /**
+     * Keyboard handler for the upload control.
+     */
+    onKeyDown?: JSX.EventHandlerUnion<HTMLElement, KeyboardEvent>
+
+    /**
+     * Drag-over handler for the upload dropzone.
+     */
+    onDragOver?: JSX.EventHandlerUnion<HTMLElement, DragEvent>
+
+    /**
+     * Drag-leave handler for the upload dropzone.
+     */
+    onDragLeave?: JSX.EventHandlerUnion<HTMLElement, DragEvent>
+
+    /**
+     * Drop handler for the upload dropzone.
+     */
+    onDrop?: JSX.EventHandlerUnion<HTMLElement, DragEvent>
+
     /**
      * Accepted file types (e.g., ".jpg,.png", "image/*").
      * @default '*'
@@ -120,6 +155,16 @@ export namespace FileUploadT {
      * Maximum number of files allowed.
      */
     maxFiles?: number
+
+    /**
+     * Minimum accepted file size in bytes.
+     */
+    minSize?: number
+
+    /**
+     * Maximum accepted file size in bytes.
+     */
+    maxSize?: number
 
     /**
      * Callback when the selected files change.
@@ -219,22 +264,49 @@ function createRejection(file: File, error: FileError): FileRejection {
   }
 }
 
+function getFileIdentity(file: File): string {
+  return [file.name, file.size, file.type, file.lastModified].join('\0')
+}
+
 function filterAcceptedFiles(
   files: File[],
-  accept: string | undefined,
+  options: {
+    accept: string | undefined
+    existingFiles: File[]
+    minSize: number | undefined
+    maxSize: number | undefined
+  },
 ): {
   accepted: File[]
   rejected: FileRejection[]
 } {
   const accepted: File[] = []
   const rejected: FileRejection[] = []
+  const seenFiles = new Set(options.existingFiles.map(getFileIdentity))
 
   for (const file of files) {
-    if (!isAcceptedFileType(file, accept)) {
+    if (!isAcceptedFileType(file, options.accept)) {
       rejected.push(createRejection(file, 'FILE_INVALID_TYPE'))
       continue
     }
 
+    if (options.minSize !== undefined && file.size < options.minSize) {
+      rejected.push(createRejection(file, 'FILE_TOO_SMALL'))
+      continue
+    }
+
+    if (options.maxSize !== undefined && file.size > options.maxSize) {
+      rejected.push(createRejection(file, 'FILE_TOO_LARGE'))
+      continue
+    }
+
+    const fileIdentity = getFileIdentity(file)
+    if (seenFiles.has(fileIdentity)) {
+      rejected.push(createRejection(file, 'FILE_DUPLICATE'))
+      continue
+    }
+
+    seenFiles.add(fileIdentity)
     accepted.push(file)
   }
 
@@ -305,31 +377,13 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    ...FORM_ID_NAME_DISABLED_KEYS,
-    'accept',
-    'multiple',
-    'required',
-    'maxFiles',
-    'onValueChange',
-    'onFileReject',
-    'dropzone',
-    'preview',
-    'label',
-    'description',
-    'icon',
-    'fileIcon',
-    'size',
-    'classes',
-  ])
-
-  const generatedId = useId(() => local.id, 'file-upload')
+  const generatedId = useId(() => merged.id, 'file-upload')
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      disabled: local.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
       defaultId: generatedId(),
@@ -344,16 +398,18 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
   const [dragging, setDragging] = createSignal(false)
   const [previewUrls, setPreviewUrls] = createSignal<Map<File, string>>(new Map())
 
+  const readOnly = createMemo(() => Boolean(merged.readOnly))
+
   const resolvedMaxFiles = createMemo(() => {
-    if (local.maxFiles !== undefined) {
-      return local.maxFiles
+    if (merged.maxFiles !== undefined) {
+      return merged.maxFiles
     }
 
-    return local.multiple ? Number.POSITIVE_INFINITY : 1
+    return merged.multiple ? Number.POSITIVE_INFINITY : 1
   })
 
   function resolveValue(files: File[]): FileUploadT.Value {
-    if (local.multiple) {
+    if (merged.multiple) {
       return [...files]
     }
 
@@ -364,24 +420,37 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
     const nextValue = resolveValue(files)
 
     field.setFormValue(nextValue)
-    local.onValueChange?.(nextValue)
+    merged.onValueChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
 
-  function handleFileReject(files: FileRejection[]): void {
-    local.onFileReject?.(files)
-  }
-
-  function processIncomingFiles(files: File[]): void {
-    if (files.length === 0) {
+  function openFileDialog(): void {
+    if (field.disabled() || readOnly()) {
       return
     }
 
-    const { accepted, rejected } = filterAcceptedFiles(files, local.accept)
+    hiddenInputEl?.click()
+  }
 
-    if (local.multiple) {
-      const currentFiles = selectedFiles()
+  function handleFileReject(files: FileRejection[]): void {
+    merged.onFileReject?.(files)
+  }
+
+  function processIncomingFiles(files: File[]): void {
+    if (files.length === 0 || field.disabled() || readOnly()) {
+      return
+    }
+
+    const currentFiles = selectedFiles()
+    const { accepted, rejected } = filterAcceptedFiles(files, {
+      accept: merged.accept,
+      existingFiles: currentFiles,
+      minSize: merged.minSize,
+      maxSize: merged.maxSize,
+    })
+
+    if (merged.multiple) {
       const bounded = constrainMultipleFiles(accepted, currentFiles.length, resolvedMaxFiles())
       rejected.push(...bounded.rejected)
 
@@ -407,6 +476,10 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
   }
 
   function removeFileAt(index: number): void {
+    if (field.disabled() || readOnly()) {
+      return
+    }
+
     const currentFiles = selectedFiles()
     if (!currentFiles[index]) {
       return
@@ -418,8 +491,6 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
   }
 
   function FileRemoveButton(props: { file: File; index: number }): JSX.Element {
-    const fileFieldContext = KobalteFileField.useFileFieldContext()
-
     return (
       <button
         type="button"
@@ -430,11 +501,10 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
           {
             size: field.size(),
           },
-          local.classes?.fileRemove,
+          merged.classes?.fileRemove,
         )}
-        disabled={field.disabled()}
+        disabled={field.disabled() || readOnly()}
         onClick={() => {
-          fileFieldContext.removeFile(props.file)
           removeFileAt(props.index)
         }}
       >
@@ -496,22 +566,22 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
           {
             size: field.size(),
           },
-          local.classes?.wrapper,
+          merged.classes?.wrapper,
         )}
       >
         <Icon
-          name={local.icon}
+          name={merged.icon}
           slotName="icon"
           style={merged.styles?.icon}
           class={fileUploadIconVariants(
             {
               size: field.size(),
             },
-            local.classes?.icon,
+            merged.classes?.icon,
           )}
         />
 
-        <Show when={local.label}>
+        <Show when={merged.label}>
           <span
             data-slot="label"
             style={merged.styles?.label}
@@ -519,14 +589,14 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
               {
                 size: field.size(),
               },
-              local.classes?.label,
+              merged.classes?.label,
             )}
           >
-            {local.label}
+            {merged.label}
           </span>
         </Show>
 
-        <Show when={local.description}>
+        <Show when={merged.description}>
           <span
             data-slot="description"
             style={merged.styles?.description}
@@ -534,41 +604,82 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
               {
                 size: field.size(),
               },
-              local.classes?.description,
+              merged.classes?.description,
             )}
           >
-            {local.description}
+            {merged.description}
           </span>
         </Show>
       </div>
     )
   }
 
+  function onControlClick(event: MouseEvent): void {
+    callHandler(event, merged.onClick)
+
+    if (!event.defaultPrevented) {
+      openFileDialog()
+    }
+  }
+
+  function onDropzoneKeyDown(event: KeyboardEvent): void {
+    callHandler(event, merged.onKeyDown)
+
+    if (!event.defaultPrevented && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault()
+      openFileDialog()
+    }
+  }
+
+  function onDropzoneDragOver(event: DragEvent): void {
+    callHandler(event, merged.onDragOver)
+
+    if (!event.defaultPrevented && !field.disabled() && !readOnly()) {
+      event.preventDefault()
+      setDragging(true)
+    }
+  }
+
+  function onDropzoneDragLeave(event: DragEvent): void {
+    callHandler(event, merged.onDragLeave)
+    setDragging(false)
+  }
+
+  function onDropzoneDrop(event: DragEvent): void {
+    callHandler(event, merged.onDrop)
+    setDragging(false)
+
+    if (event.defaultPrevented || field.disabled() || readOnly()) {
+      return
+    }
+
+    event.preventDefault()
+    const files = Array.from(event.dataTransfer?.files ?? [])
+    processIncomingFiles(files)
+  }
+
   return (
-    <KobalteFileField.Root
+    <Dynamic
+      component={merged.as ?? 'div'}
       id={`${field.id()}-root`}
-      name={field.name()}
-      accept={local.accept}
-      multiple={local.multiple}
-      maxFiles={resolvedMaxFiles()}
-      allowDragAndDrop={local.dropzone}
-      required={local.required}
+      role="group"
       disabled={field.disabled()}
       data-slot="root"
       style={merged.styles?.root}
       data-disabled={field.disabled() ? '' : undefined}
+      data-readonly={readOnly() ? '' : undefined}
       class={fileUploadRootVariants(
         {
           size: field.size(),
         },
-        local.classes?.root,
+        merged.classes?.root,
       )}
-      {...rest}
     >
       <Show
-        when={local.dropzone}
+        when={merged.dropzone}
         fallback={
-          <KobalteFileField.Trigger
+          <button
+            type="button"
             data-slot="control"
             style={merged.styles?.control}
             data-invalid={field.invalid() ? '' : undefined}
@@ -578,16 +689,22 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                 dropzone: false,
               },
               field.disabled() && 'bg-muted/32',
-              local.classes?.control,
+              merged.classes?.control,
             )}
+            disabled={field.disabled()}
+            aria-disabled={field.disabled() || readOnly() ? true : undefined}
             onFocus={() => field.emit('focus')}
             onBlur={() => field.emit('blur')}
+            onClick={onControlClick}
           >
             <Content />
-          </KobalteFileField.Trigger>
+          </button>
         }
       >
-        <KobalteFileField.Dropzone
+        <div
+          role="button"
+          tabIndex={field.disabled() ? undefined : 0}
+          aria-disabled={field.disabled() || readOnly() ? true : undefined}
           data-slot="control"
           style={merged.styles?.control}
           data-dragging={dragging() ? '' : undefined}
@@ -598,37 +715,30 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
               dropzone: true,
             },
             field.disabled() && 'bg-muted/32',
-            local.classes?.control,
+            merged.classes?.control,
           )}
           onFocus={() => field.emit('focus')}
           onBlur={() => field.emit('blur')}
-          onDragOver={() => {
-            if (!field.disabled()) {
-              setDragging(true)
-            }
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(event) => {
-            setDragging(false)
-
-            if (field.disabled()) {
-              return
-            }
-
-            const files = Array.from(event.dataTransfer?.files ?? [])
-            processIncomingFiles(files)
-          }}
+          onClick={onControlClick}
+          onKeyDown={onDropzoneKeyDown}
+          onDragOver={onDropzoneDragOver}
+          onDragLeave={onDropzoneDragLeave}
+          onDrop={onDropzoneDrop}
         >
           <Content />
-        </KobalteFileField.Dropzone>
+        </div>
       </Show>
 
-      <KobalteFileField.HiddenInput
+      <HiddenInput
+        type="file"
         id={field.id()}
         ref={(element) => (hiddenInputEl = element)}
         name={field.name()}
-        required={local.required}
+        accept={merged.accept}
+        multiple={merged.multiple}
+        required={merged.required}
         disabled={field.disabled()}
+        readOnly={readOnly()}
         onChange={(event) => {
           const files = Array.from(event.currentTarget.files ?? [])
           processIncomingFiles(files)
@@ -636,7 +746,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
         {...field.ariaAttrs()}
       />
 
-      <Show when={local.preview && selectedFiles().length > 0}>
+      <Show when={merged.preview && selectedFiles().length > 0}>
         <ul
           data-slot="files"
           style={merged.styles?.files}
@@ -644,7 +754,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
             {
               size: field.size(),
             },
-            local.classes?.files,
+            merged.classes?.files,
           )}
         >
           <For each={selectedFiles()}>
@@ -656,7 +766,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                   {
                     size: field.size(),
                   },
-                  local.classes?.file,
+                  merged.classes?.file,
                 )}
               >
                 <span
@@ -666,14 +776,14 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                     {
                       size: field.size(),
                     },
-                    local.classes?.filePreview,
+                    merged.classes?.filePreview,
                   )}
                 >
                   <Show
                     when={previewUrls().get(file)}
                     fallback={
                       <Icon
-                        name={local.fileIcon}
+                        name={merged.fileIcon}
                         class={fileUploadIconVariants({
                           size: field.size(),
                         })}
@@ -691,7 +801,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                     {
                       size: field.size(),
                     },
-                    local.classes?.fileMeta,
+                    merged.classes?.fileMeta,
                   )}
                 >
                   <span
@@ -701,7 +811,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                       {
                         size: field.size(),
                       },
-                      local.classes?.fileName,
+                      merged.classes?.fileName,
                     )}
                   >
                     {file.name}
@@ -713,7 +823,7 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
                       {
                         size: field.size(),
                       },
-                      local.classes?.fileSize,
+                      merged.classes?.fileSize,
                     )}
                   >
                     {formatFileSize(file.size)}
@@ -726,6 +836,6 @@ export function FileUpload(props: FileUploadProps): JSX.Element {
           </For>
         </ul>
       </Show>
-    </KobalteFileField.Root>
+    </Dynamic>
   )
 }

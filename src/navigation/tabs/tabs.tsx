@@ -1,11 +1,12 @@
-import * as KobalteTabs from '@kobalte/core/tabs'
 import type { JSX } from 'solid-js'
-import { For, Show, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createMemo, mergeProps } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { useSelectableCollectionNavigation } from '../../shared/use-selectable-collection-navigation'
+import { cn, useId } from '../../shared/utils'
 
 import {
   tabsIndicatorVariants,
@@ -29,7 +30,7 @@ export namespace TabsT {
   export type Variant = TabsVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteTabs.TabsRootProps
+  export type Extend = never
 
   /**
    * An individual tab in the tabs component.
@@ -73,6 +74,50 @@ export namespace TabsT {
    */
   export interface Base {
     /**
+     * Unique identifier for the tabs root element.
+     */
+    id?: string
+
+    /**
+     * Controlled active tab value.
+     */
+    value?: string
+
+    /**
+     * Default active tab value for uncontrolled usage.
+     */
+    defaultValue?: string
+
+    /**
+     * The orientation of the tab list.
+     * @default 'horizontal'
+     */
+    orientation?: 'horizontal' | 'vertical'
+
+    /**
+     * Whether keyboard navigation activates the tab immediately or waits for confirmation.
+     * @default 'automatic'
+     */
+    activationMode?: 'automatic' | 'manual'
+
+    /**
+     * Whether the tab list is disabled.
+     * @default false
+     */
+    disabled?: boolean
+
+    /**
+     * Whether arrow-key navigation wraps from the ends.
+     * @default true
+     */
+    keyboardLoop?: boolean
+
+    /**
+     * Callback when the active tab changes.
+     */
+    onChange?: (value: string) => void
+
+    /**
      * Array of tabs to display.
      */
     items?: Item[]
@@ -88,6 +133,10 @@ export namespace TabsT {
  * Props for the Tabs component.
  */
 export interface TabsProps extends TabsT.Props {}
+
+interface NormalizedTabItem extends TabsT.Item {
+  value: string
+}
 
 function normalizeItemValue(item: TabsT.Item, index: number): string {
   if (item.value === undefined || item.value === null) {
@@ -110,98 +159,172 @@ export function Tabs(props: TabsProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    'orientation',
-    'variant',
-    'size',
-    'classes',
-    'styles',
-    'items',
-  ])
+  const rootId = useId(() => merged.id, 'tabs')
+  const [requestedValue, setRequestedValue] = useControllableValue<string>({
+    value: () => merged.value,
+    defaultValue: () => merged.defaultValue,
+  })
+  const normalizedItems = createMemo<NormalizedTabItem[]>(() =>
+    (merged.items ?? []).map((item, index) =>
+      Object.assign({}, item, {
+        value: normalizeItemValue(item, index),
+      }),
+    ),
+  )
+  const firstEnabledValue = createMemo(
+    () => normalizedItems().find((item) => !item.disabled)?.value,
+  )
+  const selectedValue = createMemo(() => {
+    const candidate = requestedValue()
+
+    if (candidate && normalizedItems().some((item) => item.value === candidate && !item.disabled)) {
+      return candidate
+    }
+
+    return firstEnabledValue()
+  })
+  const triggerRefs = new Map<string, HTMLButtonElement>()
+  const { onNavigationKeyDown } = useSelectableCollectionNavigation<NormalizedTabItem, string>({
+    items: normalizedItems,
+    getValue: (item) => item.value,
+    isDisabled: (item) => Boolean(merged.disabled || item.disabled),
+    loop: () => merged.keyboardLoop ?? true,
+    activationMode: () => merged.activationMode ?? 'automatic',
+    focusValue: (value) => triggerRefs.get(value)?.focus(),
+    onSelect: (value) => selectValue(value),
+  })
+
+  function getTriggerId(value: string): string {
+    return `${rootId()}-${value}-trigger`
+  }
+
+  function getContentId(value: string): string {
+    return `${rootId()}-${value}-content`
+  }
+
+  function selectValue(nextValue: string): void {
+    if (merged.disabled || nextValue === selectedValue()) {
+      return
+    }
+
+    setRequestedValue(nextValue)
+
+    merged.onChange?.(nextValue)
+  }
 
   return (
-    <KobalteTabs.Root
+    <div
+      id={rootId()}
       data-slot="root"
+      data-orientation={merged.orientation}
       style={merged.styles?.root}
-      class={tabsRootVariants({ orientation: local.orientation }, local.classes?.root)}
-      orientation={local.orientation}
-      {...rest}
+      class={tabsRootVariants({ orientation: merged.orientation }, merged.classes?.root)}
     >
-      <KobalteTabs.List
+      <div
+        role="tablist"
+        aria-orientation={merged.orientation}
         data-slot="list"
         style={merged.styles?.list}
         class={tabsListVariants(
           {
-            orientation: local.orientation,
-            variant: local.variant,
+            orientation: merged.orientation,
+            variant: merged.variant,
           },
-          local.classes?.list,
+          merged.classes?.list,
         )}
       >
-        <KobalteTabs.Indicator
+        <div
+          aria-hidden="true"
           data-slot="indicator"
           style={merged.styles?.indicator}
           class={tabsIndicatorVariants(
             {
-              orientation: local.orientation,
-              variant: local.variant,
+              orientation: merged.orientation,
+              variant: merged.variant,
             },
-            local.classes?.indicator,
+            merged.classes?.indicator,
           )}
         />
 
-        <For each={local.items}>
-          {(item, index) => (
-            <KobalteTabs.Trigger
-              data-slot="trigger"
-              style={merged.styles?.trigger}
-              value={normalizeItemValue(item, index())}
-              disabled={item.disabled}
-              class={tabsTriggerVariants(
-                {
-                  orientation: local.orientation,
-                  variant: local.variant,
-                  size: local.size,
-                },
-                local.classes?.trigger,
-              )}
-            >
-              <Show when={item.icon}>
-                <span
-                  data-slot="leading"
-                  style={merged.styles?.leading}
-                  class={tabsLeadingVariants({ size: local.size }, local.classes?.leading)}
-                >
-                  <Icon name={item.icon} />
-                </span>
-              </Show>
+        <For each={normalizedItems()}>
+          {(item) => {
+            const selected = createMemo(() => selectedValue() === item.value)
 
-              <Show when={typeof item.label === 'string'} fallback={item.label}>
-                <span
-                  data-slot="label"
-                  style={merged.styles?.label}
-                  class={cn('truncate', local.classes?.label)}
-                >
-                  {item.label}
-                </span>
-              </Show>
-            </KobalteTabs.Trigger>
-          )}
+            return (
+              <button
+                id={getTriggerId(item.value)}
+                ref={(element) => {
+                  triggerRefs.set(item.value, element)
+                }}
+                type="button"
+                role="tab"
+                tabIndex={selected() ? 0 : -1}
+                aria-controls={getContentId(item.value)}
+                aria-selected={selected()}
+                data-selected={selected() ? '' : undefined}
+                disabled={Boolean(merged.disabled || item.disabled)}
+                data-slot="trigger"
+                style={merged.styles?.trigger}
+                class={tabsTriggerVariants(
+                  {
+                    orientation: merged.orientation,
+                    variant: merged.variant,
+                    size: merged.size,
+                  },
+                  merged.classes?.trigger,
+                )}
+                onClick={() => selectValue(item.value)}
+                onKeyDown={(event) => {
+                  onNavigationKeyDown(event, item.value, merged.orientation)
+                }}
+              >
+                <Show when={item.icon}>
+                  <span
+                    data-slot="leading"
+                    style={merged.styles?.leading}
+                    class={tabsLeadingVariants({ size: merged.size }, merged.classes?.leading)}
+                  >
+                    <Icon name={item.icon} />
+                  </span>
+                </Show>
+
+                <Show when={typeof item.label === 'string'} fallback={item.label}>
+                  <span
+                    data-slot="label"
+                    style={merged.styles?.label}
+                    class={cn('truncate', merged.classes?.label)}
+                  >
+                    {item.label}
+                  </span>
+                </Show>
+              </button>
+            )
+          }}
         </For>
-      </KobalteTabs.List>
+      </div>
 
-      <For each={local.items}>
-        {(item, index) => (
-          <KobalteTabs.Content
-            data-slot="content"
-            style={merged.styles?.content}
-            value={normalizeItemValue(item, index())}
-            class={cn('outline-none w-full', local.classes?.content, item.class)}
-          >
-            {item.content}
-          </KobalteTabs.Content>
-        )}
+      <For each={normalizedItems()}>
+        {(item) => {
+          const selected = createMemo(() => selectedValue() === item.value)
+
+          return (
+            <Show when={selected()}>
+              <div
+                id={getContentId(item.value)}
+                role="tabpanel"
+                tabIndex={0}
+                aria-labelledby={getTriggerId(item.value)}
+                data-selected=""
+                data-slot="content"
+                style={merged.styles?.content}
+                class={cn('outline-none w-full', merged.classes?.content, item.class)}
+              >
+                {item.content}
+              </div>
+            </Show>
+          )
+        }}
       </For>
-    </KobalteTabs.Root>
+    </div>
   )
 }

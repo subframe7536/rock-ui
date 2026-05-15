@@ -227,6 +227,23 @@ describe('MultiSelect', () => {
     expect(overflow?.textContent).toContain('+1')
   })
 
+  test('opens dropdown and focuses combobox when control shell is clicked', async () => {
+    const screen = render(() => (
+      <MultiSelect options={FRUITS} leadingIcon="icon-search" placeholder="Pick fruits" />
+    ))
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+    const combobox = screen.getByRole('combobox') as HTMLElement
+
+    await fireEvent.pointerDown(control, { button: 0 })
+    await fireEvent.click(control)
+
+    await waitFor(() => {
+      expect(queryBody('[data-slot="content"]')).not.toBeNull()
+    })
+
+    expect(document.activeElement).toBe(combobox)
+  })
+
   test('when menu is open, Tab toggles focused item', async () => {
     const onChange = vi.fn()
     const screen = render(() => <MultiSelect options={FRUITS} search onChange={onChange} />)
@@ -390,7 +407,8 @@ describe('MultiSelect', () => {
     expect(control?.className).toContain('cursor-default')
     expect(control?.className).not.toContain('cursor-pointer')
     expect(tagsContainer?.className).toContain('cursor-default')
-    expect(input.className).toContain('data-readonly:cursor-default')
+    expect(input.className).toContain('cursor-default')
+    expect(screen.container.querySelector('input[data-slot="input"]')).toBeNull()
 
     await fireEvent.pointerDown(tagsContainer as HTMLElement, { button: 0 })
     expect(queryBody('[data-slot="content"]')).toBeNull()

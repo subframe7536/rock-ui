@@ -69,6 +69,70 @@ describe('CheckboxGroup', () => {
     expect(checkboxB.checked).toBe(true)
   })
 
+  test('toggles item with Space key', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <CheckboxGroup items={['A', 'B']} onChange={onChange} />)
+
+    const checkboxA = screen.getByRole('checkbox', { name: 'A' }) as HTMLInputElement
+
+    await fireEvent.keyDown(checkboxA, { key: ' ' })
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenLastCalledWith(['A'])
+    expect(checkboxA.checked).toBe(true)
+
+    await fireEvent.keyDown(checkboxA, { key: ' ' })
+
+    expect(onChange).toHaveBeenCalledTimes(2)
+    expect(onChange).toHaveBeenLastCalledWith([])
+    expect(checkboxA.checked).toBe(false)
+  })
+
+  test('does not toggle disabled group or item', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <CheckboxGroup
+        disabled
+        items={[
+          'A',
+          {
+            value: 'B',
+            label: 'B',
+            disabled: true,
+          },
+        ]}
+        onChange={onChange}
+      />
+    ))
+
+    const checkboxA = screen.getByRole('checkbox', { name: 'A' }) as HTMLInputElement
+    const checkboxB = screen.getByRole('checkbox', { name: 'B' }) as HTMLInputElement
+
+    await fireEvent.click(checkboxA)
+    await fireEvent.keyDown(checkboxB, { key: ' ' })
+
+    expect(checkboxA.disabled).toBe(true)
+    expect(checkboxB.disabled).toBe(true)
+    expect(checkboxA.checked).toBe(false)
+    expect(checkboxB.checked).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  test('does not toggle readonly items', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => <CheckboxGroup items={['A']} readOnly onChange={onChange} />)
+
+    const checkboxA = screen.getByRole('checkbox', { name: 'A' }) as HTMLInputElement
+
+    expect(checkboxA.getAttribute('aria-readonly')).toBe('true')
+
+    await fireEvent.click(checkboxA)
+    await fireEvent.keyDown(checkboxA, { key: ' ' })
+
+    expect(checkboxA.checked).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   test('keeps controlled selection until parent updates', async () => {
     const onChange = vi.fn()
     const screen = render(() => (
@@ -131,6 +195,26 @@ describe('CheckboxGroup', () => {
     await waitFor(() => {
       expect(screen.queryByText('Select at least one')).toBeNull()
     })
+  })
+
+  test('passes required and links legend to the fieldset', () => {
+    const screen = render(() => (
+      <CheckboxGroup
+        id="channels"
+        legend="Channels"
+        items={[{ value: 'email', label: 'Email', description: 'Send email updates' }]}
+        required
+      />
+    ))
+
+    const fieldset = screen.container.querySelector('[data-slot="fieldset"]') as HTMLFieldSetElement
+    const legend = screen.getByText('Channels')
+    const checkbox = screen.getByRole('checkbox', { name: 'Email' })
+    const description = screen.getByText('Send email updates')
+
+    expect(fieldset.getAttribute('aria-labelledby')).toBe(legend.getAttribute('id'))
+    expect(checkbox.getAttribute('required')).not.toBeNull()
+    expect(description).not.toBeNull()
   })
 
   test('applies horizontal table layout classes', () => {
@@ -406,5 +490,35 @@ describe('CheckboxGroup', () => {
     })
 
     expect(screen.queryByText('Invalid type: Expected Array but received true')).toBeNull()
+  })
+
+  test('submits selected item values and resets to default selection', async () => {
+    const screen = render(() => (
+      <form>
+        <CheckboxGroup name="choices" items={['A', 'B']} defaultValue={['A']} />
+        <button type="reset">Reset</button>
+      </form>
+    ))
+
+    const form = screen.container.querySelector('form') as HTMLFormElement
+    const checkboxA = screen.getByRole('checkbox', { name: 'A' }) as HTMLInputElement
+    const checkboxB = screen.getByRole('checkbox', { name: 'B' }) as HTMLInputElement
+
+    expect(checkboxA.checked).toBe(true)
+    expect(checkboxB.checked).toBe(false)
+    expect(new FormData(form).getAll('choices')).toEqual(['A'])
+
+    await fireEvent.click(checkboxA)
+    await fireEvent.click(checkboxB)
+
+    expect(new FormData(form).getAll('choices')).toEqual(['B'])
+
+    form.reset()
+
+    await waitFor(() => {
+      expect(checkboxA.checked).toBe(true)
+      expect(checkboxB.checked).toBe(false)
+      expect(new FormData(form).getAll('choices')).toEqual(['A'])
+    })
   })
 })

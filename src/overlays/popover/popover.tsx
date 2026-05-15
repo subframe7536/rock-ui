@@ -1,12 +1,10 @@
-import * as KobaltePopover from '@kobalte/core/popover'
-import { usePopperContext } from '@kobalte/core/popper'
 import type { JSX } from 'solid-js'
-import { Show, createMemo, createSignal, mergeProps, onCleanup, splitProps } from 'solid-js'
+import { Show, createMemo, mergeProps, onCleanup } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { cn } from '../../shared/utils'
-import { resolveOverlayMenuSide } from '../shared-overlay-menu/utils'
-import type { OverlayMenuSide } from '../shared-overlay-menu/utils'
+import { Popper, resolveOverlayMenuSide } from '../base'
+import type { OverlayMenuSide, PopperContentContext, PopperProps } from '../base'
 
 import { popoverContentVariants } from './popover.class'
 import type { PopoverContentVariantProps } from './popover.class'
@@ -18,7 +16,19 @@ export namespace PopoverT {
   export type Variant = PopoverContentVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobaltePopover.PopoverRootProps
+  export type Extend = Pick<
+    PopperProps,
+    | 'id'
+    | 'open'
+    | 'defaultOpen'
+    | 'onOpenChange'
+    | 'placement'
+    | 'forceMount'
+    | 'modal'
+    | 'preventScroll'
+    | 'dismissible'
+    | 'onClosePrevent'
+  >
 
   export interface Item {}
 
@@ -48,17 +58,6 @@ export namespace PopoverT {
      * Content to render inside the popover body.
      */
     content?: JSX.Element
-
-    /**
-     * Whether the popover should close when clicking outside or pressing Escape.
-     * @default true
-     */
-    dismissible?: boolean
-
-    /**
-     * Callback triggered when a dismissal action is prevented.
-     */
-    onClosePrevent?: () => void
 
     /**
      * The reference element that triggers the popover.
@@ -91,21 +90,6 @@ export function Popover(props: PopoverProps): JSX.Element {
     },
     props,
   )
-  const [local, rest] = splitProps(merged, [
-    'mode',
-    'placement',
-    'open',
-    'openDelay',
-    'closeDelay',
-    'dismissible',
-    'onClosePrevent',
-    'content',
-    'classes',
-    'styles',
-    'children',
-  ])
-
-  const [hoverOpen, setHoverOpen] = createSignal<boolean>(rest.defaultOpen ?? false)
 
   let openTimer: ReturnType<typeof setTimeout> | undefined
   let closeTimer: ReturnType<typeof setTimeout> | undefined
@@ -118,116 +102,141 @@ export function Popover(props: PopoverProps): JSX.Element {
     clearTimeout(closeTimer)
   })
 
-  function Content(): JSX.Element {
-    const popperContext = usePopperContext()
+  function Content(context: PopperContentContext): JSX.Element {
     const resolvedSide = createMemo<PopoverSide>(() => {
-      const runtimePlacement = popperContext.currentPlacement()
+      const runtimePlacement = context.currentPlacement()
 
       if (runtimePlacement) {
         return resolveOverlayMenuSide(runtimePlacement)
       }
 
-      return resolveOverlayMenuSide(local.placement)
+      return resolveOverlayMenuSide(merged.placement)
     })
 
     return (
-      <KobaltePopover.Content
+      <div
+        role={context.contentProps.role}
+        aria-modal={context.contentProps['aria-modal']}
+        aria-labelledby={context.contentProps['aria-labelledby']}
+        aria-describedby={context.contentProps['aria-describedby']}
         data-slot="content"
-        style={local.styles?.content}
-        class={popoverContentVariants({ side: resolvedSide() }, local.classes?.content)}
-        onPointerDownOutside={(event) => {
-          if (local.dismissible) {
-            return
-          }
-          event.preventDefault()
-          hasPreventedPointerAttempt = true
-          clearTimeout(resetTimeout)
-          resetTimeout = setTimeout(() => {
-            hasPreventedPointerAttempt = false
-            resetTimeout = undefined
-          }, 0)
-          local.onClosePrevent?.()
-        }}
-        onInteractOutside={(event) => {
-          if (local.dismissible || event.defaultPrevented) {
-            return
-          }
-          event.preventDefault()
-          if (!hasPreventedPointerAttempt) {
-            local.onClosePrevent?.()
-          }
-        }}
-        onEscapeKeyDown={(event) => {
-          if (local.dismissible) {
-            return
-          }
-          event.preventDefault()
-          local.onClosePrevent?.()
-        }}
+        style={merged.styles?.content}
+        class={popoverContentVariants({ side: resolvedSide() }, merged.classes?.content)}
+        {...context.contentProps}
       >
-        <Show when={local.content !== undefined && local.content !== null}>
+        <Show when={merged.content !== undefined && merged.content !== null}>
           <div
             data-slot="body"
-            style={local.styles?.body}
+            style={merged.styles?.body}
             class={cn(
-              'max-h-$kb-popper-content-available-height overflow-auto',
-              local.classes?.body,
+              'max-h-$mo-popper-content-available-height overflow-auto',
+              merged.classes?.body,
             )}
           >
-            {local.content}
+            {merged.content}
           </div>
         </Show>
-      </KobaltePopover.Content>
+      </div>
     )
   }
 
   return (
-    <KobaltePopover.Root
-      placement={local.placement}
+    <Popper
+      id={merged.id}
+      placement={merged.placement}
+      open={merged.open}
+      defaultOpen={merged.defaultOpen}
+      onOpenChange={merged.onOpenChange}
+      forceMount={merged.forceMount}
       overflowPadding={4}
-      open={
-        local.mode === 'hover' ? (local.open !== undefined ? local.open : hoverOpen()) : local.open
-      }
-      {...rest}
-    >
-      <KobaltePopover.Trigger
-        as="span"
-        tabIndex={-1}
-        data-slot="trigger"
-        style={local.styles?.trigger}
-        class={cn('outline-none', local.classes?.trigger)}
-        onMouseEnter={
-          local.mode === 'hover'
-            ? () => {
-                clearTimeout(closeTimer)
-                closeTimer = undefined
-                openTimer = setTimeout(() => {
-                  setHoverOpen(true)
-                  rest.onOpenChange?.(true)
-                  openTimer = undefined
-                }, local.openDelay)
-              }
-            : undefined
-        }
-        onMouseLeave={
-          local.mode === 'hover'
-            ? () => {
-                clearTimeout(openTimer)
+      modal={merged.modal}
+      preventScroll={merged.preventScroll}
+      dismissible={merged.dismissible}
+      onClosePrevent={merged.onClosePrevent}
+      role="dialog"
+      toggleOnClick={merged.mode === 'click'}
+      trigger={merged.children}
+      triggerStyle={merged.styles?.trigger}
+      triggerClass={cn(merged.classes?.trigger)}
+      onTriggerPointerEnter={
+        merged.mode === 'hover'
+          ? ({ open }) => {
+              clearTimeout(closeTimer)
+              closeTimer = undefined
+              openTimer = setTimeout(() => {
+                open()
                 openTimer = undefined
-                closeTimer = setTimeout(() => {
-                  setHoverOpen(false)
-                  rest.onOpenChange?.(false)
-                  closeTimer = undefined
-                }, local.closeDelay)
-              }
-            : undefined
+              }, merged.openDelay)
+            }
+          : undefined
+      }
+      onTriggerPointerLeave={
+        merged.mode === 'hover'
+          ? ({ close }) => {
+              clearTimeout(openTimer)
+              openTimer = undefined
+              closeTimer = setTimeout(() => {
+                close()
+                closeTimer = undefined
+              }, merged.closeDelay)
+            }
+          : undefined
+      }
+      onContentPointerEnter={
+        merged.mode === 'hover'
+          ? () => {
+              clearTimeout(closeTimer)
+              closeTimer = undefined
+            }
+          : undefined
+      }
+      onContentPointerLeave={
+        merged.mode === 'hover'
+          ? ({ close }) => {
+              clearTimeout(openTimer)
+              openTimer = undefined
+              closeTimer = setTimeout(() => {
+                close()
+                closeTimer = undefined
+              }, merged.closeDelay)
+            }
+          : undefined
+      }
+      closeOnOutsideFocus={merged.mode === 'click'}
+      onPointerDownOutside={(event) => {
+        if (merged.dismissible) {
+          return
         }
-      >
-        {local.children}
-      </KobaltePopover.Trigger>
-      <KobaltePopover.Portal>
-        <Content />
-      </KobaltePopover.Portal>
-    </KobaltePopover.Root>
+
+        event.preventDefault()
+        hasPreventedPointerAttempt = true
+        clearTimeout(resetTimeout)
+        resetTimeout = setTimeout(() => {
+          hasPreventedPointerAttempt = false
+          resetTimeout = undefined
+        }, 0)
+        merged.onClosePrevent?.()
+      }}
+      onInteractOutside={(event) => {
+        if (merged.dismissible || event.defaultPrevented) {
+          return
+        }
+
+        event.preventDefault()
+
+        if (!hasPreventedPointerAttempt) {
+          merged.onClosePrevent?.()
+        }
+      }}
+      onEscapeKeyDown={(event) => {
+        if (merged.dismissible) {
+          return
+        }
+
+        event.preventDefault()
+        merged.onClosePrevent?.()
+      }}
+      content={Content}
+    />
   )
 }

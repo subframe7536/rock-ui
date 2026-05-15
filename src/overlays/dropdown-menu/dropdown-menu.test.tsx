@@ -4,6 +4,19 @@ import { describe, expect, test, vi } from 'vitest'
 import { DropdownMenu } from './dropdown-menu'
 import type { DropdownMenuProps } from './dropdown-menu'
 
+async function finishMenuExitMotion(): Promise<void> {
+  const contents = Array.from(
+    document.body.querySelectorAll('[data-slot="content"]'),
+  ) as HTMLElement[]
+
+  await Promise.all(
+    contents.map(async (content) => {
+      await fireEvent.animationEnd(content)
+      await fireEvent.transitionEnd(content)
+    }),
+  )
+}
+
 describe('DropdownMenu', () => {
   test('opens by keyboard and supports keyboard selection', async () => {
     const onSelect = vi.fn()
@@ -25,6 +38,224 @@ describe('DropdownMenu', () => {
     await fireEvent.keyDown(highlighted!, { key: 'Enter' })
 
     expect(onSelect).toHaveBeenCalledTimes(1)
+  })
+
+  test('focuses content on click open, supports typeahead, and restores trigger focus on escape', async () => {
+    const screen = render(() => (
+      <DropdownMenu items={[{ label: 'Archive' }, { label: 'Duplicate' }, { label: 'Delete' }]}>
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    const trigger = screen.getByText('Actions') as HTMLButtonElement
+    await fireEvent.click(trigger)
+
+    await waitFor(() => {
+      const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
+      expect(content).not.toBeNull()
+      expect(document.activeElement).toBe(content)
+    })
+
+    const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
+    await fireEvent.keyDown(content, { key: 'd' })
+
+    await waitFor(() => {
+      const highlighted = document.body.querySelector('[data-slot="item"][data-highlighted]')
+      expect(highlighted?.textContent).toContain('Duplicate')
+    })
+
+    await fireEvent.keyDown(content, { key: 'Escape' })
+    await finishMenuExitMotion()
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(trigger)
+    })
+  })
+
+  test('scrolls the highlighted item into view when opened by keyboard', async () => {
+    const scrollIntoView = vi.fn()
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView
+
+    HTMLElement.prototype.scrollIntoView = scrollIntoView
+
+    try {
+      const screen = render(() => (
+        <DropdownMenu items={[{ label: 'Open file' }, { label: 'Close file' }]}>
+          <button type="button">Actions</button>
+        </DropdownMenu>
+      ))
+
+      await fireEvent.keyDown(screen.getByText('Actions'), { key: 'ArrowDown' })
+
+      await waitFor(() => {
+        expect(scrollIntoView).toHaveBeenCalled()
+      })
+    } finally {
+      HTMLElement.prototype.scrollIntoView = originalScrollIntoView
+    }
+  })
+
+  test('opens and closes submenus with arrow keys', async () => {
+    render(() => (
+      <DropdownMenu
+        defaultOpen
+        items={[
+          {
+            label: 'More',
+            children: [{ label: 'Nested action' }],
+          },
+        ]}
+      >
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="item"]')).not.toBeNull()
+    })
+
+    await fireEvent.keyDown(content, { key: 'ArrowDown' })
+
+    const subTrigger = await waitFor(() => {
+      const highlighted = document.body.querySelector(
+        '[data-slot="item"][data-highlighted]',
+      ) as HTMLElement | null
+      expect(highlighted).not.toBeNull()
+      return highlighted as HTMLElement
+    })
+    await fireEvent.keyDown(subTrigger, { key: 'ArrowRight' })
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Nested action')
+      expect(document.body.querySelectorAll('[data-slot="content"]')).toHaveLength(2)
+    })
+
+    const submenuContent = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
+      (element) => element.textContent?.includes('Nested action'),
+    ) as HTMLElement
+
+    await fireEvent.keyDown(submenuContent, { key: 'ArrowLeft' })
+
+    await waitFor(() => {
+      const closingSubmenu = Array.from(
+        document.body.querySelectorAll('[data-slot="content"]'),
+      ).find((element) => element.textContent?.includes('Nested action')) as HTMLElement
+
+      expect(closingSubmenu?.getAttribute('data-closed')).toBe('')
+    })
+
+    await finishMenuExitMotion()
+
+    await waitFor(() => {
+      expect(document.body.querySelectorAll('[data-slot="content"]')).toHaveLength(1)
+    })
+
+    expect(document.activeElement).toBe(subTrigger)
+  })
+
+  test('dismisses the deepest submenu first', async () => {
+    const closeOrder: string[] = []
+    const originalSetAttribute = HTMLElement.prototype.setAttribute
+    const setAttributeSpy = vi
+      .spyOn(HTMLElement.prototype, 'setAttribute')
+      .mockImplementation(function (this: HTMLElement, name: string, value: string) {
+        if (
+          name === 'data-closed' &&
+          value === '' &&
+          this.getAttribute('data-slot') === 'content'
+        ) {
+          closeOrder.push(this.id)
+        }
+
+        return originalSetAttribute.call(this, name, value)
+      })
+
+    try {
+      render(() => (
+        <DropdownMenu
+          id="dismiss-order"
+          defaultOpen
+          items={[
+            {
+              label: 'More',
+              defaultOpen: true,
+              children: [
+                {
+                  label: 'Deep',
+                  defaultOpen: true,
+                  children: [{ label: 'Leaf action' }],
+                },
+              ],
+            },
+          ]}
+        >
+          <button type="button">Actions</button>
+        </DropdownMenu>
+      ))
+
+      await waitFor(() => {
+        expect(document.body.querySelectorAll('[data-slot="content"]')).toHaveLength(3)
+      })
+
+      const contents = Array.from(
+        document.body.querySelectorAll('[data-slot="content"]'),
+      ) as HTMLElement[]
+      const [rootContent, middleContent, deepestContent] = contents as [
+        HTMLElement,
+        HTMLElement,
+        HTMLElement,
+      ]
+
+      await fireEvent.keyDown(rootContent, { key: 'Escape' })
+
+      await waitFor(() => {
+        expect(closeOrder).toHaveLength(3)
+      })
+
+      expect(closeOrder).toEqual([deepestContent.id, middleContent.id, rootContent.id])
+    } finally {
+      setAttributeSpy.mockRestore()
+    }
+  })
+
+  test('moves focus into submenu when submenu opens by click', async () => {
+    render(() => (
+      <DropdownMenu
+        defaultOpen
+        items={[
+          {
+            label: 'More',
+            children: [{ label: 'Nested action' }],
+          },
+        ]}
+      >
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    const subTrigger = await waitFor(() => {
+      const item = document.body.querySelector('[data-slot="item"]') as HTMLElement | null
+      expect(item).not.toBeNull()
+      return item as HTMLElement
+    })
+
+    await fireEvent.click(subTrigger)
+
+    const submenuContent = await waitFor(() => {
+      const content = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
+        (element) => element.textContent?.includes('Nested action'),
+      ) as HTMLElement | undefined
+
+      expect(content).toBeDefined()
+      return content!
+    })
+
+    await waitFor(() => {
+      const activeElement = document.activeElement
+      expect(activeElement === submenuContent || submenuContent.contains(activeElement)).toBe(true)
+    })
   })
 
   test('supports controlled open state and reports close attempts', async () => {
@@ -50,6 +281,33 @@ describe('DropdownMenu', () => {
     expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
   })
 
+  test('keeps content mounted with closed data attrs until exit motion finishes', async () => {
+    render(() => (
+      <DropdownMenu defaultOpen items={[{ label: 'Open file' }]}>
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+    })
+
+    const content = document.body.querySelector('[data-slot="content"]') as HTMLElement
+    await fireEvent.keyDown(content, { key: 'Escape' })
+
+    await waitFor(() => {
+      const exitingContent = document.body.querySelector('[data-slot="content"]') as HTMLElement
+      expect(exitingContent).not.toBeNull()
+      expect(exitingContent.getAttribute('data-closed')).toBe('')
+    })
+
+    await finishMenuExitMotion()
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
+    })
+  })
+
   test('uses shared bottom-side transition classes for default placement', async () => {
     render(() => (
       <DropdownMenu defaultOpen items={[{ label: 'Default animation item' }]}>
@@ -63,7 +321,7 @@ describe('DropdownMenu', () => {
 
     const rootContent = document.body.querySelector('[data-slot="content"]') as HTMLElement
 
-    expect(rootContent.className).toContain('mt-$kb-popper-content-overflow-padding')
+    expect(rootContent.className).toContain('mt-$mo-popper-content-overflow-padding')
     expect(rootContent.className).toContain('data-expanded:animate-menu-in')
     expect(rootContent.className).toContain('data-closed:animate-menu-out')
     expect(rootContent.className).toContain('animate-menu-side-bottom')
@@ -140,7 +398,7 @@ describe('DropdownMenu', () => {
     expect(document.body.querySelector('[data-testid="avatar-node"]')).not.toBeNull()
     expect(document.body.querySelector('[data-slot="itemIndicator"]')).not.toBeNull()
 
-    expect(rootContent?.className).toContain('mr-$kb-popper-content-overflow-padding')
+    expect(rootContent?.className).toContain('mr-$mo-popper-content-overflow-padding')
     expect(rootContent?.className).toContain('surface-overlay')
     expect(rootContent?.className).toContain('data-expanded:animate-menu-in')
     expect(rootContent?.className).toContain('data-closed:animate-menu-out')
@@ -285,6 +543,71 @@ describe('DropdownMenu', () => {
     expect(onDisabledSelect).not.toHaveBeenCalled()
   })
 
+  test('supports radio items with grouped selection and disabled prevention', async () => {
+    const onCompactSelect = vi.fn()
+    const onComfortableValueChange = vi.fn()
+    const onDisabledSelect = vi.fn()
+
+    render(() => (
+      <DropdownMenu
+        defaultOpen
+        items={[
+          {
+            type: 'radio',
+            group: 'density',
+            value: 'compact',
+            label: 'Compact',
+            checked: true,
+            onSelect: onCompactSelect,
+          },
+          {
+            type: 'radio',
+            group: 'density',
+            value: 'comfortable',
+            label: 'Comfortable',
+            onValueChange: onComfortableValueChange,
+          },
+          {
+            type: 'radio',
+            group: 'density',
+            value: 'spacious',
+            label: 'Spacious',
+            disabled: true,
+            onSelect: onDisabledSelect,
+          },
+        ]}
+      >
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    const radioItems = Array.from(
+      document.body.querySelectorAll('[role="menuitemradio"]'),
+    ) as HTMLElement[]
+    const [compactItem, comfortableItem, disabledItem] = radioItems as [
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+    ]
+
+    expect(compactItem.getAttribute('aria-checked')).toBe('true')
+    expect(comfortableItem.getAttribute('aria-checked')).toBe('false')
+    expect(disabledItem.getAttribute('aria-disabled')).toBe('true')
+
+    await fireEvent.click(comfortableItem)
+
+    expect(compactItem.getAttribute('aria-checked')).toBe('false')
+    expect(comfortableItem.getAttribute('aria-checked')).toBe('true')
+    expect(onComfortableValueChange).toHaveBeenCalledWith('comfortable')
+
+    await fireEvent.click(disabledItem)
+
+    expect(disabledItem.getAttribute('aria-checked')).toBe('false')
+    expect(comfortableItem.getAttribute('aria-checked')).toBe('true')
+    expect(onDisabledSelect).not.toHaveBeenCalled()
+    expect(onCompactSelect).not.toHaveBeenCalled()
+  })
+
   test('destructive item icon does not force muted color class', async () => {
     render(() => (
       <DropdownMenu
@@ -332,6 +655,131 @@ describe('DropdownMenu', () => {
     expect(root.contains(sub)).toBe(false)
   })
 
+  test('keeps submenu open while pointer moves through the submenu grace area', async () => {
+    render(() => (
+      <DropdownMenu
+        defaultOpen
+        items={[
+          {
+            label: 'More',
+            defaultOpen: true,
+            children: [{ label: 'Nested action' }],
+          },
+          { label: 'Sibling action' },
+        ]}
+      >
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    await waitFor(() => {
+      expect(document.body.querySelectorAll('[data-slot="content"]').length).toBeGreaterThanOrEqual(
+        2,
+      )
+    })
+
+    const items = Array.from(document.body.querySelectorAll('[data-slot="item"]'))
+    const subTrigger = items.find((item) => item.textContent?.includes('More')) as HTMLElement
+    const sibling = items.find((item) =>
+      item.textContent?.includes('Sibling action'),
+    ) as HTMLElement
+    const subContent = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
+      (content) => content.textContent?.includes('Nested action'),
+    ) as HTMLElement
+
+    subContent.getBoundingClientRect = () =>
+      ({
+        bottom: 120,
+        height: 80,
+        left: 60,
+        right: 140,
+        top: 40,
+        width: 80,
+        x: 60,
+        y: 40,
+        toJSON: () => ({}),
+      }) as DOMRect
+
+    await fireEvent.pointerLeave(subTrigger, { clientX: 50, clientY: 80, pointerType: 'mouse' })
+    await fireEvent.pointerEnter(sibling, { clientX: 80, clientY: 80, pointerType: 'mouse' })
+
+    expect(sibling.hasAttribute('data-highlighted')).toBe(false)
+    expect(subTrigger.getAttribute('data-expanded')).toBe('')
+    expect(document.body.textContent).toContain('Nested action')
+  })
+
+  test('restores submenu selection after pointer grace when moving toward another submenu', async () => {
+    vi.useFakeTimers()
+
+    try {
+      render(() => (
+        <DropdownMenu
+          defaultOpen
+          items={[
+            {
+              label: 'More',
+              defaultOpen: true,
+              children: [{ label: 'Nested action' }],
+            },
+            {
+              label: 'More tools',
+              children: [{ label: 'Second nested action' }],
+            },
+          ]}
+        >
+          <button type="button">Actions</button>
+        </DropdownMenu>
+      ))
+
+      await waitFor(() => {
+        expect(document.body.textContent).toContain('Nested action')
+      })
+
+      const items = Array.from(document.body.querySelectorAll('[data-slot="item"]'))
+      const firstTrigger = items.find((item) => item.textContent?.includes('More')) as HTMLElement
+      const secondTrigger = items.find((item) =>
+        item.textContent?.includes('More tools'),
+      ) as HTMLElement
+      const firstContent = Array.from(document.body.querySelectorAll('[data-slot="content"]')).find(
+        (content) => content.textContent?.includes('Nested action'),
+      ) as HTMLElement
+
+      firstContent.getBoundingClientRect = () =>
+        ({
+          bottom: 120,
+          height: 80,
+          left: 60,
+          right: 140,
+          top: 40,
+          width: 80,
+          x: 60,
+          y: 40,
+          toJSON: () => ({}),
+        }) as DOMRect
+
+      await fireEvent.pointerLeave(firstTrigger, { clientX: 50, clientY: 80, pointerType: 'mouse' })
+      await fireEvent.pointerEnter(secondTrigger, {
+        clientX: 80,
+        clientY: 80,
+        pointerType: 'mouse',
+      })
+
+      expect(secondTrigger.hasAttribute('data-highlighted')).toBe(false)
+
+      await vi.advanceTimersByTimeAsync(301)
+
+      expect(secondTrigger.getAttribute('data-highlighted')).toBe('')
+
+      await vi.advanceTimersByTimeAsync(100)
+
+      await waitFor(() => {
+        expect(document.body.textContent).toContain('Second nested action')
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   test('applies styles override to content', async () => {
     render(() => (
       <DropdownMenu
@@ -349,5 +797,28 @@ describe('DropdownMenu', () => {
 
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
     expect(content?.style.width).toBe('200px')
+  })
+
+  test('locks body scroll and renders an overlay layer while open', async () => {
+    render(() => (
+      <DropdownMenu defaultOpen items={[{ label: 'Archive' }]}>
+        <button type="button">Actions</button>
+      </DropdownMenu>
+    ))
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="overlay"]')).not.toBeNull()
+    })
+
+    const positioner = document.body.querySelector('[data-slot="positioner"]') as HTMLElement
+    expect(positioner.className).not.toContain('z-50')
+    expect(document.body.style.overflow).toBe('hidden')
+
+    const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement
+    await fireEvent.pointerDown(overlay, { pointerType: 'mouse' })
+    await finishMenuExitMotion()
+
+    expect(document.body.querySelector('[data-slot="overlay"]')).toBeNull()
+    expect(document.body.style.overflow).toBe('')
   })
 })

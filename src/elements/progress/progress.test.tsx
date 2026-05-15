@@ -43,6 +43,18 @@ describe('Progress', () => {
     expect(withRenderStatus.getByText('Done 25%')).not.toBeNull()
   })
 
+  test('supports custom value labels for aria-valuetext', () => {
+    const screen = render(() => (
+      <Progress
+        value={3}
+        max={10}
+        getValueLabel={({ value, max }) => `${value} of ${max} completed`}
+      />
+    ))
+
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuetext')).toBe('3 of 10 completed')
+  })
+
   test('updates renderStatus content when value changes', () => {
     const [value, setValue] = createSignal(25)
     const screen = render(() => (

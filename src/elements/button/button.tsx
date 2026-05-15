@@ -1,7 +1,6 @@
-import * as KobalteButton from '@kobalte/core/button'
-import type { ElementOf, PolymorphicProps } from '@kobalte/core/polymorphic'
-import type { JSX, ValidComponent } from 'solid-js'
+import type { ComponentProps, JSX, ValidComponent } from 'solid-js'
 import { Show, createMemo, splitProps } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 
 import type { MaybeRenderProp } from '../../shared/render-prop'
 import { resolveRenderProp } from '../../shared/render-prop'
@@ -19,10 +18,7 @@ export namespace ButtonT {
   export type Variant = ButtonVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend<T extends ValidComponent = 'button'> = PolymorphicProps<
-    T,
-    KobalteButton.ButtonRootProps<ElementOf<T>>
-  >
+  export type Extend<T extends ValidComponent = 'button'> = ComponentProps<T> & { as?: T }
 
   export interface Item {}
   /**
@@ -84,10 +80,11 @@ export namespace ButtonT {
 export type ButtonProps<T extends ValidComponent = 'button'> = ButtonT.Props<T>
 
 /**
- * Button component built on top of Kobalte `Button.Root` with polymorphic `as` support.
+ * Button component with polymorphic `as` support and loading state.
  */
 export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T>): JSX.Element {
   const [local, rest] = splitProps(props as ButtonProps, [
+    'as',
     'variant',
     'size',
     'classes',
@@ -103,11 +100,17 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
     'children',
   ])
 
-  const { isLoading, onClick } = useLoadingAutoClick<ElementOf<T>, MouseEvent>({
+  const { isLoading, onClick } = useLoadingAutoClick<any, MouseEvent>({
     loading: () => local.loading,
     loadingAuto: () => local.loadingAuto,
     onClick: () => local.onClick,
   })
+
+  const tag = () => (local.as as ValidComponent) ?? 'button'
+  const isNativeBtn = () => typeof tag() === 'string' && (tag() === 'button' || tag() === 'input')
+  const isNativeLink = () =>
+    !isNativeBtn() && typeof tag() === 'string' && tag() === 'a' && (rest as any).href !== null
+  const needsButtonRole = () => typeof tag() === 'string' && !isNativeBtn() && !isNativeLink()
 
   const iconSize = createMemo(() =>
     local.size?.startsWith('icon-') ? local.size.replace('icon-', '') : undefined,
@@ -143,7 +146,8 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
   })
 
   return (
-    <KobalteButton.Root
+    <Dynamic
+      component={tag()}
       data-slot={local.slotName || 'root'}
       style={local.styles?.root}
       class={buttonVariants(
@@ -153,9 +157,14 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
         },
         local.classes?.root,
       )}
+      type={isNativeBtn() ? 'button' : undefined}
+      role={needsButtonRole() ? 'button' : undefined}
+      tabIndex={needsButtonRole() && !isLoading() && !local.disabled ? 0 : undefined}
       aria-busy={isLoading() ? true : undefined}
       data-loading={isLoading() ? '' : undefined}
-      disabled={isLoading() || local.disabled}
+      disabled={isNativeBtn() ? isLoading() || local.disabled : undefined}
+      aria-disabled={!isNativeBtn() && (isLoading() || local.disabled) ? true : undefined}
+      data-disabled={local.disabled ? '' : undefined}
       onClick={onClick}
       {...rest}
     >
@@ -201,6 +210,6 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
           />
         )}
       </Show>
-    </KobalteButton.Root>
+    </Dynamic>
   )
 }

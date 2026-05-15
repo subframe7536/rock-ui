@@ -1,7 +1,8 @@
-import type * as KPopper from '@kobalte/core/popper'
 import { render } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+
+import { setPopperTestPlacementAccessor } from '../base/popper'
 
 import { Tooltip } from './tooltip'
 import type { TooltipProps } from './tooltip'
@@ -9,25 +10,16 @@ import type { TooltipProps } from './tooltip'
 let getMockPlacement: () => string = () => 'top'
 let setMockPlacement: (value: string) => void = () => undefined
 
-vi.mock('@kobalte/core/popper', async () => {
-  const actual = await vi.importActual<typeof KPopper>('@kobalte/core/popper')
-
-  return {
-    ...actual,
-    usePopperContext: () => ({
-      currentPlacement: () => getMockPlacement(),
-      contentRef: () => undefined,
-      setPositionerRef: () => undefined,
-      setArrowRef: () => undefined,
-    }),
-  }
-})
-
 describe('Tooltip', () => {
   beforeEach(() => {
     const [placement, setPlacement] = createSignal('top')
     getMockPlacement = placement
     setMockPlacement = setPlacement
+    setPopperTestPlacementAccessor(getMockPlacement)
+  })
+
+  afterEach(() => {
+    setPopperTestPlacementAccessor(undefined)
   })
 
   test('renders text content when open is controlled', () => {

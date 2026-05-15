@@ -43,6 +43,31 @@ describe('RadioGroup', () => {
     expect(radioB.checked).toBe(true)
   })
 
+  test('changes selection with keyboard navigation', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <RadioGroup items={['A', 'B', 'C']} defaultValue="A" onChange={onChange} />
+    ))
+
+    const radioA = screen.getByRole('radio', { name: 'A' }) as HTMLInputElement
+    const radioB = screen.getByRole('radio', { name: 'B' }) as HTMLInputElement
+    const radioC = screen.getByRole('radio', { name: 'C' }) as HTMLInputElement
+
+    radioA.focus()
+
+    await fireEvent.keyDown(radioA, { key: 'ArrowDown' })
+    expect(radioB.checked).toBe(true)
+
+    await fireEvent.keyDown(radioB, { key: 'End' })
+    expect(radioC.checked).toBe(true)
+
+    await fireEvent.keyDown(radioC, { key: 'Home' })
+    expect(radioA.checked).toBe(true)
+    expect(onChange).toHaveBeenCalledWith('B')
+    expect(onChange).toHaveBeenCalledWith('C')
+    expect(onChange).toHaveBeenCalledWith('A')
+  })
+
   test('keeps controlled value until parent updates', async () => {
     const onChange = vi.fn()
     const screen = render(() => <RadioGroup items={['A', 'B']} value="A" onChange={onChange} />)
@@ -265,6 +290,24 @@ describe('RadioGroup', () => {
 
     const label = screen.getByText('Radio group')
     expect(label.getAttribute('for')).toBeNull()
+  })
+
+  test('sets aria-readonly and prevents changes when readOnly', async () => {
+    const onChange = vi.fn()
+    const screen = render(() => (
+      <RadioGroup items={['Dogs', 'Cats', 'Dragons']} readOnly onChange={onChange} />
+    ))
+
+    const group = screen.getByRole('radiogroup')
+    const dragons = screen.getByRole('radio', { name: 'Dragons' }) as HTMLInputElement
+
+    expect(group.getAttribute('aria-readonly')).toBe('true')
+    expect(dragons.checked).toBe(false)
+
+    await fireEvent.click(dragons)
+
+    expect(dragons.checked).toBe(false)
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   test('applies style overrides to item and checkbox slots', () => {

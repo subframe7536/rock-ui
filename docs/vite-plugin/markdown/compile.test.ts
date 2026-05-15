@@ -107,18 +107,6 @@ name: Variants
     expect(code).not.toContain('"id":"api-inherited"')
   })
 
-  test('injects upstreamHref for kobalte-based component pages', () => {
-    const markdown = `
-## Variants
-`
-
-    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/general/button/button.md', {
-      projectRoot: process.cwd(),
-    })
-
-    expect(code).toContain('upstreamHref: "https://kobalte.dev/docs/core/components/button"')
-  })
-
   test('does not inject upstreamHref for non-kobalte component pages', () => {
     const markdown = `
 ## Demo

@@ -1,14 +1,13 @@
-import { Combobox, useComboboxContext } from '@kobalte/core/combobox'
-import type { ComboboxRootProps } from '@kobalte/core/combobox'
 import type { JSX } from 'solid-js'
-import { For, Show, createEffect, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, mergeProps } from 'solid-js'
 
 import { Badge } from '../../elements/badge'
 import type { BadgeProps } from '../../elements/badge'
 import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { cn, useId } from '../../shared/utils'
 import type {
   FormDisableOption,
   FormIdentityOptions,
@@ -26,20 +25,18 @@ import {
 } from './select.class'
 import {
   createComboboxInputHandlers,
-  emitSelectValueChange,
-  createFindOptionByValue,
   createSelectComponents,
+  emitSelectValueChange,
+  filterNormalizedOptions,
   flattenOptions,
   mapNormalizedListToRawValues,
   mapNormalizedToRawValue,
-  MULTI_SELECT_SPLIT_KEYS,
   normalizeOptions,
-  RenderSelectComboboxFrame,
   RenderSelectClearButton,
   RenderSelectEmptyNode,
-  SELECT_COMMON_COMBOBOX_PROPS,
-  SELECT_COMMON_DEFAULT_PROPS,
   RenderSelectTriggerButton,
+  SELECT_COMMON_DEFAULT_PROPS,
+  SelectPopup,
   syncSelectSearchInputValue,
   useSelectField,
   useSelectFilter,
@@ -48,12 +45,7 @@ import {
 import type {
   NormalizedGroup as SharedNormalizedGroup,
   NormalizedOption as SharedNormalizedOption,
-  SelectControlState as SharedSelectControlState,
 } from './shared'
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export namespace MultiSelectT {
   export type Value = string | number
@@ -66,6 +58,7 @@ export namespace MultiSelectT {
     /** Whether the option is disabled. */
     isDisabled: boolean
   }
+
   export interface EmptyRenderContext<TItem extends Value = Value> {
     /** Current input/search text. */
     inputValue: string
@@ -105,10 +98,7 @@ export namespace MultiSelectT {
   export type Variant = SelectControlVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend<Val extends Value> = ComboboxRootProps<
-    SharedNormalizedOption<Item<Val>>,
-    SharedNormalizedGroup<Item<Val>>
-  >
+  export type Extend = never
 
   export interface Item<Val extends Value = Value> {
     /** Label to display for the option. */
@@ -127,17 +117,20 @@ export namespace MultiSelectT {
     children?: Item<Val>[]
   }
 
-  /**
-   * Base props for the MultiSelect component.
-   */
   export interface Base<TItem extends Value = Value>
     extends FormIdentityOptions, FormValueOptions<TItem[]>, FormRequiredOption, FormDisableOption {
     /** Available options. */
     options?: Item<TItem>[]
-
+    /** Controlled open state. */
+    open?: boolean
+    /** Initial open state. */
+    defaultOpen?: boolean
+    /** Called whenever the popup open state changes. */
+    onOpenChange?: (open: boolean) => void
+    /** Enables virtualized-like aria metadata on options. */
+    virtualized?: boolean
     /** Called when the selection changes. */
     onChange?: (value: NoInfer<TItem[]>) => void
-
     /** Enable search input. Defaults to `false`. */
     search?: boolean
     /** Controlled search value. */
@@ -163,7 +156,6 @@ export namespace MultiSelectT {
      * @default 'control'
      */
     openOnClick?: 'control' | 'trigger'
-
     /**
      * Show a clear button when a value is selected.
      * @default false
@@ -173,17 +165,14 @@ export namespace MultiSelectT {
     onClear?: () => void
     /** Variant for the selected tags. */
     tagVariant?: BadgeProps['variant']
-
     /** Characters that split input into tokens and immediately select them. */
     tokenSeparators?: string[]
     /** Allow creating new tags on Enter when no match is found. */
     allowCreate?: boolean
-
     /** Maximum number of selected values (multiple/tags). */
     maxCount?: number
     /** Maximum visible tags before showing +N (visual only). */
     maxTagCount?: number
-
     /** Custom renderer for each option in the dropdown. */
     optionRender?: (option: MultiSelectT.Item<TItem> & OptionRenderState) => JSX.Element
     /** Custom renderer for each selected tag (multiple/tags). */
@@ -213,43 +202,29 @@ export namespace MultiSelectT {
     triggerIcon?: IconT.Name
     /** Icon shown on the clear button. */
     closeIcon?: IconT.Name
-
     /** Called when the user scrolls near the bottom of the listbox. Use for infinite loading. */
     onScrollBottom?: () => void
     /** Distance (px) from the bottom at which onScrollBottom fires. Default: 20. */
     scrollBottomThreshold?: number
+    /** Padding (px) used when calculating popup overflow and viewport collision. Default: 4. */
+    overflowPadding?: number
   }
 
-  /**
-   * Props for the MultiSelect component.
-   */
   export interface Props<TItem extends Value = Value> extends BaseProps<
     Base<TItem>,
     Variant,
-    Extend<TItem>,
-    Slot,
-    'multiple' | 'defaultFilter' | 'itemComponent' | 'sectionComponent'
+    Extend,
+    Slot
   > {}
 }
 
-/**
- * Props for the MultiSelect component.
- */
 export interface MultiSelectProps<
   TItem extends MultiSelectT.Value = MultiSelectT.Value,
 > extends MultiSelectT.Props<TItem> {}
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 /** Dropdown select component with search, multi-select, and custom item rendering. */
 export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Value>(
@@ -257,157 +232,160 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 ): JSX.Element {
   type NormalizedOption = SharedNormalizedOption<MultiSelectT.Item<TItem>>
   type NormalizedGroup = SharedNormalizedGroup<MultiSelectT.Item<TItem>>
-  type SelectControlState = SharedSelectControlState<MultiSelectT.Item<TItem>>
 
   const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
-
-  const [local, rest] = splitProps(merged, MULTI_SELECT_SPLIT_KEYS)
+  const listboxId = useId(() => merged.id && `${merged.id}-listbox`, 'multi-select-listbox')
 
   const field = useSelectField(() => ({
-    id: local.id,
-    name: local.name,
-    size: local.size,
-    disabled: local.disabled,
-    initialValue: local.defaultValue ?? [],
+    id: merged.id,
+    name: merged.name,
+    size: merged.size,
+    disabled: merged.disabled,
+    initialValue: merged.defaultValue ?? [],
   }))
-  const menuControl = useSelectMenuControl(() => local.openOnClick)
+  const isSearchable = () => Boolean(merged.search)
 
-  // ---- Mode-derived booleans ----
-  const isSearchable = () => Boolean(local.search)
-
-  // ---- Dynamically created options (allowCreate) ----
   const [createdTags, setCreatedTags] = createSignal<NormalizedOption[]>([])
-
-  // ---- Normalize options for Kobalte ----
   const normalizedOptions = createMemo(() => {
-    const base = normalizeOptions(local.options as unknown as MultiSelectT.Item<TItem>[])
+    const base = normalizeOptions(merged.options as unknown as MultiSelectT.Item<TItem>[])
 
-    if (local.allowCreate || Boolean(local.tokenSeparators?.length)) {
-      const existingValues = new Set(flattenOptions(base).map((o) => o.value))
-      const newTags = createdTags().filter((t) => !existingValues.has(t.value))
-
+    if (merged.allowCreate || Boolean(merged.tokenSeparators?.length)) {
+      const existingValues = new Set(flattenOptions(base).map((option) => option.value))
+      const newTags = createdTags().filter((tag) => !existingValues.has(tag.value))
       return [...newTags, ...base]
     }
 
     return base
   })
-
-  const hasGroups = createMemo(() => normalizedOptions().some((item) => item.isGroup === true))
-
   const allFlatOptions = createMemo(() => flattenOptions(normalizedOptions()))
-
-  // ---- maxCount: track selected values to disable remaining options ----
-  const [selectedValueSet, setSelectedValueSet] = createSignal<Set<string>>(new Set())
-  // ---- Value lookup ----
-  const findOptionByValue = createFindOptionByValue<MultiSelectT.Item<TItem>>(() =>
-    allFlatOptions(),
-  )
-
-  // ---- Value conversion memos ----
-  const multiKobalteValue = createMemo(() => {
-    if (local.value === undefined) {
-      return undefined
-    }
-    const values = local.value
-
-    return values
-      .map((v) => findOptionByValue(v))
-      .filter((o): o is NormalizedOption => o !== undefined)
+  const [selectedValues, setSelectedValues] = useControllableValue<TItem[]>({
+    value: () => merged.value,
+    defaultValue: () => merged.defaultValue ?? [],
+  })
+  const [open, setOpen] = useControllableValue<boolean>({
+    value: () => merged.open,
+    defaultValue: () => merged.defaultOpen ?? false,
+  })
+  const menuControl = useSelectMenuControl({
+    close: closeMenu,
+    isOpen: () => Boolean(open()),
+    mode: () => merged.openOnClick,
+    open: () => setMenuOpen(true),
   })
 
-  // Initialize selection tracking from value (controlled) or defaultValue (uncontrolled)
-  createEffect(() => {
-    const controlled = multiKobalteValue()
-    if (controlled) {
-      setSelectedValueSet(new Set(controlled.map((o) => o.value)))
-      return
-    }
-
-    if (local.value === undefined && local.defaultValue !== undefined) {
-      setSelectedValueSet(new Set(local.defaultValue.map((v) => String(v))))
-    }
-  })
-
-  // Options with maxCount enforcement: disable unselected items when at the limit
-  const effectiveOptions = createMemo(() => {
-    const base = normalizedOptions()
-    if (local.maxCount === undefined) {
-      return base
-    }
-
-    const selected = selectedValueSet()
-    if (selected.size < local.maxCount!) {
-      return base
-    }
-
-    // At the limit â€?disable every unselected option
-    return base.map((item) => {
-      if (item.isGroup) {
-        return Object.assign({}, item, {
-          options: item.options.map((o) =>
-            Object.assign({}, o, {
-              disabled: selected.has(o.value) ? o.disabled : true,
-            }),
-          ),
-        })
-      }
-      return Object.assign({}, item, {
-        disabled: selected.has((item as NormalizedOption).value)
-          ? (item as NormalizedOption).disabled
-          : true,
-      })
-    })
-  })
-
-  // ---- Input ref for controlled search ----
+  let controlRef: HTMLDivElement | undefined
+  let comboboxRef: HTMLInputElement | HTMLButtonElement | undefined
   let inputRef: HTMLInputElement | undefined
 
-  // ---- Current input text tracking (for create-tag item) ----
-  const [currentInputText, setCurrentInputText] = createSignal('')
-
+  const [currentInputText, setCurrentInputText] = createSignal(merged.defaultSearchValue ?? '')
+  const [highlightedKey, setHighlightedKey] = createSignal<string | undefined>(undefined)
   syncSelectSearchInputValue(
-    local,
+    merged,
     () => inputRef,
     (searchValue) => setCurrentInputText(searchValue),
   )
 
+  const selectedValueSet = createMemo(
+    () => new Set((selectedValues() ?? []).map((value) => String(value))),
+  )
+  const selectedOptions = createMemo(() =>
+    allFlatOptions().filter((option) => selectedValueSet().has(option.value)),
+  )
+
+  const effectiveOptions = createMemo(() => {
+    const base = normalizedOptions()
+    if (merged.maxCount === undefined || selectedValueSet().size < merged.maxCount) {
+      return base
+    }
+
+    return base.map((item) => {
+      if (item.isGroup) {
+        return Object.assign({}, item, {
+          options: item.options.map((option) =>
+            Object.assign({}, option, {
+              disabled: selectedValueSet().has(option.value) ? option.disabled : true,
+            }),
+          ),
+        })
+      }
+
+      return Object.assign({}, item, {
+        disabled: selectedValueSet().has(item.value) ? item.disabled : true,
+      })
+    })
+  })
+
   const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, MultiSelectT.Item<TItem>>(
     {
       isSearchable,
-      filterOption: () => local.filterOption,
+      filterOption: () => merged.filterOption,
       allOptions: allFlatOptions,
       inputValue: currentInputText,
     },
   )
 
-  const kobalteDefaultValue = createMemo(() => {
-    if (local.defaultValue === undefined) {
-      return undefined
+  const visibleOptions = createMemo(() =>
+    filterNormalizedOptions(effectiveOptions(), currentInputText(), kobalteFilter()),
+  )
+  const visibleFlatOptions = createMemo(() => flattenOptions(visibleOptions()))
+
+  createEffect(() => {
+    if (!open()) {
+      setHighlightedKey(undefined)
+      return
     }
 
-    return (local.defaultValue as TItem[])
-      .map((v) => findOptionByValue(v))
-      .filter((o): o is NormalizedOption => o !== undefined)
+    const highlighted = highlightedKey()
+    if (
+      highlighted &&
+      visibleFlatOptions().some((option) => option.key === highlighted && !option.disabled)
+    ) {
+      return
+    }
+
+    setHighlightedKey(undefined)
   })
 
-  // ---- onChange bridges ----
-  function handleMultipleChange(options: NormalizedOption[]): void {
-    setSelectedValueSet(new Set(options.map((o) => o.value)))
-
-    const nextValue = mapNormalizedListToRawValues(options)
-    emitSelectValueChange(field, nextValue as unknown as TItem[], local.onChange as any)
+  function setMenuOpen(nextOpen: boolean): void {
+    if (field.disabled()) {
+      return
+    }
+    setOpen(nextOpen)
+    merged.onOpenChange?.(nextOpen)
   }
 
-  const selectedOptions = createMemo(() =>
-    allFlatOptions().filter((option) => selectedValueSet().has(option.value)),
-  )
+  function closeMenu(): void {
+    setMenuOpen(false)
+  }
 
-  const isAtMaxCount = () => {
-    if (local.maxCount === undefined) {
-      return false
+  function focusItemByOffset(delta: number): void {
+    const options = visibleFlatOptions().filter((option) => !option.disabled)
+    if (options.length === 0) {
+      return
     }
 
-    return selectedValueSet().size >= local.maxCount
+    const currentIndex = options.findIndex((option) => option.key === highlightedKey())
+    const nextIndex =
+      currentIndex === -1
+        ? delta > 0
+          ? 0
+          : options.length - 1
+        : (currentIndex + delta + options.length) % options.length
+    setHighlightedKey(options[nextIndex]?.key)
+  }
+
+  function focusBoundaryItem(kind: 'first' | 'last'): void {
+    const options = visibleFlatOptions().filter((option) => !option.disabled)
+    if (options.length === 0) {
+      return
+    }
+    setHighlightedKey(kind === 'first' ? options[0]?.key : options[options.length - 1]?.key)
+  }
+
+  function handleMultipleChange(options: NormalizedOption[]): void {
+    const nextValue = mapNormalizedListToRawValues(options) as TItem[]
+    setSelectedValues(nextValue)
+    emitSelectValueChange(field, nextValue, merged.onChange)
   }
 
   function appendOptionIfAllowed(
@@ -427,7 +405,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
       return { next: current, appended: false, blockedByMaxCount: false, blockedByDisabled: true }
     }
 
-    if (local.maxCount !== undefined && current.length >= local.maxCount) {
+    if (merged.maxCount !== undefined && current.length >= merged.maxCount) {
       return { next: current, appended: false, blockedByMaxCount: true, blockedByDisabled: false }
     }
 
@@ -439,6 +417,39 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     }
   }
 
+  function addTag(text: string): NormalizedOption | undefined {
+    const normalized = text.trim()
+    if (!normalized) {
+      return undefined
+    }
+
+    const lower = normalized.toLowerCase()
+    const exists = allFlatOptions().find(
+      (option) => option.value.toLowerCase() === lower || option.key.toLowerCase() === lower,
+    )
+    if (exists) {
+      return exists
+    }
+
+    const option: NormalizedOption = {
+      value: normalized,
+      label: normalized,
+      key: normalized,
+      disabled: false,
+      raw: { label: normalized, value: normalized as unknown as TItem },
+    }
+
+    setCreatedTags((prev) => [...prev, option])
+    return option
+  }
+
+  function findOptionByText(text: string): NormalizedOption | undefined {
+    const lower = text.toLowerCase()
+    return allFlatOptions().find(
+      (option) => option.key.toLowerCase() === lower || option.value.toLowerCase() === lower,
+    )
+  }
+
   function resolveOptionForInput(
     text: string,
     current: NormalizedOption[],
@@ -448,54 +459,98 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
       return { option: existing, blockedByMaxCount: false }
     }
 
-    if (local.maxCount !== undefined && current.length >= local.maxCount) {
+    if (merged.maxCount !== undefined && current.length >= merged.maxCount) {
       return { blockedByMaxCount: true }
     }
 
     return { option: addTag(text), blockedByMaxCount: false }
   }
 
-  // ---- Input change handler ----
-  function handleInputChange(inputValue: string): void {
-    // Token separator check for tags mode
-    if (local.tokenSeparators?.length) {
-      const sepRegex = new RegExp(`[${escapeRegex(local.tokenSeparators.join(''))}]`)
+  function createTag(value?: string): boolean {
+    if (!merged.allowCreate) {
+      return false
+    }
 
-      if (sepRegex.test(inputValue)) {
-        const trailingInput = inputValue.split(sepRegex).at(-1) ?? ''
-        const isTrailingTokenCompleted = sepRegex.test(inputValue.at(-1) ?? '')
+    const text = String(value ?? currentInputText()).trim()
+    if (!text) {
+      return false
+    }
+
+    const current = selectedOptions()
+    const resolved = resolveOptionForInput(text, current)
+    if (resolved.blockedByMaxCount || !resolved.option) {
+      return false
+    }
+
+    const appendResult = appendOptionIfAllowed(current, resolved.option)
+    if (!appendResult.appended) {
+      return false
+    }
+
+    handleMultipleChange(appendResult.next)
+    setCurrentInputText('')
+    merged.onSearch?.('')
+    if (inputRef) {
+      inputRef.value = ''
+    }
+    return true
+  }
+
+  function toggleOption(option: NormalizedOption): void {
+    if (option.disabled) {
+      return
+    }
+
+    const current = selectedOptions()
+    if (current.some((item) => item.value === option.value)) {
+      handleMultipleChange(current.filter((item) => item.value !== option.value))
+      return
+    }
+
+    const appendResult = appendOptionIfAllowed(current, option)
+    if (appendResult.appended) {
+      handleMultipleChange(appendResult.next)
+    }
+  }
+
+  function clearSelection(): void {
+    const resetValue = (merged.defaultValue ?? []) as TItem[]
+    setSelectedValues(resetValue)
+    merged.onChange?.(resetValue)
+    setCurrentInputText('')
+    closeMenu()
+  }
+
+  function handleInputChange(inputValue: string): void {
+    if (merged.tokenSeparators?.length) {
+      const separatorRegex = new RegExp(`[${escapeRegex(merged.tokenSeparators.join(''))}]`)
+      if (separatorRegex.test(inputValue)) {
+        const trailingInput = inputValue.split(separatorRegex).at(-1) ?? ''
+        const isTrailingTokenCompleted = separatorRegex.test(inputValue.at(-1) ?? '')
         const remainder = isTrailingTokenCompleted ? '' : trailingInput
         const tokens = (
           isTrailingTokenCompleted
-            ? inputValue.split(sepRegex)
-            : inputValue.split(sepRegex).slice(0, -1)
-        ).filter((t) => t.trim())
+            ? inputValue.split(separatorRegex)
+            : inputValue.split(separatorRegex).slice(0, -1)
+        ).filter((token) => token.trim())
 
-        const current = selectedOptions()
-        let nextSelected = [...current]
-
+        let nextSelected = [...selectedOptions()]
         for (const token of tokens) {
           const resolved = resolveOptionForInput(token.trim(), nextSelected)
-          if (resolved.blockedByMaxCount) {
+          if (resolved.blockedByMaxCount || !resolved.option) {
             break
           }
 
-          const option = resolved.option
-          if (!option) {
-            continue
-          }
-
-          const appendResult = appendOptionIfAllowed(nextSelected, option)
+          const appendResult = appendOptionIfAllowed(nextSelected, resolved.option)
           if (appendResult.blockedByMaxCount) {
             break
           }
-
           if (appendResult.appended) {
             nextSelected = appendResult.next
           }
         }
 
-        if (nextSelected.length !== current.length) {
+        if (nextSelected.length !== selectedOptions().length) {
           handleMultipleChange(nextSelected)
         }
 
@@ -508,8 +563,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
         if (!menuControl.isDismissing()) {
           setCurrentInputText(remainder)
         }
-
-        local.onSearch?.(remainder)
+        merged.onSearch?.(remainder)
         return
       }
     }
@@ -517,137 +571,81 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     if (!menuControl.isDismissing()) {
       setCurrentInputText(inputValue)
     }
-
-    local.onSearch?.(inputValue)
+    merged.onSearch?.(inputValue)
   }
 
-  function addTag(text: string): NormalizedOption | undefined {
-    if (!text) {
-      return undefined
-    }
-
-    const normalized = text.trim()
-    if (!normalized) {
-      return undefined
-    }
-
-    const lower = normalized.toLowerCase()
-    const exists = allFlatOptions().find(
-      (o) => o.value.toLowerCase() === lower || o.key.toLowerCase() === lower,
-    )
-
-    if (exists) {
-      return exists
-    }
-
-    const newOpt: NormalizedOption = {
-      value: normalized,
-      label: normalized,
-      key: normalized,
-      disabled: false,
-      raw: { label: normalized, value: normalized as unknown as TItem },
-    }
-
-    setCreatedTags((prev) => [...prev, newOpt])
-    return newOpt
+  const selectionManager = {
+    focusedKey: highlightedKey,
+    isDisabled: (key: string) =>
+      Boolean(visibleFlatOptions().find((option) => option.key === key)?.disabled),
+    select: (key: string) => {
+      const option = visibleFlatOptions().find((item) => item.key === key)
+      if (option) {
+        toggleOption(option)
+      }
+    },
+    toggleSelection: (key: string) => {
+      const option = visibleFlatOptions().find((item) => item.key === key)
+      if (option) {
+        toggleOption(option)
+      }
+    },
   }
 
-  function findOptionByText(text: string): NormalizedOption | undefined {
-    const lower = text.toLowerCase()
-    return allFlatOptions().find(
-      (o) => o.key.toLowerCase() === lower || o.value.toLowerCase() === lower,
-    )
-  }
-
-  function createTag(value?: string): boolean {
-    if (!local.allowCreate) {
-      return false
-    }
-
-    const text = String(value ?? currentInputText()).trim()
-    if (!text) {
-      return false
-    }
-
-    const current = selectedOptions()
-    const resolved = resolveOptionForInput(text, current)
-    if (resolved.blockedByMaxCount) {
-      return false
-    }
-
-    const tagOpt = resolved.option
-    if (!tagOpt) {
-      return false
-    }
-
-    const appendResult = appendOptionIfAllowed(current, tagOpt)
-    if (appendResult.blockedByMaxCount || appendResult.blockedByDisabled) {
-      return false
-    }
-
-    if (appendResult.appended) {
-      handleMultipleChange(appendResult.next)
-    }
-
-    if (inputRef) {
-      inputRef.value = ''
-    }
-
-    setCurrentInputText('')
-    local.onSearch?.('')
-    return true
-  }
-
-  // ---- Trigger mode ----
-  // Use 'manual' so the dropdown only opens on explicit user actions
-  // (click, arrow-down, typing in searchable mode) â€?never on bare focus.
-  // This prevents Tab from retriggering the menu via FocusScope's delayed
-  // unmount-auto-focus.
-
-  // ---- Item component ----
-  const { ItemComponent, SectionComponent } = createSelectComponents<
-    MultiSelectT.Item<TItem>,
-    MultiSelectT.OptionRenderState
-  >({
-    styles: () => merged.styles,
-    size: field.size,
-    classes: () => local.classes,
-    optionRender: () => local.optionRender,
-    labelRender: () => local.labelRender,
-  })
-
-  function SelectTriggerContent(props: SelectControlState): JSX.Element {
-    const context = useComboboxContext()
-
-    const inputHandlers = createComboboxInputHandlers({
-      isSearchable,
-      menuControl,
-      field,
-      context,
-      onTabSelection: (key) => context.listState().selectionManager().toggleSelection(key),
-      onExtraKeyDown: (e) => {
-        if (e.key !== 'Enter') {
-          return
+  const inputHandlers = createComboboxInputHandlers({
+    isSearchable,
+    menuControl,
+    field,
+    isOpen: () => Boolean(open()),
+    selectionManager: () => selectionManager,
+    onTabSelection: (key) => selectionManager.toggleSelection(key),
+    onExtraKeyDown: (event) => {
+      if (event.key === 'ArrowDown') {
+        if (!open()) {
+          setMenuOpen(true)
         }
+        focusItemByOffset(1)
+        return
+      }
 
-        const input = e.target as HTMLInputElement
+      if (event.key === 'ArrowUp') {
+        if (!open()) {
+          setMenuOpen(true)
+        }
+        focusItemByOffset(-1)
+        return
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault()
+        focusBoundaryItem('first')
+        return
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault()
+        focusBoundaryItem('last')
+        return
+      }
+
+      if (event.key === 'Enter') {
+        const input = event.currentTarget as HTMLInputElement
         const text = input.value.trim()
-        if (!text) {
-          return
-        }
+        if (text) {
+          const match = findOptionByText(text)
+          if (match) {
+            const current = selectedOptions()
+            const isSelected = current.some((option) => option.value === match.value)
 
-        const match = findOptionByText(text)
+            if (isSelected) {
+              handleMultipleChange(current.filter((option) => option.value !== match.value))
+              input.value = ''
+              setCurrentInputText('')
+              handleInputChange('')
+              event.preventDefault()
+              return
+            }
 
-        if (match) {
-          // Toggle: remove if already selected, add if not
-          const current = props.selectedOptions()
-          const isSelected = current.some((o) => o.value === match.value)
-          if (isSelected) {
-            handleMultipleChange(current.filter((o) => o.value !== match.value))
-            input.value = ''
-            setCurrentInputText('')
-            handleInputChange('')
-          } else {
             const appendResult = appendOptionIfAllowed(current, match)
             if (appendResult.appended) {
               handleMultipleChange(appendResult.next)
@@ -655,45 +653,112 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
               setCurrentInputText('')
               handleInputChange('')
             }
+            event.preventDefault()
+            return
           }
-        } else if (local.allowCreate) {
-          createTag(text)
+
+          if (merged.allowCreate) {
+            createTag(text)
+            event.preventDefault()
+            return
+          }
         }
 
-        e.preventDefault()
-      },
-    })
-
-    const visibleTags = (): NormalizedOption[] => {
-      const selected = props.selectedOptions()
-
-      if (local.maxTagCount === undefined) {
-        return selected
+        const focused = highlightedKey()
+        if (focused) {
+          const option = visibleFlatOptions().find((item) => item.key === focused)
+          if (option && !option.disabled) {
+            toggleOption(option)
+            event.preventDefault()
+          }
+        }
+        return
       }
 
-      return selected.slice(0, local.maxTagCount)
-    }
-
-    const overflowCount = (): number => {
-      if (local.maxTagCount === undefined) {
-        return 0
+      if (event.key === 'Escape' && open()) {
+        event.preventDefault()
+        closeMenu()
       }
-      const total = props.selectedOptions().length
+    },
+  })
 
-      return Math.max(0, total - local.maxTagCount!)
+  const { ItemComponent, SectionComponent } = createSelectComponents<
+    MultiSelectT.Item<TItem>,
+    MultiSelectT.OptionRenderState
+  >({
+    styles: () => merged.styles,
+    size: field.size,
+    classes: () => merged.classes,
+    optionRender: () => merged.optionRender,
+    labelRender: () => merged.labelRender,
+  })
+
+  const visibleTags = createMemo(() => {
+    if (merged.maxTagCount === undefined) {
+      return selectedOptions()
+    }
+    return selectedOptions().slice(0, merged.maxTagCount)
+  })
+  const overflowCount = createMemo(() =>
+    merged.maxTagCount === undefined
+      ? 0
+      : Math.max(0, selectedOptions().length - merged.maxTagCount),
+  )
+  const isAtMaxCount = createMemo(() =>
+    merged.maxCount === undefined ? false : selectedValueSet().size >= merged.maxCount,
+  )
+
+  function handleControlPointerDown(event: PointerEvent): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
     }
 
-    return (
-      <>
-        {/* Leading icon */}
-        <Show when={local.leadingIcon}>
+    event.preventDefault()
+    comboboxRef?.focus()
+  }
+
+  function handleControlClick(): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
+    }
+
+    menuControl.toggleMenu()
+  }
+
+  return (
+    <div
+      style={merged.styles?.root}
+      class={cn('inline-flex h-fit w-full relative', merged.classes?.root)}
+    >
+      <div
+        ref={(el) => {
+          controlRef = el
+        }}
+        data-slot="control"
+        style={merged.styles?.control}
+        data-invalid={field.invalid() ? '' : undefined}
+        data-disabled={field.disabled() ? '' : undefined}
+        onPointerDown={handleControlPointerDown}
+        onClick={handleControlClick}
+        class={cn(
+          selectControlVariants(
+            {
+              size: field.size(),
+              variant: merged.variant,
+            },
+            merged.classes?.control,
+          ),
+          menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+        )}
+      >
+        <Show when={merged.leadingIcon}>
           {(icon) => (
             <Icon
               name={icon()}
               size={field.size()}
               slotName="leading"
               style={merged.styles?.leading}
-              class={selectLeadingIconVariants({ size: field.size() }, local.classes?.leading)}
+              class={selectLeadingIconVariants({ size: field.size() }, merged.classes?.leading)}
             />
           )}
         </Show>
@@ -704,39 +769,30 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
           class={cn(
             'p-1.5 flex flex-1 flex-wrap gap-1 max-w-full select-none items-center',
             menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-            local.classes?.tagsContainer,
+            merged.classes?.tagsContainer,
           )}
-          onPointerDown={(e) => {
-            e.preventDefault()
-            inputRef?.focus()
-            if (menuControl.opensFromControlClick()) {
-              // With triggerMode="manual", focus alone won't open.
-              // Open explicitly so clicking the tags area opens the dropdown.
-              menuControl.openMenu(context, () => context.close())
-            }
-          }}
         >
           <For each={visibleTags()}>
             {(option) => {
-              const onClose = () => props.remove(option)
+              const onClose = () => toggleOption(option)
               return (
                 <Show
-                  when={!local.tagRender}
-                  fallback={local.tagRender!({ ...option.raw, onClose })}
+                  when={!merged.tagRender}
+                  fallback={merged.tagRender?.({ ...option.raw, onClose })}
                 >
                   <Badge
                     slotName="tag"
                     size={field.size()}
                     title={option.key}
-                    variant={local.tagVariant}
+                    variant={merged.tagVariant}
                     styles={{ root: merged.styles?.tag }}
                     classes={{
-                      root: ['max-w-50% pe-0', local.classes?.tag],
-                      trailing: ['rounded hover:bg-accent scale-85', local.classes?.tagRemove],
+                      root: ['max-w-50% pe-0', merged.classes?.tag],
+                      trailing: ['rounded hover:bg-accent scale-85', merged.classes?.tagRemove],
                     }}
-                    trailing={local.closeIcon ?? 'icon-close'}
-                    onTrailingClick={(e) => {
-                      e.stopPropagation()
+                    trailing={merged.closeIcon ?? 'icon-close'}
+                    onTrailingClick={(event) => {
+                      event.stopPropagation()
                       onClose()
                     }}
                   >
@@ -757,136 +813,202 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             </span>
           </Show>
 
-          <Combobox.Input
-            ref={(el: HTMLInputElement) => {
-              inputRef = el
-            }}
-            data-slot="input"
-            style={merged.styles?.input}
-            data-readonly={!isSearchable()}
-            class={selectInputVariants(
-              {
-                mode: 'multiSearch',
-                size: field.size(),
-              },
-              menuControl.opensFromControlClick()
-                ? 'data-readonly:cursor-pointer'
-                : 'data-readonly:cursor-default',
-              local.classes?.input,
-            )}
-            readOnly={!isSearchable()}
-            maxLength={local.searchMaxLength}
-            onPointerDown={(e: PointerEvent) => {
-              e.stopPropagation()
-            }}
-            {...inputHandlers}
-          />
+          <Show
+            when={isSearchable()}
+            fallback={
+              <button
+                ref={(el) => {
+                  comboboxRef = el
+                }}
+                id={field.id()}
+                type="button"
+                role="combobox"
+                aria-controls={listboxId()}
+                aria-expanded={open() ? 'true' : 'false'}
+                aria-haspopup="listbox"
+                aria-activedescendant={
+                  highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+                }
+                data-slot="input"
+                style={merged.styles?.input}
+                class={selectInputVariants(
+                  {
+                    mode: 'multiSearch',
+                    size: field.size(),
+                  },
+                  'text-start truncate',
+                  menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+                  merged.classes?.input,
+                )}
+                disabled={field.disabled()}
+                aria-invalid={field.invalid() ? 'true' : undefined}
+                onKeyDown={inputHandlers.onKeyDown}
+                onFocus={inputHandlers.onFocus}
+                onBlur={inputHandlers.onBlur}
+                {...field.ariaAttrs()}
+              >
+                <Show when={selectedOptions().length === 0}>{merged.placeholder}</Show>
+              </button>
+            }
+          >
+            <input
+              ref={(el) => {
+                comboboxRef = el
+                inputRef = el
+              }}
+              id={field.id()}
+              role="combobox"
+              aria-controls={listboxId()}
+              aria-expanded={open() ? 'true' : 'false'}
+              aria-haspopup="listbox"
+              aria-autocomplete="list"
+              aria-activedescendant={
+                highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+              }
+              data-slot="input"
+              style={merged.styles?.input}
+              class={selectInputVariants(
+                {
+                  mode: 'multiSearch',
+                  size: field.size(),
+                },
+                menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+                merged.classes?.input,
+              )}
+              maxLength={merged.searchMaxLength}
+              value={currentInputText()}
+              placeholder={selectedOptions().length > 0 ? '' : merged.placeholder}
+              disabled={field.disabled()}
+              required={merged.required}
+              aria-invalid={field.invalid() ? 'true' : undefined}
+              onInput={(event) => {
+                handleInputChange(event.currentTarget.value)
+                inputHandlers.onInput(event)
+              }}
+              onKeyDown={inputHandlers.onKeyDown}
+              onFocus={inputHandlers.onFocus}
+              onBlur={inputHandlers.onBlur}
+              {...field.ariaAttrs()}
+            />
+          </Show>
         </div>
 
         <RenderSelectClearButton
-          show={Boolean(local.allowClear && props.selectedOptions().length > 0)}
+          show={Boolean(merged.allowClear && selectedOptions().length > 0)}
           size={field.size()}
           style={merged.styles?.clear}
-          rootClass={selectClearVariants({ size: field.size() }, local.classes?.clear)}
+          rootClass={selectClearVariants({ size: field.size() }, merged.classes?.clear)}
           onClick={(event) => {
             event.stopPropagation()
-            field.handleClear(props.clear, local.onClear)
+            field.handleClear(clearSelection, merged.onClear)
           }}
         />
 
         <RenderSelectTriggerButton
           style={merged.styles?.trigger}
-          name={local.triggerIcon}
+          name={merged.triggerIcon}
           size={field.size()}
-          rootClass={selectTriggerIconVariants({ size: field.size() }, local.classes?.trigger)}
-          loading={local.loading}
-          loadingIcon={local.loadingIcon}
-          onClick={(event) => menuControl.onTriggerClickFallback(event, context)}
+          rootClass={selectTriggerIconVariants({ size: field.size() }, merged.classes?.trigger)}
+          loading={merged.loading}
+          loadingIcon={merged.loadingIcon}
+          onClick={(event) => menuControl.onTriggerClickFallback(event)}
         />
-      </>
-    )
-  }
+      </div>
 
-  function SelectEmptyNode(): JSX.Element {
-    const context = useComboboxContext()
-
-    return (
-      <RenderSelectEmptyNode<MultiSelectT.EmptyRenderContext<TItem>>
-        emptyRender={local.emptyRender}
-        style={merged.styles?.empty}
-        class={local.classes?.empty}
-        context={() => ({
-          inputValue: currentInputText(),
-          hasMatches: hasMatches(),
-          selectedValues: [...selectedValueSet()].map((value) => {
-            const option = findOptionByValue(value)
-            return (option ? mapNormalizedToRawValue(option) : value) as unknown as TItem
-          }),
-          isAtMaxCount: isAtMaxCount(),
-          create: (value?: string): boolean => createTag(value),
-          close: () => context.close(),
-        })}
-      />
-    )
-  }
-
-  // ---- Render ----
-  return (
-    <Combobox<NormalizedOption, NormalizedGroup>
-      id={field.id()}
-      name={field.name()}
-      options={effectiveOptions()}
-      {...SELECT_COMMON_COMBOBOX_PROPS}
-      optionGroupChildren={hasGroups() ? 'options' : undefined}
-      placeholder={selectedValueSet().size > 0 ? '' : local.placeholder}
-      onInputChange={handleInputChange}
-      defaultFilter={kobalteFilter()}
-      disabled={field.disabled()}
-      required={local.required}
-      validationState={field.invalid() ? 'invalid' : 'valid'}
-      virtualized={local.virtualized}
-      itemComponent={local.virtualized ? undefined : ItemComponent}
-      sectionComponent={local.virtualized ? undefined : SectionComponent}
-      multiple={true}
-      value={multiKobalteValue()}
-      defaultValue={kobalteDefaultValue()}
-      onChange={handleMultipleChange}
-      closeOnSelection={false}
-      removeOnBackspace={true}
-      style={merged.styles?.root}
-      class={cn('inline-flex h-fit w-full relative', local.classes?.root)}
-      {...field.ariaAttrs()}
-      {...rest}
-    >
-      <RenderSelectComboboxFrame<MultiSelectT.Item<TItem>>
-        controlStyle={merged.styles?.control}
-        controlClass={cn(
-          selectControlVariants(
-            {
-              size: field.size(),
-              variant: local.variant,
-            },
-            local.classes?.control,
-          ),
-          menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-        )}
-        invalid={Boolean(field.invalid())}
-        disabled={Boolean(field.disabled())}
-        renderTriggerContent={(state) => <SelectTriggerContent {...state} />}
-        hasMatches={hasMatches}
-        emptyNode={<SelectEmptyNode />}
-        virtualized={Boolean(local.virtualized)}
+      <SelectPopup
+        open={Boolean(open())}
+        anchorElement={() => controlRef}
+        listboxId={listboxId()}
         contentStyle={merged.styles?.content}
-        contentClass={local.classes?.content}
+        contentClass={merged.classes?.content as string | undefined}
         listboxStyle={merged.styles?.listbox}
-        listboxClass={local.classes?.listbox}
-        onContentInteractOutside={menuControl.onContentInteractOutside}
-        onContentCloseAutoFocus={menuControl.onContentCloseAutoFocus}
-        onListboxScrollBottom={local.onScrollBottom}
-        scrollBottomThreshold={local.scrollBottomThreshold}
-        sectionComponent={SectionComponent}
-        itemComponent={ItemComponent}
-      />
-    </Combobox>
+        listboxClass={merged.classes?.listbox as string | undefined}
+        onClose={closeMenu}
+        onInteractOutside={menuControl.onContentInteractOutside}
+        onListboxScrollBottom={merged.onScrollBottom}
+        overflowPadding={merged.overflowPadding}
+        scrollBottomThreshold={merged.scrollBottomThreshold}
+      >
+        <Show
+          when={hasMatches()}
+          fallback={
+            <RenderSelectEmptyNode<MultiSelectT.EmptyRenderContext<TItem>>
+              emptyRender={merged.emptyRender}
+              style={merged.styles?.empty}
+              class={merged.classes?.empty}
+              context={() => ({
+                inputValue: currentInputText(),
+                hasMatches: hasMatches(),
+                selectedValues: selectedOptions().map(
+                  (option) => mapNormalizedToRawValue(option) as TItem,
+                ),
+                isAtMaxCount: isAtMaxCount(),
+                create: (value?: string) => createTag(value),
+                close: closeMenu,
+              })}
+            />
+          }
+        >
+          <For each={visibleOptions()}>
+            {(item) => (
+              <Show
+                when={item.isGroup}
+                fallback={
+                  <ItemComponent
+                    id={`${listboxId()}-${(item as NormalizedOption).key}`}
+                    item={item as NormalizedOption}
+                    isSelected={selectedValueSet().has((item as NormalizedOption).value)}
+                    isHighlighted={highlightedKey() === (item as NormalizedOption).key}
+                    posinset={
+                      merged.virtualized
+                        ? visibleFlatOptions().findIndex(
+                            (option) => option.key === (item as NormalizedOption).key,
+                          ) + 1
+                        : undefined
+                    }
+                    setsize={merged.virtualized ? visibleFlatOptions().length : undefined}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onPointerMove={() => {
+                      if (!(item as NormalizedOption).disabled) {
+                        setHighlightedKey((item as NormalizedOption).key)
+                      }
+                    }}
+                    onClick={() => toggleOption(item as NormalizedOption)}
+                  />
+                }
+              >
+                <div>
+                  <SectionComponent section={item as NormalizedGroup} />
+                  <For each={(item as NormalizedGroup).options}>
+                    {(option) => (
+                      <ItemComponent
+                        id={`${listboxId()}-${option.key}`}
+                        item={option}
+                        isSelected={selectedValueSet().has(option.value)}
+                        isHighlighted={highlightedKey() === option.key}
+                        posinset={
+                          merged.virtualized
+                            ? visibleFlatOptions().findIndex((entry) => entry.key === option.key) +
+                              1
+                            : undefined
+                        }
+                        setsize={merged.virtualized ? visibleFlatOptions().length : undefined}
+                        onPointerDown={(event) => event.preventDefault()}
+                        onPointerMove={() => {
+                          if (!option.disabled) {
+                            setHighlightedKey(option.key)
+                          }
+                        }}
+                        onClick={() => toggleOption(option)}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+            )}
+          </For>
+        </Show>
+      </SelectPopup>
+    </div>
   )
 }

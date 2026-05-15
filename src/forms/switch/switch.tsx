@@ -1,11 +1,12 @@
-import * as KobalteSwitch from '@kobalte/core/switch'
 import type { JSX } from 'solid-js'
-import { Show, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps, onCleanup, onMount } from 'solid-js'
 
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
+import { HiddenInput } from '../../shared/hidden-input'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn, useId } from '../../shared/utils'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { callHandler, cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
   FormDisableOption,
@@ -13,7 +14,6 @@ import type {
   FormReadOnlyOption,
   FormRequiredOption,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS } from '../form-field/form-options'
 
 import type { SwitchVariantProps } from './switch.class'
 import {
@@ -37,7 +37,7 @@ export namespace SwitchT {
   export type Variant = SwitchVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteSwitch.SwitchRootProps
+  export type Extend = never
 
   export interface Item {}
 
@@ -46,6 +46,17 @@ export namespace SwitchT {
    */
   export interface Base<TTrue = boolean, TFalse = boolean>
     extends FormIdentityOptions, FormDisableOption, FormRequiredOption, FormReadOnlyOption {
+    /**
+     * Pointer down handler for the switch root container.
+     */
+    onPointerDown?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>
+
+    /**
+     * Native value submitted when the switch is checked.
+     * @default 'on'
+     */
+    value?: string
+
     /**
      * Whether the switch is checked.
      */
@@ -136,49 +147,37 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
       loadingIcon: 'icon-loading' as IconT.Name,
       trueValue: true,
       falseValue: false,
+      value: 'on',
     },
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    ...FORM_ID_NAME_DISABLED_ON_CHANGE_KEYS,
-    'checked',
-    'defaultChecked',
-    'trueValue',
-    'falseValue',
-    'loading',
-    'loadingIcon',
-    'checkedIcon',
-    'uncheckedIcon',
-    'label',
-    'description',
-    'size',
-    'classes',
-  ])
-
-  const generatedId = useId(() => local.id, 'switch')
+  const generatedId = useId(() => merged.id, 'switch')
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      disabled: local.disabled || local.loading,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled || merged.loading,
     }),
     () => ({
       defaultId: generatedId(),
       defaultSize: 'md',
       initialValue:
-        normalizeFieldValue(local.checked !== undefined ? local.checked : local.defaultChecked) ??
-        local.falseValue,
+        normalizeFieldValue(
+          merged.checked !== undefined ? merged.checked : merged.defaultChecked,
+        ) ?? merged.falseValue,
     }),
   )
 
+  let inputEl: HTMLInputElement | undefined
+
   function toCheckedState(value: unknown): boolean {
-    if (value === local.trueValue) {
+    if (value === merged.trueValue) {
       return true
     }
 
-    if (value === local.falseValue) {
+    if (value === merged.falseValue) {
       return false
     }
 
@@ -190,166 +189,262 @@ export function Switch<TTrue = boolean, TFalse = boolean>(
       return value
     }
 
-    if (value === local.trueValue || value === local.falseValue) {
+    if (value === merged.trueValue || value === merged.falseValue) {
       return value
     }
 
     if (typeof value === 'boolean') {
-      return value ? local.trueValue : local.falseValue
+      return value ? merged.trueValue : merged.falseValue
     }
 
     return value
   }
 
-  const checked = createMemo<boolean | undefined>(() => {
-    if (local.checked !== undefined) {
-      return toCheckedState(local.checked)
-    }
+  const [checked, setChecked] = useControllableValue<boolean>({
+    value: () => {
+      if (merged.checked !== undefined) {
+        return toCheckedState(merged.checked)
+      }
 
-    if (field.value() !== undefined) {
-      return toCheckedState(field.value())
-    }
+      if (field.value() !== undefined) {
+        return toCheckedState(field.value())
+      }
 
-    return undefined
+      return undefined
+    },
+    defaultValue: () => Boolean(merged.defaultChecked),
   })
 
   createEffect(() => {
-    if (local.checked === undefined) {
+    if (merged.checked === undefined) {
       return
     }
 
-    field.setFormValue(normalizeFieldValue(local.checked))
+    field.setFormValue(normalizeFieldValue(merged.checked))
   })
 
   function onChange(nextChecked: boolean): void {
-    const nextValue = nextChecked ? (local.trueValue as TTrue) : (local.falseValue as TFalse)
+    const nextValue = nextChecked ? (merged.trueValue as TTrue) : (merged.falseValue as TFalse)
+
+    setChecked(nextChecked)
 
     field.setFormValue(nextValue)
-    local.onChange?.(nextValue)
+    merged.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
 
-  return (
-    <KobalteSwitch.Root
-      id={`${field.id()}-root`}
-      name={field.name()}
-      disabled={field.disabled()}
-      checked={checked()}
-      defaultChecked={local.defaultChecked}
-      onChange={onChange}
-      data-slot="root"
-      style={merged.styles?.root}
-      class={cn('flex items-start relative', field.disabled() && 'effect-dis', local.classes?.root)}
-      {...rest}
-    >
-      {(state) => {
-        const resolvedIconName = (): IconT.Name | undefined => {
-          if (local.loading) {
-            return local.loadingIcon
-          }
+  const readOnly = createMemo(() => Boolean(merged.readOnly))
+  const dataAttrs = createMemo(() => ({
+    'data-checked': checked() ? '' : undefined,
+    'data-disabled': field.disabled() ? '' : undefined,
+    'data-readonly': readOnly() ? '' : undefined,
+  }))
 
-          return state.checked() ? local.checkedIcon : local.uncheckedIcon
+  createEffect(() => {
+    if (inputEl) {
+      inputEl.checked = Boolean(checked())
+    }
+  })
+
+  function toggle(): void {
+    if (field.disabled() || readOnly()) {
+      return
+    }
+
+    onChange(!checked())
+    inputEl?.focus()
+  }
+
+  onMount(() => {
+    const form = inputEl?.form
+    if (!form) {
+      return
+    }
+
+    function onReset(): void {
+      // oxlint-disable-next-line subf/solid-reactivity
+      queueMicrotask(() => {
+        const nextChecked = Boolean(merged.defaultChecked)
+        setChecked(nextChecked)
+
+        if (inputEl) {
+          inputEl.checked = nextChecked
         }
 
-        return (
-          <>
-            <div
-              data-slot="container"
-              style={merged.styles?.container}
-              class={switchContainerVariants(
-                {
-                  size: field.size(),
-                },
-                local.classes?.container,
+        field.setFormValue(nextChecked ? merged.trueValue : merged.falseValue)
+      })
+    }
+
+    form.addEventListener('reset', onReset)
+    onCleanup(() => {
+      form.removeEventListener('reset', onReset)
+    })
+  })
+
+  function onInputKeyDown(event: KeyboardEvent): void {
+    if (event.key !== ' ' && event.key !== 'Enter') {
+      return
+    }
+
+    event.preventDefault()
+    toggle()
+  }
+
+  function onRootPointerDown(event: PointerEvent): void {
+    callHandler(event, merged.onPointerDown)
+
+    if (document.activeElement === inputEl) {
+      event.preventDefault()
+    }
+  }
+
+  function resolvedIconName(): IconT.Name | undefined {
+    if (merged.loading) {
+      return merged.loadingIcon
+    }
+
+    return checked() ? merged.checkedIcon : merged.uncheckedIcon
+  }
+
+  return (
+    <div
+      id={`${field.id()}-root`}
+      role="group"
+      data-slot="root"
+      style={merged.styles?.root}
+      class={cn(
+        'flex items-start relative',
+        field.disabled() && 'effect-dis',
+        merged.classes?.root,
+      )}
+      onPointerDown={onRootPointerDown}
+      {...dataAttrs()}
+    >
+      <div
+        data-slot="container"
+        style={merged.styles?.container}
+        class={switchContainerVariants(
+          {
+            size: field.size(),
+          },
+          merged.classes?.container,
+        )}
+      >
+        <HiddenInput
+          ref={(element) => {
+            inputEl = element
+          }}
+          id={field.id()}
+          type="checkbox"
+          role="switch"
+          name={field.name()}
+          value={merged.value}
+          checked={Boolean(checked())}
+          required={merged.required}
+          disabled={field.disabled()}
+          readOnly={readOnly()}
+          aria-checked={Boolean(checked())}
+          aria-required={merged.required || undefined}
+          aria-disabled={field.disabled() || undefined}
+          aria-readonly={readOnly() || undefined}
+          class="peer"
+          data-slot="input"
+          onChange={(event) => {
+            event.stopPropagation()
+
+            if (field.disabled() || readOnly()) {
+              event.currentTarget.checked = Boolean(checked())
+              return
+            }
+
+            onChange(event.currentTarget.checked)
+            event.currentTarget.checked = Boolean(checked())
+          }}
+          onKeyDown={onInputKeyDown}
+          {...dataAttrs()}
+          {...field.ariaAttrs()}
+        />
+
+        <div
+          data-slot="track"
+          style={merged.styles?.track}
+          data-invalid={field.invalid() ? '' : undefined}
+          class={switchTrackVariants(
+            {
+              size: field.size(),
+            },
+            merged.classes?.track,
+          )}
+          onClick={() => toggle()}
+          {...dataAttrs()}
+        >
+          <div
+            data-slot="thumb"
+            style={merged.styles?.thumb}
+            class={switchThumbVariants(
+              {
+                size: field.size(),
+              },
+              merged.classes?.thumb,
+            )}
+            {...dataAttrs()}
+          >
+            <Show when={resolvedIconName()} keyed>
+              {(iconName) => (
+                <Icon
+                  name={iconName}
+                  data-checked={!merged.loading && checked() ? '' : undefined}
+                  data-unchecked={!merged.loading && !checked() ? '' : undefined}
+                  data-loading={merged.loading ? '' : undefined}
+                  class={cn(
+                    'text-primary size-10/12 transition-opacity absolute data-unchecked:(text-muted-foreground opacity-90) data-checked:opacity-100 data-loading:effect-loading',
+                    merged.classes?.icon,
+                  )}
+                />
+              )}
+            </Show>
+          </div>
+        </div>
+      </div>
+
+      <Show when={merged.label || merged.description}>
+        <div
+          data-slot="wrapper"
+          style={merged.styles?.wrapper}
+          class={switchWrapperVariants(
+            {
+              size: field.size(),
+            },
+            merged.classes?.wrapper,
+          )}
+        >
+          <Show when={merged.label}>
+            <label
+              for={field.id()}
+              data-slot="label"
+              style={merged.styles?.label}
+              class={cn(
+                'text-foreground font-medium block cursor-pointer',
+                merged.required && "after:(text-destructive ms-0.5 content-['*'])",
+                merged.classes?.label,
               )}
             >
-              <KobalteSwitch.Input
-                id={field.id()}
-                class="peer"
-                data-slot="input"
-                {...field.ariaAttrs()}
-              />
+              {merged.label}
+            </label>
+          </Show>
 
-              <KobalteSwitch.Control
-                data-slot="track"
-                style={merged.styles?.track}
-                data-invalid={field.invalid() ? '' : undefined}
-                class={switchTrackVariants(
-                  {
-                    size: field.size(),
-                  },
-                  local.classes?.track,
-                )}
-              >
-                <KobalteSwitch.Thumb
-                  data-slot="thumb"
-                  style={merged.styles?.thumb}
-                  class={switchThumbVariants(
-                    {
-                      size: field.size(),
-                    },
-                    local.classes?.thumb,
-                  )}
-                >
-                  <Show when={resolvedIconName()} keyed>
-                    {(iconName) => (
-                      <Icon
-                        name={iconName}
-                        data-checked={!local.loading && state.checked() ? '' : undefined}
-                        data-unchecked={!local.loading && !state.checked() ? '' : undefined}
-                        data-loading={local.loading ? '' : undefined}
-                        class={cn(
-                          'text-primary size-10/12 transition-opacity absolute data-unchecked:(text-muted-foreground opacity-90) data-checked:opacity-100 data-loading:effect-loading',
-                          local.classes?.icon,
-                        )}
-                      />
-                    )}
-                  </Show>
-                </KobalteSwitch.Thumb>
-              </KobalteSwitch.Control>
-            </div>
-
-            <Show when={local.label || local.description}>
-              <div
-                data-slot="wrapper"
-                style={merged.styles?.wrapper}
-                class={switchWrapperVariants(
-                  {
-                    size: field.size(),
-                  },
-                  local.classes?.wrapper,
-                )}
-              >
-                <Show when={local.label}>
-                  <label
-                    for={field.id()}
-                    data-slot="label"
-                    style={merged.styles?.label}
-                    class={cn(
-                      'text-foreground font-medium block cursor-pointer',
-                      rest.required && "after:(text-destructive ms-0.5 content-['*'])",
-                      local.classes?.label,
-                    )}
-                  >
-                    {local.label}
-                  </label>
-                </Show>
-
-                <Show when={local.description}>
-                  <p
-                    data-slot="description"
-                    style={merged.styles?.description}
-                    class={cn('text-muted-foreground', local.classes?.description)}
-                  >
-                    {local.description}
-                  </p>
-                </Show>
-              </div>
-            </Show>
-          </>
-        )
-      }}
-    </KobalteSwitch.Root>
+          <Show when={merged.description}>
+            <p
+              data-slot="description"
+              style={merged.styles?.description}
+              class={cn('text-muted-foreground', merged.classes?.description)}
+            >
+              {merged.description}
+            </p>
+          </Show>
+        </div>
+      </Show>
+    </div>
   )
 }

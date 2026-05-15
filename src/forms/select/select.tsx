@@ -1,12 +1,11 @@
-import { Combobox, useComboboxContext } from '@kobalte/core/combobox'
-import type { ComboboxRootProps, ComboboxSingleSelectionOptions } from '@kobalte/core/combobox'
 import type { JSX } from 'solid-js'
-import { Show, createMemo, createSignal, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, mergeProps } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { cn } from '../../shared/utils'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { cn, useId } from '../../shared/utils'
 import type {
   FormDisableOption,
   FormIdentityOptions,
@@ -26,16 +25,15 @@ import {
   createComboboxInputHandlers,
   createFindOptionByValue,
   createSelectComponents,
+  filterNormalizedOptions,
   flattenOptions,
   mapNormalizedToRawValue,
   normalizeOptions,
-  RenderSelectComboboxFrame,
   RenderSelectClearButton,
-  SELECT_COMMON_COMBOBOX_PROPS,
-  SELECT_COMMON_DEFAULT_PROPS,
-  SELECT_SPLIT_KEYS,
-  RenderSelectTriggerButton,
   RenderSelectEmptyNode,
+  RenderSelectTriggerButton,
+  SELECT_COMMON_DEFAULT_PROPS,
+  SelectPopup,
   syncSelectSearchInputValue,
   useSelectField,
   useSelectFilter,
@@ -44,12 +42,7 @@ import {
 import type {
   NormalizedGroup as SharedNormalizedGroup,
   NormalizedOption as SharedNormalizedOption,
-  SelectControlState as SharedSelectControlState,
 } from './shared'
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export namespace SelectT {
   export type Value = string | number
@@ -62,6 +55,7 @@ export namespace SelectT {
     /** Whether the option is disabled. */
     isDisabled: boolean
   }
+
   export interface EmptyRenderContext<TItem extends Value = Value> {
     /** Current input/search text. */
     inputValue: string
@@ -93,13 +87,7 @@ export namespace SelectT {
   export type Variant = SelectControlVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  /**
-   * Base props for the Select component.
-   */
-  export type Extend<Val extends Value> = ComboboxRootProps<
-    SharedNormalizedOption<Item<Val>>,
-    SharedNormalizedGroup<Item<Val>>
-  >
+  export type Extend = never
 
   export interface Item<Val extends Value = Value> {
     /** Label to display for the option. */
@@ -126,10 +114,16 @@ export namespace SelectT {
       FormDisableOption {
     /** Available options. */
     options?: Item<TItem>[]
-
+    /** Controlled open state. */
+    open?: boolean
+    /** Initial open state. */
+    defaultOpen?: boolean
+    /** Called whenever the popup open state changes. */
+    onOpenChange?: (open: boolean) => void
+    /** Enables virtualized-like aria metadata on options. */
+    virtualized?: boolean
     /** Called when the selection changes. */
     onChange?: (value: NoInfer<TItem | null>) => void
-
     /** Enable search input. Defaults to `false`. */
     search?: boolean
     /** Controlled search value. */
@@ -155,18 +149,16 @@ export namespace SelectT {
      * @default 'control'
      */
     openOnClick?: 'control' | 'trigger'
-
     /** Show a clear button when a value is selected.
      * @default false
      */
     allowClear?: boolean
     /** Called when clear is triggered. */
     onClear?: () => void
-
     /** Custom renderer for each option in the dropdown. */
-    optionRender?: (option: SelectT.Item & OptionRenderState) => JSX.Element
+    optionRender?: (option: SelectT.Item<TItem> & OptionRenderState) => JSX.Element
     /** Custom renderer for the option label text. */
-    labelRender?: (option: SelectT.Item) => JSX.Element
+    labelRender?: (option: SelectT.Item<TItem>) => JSX.Element
     /** Custom renderer for the empty state when current filtered result has no matches. */
     emptyRender?: string | ((context: EmptyRenderContext<TItem>) => JSX.Element)
     /**
@@ -190,28 +182,22 @@ export namespace SelectT {
     triggerIcon?: IconT.Name
     /** Icon shown on the clear button. */
     closeIcon?: IconT.Name
-
     /** Called when the user scrolls near the bottom of the listbox. Use for infinite loading. */
     onScrollBottom?: () => void
     /** Distance (px) from the bottom at which onScrollBottom fires. Default: 20. */
     scrollBottomThreshold?: number
+    /** Padding (px) used when calculating popup overflow and viewport collision. Default: 4. */
+    overflowPadding?: number
   }
 
-  /**
-   * Props for the Select component.
-   */
   export interface Props<TItem extends Value = Value> extends BaseProps<
     Base<TItem>,
     Variant,
-    Extend<TItem>,
-    Slot,
-    'multiple' | 'defaultFilter' | 'itemComponent' | 'sectionComponent'
+    Extend,
+    Slot
   > {}
 }
 
-/**
- * Props for the Select component.
- */
 export interface SelectProps<
   TItem extends SelectT.Value = SelectT.Value,
 > extends SelectT.Props<TItem> {}
@@ -222,262 +208,510 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
 ): JSX.Element {
   type NormalizedOption = SharedNormalizedOption<SelectT.Item<TItem>>
   type NormalizedGroup = SharedNormalizedGroup<SelectT.Item<TItem>>
-  type SelectControlState = SharedSelectControlState<SelectT.Item<TItem>>
-  const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
 
-  const [local, rest] = splitProps(merged, SELECT_SPLIT_KEYS)
+  const merged = mergeProps(SELECT_COMMON_DEFAULT_PROPS, props)
+  const listboxId = useId(() => merged.id && `${merged.id}-listbox`, 'select-listbox')
 
   const field = useSelectField(() => ({
-    id: local.id,
-    name: local.name,
-    size: local.size,
-    disabled: local.disabled,
-    initialValue: local.defaultValue ?? '',
+    id: merged.id,
+    name: merged.name,
+    size: merged.size,
+    disabled: merged.disabled,
+    initialValue:
+      merged.defaultValue === null || merged.defaultValue === undefined ? '' : merged.defaultValue,
   }))
-  const menuControl = useSelectMenuControl(() => local.openOnClick)
+  const isSearchable = createMemo(() => Boolean(merged.search))
 
-  const isSearchable = createMemo(() => Boolean(local.search))
-
-  // ---- Normalize options for Kobalte ----
   const normalizedOptions = createMemo(() =>
-    normalizeOptions(local.options as SelectT.Item<TItem>[]),
+    normalizeOptions(merged.options as SelectT.Item<TItem>[]),
   )
-
-  const hasGroups = createMemo(() => normalizedOptions().some((item) => item.isGroup === true))
-
   const allFlatOptions = createMemo(() => flattenOptions(normalizedOptions()))
+  const findOptionByValue = createFindOptionByValue<SelectT.Item<TItem>>(() => allFlatOptions())
 
-  // ---- Input ref for controlled search ----
+  const [selectedValue, setSelectedValue] = useControllableValue<TItem | null>({
+    value: () => merged.value,
+    defaultValue: () => merged.defaultValue ?? null,
+  })
+  const [open, setOpen] = useControllableValue<boolean>({
+    value: () => merged.open,
+    defaultValue: () => merged.defaultOpen ?? false,
+  })
+  const menuControl = useSelectMenuControl({
+    close: closeMenu,
+    isOpen: () => Boolean(open()),
+    mode: () => merged.openOnClick,
+    open: () => setMenuOpen(true),
+  })
+
+  let controlRef: HTMLDivElement | undefined
+  let comboboxRef: HTMLInputElement | HTMLButtonElement | undefined
   let inputRef: HTMLInputElement | undefined
 
-  // ---- Current input text tracking (for create-tag item) ----
-  const [currentInputText, setCurrentInputText] = createSignal('')
+  const [currentInputText, setCurrentInputText] = createSignal(merged.defaultSearchValue ?? '')
+  const [highlightedKey, setHighlightedKey] = createSignal<string | undefined>(undefined)
 
   syncSelectSearchInputValue(
-    local,
+    merged,
     () => inputRef,
     (searchValue) => setCurrentInputText(searchValue),
   )
 
   const { kobalteFilter, hasMatches } = useSelectFilter<NormalizedOption, SelectT.Item<TItem>>({
     isSearchable,
-    filterOption: () => local.filterOption,
+    filterOption: () => merged.filterOption,
     allOptions: allFlatOptions,
     inputValue: currentInputText,
   })
 
-  // ---- Value lookup ----
-  const findOptionByValue = createFindOptionByValue<SelectT.Item<TItem>>(() => allFlatOptions())
+  const visibleOptions = createMemo(() =>
+    filterNormalizedOptions(normalizedOptions(), currentInputText(), kobalteFilter()),
+  )
+  const visibleFlatOptions = createMemo(() => flattenOptions(visibleOptions()))
 
-  // ---- Value conversion memos ----
-  const kobalteValue = createMemo(() => {
-    if (local.value === undefined) {
-      return undefined
-    }
-    if (local.value === null) {
+  const selectedOption = createMemo(() => {
+    const value = selectedValue()
+    if (value === undefined || value === null) {
       return null
     }
-    return findOptionByValue(local.value as SelectT.Value) ?? null
+    return findOptionByValue(value as SelectT.Value) ?? null
   })
 
-  const kobalteDefaultValue = createMemo(() => {
-    if (local.defaultValue === undefined || local.defaultValue === null) {
-      return undefined
+  createEffect(() => {
+    if (!open()) {
+      setHighlightedKey(undefined)
+      return
     }
-    return findOptionByValue(local.defaultValue as SelectT.Value)
+
+    const highlighted = highlightedKey()
+    if (
+      highlighted &&
+      visibleFlatOptions().some((option) => option.key === highlighted && !option.disabled)
+    ) {
+      return
+    }
+
+    setHighlightedKey(undefined)
   })
 
-  // ---- onChange bridges ----
-  function handleSingleChange(option: NormalizedOption | null): void {
-    const nextValue = option ? mapNormalizedToRawValue(option) : null
-
-    field.setFormValue(nextValue ?? '')
-    local.onChange?.(nextValue as any)
-    field.emit('change')
-    field.emit('input')
+  function setMenuOpen(nextOpen: boolean): void {
+    if (field.disabled()) {
+      return
+    }
+    setOpen(nextOpen)
+    merged.onOpenChange?.(nextOpen)
   }
 
-  // ---- Input change handler ----
+  function closeMenu(): void {
+    setMenuOpen(false)
+  }
+
+  function focusItemByOffset(delta: number): void {
+    const options = visibleFlatOptions().filter((option) => !option.disabled)
+    if (options.length === 0) {
+      return
+    }
+
+    const currentIndex = options.findIndex((option) => option.key === highlightedKey())
+    const nextIndex =
+      currentIndex === -1
+        ? delta > 0
+          ? 0
+          : options.length - 1
+        : (currentIndex + delta + options.length) % options.length
+    setHighlightedKey(options[nextIndex]?.key)
+  }
+
+  function focusBoundaryItem(kind: 'first' | 'last'): void {
+    const options = visibleFlatOptions().filter((option) => !option.disabled)
+    if (options.length === 0) {
+      return
+    }
+    setHighlightedKey(kind === 'first' ? options[0]?.key : options[options.length - 1]?.key)
+  }
+
+  function handleSingleChange(option: NormalizedOption | null): void {
+    const nextValue = option ? (mapNormalizedToRawValue(option) as TItem) : null
+    setSelectedValue(nextValue)
+    field.setFormValue(nextValue ?? '')
+    merged.onChange?.(nextValue)
+    field.emit('change')
+    field.emit('input')
+    setCurrentInputText(option?.key ?? '')
+  }
+
+  function selectOption(option: NormalizedOption): void {
+    if (option.disabled) {
+      return
+    }
+    handleSingleChange(option)
+    closeMenu()
+    queueMicrotask(() => comboboxRef?.focus())
+  }
+
+  function clearSelection(): void {
+    const resetValue = (merged.defaultValue ?? null) as TItem | null
+    setSelectedValue(resetValue)
+    merged.onChange?.(resetValue)
+    setCurrentInputText('')
+    closeMenu()
+  }
+
   function handleInputChange(inputValue: string): void {
     if (!menuControl.isDismissing()) {
       setCurrentInputText(inputValue)
     }
-
-    local.onSearch?.(inputValue)
+    merged.onSearch?.(inputValue)
   }
 
-  // ---- Trigger mode ----
-  // Use 'manual' so the dropdown only opens on explicit user actions
-  // (click, arrow-down, typing in searchable mode) �?never on bare focus.
-  // This prevents Tab from retriggering the menu via FocusScope's delayed
-  // unmount-auto-focus.
+  const selectionManager = {
+    focusedKey: highlightedKey,
+    isDisabled: (key: string) =>
+      Boolean(visibleFlatOptions().find((option) => option.key === key)?.disabled),
+    select: (key: string) => {
+      const option = visibleFlatOptions().find((item) => item.key === key)
+      if (option) {
+        selectOption(option)
+      }
+    },
+    toggleSelection: (key: string) => {
+      const option = visibleFlatOptions().find((item) => item.key === key)
+      if (option) {
+        selectOption(option)
+      }
+    },
+  }
 
-  // ---- Item component ----
+  const inputHandlers = createComboboxInputHandlers({
+    isSearchable,
+    menuControl,
+    field,
+    isOpen: () => Boolean(open()),
+    selectionManager: () => selectionManager,
+    onTabSelection: (key) => selectionManager.select(key),
+    onExtraKeyDown: (event) => {
+      if (event.key === 'ArrowDown') {
+        if (!open()) {
+          setMenuOpen(true)
+        }
+        focusItemByOffset(1)
+        return
+      }
+
+      if (event.key === 'ArrowUp') {
+        if (!open()) {
+          setMenuOpen(true)
+        }
+        focusItemByOffset(-1)
+        return
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault()
+        focusBoundaryItem('first')
+        return
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault()
+        focusBoundaryItem('last')
+        return
+      }
+
+      if (event.key === 'Enter') {
+        if (!open()) {
+          setMenuOpen(true)
+          return
+        }
+
+        const focused = highlightedKey()
+        if (!focused) {
+          return
+        }
+
+        const option = visibleFlatOptions().find((item) => item.key === focused)
+        if (!option || option.disabled) {
+          return
+        }
+
+        event.preventDefault()
+        selectOption(option)
+        return
+      }
+
+      if (event.key === 'Escape' && open()) {
+        event.preventDefault()
+        closeMenu()
+      }
+    },
+  })
+
   const { ItemComponent, SectionComponent } = createSelectComponents<
     SelectT.Item<TItem>,
     SelectT.OptionRenderState
   >({
     styles: () => merged.styles,
     size: field.size,
-    classes: () => local.classes,
-    optionRender: () => local.optionRender,
-    labelRender: () => local.labelRender,
+    classes: () => merged.classes,
+    optionRender: () => merged.optionRender,
+    labelRender: () => merged.labelRender,
   })
 
-  function SelectTriggerContent(props: SelectControlState): JSX.Element {
-    const context = useComboboxContext()
+  const displayInputValue = createMemo(() => {
+    if (isSearchable()) {
+      return currentInputText()
+    }
 
-    const inputHandlers = createComboboxInputHandlers({
-      isSearchable,
-      menuControl,
-      field,
-      context,
-      onTabSelection: (key) => context.listState().selectionManager().select(key),
-    })
+    const selected = selectedOption()
+    return typeof selected?.label === 'string' ? selected.label : (selected?.key ?? '')
+  })
 
-    return (
-      <>
-        {/* Leading icon */}
-        <Show when={local.leadingIcon}>
+  function handleControlPointerDown(event: PointerEvent): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
+    }
+
+    event.preventDefault()
+    comboboxRef?.focus()
+  }
+
+  function handleControlClick(): void {
+    if (!menuControl.opensFromControlClick()) {
+      return
+    }
+
+    menuControl.toggleMenu()
+  }
+
+  return (
+    <div
+      style={merged.styles?.root}
+      class={cn('inline-flex h-fit w-full relative', merged.classes?.root)}
+    >
+      <div
+        ref={(el) => {
+          controlRef = el
+        }}
+        data-slot="control"
+        style={merged.styles?.control}
+        data-invalid={field.invalid() ? '' : undefined}
+        data-disabled={field.disabled() ? '' : undefined}
+        onPointerDown={handleControlPointerDown}
+        onClick={handleControlClick}
+        class={selectControlVariants(
+          {
+            size: field.size(),
+            variant: merged.variant,
+          },
+          menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+          merged.classes?.control,
+        )}
+      >
+        <Show when={merged.leadingIcon}>
           {(icon) => (
             <Icon
               name={icon()}
               size={field.size()}
               slotName="leading"
               style={merged.styles?.leading}
-              class={selectLeadingIconVariants({ size: field.size() }, local.classes?.leading)}
+              class={selectLeadingIconVariants({ size: field.size() }, merged.classes?.leading)}
             />
           )}
         </Show>
 
-        <Combobox.Input
-          ref={(el: HTMLInputElement) => {
-            inputRef = el
-          }}
-          data-slot="input"
-          data-readonly={!isSearchable()}
-          style={merged.styles?.input}
-          class={selectInputVariants(
-            {
-              mode: 'single',
-              size: field.size(),
-            },
-            menuControl.opensFromControlClick()
-              ? 'data-readonly:cursor-pointer'
-              : 'data-readonly:cursor-default',
-            local.classes?.input,
-          )}
-          readOnly={!isSearchable()}
-          maxLength={local.searchMaxLength}
-          {...inputHandlers}
-        />
+        <Show
+          when={isSearchable()}
+          fallback={
+            <button
+              ref={(el) => {
+                comboboxRef = el
+              }}
+              id={field.id()}
+              type="button"
+              role="combobox"
+              aria-controls={listboxId()}
+              aria-expanded={open() ? 'true' : 'false'}
+              aria-haspopup="listbox"
+              aria-activedescendant={
+                highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+              }
+              data-slot="input"
+              style={merged.styles?.input}
+              class={selectInputVariants(
+                {
+                  mode: 'single',
+                  size: field.size(),
+                },
+                'text-start truncate',
+                menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+                merged.classes?.input,
+              )}
+              disabled={field.disabled()}
+              aria-invalid={field.invalid() ? 'true' : undefined}
+              onKeyDown={inputHandlers.onKeyDown}
+              onFocus={inputHandlers.onFocus}
+              onBlur={inputHandlers.onBlur}
+              {...field.ariaAttrs()}
+            >
+              {displayInputValue() || merged.placeholder}
+            </button>
+          }
+        >
+          <input
+            ref={(el) => {
+              comboboxRef = el
+              inputRef = el
+            }}
+            id={field.id()}
+            role="combobox"
+            aria-controls={listboxId()}
+            aria-expanded={open() ? 'true' : 'false'}
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={
+              highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined
+            }
+            data-slot="input"
+            style={merged.styles?.input}
+            class={selectInputVariants(
+              {
+                mode: 'single',
+                size: field.size(),
+              },
+              menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
+              merged.classes?.input,
+            )}
+            maxLength={merged.searchMaxLength}
+            placeholder={merged.placeholder}
+            value={displayInputValue()}
+            disabled={field.disabled()}
+            required={merged.required}
+            aria-invalid={field.invalid() ? 'true' : undefined}
+            onInput={(event) => {
+              handleInputChange(event.currentTarget.value)
+              inputHandlers.onInput(event)
+            }}
+            onKeyDown={inputHandlers.onKeyDown}
+            onFocus={inputHandlers.onFocus}
+            onBlur={inputHandlers.onBlur}
+            {...field.ariaAttrs()}
+          />
+        </Show>
 
         <RenderSelectClearButton
-          show={Boolean(local.allowClear && props.selectedOptions().length > 0)}
+          show={Boolean(merged.allowClear && selectedOption())}
           size={field.size()}
           style={merged.styles?.clear}
-          rootClass={selectClearVariants({ size: field.size() }, local.classes?.clear)}
+          rootClass={selectClearVariants({ size: field.size() }, merged.classes?.clear)}
           onClick={(event) => {
             event.stopPropagation()
-            field.handleClear(props.clear, local.onClear)
+            field.handleClear(clearSelection, merged.onClear)
           }}
         />
 
         <RenderSelectTriggerButton
           style={merged.styles?.trigger}
-          name={local.triggerIcon}
+          name={merged.triggerIcon}
           size={field.size()}
-          rootClass={selectTriggerIconVariants({ size: field.size() }, local.classes?.trigger)}
-          loading={local.loading}
-          loadingIcon={local.loadingIcon}
-          onClick={(event) => menuControl.onTriggerClickFallback(event, context)}
+          rootClass={selectTriggerIconVariants({ size: field.size() }, merged.classes?.trigger)}
+          loading={merged.loading}
+          loadingIcon={merged.loadingIcon}
+          onClick={(event) => menuControl.onTriggerClickFallback(event)}
         />
-      </>
-    )
-  }
+      </div>
 
-  function SelectEmptyNode(): JSX.Element {
-    const context = useComboboxContext()
-
-    return (
-      <RenderSelectEmptyNode<SelectT.EmptyRenderContext<TItem>>
-        emptyRender={local.emptyRender}
-        style={merged.styles?.empty}
-        class={local.classes?.empty}
-        context={() => ({
-          inputValue: currentInputText(),
-          hasMatches: hasMatches(),
-          selectedValue: (() => {
-            const selected = kobalteValue()
-            if (!selected) {
-              return null
-            }
-            return mapNormalizedToRawValue(selected) as unknown as TItem
-          })(),
-          close: () => context.close(),
-        })}
-      />
-    )
-  }
-
-  const singleSelectionProps = createMemo<ComboboxSingleSelectionOptions<NormalizedOption>>(() => ({
-    multiple: false,
-    value: kobalteValue(),
-    defaultValue: kobalteDefaultValue(),
-    onChange: handleSingleChange,
-  }))
-
-  // ---- Render ----
-  return (
-    <Combobox<NormalizedOption, NormalizedGroup>
-      id={field.id()}
-      name={field.name()}
-      options={normalizedOptions()}
-      {...SELECT_COMMON_COMBOBOX_PROPS}
-      optionGroupChildren={hasGroups() ? 'options' : undefined}
-      placeholder={local.placeholder}
-      onInputChange={handleInputChange}
-      defaultFilter={kobalteFilter()}
-      disabled={field.disabled()}
-      required={local.required}
-      validationState={field.invalid() ? 'invalid' : 'valid'}
-      virtualized={local.virtualized}
-      itemComponent={local.virtualized ? undefined : ItemComponent}
-      sectionComponent={local.virtualized ? undefined : SectionComponent}
-      {...singleSelectionProps()}
-      closeOnSelection={true}
-      style={merged.styles?.root}
-      class={cn('inline-flex h-fit w-full relative', local.classes?.root)}
-      {...field.ariaAttrs()}
-      {...rest}
-    >
-      <RenderSelectComboboxFrame<SelectT.Item<TItem>>
-        controlStyle={merged.styles?.control}
-        controlClass={selectControlVariants(
-          {
-            size: field.size(),
-            variant: local.variant,
-          },
-          menuControl.opensFromControlClick() ? 'cursor-pointer' : 'cursor-default',
-          local.classes?.control,
-        )}
-        invalid={Boolean(field.invalid())}
-        disabled={Boolean(field.disabled())}
-        renderTriggerContent={(state) => <SelectTriggerContent {...state} />}
-        hasMatches={hasMatches}
-        emptyNode={<SelectEmptyNode />}
-        virtualized={Boolean(local.virtualized)}
+      <SelectPopup
+        open={Boolean(open())}
+        anchorElement={() => controlRef}
+        listboxId={listboxId()}
         contentStyle={merged.styles?.content}
-        contentClass={local.classes?.content}
+        contentClass={merged.classes?.content as string | undefined}
         listboxStyle={merged.styles?.listbox}
-        listboxClass={local.classes?.listbox}
-        onContentInteractOutside={menuControl.onContentInteractOutside}
-        onContentCloseAutoFocus={menuControl.onContentCloseAutoFocus}
-        onListboxScrollBottom={local.onScrollBottom}
-        scrollBottomThreshold={local.scrollBottomThreshold}
-        sectionComponent={SectionComponent}
-        itemComponent={ItemComponent}
-      />
-    </Combobox>
+        listboxClass={merged.classes?.listbox as string | undefined}
+        onClose={closeMenu}
+        onInteractOutside={menuControl.onContentInteractOutside}
+        onListboxScrollBottom={merged.onScrollBottom}
+        overflowPadding={merged.overflowPadding}
+        scrollBottomThreshold={merged.scrollBottomThreshold}
+      >
+        <Show
+          when={hasMatches()}
+          fallback={
+            <RenderSelectEmptyNode<SelectT.EmptyRenderContext<TItem>>
+              emptyRender={merged.emptyRender}
+              style={merged.styles?.empty}
+              class={merged.classes?.empty}
+              context={() => ({
+                inputValue: currentInputText(),
+                hasMatches: hasMatches(),
+                selectedValue: (() => {
+                  const selected = selectedOption()
+                  return selected ? (mapNormalizedToRawValue(selected) as TItem) : null
+                })(),
+                close: closeMenu,
+              })}
+            />
+          }
+        >
+          <For each={visibleOptions()}>
+            {(item) => (
+              <Show
+                when={item.isGroup}
+                fallback={
+                  <ItemComponent
+                    id={`${listboxId()}-${(item as NormalizedOption).key}`}
+                    item={item as NormalizedOption}
+                    isSelected={selectedOption()?.key === (item as NormalizedOption).key}
+                    isHighlighted={highlightedKey() === (item as NormalizedOption).key}
+                    posinset={
+                      merged.virtualized
+                        ? visibleFlatOptions().findIndex(
+                            (option) => option.key === (item as NormalizedOption).key,
+                          ) + 1
+                        : undefined
+                    }
+                    setsize={merged.virtualized ? visibleFlatOptions().length : undefined}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onPointerMove={() => {
+                      if (!(item as NormalizedOption).disabled) {
+                        setHighlightedKey((item as NormalizedOption).key)
+                      }
+                    }}
+                    onClick={() => selectOption(item as NormalizedOption)}
+                  />
+                }
+              >
+                <div>
+                  <SectionComponent section={item as NormalizedGroup} />
+                  <For each={(item as NormalizedGroup).options}>
+                    {(option) => (
+                      <ItemComponent
+                        id={`${listboxId()}-${option.key}`}
+                        item={option}
+                        isSelected={selectedOption()?.key === option.key}
+                        isHighlighted={highlightedKey() === option.key}
+                        posinset={
+                          merged.virtualized
+                            ? visibleFlatOptions().findIndex((entry) => entry.key === option.key) +
+                              1
+                            : undefined
+                        }
+                        setsize={merged.virtualized ? visibleFlatOptions().length : undefined}
+                        onPointerDown={(event) => event.preventDefault()}
+                        onPointerMove={() => {
+                          if (!option.disabled) {
+                            setHighlightedKey(option.key)
+                          }
+                        }}
+                        onClick={() => selectOption(option)}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+            )}
+          </For>
+        </Show>
+      </SelectPopup>
+    </div>
   )
 }

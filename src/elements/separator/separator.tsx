@@ -1,4 +1,3 @@
-import * as KobalteSeparator from '@kobalte/core/separator'
 import type { JSX } from 'solid-js'
 import { Show, mergeProps } from 'solid-js'
 
@@ -16,7 +15,7 @@ export namespace SeparatorT {
   export type Variant = SeparatorVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteSeparator.SeparatorRootProps<HTMLDivElement>
+  export type Extend = never
 
   export interface Item {}
   /**
@@ -33,6 +32,11 @@ export namespace SeparatorT {
      * Additional content to render inside the separator (usually between two borders).
      */
     children?: JSX.Element
+    /**
+     * The orientation of the separator.
+     * @default 'horizontal'
+     */
+    orientation?: 'horizontal' | 'vertical'
   }
 
   /**
@@ -59,18 +63,14 @@ export function Separator(props: SeparatorProps): JSX.Element {
   )
 
   return (
-    <KobalteSeparator.Root
-      as="div"
-      orientation={merged.orientation}
-      aria-hidden={merged.decorative ? true : undefined}
+    <div
+      role="separator"
       data-slot="root"
+      data-orientation={merged.orientation}
+      aria-orientation={merged.orientation === 'vertical' ? 'vertical' : undefined}
+      aria-hidden={merged.decorative ? true : undefined}
       style={merged.styles?.root}
-      class={separatorRootVariants(
-        {
-          orientation: merged.orientation,
-        },
-        merged.classes?.root,
-      )}
+      class={separatorRootVariants({ orientation: merged.orientation }, merged.classes?.root)}
     >
       <div
         data-slot="border"
@@ -111,6 +111,6 @@ export function Separator(props: SeparatorProps): JSX.Element {
           )}
         />
       </Show>
-    </KobalteSeparator.Root>
+    </div>
   )
 }

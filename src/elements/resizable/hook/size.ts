@@ -1,6 +1,14 @@
 import type { ResizableSize } from './types'
 import { EPSILON, PRECISION } from './types'
 
+export function clamp(
+  value: number,
+  min = Number.NEGATIVE_INFINITY,
+  max = Number.POSITIVE_INFINITY,
+): number {
+  return Math.min(Math.max(value, min), max)
+}
+
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
 }

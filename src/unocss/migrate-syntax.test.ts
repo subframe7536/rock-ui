@@ -27,8 +27,8 @@ describe('transformer-migrate-syntax', () => {
     ).toBe(
       "border border-b-2 border-border border-transparent font-medium content-[''] supports-[backdrop-filter]:backdrop-blur-xs [html:not(.dark)_&]:bg-clip-padding [&:not(:last-child)]:border effect-fv var-input-1.5 icon-close transition-flex-basis",
     )
-    expect(normalizeClassList('h-$kb-collapsible-content-height')).toBe(
-      'h-[var(--kb-collapsible-content-height)]',
+    expect(normalizeClassList('h-$mo-collapsible-content-height')).toBe(
+      'h-[var(--mo-collapsible-content-height)]',
     )
   })
 

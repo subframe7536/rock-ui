@@ -1,9 +1,9 @@
-import * as KobalteSlider from '@kobalte/core/slider'
 import type { JSX } from 'solid-js'
-import { For, createEffect, createMemo, mergeProps, splitProps } from 'solid-js'
+import { For, createEffect, createMemo, createSignal, mergeProps, onMount } from 'solid-js'
 
+import { HiddenInput } from '../../shared/hidden-input'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
-import { useId } from '../../shared/utils'
+import { useId, cn } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
   FormDisableOption,
@@ -12,7 +12,6 @@ import type {
   FormRequiredOption,
   FormValueOptions,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-options'
 
 import type { SliderVariantProps } from './slider.class'
 import {
@@ -21,6 +20,18 @@ import {
   sliderThumbVariants,
   sliderTrackVariants,
 } from './slider.class'
+import {
+  clamp,
+  getClosestValueIndex,
+  getNextSortedValues,
+  hasMinStepsBetweenValues,
+  linearScale,
+  moveSortedValue,
+  normalizeSliderValues,
+  resolveSliderEdges,
+  resolveThumbIndexForDirection,
+  snapValueToStep,
+} from './utils'
 
 export namespace SliderT {
   export type Value = number | number[]
@@ -31,7 +42,7 @@ export namespace SliderT {
 
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteSlider.SliderRootProps
+  export type Extend = never
 
   export interface Item {}
 
@@ -70,6 +81,12 @@ export namespace SliderT {
     minStepsBetweenThumbs?: number
 
     /**
+     * Whether dragging can continue across another thumb when there is no minimum gap.
+     * @default true
+     */
+    allowThumbCrossing?: boolean
+
+    /**
      * Orientation of the slider.
      * @default 'horizontal'
      */
@@ -95,54 +112,13 @@ export namespace SliderT {
   /**
    * Props for the Slider component.
    */
-  export interface Props<TValue = Value> extends BaseProps<
-    Base<TValue>,
-    Variant,
-    Extend,
-    Slot,
-    'minValue' | 'maxValue' | 'as'
-  > {}
+  export interface Props<TValue = Value> extends BaseProps<Base<TValue>, Variant, Extend, Slot> {}
 }
 
 /**
  * Props for the Slider component.
  */
 export interface SliderProps<TValue = SliderT.Value> extends SliderT.Props<TValue> {}
-
-function normalizeSliderValues(
-  value: SliderT.Value | undefined,
-  fallback: number,
-): number[] | undefined {
-  if (value === undefined) {
-    return undefined
-  }
-
-  if (Array.isArray(value)) {
-    return value.length > 0 ? [...value] : [fallback]
-  }
-
-  return [value]
-}
-
-function createThumbAriaLabel(index: number, total: number): string {
-  if (total <= 1) {
-    return 'Thumb'
-  }
-
-  return `Thumb ${index + 1} of ${total}`
-}
-
-function areEqualValues(a: number[] | undefined, b: number[] | undefined): boolean {
-  if (a === b) {
-    return true
-  }
-
-  if (!a || !b || a.length !== b.length) {
-    return false
-  }
-
-  return a.every((value, index) => value === b[index])
-}
 
 /** Range slider component with single or multi-thumb support and step markers. */
 export function Slider<TValue extends SliderT.Value = SliderT.Value>(
@@ -154,193 +130,594 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
       max: 100,
       step: 1,
       minStepsBetweenThumbs: 0,
+      allowThumbCrossing: true,
       orientation: 'horizontal' as const,
       size: 'md' as const,
     },
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    ...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS,
-    'readOnly',
-    'onValueChange',
-    'onChange',
-    'min',
-    'max',
-    'step',
-    'minStepsBetweenThumbs',
-    'orientation',
-    'inverted',
-    'size',
-    'classes',
-    'styles',
-  ])
+  const generatedId = useId(() => merged.id, 'slider')
+  const [displayValues, setDisplayValues] = createSignal<number[]>([])
+  const getControlledValues = () => normalizeSliderValues(merged.value, merged.min!)
 
-  const generatedId = useId(() => local.id, 'slider')
+  const [dragging, setDragging] = createSignal(false)
+  const pageSize = createMemo(() => {
+    let calcPageSize = (merged.max! - merged.min!) / 10
+    calcPageSize = snapValueToStep(calcPageSize, 0, calcPageSize + merged.step!, merged.step!)
+    return Math.max(calcPageSize, merged.step!)
+  })
+  const [thumbRefs, setThumbRefs] = createSignal<Array<HTMLDivElement | undefined>>([])
+  const [trackElement, setTrackElementState] = createSignal<HTMLDivElement | undefined>(undefined)
+  const [activeThumbIndexState, setActiveThumbIndexState] = createSignal<number | undefined>(
+    undefined,
+  )
+  let pendingValues: number[] | undefined
+  let activePointerId: number | undefined
+  let activeThumbIndex: number | undefined
+  let lastPointerPosition = 0
+  let suppressNextBlurCommit = false
+
+  function setActiveThumbIndex(index: number | undefined): void {
+    activeThumbIndex = index
+    setActiveThumbIndexState(index)
+  }
+
+  const isRTL = () =>
+    typeof document === 'undefined'
+      ? false
+      : (document.dir || document.documentElement.dir || 'ltr') === 'rtl'
+
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      disabled: local.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
       defaultId: generatedId(),
       defaultSize: 'md',
-      initialValue: local.defaultValue ?? local.min,
     }),
   )
 
-  const kobalteValue = createMemo(() => normalizeSliderValues(local.value, local.min!))
-  const kobalteDefaultValue = createMemo(() =>
-    normalizeSliderValues(local.defaultValue, local.min!),
+  const getSliderEdges = createMemo(() =>
+    resolveSliderEdges(merged.orientation, Boolean(merged.inverted), isRTL()),
   )
-  let lastInputValues: number[] | undefined
+  const isActionDisabled = createMemo(() => field.disabled() || merged.readOnly)
+  const currentValues = createMemo(() => getControlledValues() ?? displayValues())
+  const interactionValues = () => pendingValues ?? currentValues()
+  const thumbStyles = createMemo<JSX.CSSProperties[]>(() => {
+    const { startEdge } = getSliderEdges()
 
-  const thumbValues = () => kobalteValue() ?? kobalteDefaultValue() ?? [local.min!]
-  const thumbIndexes = () => Array.from({ length: thumbValues().length }, (_, index) => index)
+    return currentValues().map((value) => ({
+      [startEdge]: `${getValuePercent(value) * 100}%`,
+    }))
+  })
+  const rangeStyle = createMemo<JSX.CSSProperties>(() => {
+    const percentages = currentValues().map((value) => getValuePercent(value) * 100)
+    const offsetStart = currentValues().length > 1 ? Math.min(...percentages) : 0
+    const offsetEnd = 100 - Math.max(...percentages)
+    const { startEdge, endEdge } = getSliderEdges()
 
-  createEffect(() => {
-    if (areEqualValues(kobalteValue(), lastInputValues)) {
-      lastInputValues = undefined
+    return {
+      [startEdge]: `${offsetStart}%`,
+      [endEdge]: `${offsetEnd}%`,
     }
   })
 
-  function inputIdForIndex(index: number): string {
-    if (index === 0) {
-      return field.id()
+  onMount(() => {
+    const initialValue = normalizeSliderValues(props.defaultValue, props.min ?? 0) ?? [
+      props.min ?? 0,
+    ]
+
+    if (getControlledValues() === undefined) {
+      setDisplayValues(initialValue)
     }
 
-    return `${field.id()}-${index + 1}`
-  }
+    if (field.value() === undefined) {
+      field.setFormValue(toPublicValue(initialValue))
+    }
+  })
+
+  createEffect(() => {
+    const nextControlledValues = getControlledValues()
+    if (nextControlledValues !== undefined) {
+      setDisplayValues(nextControlledValues)
+    }
+  })
 
   function toPublicValue(values: number[]): TValue {
-    if (Array.isArray(local.value) || Array.isArray(local.defaultValue)) {
+    if (Array.isArray(merged.value) || Array.isArray(merged.defaultValue)) {
       return [...values] as TValue
     }
 
-    return (values[0] ?? local.min!) as TValue
+    return (values[0] ?? merged.min!) as TValue
   }
 
-  function onValueChange(values: number[]): void {
+  function getThumbMinValue(values: number[], index: number): number {
+    const thumbGap = merged.minStepsBetweenThumbs! * merged.step!
+    return index === 0
+      ? merged.min!
+      : clamp((values[index - 1] ?? merged.min!) + thumbGap, merged.min!, merged.max!)
+  }
+
+  function getThumbMaxValue(values: number[], index: number): number {
+    const thumbGap = merged.minStepsBetweenThumbs! * merged.step!
+    return index === values.length - 1
+      ? merged.max!
+      : clamp((values[index + 1] ?? merged.max!) - thumbGap, merged.min!, merged.max!)
+  }
+
+  function getValueFromPointer(pointerPosition: number): number {
+    const rect = trackElement()?.getBoundingClientRect()
+    if (!rect) {
+      return merged.min!
+    }
+
+    const orientation = merged.orientation
+    const input: [number, number] = [0, orientation === 'vertical' ? rect.height : rect.width]
+
+    let output: [number, number] =
+      orientation === 'vertical'
+        ? merged.inverted
+          ? [merged.max!, merged.min!]
+          : [merged.min!, merged.max!]
+        : merged.inverted
+          ? [merged.max!, merged.min!]
+          : [merged.min!, merged.max!]
+
+    const value = linearScale(input, output)
+    const offset = orientation === 'vertical' ? rect.top : rect.left
+
+    return clamp(value(pointerPosition - offset), merged.min!, merged.max!)
+  }
+
+  function startInteraction(index: number, event: PointerEvent): void {
+    const target = event.currentTarget as HTMLDivElement
+
+    activePointerId = event.pointerId
+    setActiveThumbIndex(index)
+    lastPointerPosition = merged.orientation === 'vertical' ? event.clientY : event.clientX
+    pendingValues = undefined
+    setDragging(true)
+
+    target.setPointerCapture(event.pointerId)
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
+  function finishInteraction(event: PointerEvent, target: HTMLDivElement): void {
+    if (activePointerId !== event.pointerId) {
+      return
+    }
+
+    if (target.hasPointerCapture(event.pointerId)) {
+      target.releasePointerCapture(event.pointerId)
+    }
+
+    activePointerId = undefined
+    setActiveThumbIndex(undefined)
+    lastPointerPosition = 0
+    setDragging(false)
+
+    if (!pendingValues) {
+      return
+    }
+
+    const nextValue = toPublicValue(pendingValues)
+    field.setFormValue(nextValue)
+    merged.onChange?.(nextValue)
+    field.emit('change')
+    pendingValues = undefined
+  }
+
+  function applyThumbValue(index: number, candidateValue: number): number | undefined {
+    if (isActionDisabled()) {
+      return undefined
+    }
+
+    const values = interactionValues()
+    const allowsThumbCrossing = merged.allowThumbCrossing && merged.minStepsBetweenThumbs === 0
+    const snappedValue = snapValueToStep(
+      candidateValue,
+      allowsThumbCrossing ? merged.min! : getThumbMinValue(values, index),
+      allowsThumbCrossing ? merged.max! : getThumbMaxValue(values, index),
+      merged.step!,
+    )
+
+    let nextValues: number[]
+    let nextIndex = index
+
+    if (allowsThumbCrossing) {
+      const movedValue = moveSortedValue(values, snappedValue, index)
+      nextValues = movedValue.nextValues
+      nextIndex = movedValue.nextIndex
+    } else {
+      nextValues = [...values]
+      nextValues[index] = snappedValue
+
+      if (
+        !hasMinStepsBetweenValues(
+          getNextSortedValues(values, snappedValue, index),
+          merged.minStepsBetweenThumbs! * merged.step!,
+        )
+      ) {
+        return undefined
+      }
+    }
+
+    pendingValues = nextValues
+    setDisplayValues(nextValues)
+
+    const publicValue = toPublicValue(nextValues)
+    field.setFormValue(publicValue)
+    merged.onValueChange?.(publicValue)
+    field.emit('input')
+
+    return nextIndex
+  }
+
+  function moveThumb(index: number, pointerValue: number): void {
+    const nextIndex = applyThumbValue(index, pointerValue)
+
+    if (nextIndex !== undefined && nextIndex !== index) {
+      setActiveThumbIndex(nextIndex)
+    }
+  }
+
+  function onTrackPointerDown(event: PointerEvent): void {
+    if (isActionDisabled() || event.button !== 0) {
+      return
+    }
+
+    const pointerPosition = merged.orientation === 'vertical' ? event.clientY : event.clientX
+    const pointerValue = getValueFromPointer(pointerPosition)
+    const nextActiveThumbIndex = getClosestValueIndex(interactionValues(), pointerValue)
+    startInteraction(nextActiveThumbIndex, event)
+    applyThumbValue(nextActiveThumbIndex, pointerValue)
+  }
+
+  function onTrackPointerMove(event: PointerEvent): void {
+    if (isActionDisabled() || activePointerId !== event.pointerId) {
+      return
+    }
+
+    const target = event.currentTarget as HTMLDivElement
+    if (!target.hasPointerCapture(event.pointerId) || activeThumbIndex === undefined) {
+      return
+    }
+
+    const pointerPosition = merged.orientation === 'vertical' ? event.clientY : event.clientX
+    const delta = pointerPosition - lastPointerPosition
+    if (delta === 0) {
+      return
+    }
+
+    lastPointerPosition = pointerPosition
+
+    moveThumb(activeThumbIndex, getValueFromPointer(pointerPosition))
+  }
+
+  function onTrackPointerUp(event: PointerEvent): void {
+    const target = event.currentTarget as HTMLDivElement
+    finishInteraction(event, target)
+  }
+
+  function onThumbPointerDown(index: number, event: PointerEvent): void {
+    if (isActionDisabled() || event.button !== 0) {
+      return
+    }
+
+    startInteraction(index, event)
+    ;(event.currentTarget as HTMLDivElement).focus()
+  }
+
+  function onThumbPointerMove(event: PointerEvent): void {
+    if (isActionDisabled() || activePointerId !== event.pointerId) {
+      return
+    }
+
+    const target = event.currentTarget as HTMLDivElement
+    if (!target.hasPointerCapture(event.pointerId) || activeThumbIndex === undefined) {
+      return
+    }
+
+    const pointerPosition = merged.orientation === 'vertical' ? event.clientY : event.clientX
+    const delta = pointerPosition - lastPointerPosition
+    if (delta === 0) {
+      return
+    }
+
+    lastPointerPosition = pointerPosition
+
+    moveThumb(activeThumbIndex, getValueFromPointer(pointerPosition))
+  }
+
+  function onThumbPointerUp(event: PointerEvent): void {
+    const target = event.currentTarget as HTMLDivElement
+    finishInteraction(event, target)
+  }
+
+  function onThumbKeyDown(index: number, event: KeyboardEvent): void {
+    if (isActionDisabled()) {
+      return
+    }
+
+    const key = event.key === 'Spacebar' ? ' ' : event.key
+    const isIncrementKey =
+      key === 'ArrowRight' || key === 'ArrowUp' || key === 'Right' || key === 'Up'
+    const isDecrementKey =
+      key === 'ArrowLeft' || key === 'ArrowDown' || key === 'Left' || key === 'Down'
+    const isLTR = () =>
+      typeof document === 'undefined'
+        ? true
+        : (document.dir || document.documentElement.dir || 'ltr') !== 'rtl'
+
     if (
-      areEqualValues(values, lastInputValues) ||
-      (lastInputValues !== undefined && areEqualValues(values, kobalteValue()))
+      !isIncrementKey &&
+      !isDecrementKey &&
+      key !== 'Home' &&
+      key !== 'End' &&
+      key !== 'PageUp' &&
+      key !== 'PageDown'
     ) {
       return
     }
 
-    lastInputValues = [...values]
+    event.preventDefault()
 
-    const nextValue = toPublicValue(values)
-    field.setFormValue(nextValue)
-    local.onValueChange?.(nextValue)
-    field.emit('input')
-  }
+    let direction = 0
+    let nextIndex = index
 
-  function onChange(values: number[]): void {
-    lastInputValues = undefined
-
-    const nextValue = toPublicValue(values)
-
-    field.setFormValue(nextValue)
-    local.onChange?.(nextValue)
-    field.emit('change')
-  }
-
-  function SliderThumb(props: { thumbIndex: number }): JSX.Element {
-    const context = KobalteSlider.useSliderContext()
-
-    const style = createMemo<JSX.CSSProperties>(() => {
-      const percent = context.state.getThumbPercent(props.thumbIndex) * 100
-      const transform =
-        context.state.orientation() === 'vertical'
-          ? context.inverted()
-            ? 'translateY(-50%)'
-            : 'translateY(50%)'
-          : context.inverted()
-            ? 'translateX(50%)'
-            : 'translateX(-50%)'
-
-      return {
-        [context.startEdge()]: `calc(${percent}%)`,
-        transform,
-        ...local.styles?.thumb,
+    if (key === 'Home') {
+      direction = -1
+      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
+      if (nextIndex !== index) {
+        suppressNextBlurCommit = true
+        thumbRefs()[nextIndex]?.focus()
       }
-    })
+      applyThumbValue(nextIndex, merged.min!)
+      return
+    }
 
-    return (
-      <KobalteSlider.Thumb
-        data-slot="thumb"
-        aria-label={createThumbAriaLabel(props.thumbIndex, thumbValues().length)}
-        style={style()}
-        class={sliderThumbVariants(
-          {
-            size: field.size(),
-          },
-          local.classes?.thumb,
-        )}
-        onFocus={() => field.emit('focus')}
-        onBlur={() => field.emit('blur')}
-      >
-        <KobalteSlider.Input id={inputIdForIndex(props.thumbIndex)} {...field.ariaAttrs()} />
-      </KobalteSlider.Thumb>
-    )
+    if (key === 'End') {
+      direction = 1
+      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
+      if (nextIndex !== index) {
+        suppressNextBlurCommit = true
+        thumbRefs()[nextIndex]?.focus()
+      }
+      applyThumbValue(nextIndex, merged.max!)
+      return
+    }
+
+    const stepSize =
+      key === 'PageUp' || key === 'PageDown'
+        ? pageSize()
+        : event.shiftKey && (isIncrementKey || isDecrementKey)
+          ? pageSize()
+          : merged.step!
+
+    if (key === 'PageUp') {
+      direction = 1
+      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
+      if (nextIndex !== index) {
+        suppressNextBlurCommit = true
+        thumbRefs()[nextIndex]?.focus()
+      }
+      applyThumbValue(nextIndex, interactionValues()[nextIndex]! + stepSize)
+      return
+    }
+
+    if (key === 'PageDown') {
+      direction = -1
+      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
+      if (nextIndex !== index) {
+        suppressNextBlurCommit = true
+        thumbRefs()[nextIndex]?.focus()
+      }
+      applyThumbValue(nextIndex, interactionValues()[nextIndex]! - stepSize)
+      return
+    }
+
+    if (merged.orientation === 'vertical') {
+      if (key === 'ArrowDown' || key === 'Down') {
+        direction = merged.inverted ? -1 : 1
+      } else if (key === 'ArrowUp' || key === 'Up') {
+        direction = merged.inverted ? 1 : -1
+      } else if (isIncrementKey) {
+        direction = isLTR() ? 1 : -1
+      } else if (isDecrementKey) {
+        direction = isLTR() ? -1 : 1
+      }
+    } else if (isIncrementKey) {
+      direction = isLTR() ? 1 : -1
+    } else if (isDecrementKey) {
+      direction = isLTR() ? -1 : 1
+    }
+
+    nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
+    if (nextIndex !== index) {
+      suppressNextBlurCommit = true
+      thumbRefs()[nextIndex]?.focus()
+    }
+
+    const currentValue = interactionValues()[nextIndex] ?? merged.min!
+    applyThumbValue(nextIndex, currentValue + direction * stepSize)
+  }
+
+  function onThumbFocus(): void {
+    field.emit('focus')
+  }
+
+  function onThumbBlur(): void {
+    field.emit('blur')
+
+    if (suppressNextBlurCommit) {
+      suppressNextBlurCommit = false
+      return
+    }
+
+    if (!pendingValues) {
+      return
+    }
+
+    const publicValue = toPublicValue(pendingValues)
+    field.setFormValue(publicValue)
+    merged.onChange?.(publicValue)
+    field.emit('change')
+    pendingValues = undefined
+  }
+
+  function getValuePercent(value: number): number {
+    const range = merged.max! - merged.min!
+    if (range <= 0) {
+      return 0
+    }
+
+    return (value - merged.min!) / range
+  }
+
+  function getThumbValueText(index: number): string {
+    return String(currentValues()[index] ?? merged.min!)
   }
 
   return (
-    <KobalteSlider.Root
+    <div
       id={`${field.id()}-root`}
-      name={field.name()}
-      minValue={local.min}
-      maxValue={local.max}
-      step={local.step}
-      minStepsBetweenThumbs={local.minStepsBetweenThumbs}
-      orientation={local.orientation}
-      inverted={local.inverted}
-      value={kobalteValue()}
-      defaultValue={kobalteDefaultValue()}
-      required={local.required}
-      disabled={field.disabled()}
-      readOnly={local.readOnly}
-      onChange={onValueChange}
-      onChangeEnd={onChange}
+      role="group"
       data-slot="root"
-      style={local.styles?.root}
+      data-orientation={merged.orientation}
       data-disabled={field.disabled() ? '' : undefined}
+      data-readonly={merged.readOnly ? '' : undefined}
+      style={merged.styles?.root}
       class={sliderRootVariants(
         {
           size: field.size(),
-          orientation: local.orientation,
+          orientation: merged.orientation,
         },
-        local.classes?.root,
+        field.disabled() && 'effect-dis',
+        merged.classes?.root,
       )}
-      {...rest}
     >
-      <KobalteSlider.Track
+      <div
+        ref={(element) => {
+          setTrackElementState(element)
+        }}
         data-slot="track"
-        style={local.styles?.track}
-        class={sliderTrackVariants(
-          {
-            size: field.size(),
-            orientation: local.orientation,
-          },
-          local.classes?.track,
-        )}
-      >
-        <KobalteSlider.Fill
-          data-slot="range"
-          style={local.styles?.range}
-          class={sliderRangeVariants(
+        data-orientation={merged.orientation}
+        style={merged.styles?.track}
+        class={cn(
+          sliderTrackVariants(
             {
-              orientation: local.orientation,
+              size: field.size(),
+              orientation: merged.orientation,
             },
-            local.classes?.range,
+            merged.classes?.track,
+          ),
+        )}
+        onPointerDown={onTrackPointerDown}
+        onPointerMove={onTrackPointerMove}
+        onPointerUp={onTrackPointerUp}
+      >
+        <div
+          data-slot="range"
+          data-orientation={merged.orientation}
+          style={{
+            ...rangeStyle(),
+            ...merged.styles?.range,
+          }}
+          class={cn(
+            sliderRangeVariants(
+              {
+                orientation: merged.orientation,
+              },
+              merged.classes?.range,
+            ),
           )}
         />
-      </KobalteSlider.Track>
+      </div>
 
-      <For each={thumbIndexes()}>{(thumbIndex) => <SliderThumb thumbIndex={thumbIndex} />}</For>
-    </KobalteSlider.Root>
+      <For each={Array.from({ length: currentValues().length }, (_, index) => index)}>
+        {(thumbIndex) => (
+          <div
+            ref={(element) => {
+              setThumbRefs((previous) => {
+                const next = [...previous]
+                next[thumbIndex] = element
+                return next
+              })
+            }}
+            data-slot="thumb"
+            data-dragging={dragging() && activeThumbIndexState() === thumbIndex ? '' : undefined}
+            data-disabled={field.disabled() ? '' : undefined}
+            data-readonly={merged.readOnly ? '' : undefined}
+            role="slider"
+            tabIndex={field.disabled() ? undefined : 0}
+            style={{
+              ...thumbStyles()[thumbIndex],
+              ...merged.styles?.thumb,
+            }}
+            class={cn(
+              sliderThumbVariants(
+                {
+                  inverted: Boolean(merged.inverted),
+                  orientation: merged.orientation,
+                  size: field.size(),
+                },
+                merged.classes?.thumb,
+              ),
+            )}
+            aria-valuemin={getThumbMinValue(currentValues(), thumbIndex)}
+            aria-valuenow={currentValues()[thumbIndex] ?? merged.min!}
+            aria-valuemax={getThumbMaxValue(currentValues(), thumbIndex)}
+            aria-valuetext={getThumbValueText(thumbIndex)}
+            aria-orientation={merged.orientation}
+            aria-label={
+              currentValues().length <= 1
+                ? 'Thumb'
+                : `Thumb ${thumbIndex + 1} of ${currentValues().length}`
+            }
+            aria-disabled={field.disabled() || undefined}
+            aria-readonly={merged.readOnly || undefined}
+            onPointerDown={(event) => {
+              onThumbPointerDown(thumbIndex, event)
+            }}
+            onPointerMove={(event) => {
+              onThumbPointerMove(event)
+            }}
+            onPointerUp={(event) => {
+              onThumbPointerUp(event)
+            }}
+            onKeyDown={(event) => {
+              onThumbKeyDown(thumbIndex, event)
+            }}
+            onFocus={onThumbFocus}
+            onBlur={onThumbBlur}
+          >
+            <HiddenInput
+              type="range"
+              id={field.id() + (thumbIndex === 0 ? '' : `-${thumbIndex + 1}`)}
+              name={field.name()}
+              min={getThumbMinValue(currentValues(), thumbIndex)}
+              max={getThumbMaxValue(currentValues(), thumbIndex)}
+              step={merged.step!}
+              value={currentValues()[thumbIndex] ?? merged.min!}
+              required={merged.required}
+              disabled={field.disabled()}
+              readOnly={merged.readOnly}
+              tabIndex={field.disabled() ? undefined : -1}
+              aria-valuetext={getThumbValueText(thumbIndex)}
+              aria-orientation={merged.orientation}
+              aria-required={merged.required || undefined}
+              aria-disabled={field.disabled() || undefined}
+              aria-readonly={merged.readOnly || undefined}
+              {...field.ariaAttrs()}
+            />
+          </div>
+        )}
+      </For>
+    </div>
   )
 }

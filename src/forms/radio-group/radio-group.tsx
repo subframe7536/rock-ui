@@ -1,8 +1,11 @@
-import * as KobalteRadioGroup from '@kobalte/core/radio-group'
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, mergeProps, splitProps } from 'solid-js'
+import { For, Show, createMemo, mergeProps } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 
+import { HiddenInput } from '../../shared/hidden-input'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
+import { useControllableValue } from '../../shared/use-controllable-value'
+import { useSelectableCollectionNavigation } from '../../shared/use-selectable-collection-navigation'
 import { cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -12,7 +15,6 @@ import type {
   FormRequiredOption,
   FormValueOptions,
 } from '../form-field/form-options'
-import { FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS } from '../form-field/form-options'
 
 import type { RadioGroupVariantProps } from './radio-group.class'
 import {
@@ -40,7 +42,7 @@ export namespace RadioGroupT {
   export type Variant = RadioGroupVariantProps
   export type Classes = SlotClasses<Slot>
   export type Styles = SlotStyles<Slot>
-  export type Extend = KobalteRadioGroup.RadioGroupRootProps
+  export type Extend = never
 
   /**
    * A radio item object.
@@ -77,6 +79,12 @@ export namespace RadioGroupT {
       FormRequiredOption,
       FormDisableOption,
       FormReadOnlyOption {
+    /**
+     * The orientation of the radio group.
+     * @default 'vertical'
+     */
+    orientation?: 'horizontal' | 'vertical'
+
     /**
      * Legend for the radio group.
      */
@@ -125,38 +133,36 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
     props,
   )
 
-  const [local, rest] = splitProps(merged, [
-    ...FORM_ID_NAME_VALUE_REQUIRED_DISABLED_KEYS,
-    'onChange',
-    'legend',
-    'items',
-    'variant',
-    'indicator',
-    'orientation',
-    'size',
-    'classes',
-  ])
-
-  const groupId = useId(() => local.id, 'radio-group')
+  const groupId = useId(() => merged.id, 'radio-group')
   const field = useFormField(
     () => ({
-      id: local.id,
-      name: local.name,
-      size: local.size,
-      disabled: local.disabled,
+      id: merged.id,
+      name: merged.name,
+      size: merged.size,
+      disabled: merged.disabled,
     }),
     () => ({
       bind: false,
       defaultId: groupId(),
       defaultSize: 'md',
-      initialValue: local.defaultValue || '',
+      initialValue: merged.defaultValue || '',
     }),
   )
+  const readOnly = createMemo(() => Boolean(merged.readOnly))
+  const [selectedValue, setSelectedValue] = useControllableValue<string>({
+    value: () => merged.value,
+    defaultValue: () => merged.defaultValue ?? '',
+  })
+  const inputRefs = new Map<string, HTMLInputElement>()
+  const dataAttrs = createMemo(() => ({
+    'data-disabled': field.disabled() ? '' : undefined,
+    'data-readonly': readOnly() ? '' : undefined,
+  }))
 
   const legendId = createMemo(() => `${groupId()}-legend`)
 
   const normalizedItems = createMemo<NormalizedRadioGroupItem[]>(() => {
-    const items = local.items ?? []
+    const items = merged.items ?? []
 
     return items.map((item, index) => {
       if (typeof item === 'string') {
@@ -185,41 +191,56 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
   })
 
   function onChange(nextValue: string): void {
+    if (field.disabled() || readOnly() || nextValue === selectedValue()) {
+      return
+    }
+
+    setSelectedValue(nextValue)
+
     field.setFormValue(nextValue)
-    local.onChange?.(nextValue)
+    merged.onChange?.(nextValue)
     field.emit('change')
     field.emit('input')
   }
+  const { onNavigationKeyDown } = useSelectableCollectionNavigation<
+    NormalizedRadioGroupItem,
+    string
+  >({
+    items: normalizedItems,
+    getValue: (item) => item.value,
+    isDisabled: (item) => item.disabled || field.disabled(),
+    loop: () => true,
+    focusValue: (value) => inputRefs.get(value)?.focus(),
+    onSelect: onChange,
+  })
 
   return (
-    <KobalteRadioGroup.Root
+    <div
       id={groupId()}
-      name={field.name()}
-      value={local.value}
-      defaultValue={local.defaultValue}
-      disabled={field.disabled()}
-      required={local.required}
-      orientation={local.orientation}
-      onChange={onChange}
+      role="radiogroup"
+      aria-orientation={merged.orientation}
+      aria-required={merged.required || undefined}
+      aria-disabled={field.disabled() || undefined}
+      aria-readonly={readOnly() || undefined}
       data-slot="root"
       style={merged.styles?.root}
-      class={cn('relative', local.classes?.root)}
+      class={cn('relative', merged.classes?.root)}
+      {...dataAttrs()}
       {...field.ariaAttrs()}
-      {...rest}
     >
       <fieldset
         data-slot="fieldset"
         style={merged.styles?.fieldset}
-        aria-labelledby={local.legend ? legendId() : undefined}
+        aria-labelledby={merged.legend ? legendId() : undefined}
         class={radioGroupFieldsetVariants(
           {
-            orientation: local.orientation,
+            orientation: merged.orientation,
           },
-          local.variant !== 'table' && 'gap-2',
-          local.classes?.fieldset,
+          merged.variant !== 'table' && 'gap-2',
+          merged.classes?.fieldset,
         )}
       >
-        <Show when={local.legend}>
+        <Show when={merged.legend}>
           <legend
             id={legendId()}
             data-slot="legend"
@@ -227,120 +248,155 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
             class={radioGroupLegendVariants(
               {
                 size: field.size(),
-                required: local.required,
+                required: merged.required,
               },
-              local.classes?.legend,
+              merged.classes?.legend,
             )}
           >
-            {local.legend}
+            {merged.legend}
           </legend>
         </Show>
 
         <For each={normalizedItems()}>
-          {(item) => (
-            <KobalteRadioGroup.Item
-              as={local.variant === 'list' ? 'div' : 'label'}
-              id={item.id}
-              value={item.value}
-              disabled={item.disabled || field.disabled()}
-              data-slot="item"
-              style={merged.styles?.item}
-              data-disabled={item.disabled || field.disabled() ? '' : undefined}
-              class={radioGroupItemVariants(
-                {
-                  size: field.size(),
-                  variant: local.variant === 'list' ? undefined : local.variant,
-                  indicator: local.indicator === 'hidden' ? undefined : local.indicator,
-                  tableOrientation: local.variant === 'table' ? local.orientation : undefined,
-                },
-                local.classes?.item,
-              )}
-            >
-              <div
-                data-slot="container"
-                style={merged.styles?.container}
-                class={radioGroupContainerVariants(
+          {(item) => {
+            const disabled = createMemo(() => Boolean(item.disabled || field.disabled()))
+            const selected = createMemo(() => item.value === selectedValue())
+            const itemDataAttrs = createMemo(() => ({
+              'data-checked': selected() ? '' : undefined,
+              'data-disabled': disabled() ? '' : undefined,
+              'data-readonly': readOnly() ? '' : undefined,
+            }))
+
+            return (
+              <Dynamic
+                component={merged.variant === 'list' ? 'div' : 'label'}
+                id={item.id}
+                data-slot="item"
+                style={merged.styles?.item}
+                class={radioGroupItemVariants(
                   {
                     size: field.size(),
+                    variant: merged.variant === 'list' ? undefined : merged.variant,
+                    indicator: merged.indicator === 'hidden' ? undefined : merged.indicator,
+                    tableOrientation: merged.variant === 'table' ? merged.orientation : undefined,
                   },
-                  local.classes?.container,
+                  merged.classes?.item,
                 )}
+                {...itemDataAttrs()}
               >
-                <KobalteRadioGroup.ItemInput id={item.inputId} class="peer" data-slot="input" />
-
-                <KobalteRadioGroup.ItemControl
-                  data-slot="control"
-                  style={merged.styles?.control}
-                  data-invalid={field.invalid() ? '' : undefined}
-                  class={radioGroupBaseVariants(
+                <div
+                  data-slot="container"
+                  style={merged.styles?.container}
+                  class={radioGroupContainerVariants(
                     {
                       size: field.size(),
                     },
-                    local.indicator === 'hidden' && 'sr-only',
-                    local.classes?.control,
+                    merged.classes?.container,
                   )}
                 >
-                  <KobalteRadioGroup.ItemIndicator
-                    data-slot="indicator"
-                    style={merged.styles?.indicator}
-                    class={cn(
-                      'rounded-full flex size-full ring-(4 primary ring inset) items-center justify-center',
-                      local.classes?.indicator,
-                    )}
+                  <HiddenInput
+                    ref={(element) => {
+                      inputRefs.set(item.value, element)
+                    }}
+                    id={item.inputId}
+                    type="radio"
+                    name={field.name()}
+                    value={item.value}
+                    checked={selected()}
+                    required={merged.required}
+                    disabled={disabled()}
+                    readOnly={readOnly()}
+                    class="peer"
+                    data-slot="input"
+                    onChange={(event) => {
+                      event.stopPropagation()
+                      onChange(item.value)
+                      event.currentTarget.checked = selected()
+                    }}
+                    onKeyDown={(event) => {
+                      onNavigationKeyDown(event, item.value, merged.orientation)
+                    }}
+                    {...itemDataAttrs()}
                   />
-                </KobalteRadioGroup.ItemControl>
-              </div>
 
-              <Show when={item.label || item.description}>
-                <div
-                  data-slot="wrapper"
-                  style={merged.styles?.wrapper}
-                  class={radioGroupWrapperVariants(
-                    {
-                      indicator: local.indicator,
-                    },
-                    local.classes?.wrapper,
-                  )}
-                >
-                  <Show when={item.label}>
-                    <Show
-                      when={local.variant === 'list'}
-                      fallback={
-                        <p
+                  <div
+                    data-slot="control"
+                    style={merged.styles?.control}
+                    data-invalid={field.invalid() ? '' : undefined}
+                    class={radioGroupBaseVariants(
+                      {
+                        size: field.size(),
+                      },
+                      merged.indicator === 'hidden' && 'sr-only',
+                      merged.classes?.control,
+                    )}
+                    {...itemDataAttrs()}
+                  >
+                    <Show when={selected()}>
+                      <div
+                        data-slot="indicator"
+                        style={merged.styles?.indicator}
+                        class={cn(
+                          'rounded-full flex size-full ring-(4 primary ring inset) items-center justify-center',
+                          merged.classes?.indicator,
+                        )}
+                        {...itemDataAttrs()}
+                      />
+                    </Show>
+                  </div>
+                </div>
+
+                <Show when={item.label || item.description}>
+                  <div
+                    data-slot="wrapper"
+                    style={merged.styles?.wrapper}
+                    class={radioGroupWrapperVariants(
+                      {
+                        indicator: merged.indicator,
+                      },
+                      merged.classes?.wrapper,
+                    )}
+                  >
+                    <Show when={item.label}>
+                      <Show
+                        when={merged.variant === 'list'}
+                        fallback={
+                          <p
+                            data-slot="label"
+                            style={merged.styles?.label}
+                            class={cn('text-foreground font-medium', merged.classes?.label)}
+                          >
+                            {item.label}
+                          </p>
+                        }
+                      >
+                        <label
+                          for={item.inputId}
                           data-slot="label"
                           style={merged.styles?.label}
-                          class={cn('text-foreground font-medium', local.classes?.label)}
+                          class={cn('text-foreground font-medium', merged.classes?.label)}
                         >
                           {item.label}
-                        </p>
-                      }
-                    >
-                      <label
-                        for={item.inputId}
-                        data-slot="label"
-                        style={merged.styles?.label}
-                        class={cn('text-foreground font-medium', local.classes?.label)}
-                      >
-                        {item.label}
-                      </label>
+                        </label>
+                      </Show>
                     </Show>
-                  </Show>
 
-                  <Show when={item.description}>
-                    <p
-                      data-slot="description"
-                      style={merged.styles?.description}
-                      class={cn('text-muted-foreground', local.classes?.description)}
-                    >
-                      {item.description}
-                    </p>
-                  </Show>
-                </div>
-              </Show>
-            </KobalteRadioGroup.Item>
-          )}
+                    <Show when={item.description}>
+                      <p
+                        data-slot="description"
+                        style={merged.styles?.description}
+                        class={cn('text-muted-foreground', merged.classes?.description)}
+                      >
+                        {item.description}
+                      </p>
+                    </Show>
+                  </div>
+                </Show>
+              </Dynamic>
+            )
+          }}
         </For>
       </fieldset>
-    </KobalteRadioGroup.Root>
+    </div>
   )
 }
