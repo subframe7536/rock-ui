@@ -87,7 +87,11 @@ export function SelectPopup(props: SelectPopupProps): JSX.Element {
             ref={setContentElement}
             data-slot="content"
             style={props.contentStyle}
-            class={overlayMenuContentVariants({}, props.contentClass)}
+            class={overlayMenuContentVariants(
+              {},
+              'w-$mo-popper-anchor-width min-w-$mo-popper-anchor-width max-w-$mo-popper-content-available-width',
+              props.contentClass,
+            )}
           >
             <div
               id={props.listboxId}

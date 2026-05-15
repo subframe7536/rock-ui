@@ -128,6 +128,20 @@ describe('Select - single mode', () => {
     })
   })
 
+  test('popup content width follows the trigger width', async () => {
+    const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
+    const input = screen.getByRole('combobox')
+
+    await fireEvent.click(input)
+
+    await waitFor(() => {
+      const content = queryBody('[data-slot="content"]')
+      expect(content).not.toBeNull()
+      expect(content?.className).toContain('w-$mo-popper-anchor-width')
+      expect(content?.className).toContain('min-w-$mo-popper-anchor-width')
+    })
+  })
+
   test('restricts control click opening when openOnClick is trigger', async () => {
     const screen = render(() => (
       <Select options={FRUITS} openOnClick="trigger" placeholder="Pick a fruit" />
