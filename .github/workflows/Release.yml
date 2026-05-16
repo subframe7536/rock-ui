@@ -25,6 +25,10 @@ jobs:
 
       - run: bun ci
       - run: npm publish
+      - name: Trigger Cloudflare Pages build
+        run: curl -d "" ${PAGES_BUILD_HOOK_URL}
+        env:
+          PAGES_BUILD_HOOK_URL: ${{ secrets.PAGES_BUILD_HOOK_URL }}
       - run: bunx changelogithub
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
