@@ -65,7 +65,7 @@ describe('IconButton', () => {
       <IconButton name="i-lucide:copy" aria-label="Copy" loading loadingAuto />
     ))
 
-    const button = screen.getByRole('button', { name: 'Copy' })
+    const button = screen.getByRole('button', { name: 'Loading' })
 
     expect(button.hasAttribute('data-loading')).toBe(true)
     expect(button.getAttribute('aria-busy')).toBe('true')

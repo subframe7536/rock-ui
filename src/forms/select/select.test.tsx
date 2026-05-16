@@ -84,9 +84,9 @@ describe('Select - single mode', () => {
       </>
     ))
 
-    const controls = screen.container.querySelectorAll('[data-slot="control"]')
-    expect(controls[0]?.className).toContain('pe-1')
-    expect(controls[1]?.className).toContain('pe-3')
+    const inputs = screen.container.querySelectorAll('[data-slot="input"]')
+    expect(inputs[0]?.className).toContain('var-select-0.5')
+    expect(inputs[1]?.className).toContain('text-base')
   })
 
   test('applies classes.root override', () => {

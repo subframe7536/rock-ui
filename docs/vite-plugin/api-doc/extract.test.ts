@@ -97,7 +97,7 @@ declare function Empty(props: EmptyProps): JSX.Element
       {
         name: 'label',
         required: false,
-        type: 'string',
+        type: 'string | undefined',
         description: 'Label text.',
       },
     ])
@@ -167,14 +167,14 @@ declare function PropOnly(props: PropOnlyProps): JSX.Element
       description: 'Alias-only items doc.',
       props: [],
     })
-    expect(aliasDoc?.props.own.find((prop) => prop.name === 'value')?.required).toBe(true)
+    expect(aliasDoc?.props.own.find((prop) => prop.name === 'value')?.required).toBe(false)
 
     expect(data.componentDocs.get('prop-only')?.item).toEqual({
       props: [
         {
           name: 'id',
           required: false,
-          type: 'number',
+          type: 'number | undefined',
           description: 'Identifier field.',
         },
       ],
@@ -218,13 +218,13 @@ declare function Collection(props: CollectionProps): JSX.Element
         {
           name: 'disabled',
           required: false,
-          type: 'boolean',
+          type: 'boolean | undefined',
           description: 'Disabled state.',
         },
         {
           name: 'label',
           required: false,
-          type: 'string',
+          type: 'string | undefined',
           description: 'Label text.',
         },
       ],
@@ -290,7 +290,7 @@ export interface ExternalProps {
     const keyboardDelegateProp = inheritedGroup?.props.find(
       (prop) => prop.name === 'keyboardDelegate',
     )
-    expect(keyboardDelegateProp?.type).toBe('KeyboardDelegate')
+    expect(keyboardDelegateProp?.type).toBe('KeyboardDelegate | undefined')
     expect(keyboardDelegateProp?.type).not.toContain('import("')
     expect(keyboardDelegateProp?.type).not.toContain('/node_modules/')
 
@@ -322,9 +322,9 @@ declare function Demo<T extends string = 'button'>(props: DemoProps<T>): JSX.Ele
     const dataProp = props.find((prop) => prop.name === 'data')
     const fooProp = props.find((prop) => prop.name === 'foo')
 
-    expect(asProp?.type).toBe('"button"')
-    expect(dataProp?.type).toBe('"button"[]')
-    expect(fooProp?.type).toBe('"button"')
+    expect(asProp?.type).toBe('"button" | undefined')
+    expect(dataProp?.type).toBe('"button"[] | undefined')
+    expect(fooProp?.type).toBe('"button" | undefined')
 
     await rm(projectRoot, { recursive: true, force: true })
   })

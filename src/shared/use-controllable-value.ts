@@ -1,5 +1,5 @@
 import type { Accessor } from 'solid-js'
-import { createEffect, createMemo, createSignal } from 'solid-js'
+import { createMemo, createSignal, untrack } from 'solid-js'
 
 export interface UseControllableValueOptions<T> {
   value: Accessor<T | undefined>
@@ -8,17 +8,6 @@ export interface UseControllableValueOptions<T> {
 
 export function useControllableValue<T>(options: UseControllableValueOptions<T>) {
   const [uncontrolledValue, setUncontrolledValue] = createSignal<T | undefined>(undefined)
-  const [initialValue, setInitialValue] = createSignal<T | undefined>(undefined)
-  const [initialized, setInitialized] = createSignal(false)
-
-  createEffect(() => {
-    if (initialized()) {
-      return
-    }
-
-    setInitialValue(() => options.defaultValue?.())
-    setInitialized(true)
-  })
 
   const value = createMemo<T | undefined>(() => {
     const controlledValue = options.value()
@@ -33,7 +22,7 @@ export function useControllableValue<T>(options: UseControllableValueOptions<T>)
       return localValue
     }
 
-    return initialValue()
+    return untrack(() => options.defaultValue?.())
   })
 
   function setValue(nextValue: T): void {
