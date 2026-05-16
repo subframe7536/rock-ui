@@ -1,7 +1,9 @@
-import { createEffect, createMemo, createSignal, on } from 'solid-js'
-import type { Accessor } from 'solid-js'
+import { Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import type { Accessor, JSX } from 'solid-js'
 
-import { useId } from '../../../shared/utils'
+import { Icon } from '../../../elements/icon'
+import type { SlotClasses, SlotStyles } from '../../../shared/types'
+import { cn, useId } from '../../../shared/utils'
 import { useFormField } from '../../form-field/form-field-context'
 import type { FormFieldSize, UseFormFieldReturn } from '../../form-field/form-field-context'
 
@@ -22,10 +24,6 @@ interface UseSelectFieldProps {
   initialValue: unknown
 }
 
-interface UseSelectFieldReturn extends UseFormFieldReturn {
-  handleClear: (clearFn: VoidFunction | undefined, onClear?: VoidFunction) => void
-}
-
 interface UseSelectFilterProps<TOption extends SelectFilterableOption<TRaw>, TRaw> {
   isSearchable: () => boolean
   filterOption: () => SelectFilterOption<TRaw> | undefined
@@ -33,10 +31,31 @@ interface UseSelectFilterProps<TOption extends SelectFilterableOption<TRaw>, TRa
   inputValue: () => string
 }
 
+interface RenderDefaultSelectOptionOptions<TItem> {
+  option:
+    | (TItem & {
+        icon?: import('../../../elements/icon').IconT.Name
+        label?: string | JSX.Element
+        description?: string | JSX.Element
+        isSelected: boolean
+      })
+    | null
+  classes?: SlotClasses<'empty' | 'itemDescription' | 'itemLabel' | 'itemTrailing'>
+  styles?: SlotStyles<'empty' | 'itemDescription' | 'itemLabel' | 'itemTrailing'>
+  labelRender?: (option: TItem) => JSX.Element
+}
+
+interface CreateEmptyRendererOptions<TApi, TCtx> {
+  emptyRender?: string | ((context: TCtx) => JSX.Element)
+  classes?: SlotClasses<'empty'>
+  styles?: SlotStyles<'empty'>
+  buildContext: (api: TApi) => TCtx
+}
+
 /**
  * Shared form-field bridge for select-like controls.
  */
-export function useSelectField(props: () => UseSelectFieldProps): UseSelectFieldReturn {
+export function useSelectField(props: () => UseSelectFieldProps): UseFormFieldReturn {
   const generatedId = useId(() => props().id, 'select')
 
   const field = useFormField(
@@ -58,18 +77,7 @@ export function useSelectField(props: () => UseSelectFieldProps): UseSelectField
     }),
   )
 
-  function handleClear(clearFn: VoidFunction | undefined, onClear?: VoidFunction): void {
-    clearFn?.()
-    field.setFormValue(props().initialValue)
-    onClear?.()
-    field.emit('change')
-    field.emit('input')
-  }
-
-  return {
-    ...field,
-    handleClear,
-  }
+  return field
 }
 
 /**
@@ -309,4 +317,90 @@ export function mapNormalizedListToRawValues<TRaw extends { value?: string | num
   options: NormalizedOption<TRaw>[],
 ): Array<string | number> {
   return options.map((option) => mapNormalizedToRawValue(option))
+}
+
+export function renderDefaultSelectOption<TItem>(
+  options: RenderDefaultSelectOptionOptions<TItem>,
+): JSX.Element {
+  const option = options.option
+  if (!option) {
+    return (
+      <div
+        data-slot="empty"
+        class={cn('text-sm text-muted-foreground p-2 text-center', options.classes?.empty)}
+        style={options.styles?.empty}
+      >
+        No options
+      </div>
+    )
+  }
+
+  const label = (): JSX.Element => (
+    <span
+      data-slot="itemLabel"
+      style={options.styles?.itemLabel}
+      class={cn('truncate', options.classes?.itemLabel)}
+    >
+      <Show when={options.labelRender} keyed fallback={option.label}>
+        {(render) => render(option)}
+      </Show>
+    </span>
+  )
+
+  return (
+    <>
+      <span class="flex flex-1 gap-2 min-w-0 items-center">
+        <Show when={option.icon}>{(icon) => <Icon name={icon()} class="shrink-0" />}</Show>
+        <span class="flex-1 min-w-0">
+          {label()}
+          <Show when={option.description}>
+            {(description) => (
+              <span
+                data-slot="itemDescription"
+                style={options.styles?.itemDescription}
+                class={cn('text-xs text-muted-foreground block', options.classes?.itemDescription)}
+              >
+                {description()}
+              </span>
+            )}
+          </Show>
+        </span>
+      </span>
+
+      <Show when={option.isSelected}>
+        <span
+          data-slot="itemTrailing"
+          style={options.styles?.itemTrailing}
+          class={cn(
+            'text-sm ms-auto inline-flex shrink-0 items-center justify-center',
+            options.classes?.itemTrailing,
+          )}
+        >
+          <Icon name="icon-check" />
+        </span>
+      </Show>
+    </>
+  )
+}
+
+export function createEmptyRenderer<TContext, TCtx>(
+  options: CreateEmptyRendererOptions<TContext, TCtx>,
+): ((context: TContext) => JSX.Element) | undefined {
+  if (!options.emptyRender) {
+    return undefined
+  }
+  return (context) => (
+    <Show when={options.emptyRender} keyed>
+      {(render) => (
+        <Show
+          when={typeof render === 'string'}
+          fallback={(render as (context: TCtx) => JSX.Element)(options.buildContext(context))}
+        >
+          <div data-slot="empty" style={options.styles?.empty} class={cn(options.classes?.empty)}>
+            {render as string}
+          </div>
+        </Show>
+      )}
+    </Show>
+  )
 }

@@ -24,9 +24,11 @@ import {
   selectLeadingIconVariants,
 } from './select.class'
 import {
+  createEmptyRenderer,
   emitSelectValueChange,
   mapNormalizedListToRawValues,
   mapNormalizedToRawValue,
+  renderDefaultSelectOption,
 } from './shared'
 import type { NormalizedOption } from './shared'
 
@@ -163,8 +165,6 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
   })
   const [createdTags, setCreatedTags] = createSignal<NormalizedOption<Item>[]>([])
 
-  let inputElement: HTMLInputElement | undefined
-
   const selectedValueSet = createMemo(
     () => new Set((selectedValues() ?? []).map((value) => String(value))),
   )
@@ -197,13 +197,15 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     return [...newTags, ...base]
   })
 
-  function getSelectedOptions(api: BaseSelectT.Api<Item>): NormalizedOption<Item>[] {
+  function getSelectedOptions(
+    api: BaseSelectT.OptionSelectContext<Item>,
+  ): NormalizedOption<Item>[] {
     return api.allFlatOptions().filter((option) => selectedValueSet().has(option.value))
   }
 
   function handleMultipleChange(
     options: NormalizedOption<Item>[],
-    api: BaseSelectT.Api<Item>,
+    api: BaseSelectT.OptionSelectContext<Item>,
   ): void {
     const nextValue = mapNormalizedListToRawValues(options) as TItem[]
     setSelectedValues(nextValue)
@@ -233,7 +235,10 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     }
   }
 
-  function addTag(text: string, api: BaseSelectT.Api<Item>): NormalizedOption<Item> | undefined {
+  function addTag(
+    text: string,
+    api: BaseSelectT.OptionSelectContext<Item>,
+  ): NormalizedOption<Item> | undefined {
     const normalized = text.trim()
     if (!normalized || !api) {
       return undefined
@@ -261,7 +266,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 
   function findOptionByText(
     text: string,
-    api: BaseSelectT.Api<Item>,
+    api: BaseSelectT.OptionSelectContext<Item>,
   ): NormalizedOption<Item> | undefined {
     const lower = text.toLowerCase()
     return api
@@ -272,7 +277,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
   function resolveOptionForInput(
     text: string,
     current: NormalizedOption<Item>[],
-    api: BaseSelectT.Api<Item>,
+    api: BaseSelectT.OptionSelectContext<Item>,
   ): { option?: NormalizedOption<Item>; blockedByMaxCount: boolean } {
     const existing = findOptionByText(text, api)
     if (existing) {
@@ -286,7 +291,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     return { option: addTag(text, api), blockedByMaxCount: false }
   }
 
-  function createTag(value: string | undefined, api: BaseSelectT.Api<Item>): boolean {
+  function createTag(value: string | undefined, api: BaseSelectT.Context<Item>): boolean {
     if (!props.allowCreate) {
       return false
     }
@@ -309,13 +314,13 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 
     handleMultipleChange(appendResult.next, api)
     api.setInputValue('')
-    if (inputElement) {
-      inputElement.value = ''
-    }
     return true
   }
 
-  function toggleOption(option: NormalizedOption<Item>, api: BaseSelectT.Api<Item>): void {
+  function toggleOption(
+    option: NormalizedOption<Item>,
+    api: BaseSelectT.OptionSelectContext<Item>,
+  ): void {
     if (option.disabled) {
       return
     }
@@ -335,7 +340,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     }
   }
 
-  function handleInputChange(inputValue: string, api: BaseSelectT.Api<Item>): void {
+  function handleInputChange(inputValue: string, api: BaseSelectT.Context<Item>): void {
     if (props.tokenSeparators?.length) {
       const separatorRegex = new RegExp(`[${escapeRegex(props.tokenSeparators.join(''))}]`)
       if (separatorRegex.test(inputValue)) {
@@ -368,12 +373,6 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
           handleMultipleChange(nextSelected, api)
         }
 
-        queueMicrotask(() => {
-          if (inputElement) {
-            inputElement.value = remainder
-          }
-        })
-
         api.setInputValue(remainder)
         return
       }
@@ -382,17 +381,12 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     api.setInputValue(inputValue)
   }
 
-  function handleEnterKey(event: KeyboardEvent, api: BaseSelectT.Api<Item>): void {
+  function handleEnterKey(event: KeyboardEvent, api: BaseSelectT.Context<Item>): void {
     if (event.key !== 'Enter') {
       return
     }
 
-    if (!(event.currentTarget instanceof HTMLInputElement)) {
-      return
-    }
-
-    const input = event.currentTarget
-    const text = input.value.trim()
+    const text = api.inputValue().trim()
     if (text) {
       const match = findOptionByText(text, api)
       if (match) {
@@ -404,7 +398,6 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             current.filter((option) => option.value !== match.value),
             api,
           )
-          input.value = ''
           api.setInputValue('')
           event.preventDefault()
           return
@@ -413,7 +406,6 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
         const appendResult = appendOptionIfAllowed(current, match)
         if (appendResult.appended) {
           handleMultipleChange(appendResult.next, api)
-          input.value = ''
           api.setInputValue('')
         }
         event.preventDefault()
@@ -427,7 +419,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     }
   }
 
-  function handleSpaceKey(event: KeyboardEvent, api: BaseSelectT.Api<Item>): void {
+  function handleSpaceKey(event: KeyboardEvent, api: BaseSelectT.Context<Item>): void {
     if (event.key !== ' ' && event.key !== 'Spacebar') {
       return
     }
@@ -451,97 +443,15 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
     toggleOption(option, api)
   }
 
-  function renderEmpty(api: BaseSelectT.Api<Item>): JSX.Element | undefined {
-    const emptyRender = props.emptyRender
-    if (!emptyRender) {
-      return undefined
-    }
-
-    if (typeof emptyRender === 'string') {
-      return (
-        <div
-          data-slot="empty"
-          style={props.styles?.empty}
-          class={props.classes?.empty as string | undefined}
-        >
-          {emptyRender}
-        </div>
-      )
-    }
-
-    return emptyRender({
-      inputValue: api.inputValue(),
-      hasMatches: api.visibleFlatOptions().length > 0,
-      selectedValues: getSelectedOptions(api).map(
-        (option) => mapNormalizedToRawValue(option) as TItem,
-      ),
-      isAtMaxCount: isAtMaxCount(),
-      create: (value?: string) => createTag(value, api),
-      close: api.close,
-    })
-  }
-
   function renderDefaultOption(
     option: (Item & MultiSelectT.OptionRenderState) | null,
   ): JSX.Element {
-    if (!option) {
-      return (
-        <div
-          data-slot="empty"
-          class={cn('text-sm text-muted-foreground p-2 text-center', props.classes?.empty)}
-          style={props.styles?.empty}
-        >
-          No options
-        </div>
-      )
-    }
-
-    const label = (): JSX.Element => (
-      <span
-        data-slot="itemLabel"
-        style={props.styles?.itemLabel}
-        class={cn('truncate', props.classes?.itemLabel)}
-      >
-        <Show when={props.labelRender} keyed fallback={option.label}>
-          {(render) => render(option)}
-        </Show>
-      </span>
-    )
-
-    return (
-      <>
-        <span class="flex flex-1 gap-2 min-w-0 items-center">
-          <Show when={option.icon}>{(icon) => <Icon name={icon()} class="shrink-0" />}</Show>
-          <span class="flex-1 min-w-0">
-            {label()}
-            <Show when={option.description}>
-              {(description) => (
-                <span
-                  data-slot="itemDescription"
-                  style={props.styles?.itemDescription}
-                  class={cn('text-xs text-muted-foreground block', props.classes?.itemDescription)}
-                >
-                  {description()}
-                </span>
-              )}
-            </Show>
-          </span>
-        </span>
-
-        <Show when={option.isSelected}>
-          <span
-            data-slot="itemTrailing"
-            style={props.styles?.itemTrailing}
-            class={cn(
-              'text-sm ms-auto inline-flex shrink-0 items-center justify-center',
-              props.classes?.itemTrailing,
-            )}
-          >
-            <Icon name="icon-check" />
-          </span>
-        </Show>
-      </>
-    )
+    return renderDefaultSelectOption({
+      option,
+      classes: props.classes,
+      styles: props.styles,
+      labelRender: props.labelRender,
+    })
   }
 
   return (
@@ -553,7 +463,21 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
       closeOnSelect={false}
       onOptionSelect={toggleOption}
       onInputKeyDown={handleEnterKey}
-      emptyRender={(api) => renderEmpty(api)}
+      emptyRender={createEmptyRenderer({
+        emptyRender: props.emptyRender,
+        classes: props.classes,
+        styles: props.styles,
+        buildContext: (ctx: BaseSelectT.Context<Item>) => ({
+          inputValue: ctx.inputValue(),
+          hasMatches: ctx.visibleFlatOptions().length > 0,
+          selectedValues: getSelectedOptions(ctx).map(
+            (option) => mapNormalizedToRawValue(option) as TItem,
+          ),
+          isAtMaxCount: isAtMaxCount(),
+          create: (value?: string) => createTag(value, ctx),
+          close: ctx.close,
+        }),
+      })}
       optionRender={(option) => props.optionRender?.(option) ?? renderDefaultOption(option)}
     >
       {(api) => {
@@ -569,8 +493,8 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             ? 0
             : Math.max(0, getSelectedOptions(api).length - props.maxTagCount),
         )
-        const hasSelectedValues = createMemo(() => getSelectedOptions(api).length > 0)
-        const isClearAction = createMemo(() => Boolean(props.allowClear && hasSelectedValues()))
+        const hasSelectedValues = () => getSelectedOptions(api).length > 0
+        const isClearAction = () => Boolean(props.allowClear && hasSelectedValues())
 
         return (
           <div
@@ -580,7 +504,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             data-invalid={api.field.invalid() ? '' : undefined}
             style={props.styles?.control}
             class={selectControlVariants(
-              { variant: props.variant, search: api.isSearchable() },
+              { variant: props.variant, search: api.isSearchable(), size: api.field.size() },
               props.classes?.control,
             )}
             {...api.controlComboboxProps()}
@@ -655,10 +579,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
               </Show>
 
               <input
-                ref={(el) => {
-                  inputElement = el
-                  api.registerInput(el)
-                }}
+                ref={(el) => api.registerInput(el)}
                 id={api.field.id()}
                 role="combobox"
                 aria-controls={api.listboxId()}
@@ -686,6 +607,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
                 aria-invalid={api.field.invalid() ? 'true' : undefined}
                 onInput={(event) => {
                   handleInputChange(event.currentTarget.value, api)
+                  event.currentTarget.value = api.inputValue()
                   api.inputHandlers.onInput(event)
                 }}
                 onKeyDown={(event) => {
@@ -730,7 +652,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
               onPointerDown={(event) => {
                 event.preventDefault()
                 event.stopPropagation()
-                api.focusCombobox()
+                api.focusInput()
               }}
               onClick={(event) => {
                 event.stopPropagation()

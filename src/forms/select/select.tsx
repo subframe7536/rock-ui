@@ -1,11 +1,10 @@
 import type { JSX } from 'solid-js'
-import { Show, createMemo } from 'solid-js'
+import { Show } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { useControllableValue } from '../../shared/use-controllable-value'
-import { cn } from '../../shared/utils'
 import type {
   FormDisableOption,
   FormIdentityOptions,
@@ -22,7 +21,12 @@ import {
   selectLeadingIconVariants,
   selectTriggerIconVariants,
 } from './select.class'
-import { createFindOptionByValue, mapNormalizedToRawValue } from './shared'
+import {
+  createEmptyRenderer,
+  createFindOptionByValue,
+  mapNormalizedToRawValue,
+  renderDefaultSelectOption,
+} from './shared'
 import type { NormalizedOption } from './shared'
 
 export namespace SelectT {
@@ -120,12 +124,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     defaultValue: () => props.defaultValue ?? null,
   })
 
-  const selectedValueList = createMemo<SelectT.Value[]>(() => {
-    const value = selectedValue()
-    return value === null || value === undefined ? [] : [value]
-  })
-
-  function findSelectedOption(api: BaseSelectT.Api<Item>): NormalizedOption<Item> | null {
+  function findSelectedOption(api: BaseSelectT.Context<Item>): NormalizedOption<Item> | null {
     const value = selectedValue()
     if (value === null || value === undefined) {
       return null
@@ -137,7 +136,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
 
   function updateSelection(
     option: NormalizedOption<Item> | null,
-    api: BaseSelectT.Api<Item>,
+    api: BaseSelectT.OptionSelectContext<Item>,
   ): void {
     const nextValue = option ? (mapNormalizedToRawValue(option) as TItem) : null
     setSelectedValue(nextValue)
@@ -148,97 +147,18 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     api.field.emit('input')
   }
 
-  function displayValue(api: BaseSelectT.Api<Item>): string | JSX.Element {
+  function displayValue(api: BaseSelectT.Context<Item>): string | JSX.Element {
     const selected = findSelectedOption(api)
     return selected ? (selected.label ?? selected.key) : props.placeholder
   }
 
-  function renderEmpty(api: BaseSelectT.Api<Item>): JSX.Element | undefined {
-    const emptyRender = props.emptyRender
-    if (!emptyRender) {
-      return undefined
-    }
-
-    if (typeof emptyRender === 'string') {
-      return (
-        <div
-          data-slot="empty"
-          style={props.styles?.empty}
-          class={props.classes?.empty as string | undefined}
-        >
-          {emptyRender}
-        </div>
-      )
-    }
-
-    const selected = findSelectedOption(api)
-    return emptyRender({
-      inputValue: api.inputValue(),
-      hasMatches: api.visibleFlatOptions().length > 0,
-      selectedValue: selected ? (mapNormalizedToRawValue(selected) as TItem) : null,
-      close: api.close,
-    })
-  }
-
   function renderDefaultOption(option: (Item & SelectT.OptionRenderState) | null): JSX.Element {
-    if (!option) {
-      return (
-        <div
-          data-slot="empty"
-          class={cn('text-sm text-muted-foreground p-2 text-center', props.classes?.empty)}
-          style={props.styles?.empty}
-        >
-          No options
-        </div>
-      )
-    }
-
-    const label = (): JSX.Element => (
-      <span
-        data-slot="itemLabel"
-        style={props.styles?.itemLabel}
-        class={cn('truncate', props.classes?.itemLabel)}
-      >
-        <Show when={props.labelRender} keyed fallback={option.label}>
-          {(render) => render(option)}
-        </Show>
-      </span>
-    )
-
-    return (
-      <>
-        <span class="flex flex-1 gap-2 min-w-0 items-center">
-          <Show when={option.icon}>{(icon) => <Icon name={icon()} class="shrink-0" />}</Show>
-          <span class="flex-1 min-w-0">
-            {label()}
-            <Show when={option.description}>
-              {(description) => (
-                <span
-                  data-slot="itemDescription"
-                  style={props.styles?.itemDescription}
-                  class={cn('text-xs text-muted-foreground block', props.classes?.itemDescription)}
-                >
-                  {description()}
-                </span>
-              )}
-            </Show>
-          </span>
-        </span>
-
-        <Show when={option.isSelected}>
-          <span
-            data-slot="itemTrailing"
-            style={props.styles?.itemTrailing}
-            class={cn(
-              'text-sm inline-flex shrink-0 items-center justify-center',
-              props.classes?.itemTrailing,
-            )}
-          >
-            <Icon name="icon-check" />
-          </span>
-        </Show>
-      </>
-    )
+    return renderDefaultSelectOption({
+      option,
+      classes: props.classes,
+      styles: props.styles,
+      labelRender: props.labelRender,
+    })
   }
 
   return (
@@ -247,9 +167,24 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
       initialValue={
         props.defaultValue === null || props.defaultValue === undefined ? '' : props.defaultValue
       }
-      selectedValues={selectedValueList()}
+      selectedValues={
+        selectedValue() === null || selectedValue() === undefined ? [] : [selectedValue()!]
+      }
       onOptionSelect={(option, api) => updateSelection(option, api)}
-      emptyRender={(api) => renderEmpty(api)}
+      emptyRender={createEmptyRenderer({
+        emptyRender: props.emptyRender,
+        classes: props.classes,
+        styles: props.styles,
+        buildContext: (api: BaseSelectT.Context<Item>) => {
+          const selected = findSelectedOption(api)
+          return {
+            inputValue: api.inputValue(),
+            hasMatches: api.visibleFlatOptions().length > 0,
+            selectedValue: selected ? (mapNormalizedToRawValue(selected) as TItem) : null,
+            close: api.close,
+          }
+        },
+      })}
       optionRender={(option) => props.optionRender?.(option) ?? renderDefaultOption(option)}
     >
       {(api) => {
@@ -261,7 +196,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
             data-invalid={api.field.invalid() ? '' : undefined}
             style={props.styles?.control}
             class={selectControlVariants(
-              { variant: props.variant, search: api.isSearchable() },
+              { variant: props.variant, search: api.isSearchable(), size: api.field.size() },
               props.classes?.control,
             )}
             onPointerDown={api.controlPointerDown}

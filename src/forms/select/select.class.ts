@@ -11,6 +11,13 @@ export const selectControlVariants = cva(
     },
     variants: {
       variant: INPUT_VARIANT,
+      size: {
+        xs: 'pe-1',
+        sm: 'pe-1.5',
+        md: 'pe-2',
+        lg: 'pe-2.5',
+        xl: 'pe-3',
+      },
       search: {
         true: 'cursor-text focus-within:effect-fv-border focus-within:data-invalid:effect-invalid',
         false:
@@ -31,7 +38,6 @@ export const selectInputVariants = cva(
       mode: {
         single: 'mx-$s-p p-1.5',
         multiSearch: 'leading-$s-m ps-$s-p min-w-12',
-        multiHidden: 'sr-only',
       },
       size: {
         xs: 'text-xs var-select-0.5',
