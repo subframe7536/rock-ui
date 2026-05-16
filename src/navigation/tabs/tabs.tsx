@@ -1,5 +1,15 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, mergeProps } from 'solid-js'
+import {
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  onMount,
+  untrack,
+} from 'solid-js'
 
 import { Icon } from '../../elements/icon'
 import type { IconT } from '../../elements/icon'
@@ -181,9 +191,17 @@ export function Tabs(props: TabsProps): JSX.Element {
       return candidate
     }
 
-    return firstEnabledValue()
+    const result = firstEnabledValue()
+    untrack(computeIndicatorStyle)
+    return result
   })
   const triggerRefs = new Map<string, HTMLButtonElement>()
+  const [indicatorStyle, setIndicatorStyle] = createSignal<JSX.CSSProperties>({
+    transform: undefined,
+    width: undefined,
+    height: undefined,
+  })
+  let listRef: HTMLDivElement | undefined
   const { onNavigationKeyDown } = useSelectableCollectionNavigation<NormalizedTabItem, string>({
     items: normalizedItems,
     getValue: (item) => item.value,
@@ -212,6 +230,77 @@ export function Tabs(props: TabsProps): JSX.Element {
     merged.onChange?.(nextValue)
   }
 
+  function computeIndicatorStyle(): void {
+    const currentValue = selectedValue()
+
+    if (!currentValue) {
+      setIndicatorStyle({
+        transform: undefined,
+        width: undefined,
+        height: undefined,
+      })
+      return
+    }
+
+    const selectedTrigger = triggerRefs.get(currentValue)
+
+    if (!selectedTrigger) {
+      return
+    }
+
+    const nextStyle: JSX.CSSProperties = {
+      transform: undefined,
+      width: undefined,
+      height: undefined,
+    }
+
+    if (merged.orientation === 'vertical') {
+      nextStyle.transform = `translateY(${selectedTrigger.offsetTop}px)`
+      nextStyle.height = `${selectedTrigger.offsetHeight}px`
+    } else {
+      const direction = listRef ? getComputedStyle(listRef).direction : 'ltr'
+      const offset =
+        direction === 'rtl'
+          ? -1 *
+            (((selectedTrigger.offsetParent as HTMLElement | null)?.offsetWidth ?? 0) -
+              selectedTrigger.offsetWidth -
+              selectedTrigger.offsetLeft)
+          : selectedTrigger.offsetLeft
+
+      nextStyle.transform = `translateX(${offset}px)`
+      nextStyle.width = `${selectedTrigger.offsetWidth}px`
+    }
+
+    setIndicatorStyle(nextStyle)
+  }
+
+  onMount(() => {
+    computeIndicatorStyle()
+  })
+
+  createEffect(() => {
+    const currentValue = selectedValue()
+    const selectedTrigger = currentValue ? triggerRefs.get(currentValue) : undefined
+
+    if (!selectedTrigger) {
+      return
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      computeIndicatorStyle()
+    })
+
+    resizeObserver.observe(selectedTrigger)
+
+    if (listRef) {
+      resizeObserver.observe(listRef)
+    }
+
+    onCleanup(() => {
+      resizeObserver.disconnect()
+    })
+  })
+
   return (
     <div
       id={rootId()}
@@ -221,6 +310,7 @@ export function Tabs(props: TabsProps): JSX.Element {
       class={tabsRootVariants({ orientation: merged.orientation }, merged.classes?.root)}
     >
       <div
+        ref={(e) => (listRef = e)}
         role="tablist"
         aria-orientation={merged.orientation}
         data-slot="list"
@@ -236,7 +326,7 @@ export function Tabs(props: TabsProps): JSX.Element {
         <div
           aria-hidden="true"
           data-slot="indicator"
-          style={merged.styles?.indicator}
+          style={{ ...merged.styles?.indicator, ...indicatorStyle() }}
           class={tabsIndicatorVariants(
             {
               orientation: merged.orientation,
