@@ -6,9 +6,9 @@ import {
   createMemo,
   createSignal,
   mergeProps,
+  on,
   onCleanup,
   onMount,
-  untrack,
 } from 'solid-js'
 
 import { Icon } from '../../elements/icon'
@@ -191,9 +191,7 @@ export function Tabs(props: TabsProps): JSX.Element {
       return candidate
     }
 
-    const result = firstEnabledValue()
-    untrack(computeIndicatorStyle)
-    return result
+    return firstEnabledValue()
   })
   const triggerRefs = new Map<string, HTMLButtonElement>()
   const [indicatorStyle, setIndicatorStyle] = createSignal<JSX.CSSProperties>({
@@ -277,6 +275,12 @@ export function Tabs(props: TabsProps): JSX.Element {
   onMount(() => {
     computeIndicatorStyle()
   })
+
+  createEffect(
+    on(selectedValue, () => {
+      computeIndicatorStyle()
+    }),
+  )
 
   createEffect(() => {
     const currentValue = selectedValue()
