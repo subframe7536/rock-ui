@@ -1,5 +1,5 @@
 import type { Accessor, JSX } from 'solid-js'
-import { For, Show, createEffect, createMemo, createSignal, mergeProps } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, mergeProps, on } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
 import type { IconT } from '../../elements/icon'
@@ -21,16 +21,8 @@ import type {
 
 import type { SelectControlVariantProps } from './select.class'
 import { selectItemVariants } from './select.class'
-import {
-  filterNormalizedOptions,
-  flattenOptions,
-  normalizeOptions,
-  syncSelectSearchInputValue,
-  useSelectField,
-  useSelectFilter,
-  useSelectMenuControl,
-} from './shared'
-import type { BaseSelectItems, NormalizedGroup, NormalizedOption } from './shared'
+import { flattenOptions, normalizeOptions, useSelectField, useSelectMenuControl } from './shared'
+import type { BaseSelectItems, NormalizedGroup, NormalizedOption, SelectFilterMode } from './shared'
 
 export namespace BaseSelectT {
   export type Value = string | number
@@ -77,7 +69,6 @@ export namespace BaseSelectT {
       onInput: (event: InputEvent) => void
       onKeyDown: (event: KeyboardEvent) => void
     }
-    inputRef: Accessor<HTMLInputElement | undefined>
     inputValue: Accessor<string>
     isOpen: Accessor<boolean>
     isSearchable: Accessor<boolean>
@@ -85,7 +76,6 @@ export namespace BaseSelectT {
     open: () => void
     registerControl: (element: HTMLDivElement | undefined) => void
     registerInput: (element: HTMLInputElement | undefined) => void
-    selectedOptions: Accessor<NormalizedOption<TItem>[]>
     setHighlightedKey: (key: string | undefined) => void
     setInputValue: (value: string) => void
     toggle: () => void
@@ -174,6 +164,27 @@ export namespace BaseSelectT {
 
 export interface BaseSelectProps<TItem extends BaseSelectT.Item> extends BaseSelectT.Props<TItem> {}
 
+const SELECT_FILTER_STRATEGIES: Record<SelectFilterMode, (text: string, input: string) => boolean> =
+  {
+    startsWith: (text, input) => text.startsWith(input),
+    endsWith: (text, input) => text.endsWith(input),
+    contains: (text, input) => text.includes(input),
+  }
+
+function matchesFilter<TOption extends { key: string }>(
+  option: TOption,
+  inputValue: string,
+  filter: SelectFilterMode | ((option: TOption, inputValue: string) => boolean),
+): boolean {
+  if (typeof filter === 'function') {
+    return filter(option, inputValue)
+  }
+
+  const input = inputValue.toLowerCase()
+  const text = option.key.toLowerCase()
+  return (SELECT_FILTER_STRATEGIES[filter] ?? SELECT_FILTER_STRATEGIES.contains)(text, input)
+}
+
 function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps<TItem>) {
   const merged = mergeProps(
     {
@@ -207,9 +218,6 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
   const selectedValueSet = createMemo(
     () => new Set((merged.selectedValues ?? []).map((value) => String(value))),
   )
-  const selectedOptions = createMemo(() =>
-    allFlatOptions().filter((option) => selectedValueSet().has(option.value)),
-  )
 
   const [openState, setOpenState] = useControllableValue<boolean>({
     value: () => merged.open,
@@ -219,7 +227,6 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
 
   let controlRef: HTMLDivElement | undefined
   let comboboxRef: HTMLElement | undefined
-  let inputRef: HTMLInputElement | undefined
   let hasReachedScrollBottom = false
 
   const [currentInputText, setCurrentInputText] = createSignal(merged.defaultSearchValue ?? '')
@@ -231,26 +238,62 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
     mode: () => 'both',
   })
 
-  syncSelectSearchInputValue(
-    merged,
-    () => inputRef,
-    (searchValue) => setCurrentInputText(searchValue),
+  createEffect(
+    on(
+      () => merged.searchValue,
+      (searchValue) => {
+        if (searchValue === undefined) {
+          return
+        }
+
+        setCurrentInputText(searchValue)
+      },
+    ),
   )
 
-  const { kobalteFilter } = useSelectFilter<NormalizedOption<TItem>, TItem>({
-    isSearchable,
-    filterOption: () => merged.filterOption,
-    allOptions: allFlatOptions,
-    inputValue: currentInputText,
+  const visibleOptions = createMemo<Array<NormalizedOption<TItem> | NormalizedGroup<TItem>>>(() => {
+    const options = normalizedOptions()
+    const inputValue = currentInputText()
+    const filterOption = merged.filterOption
+
+    if (!isSearchable() || filterOption === false || inputValue.trim() === '') {
+      return options
+    }
+
+    const filter:
+      | boolean
+      | 'startsWith'
+      | 'endsWith'
+      | 'contains'
+      | ((option: NormalizedOption<TItem>, inputValue: string) => boolean) =
+      typeof filterOption === 'function'
+        ? (option, value) => filterOption(value, option.raw)
+        : filterOption === true || filterOption === undefined
+          ? 'contains'
+          : filterOption
+
+    const result: Array<NormalizedOption<TItem> | NormalizedGroup<TItem>> = []
+
+    for (const item of options) {
+      if (item.isGroup) {
+        const options = item.options.filter((option) => matchesFilter(option, inputValue, filter))
+        if (options.length > 0) {
+          result.push({ ...item, options })
+        }
+        continue
+      }
+
+      if (matchesFilter(item, inputValue, filter)) {
+        result.push(item)
+      }
+    }
+
+    return result
   })
 
-  const visibleOptions = createMemo<Array<NormalizedOption<TItem> | NormalizedGroup<TItem>>>(() =>
-    filterNormalizedOptions(normalizedOptions(), currentInputText(), kobalteFilter()),
-  )
   const visibleFlatOptions = createMemo<NormalizedOption<TItem>[]>(() =>
     flattenOptions(visibleOptions()),
   )
-  const hasVisibleOptions = createMemo(() => visibleFlatOptions().length > 0)
 
   function setMenuOpen(nextOpen: boolean): void {
     if (field.disabled()) {
@@ -263,9 +306,6 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
   function closeMenu(): void {
     if (isSearchable() && visibleFlatOptions().length === 0) {
       setCurrentInputText('')
-      if (inputRef) {
-        inputRef.value = ''
-      }
       merged.onSearch?.('')
     }
     setMenuOpen(false)
@@ -542,7 +582,6 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
     focusInput: () => comboboxRef?.focus(),
     highlightedKey,
     inputHandlers,
-    inputRef: () => inputRef,
     inputValue: currentInputText,
     isOpen,
     isSearchable,
@@ -555,12 +594,10 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
       }
     },
     registerInput: (element) => {
-      inputRef = element
       if (element) {
         comboboxRef = element
       }
     },
-    selectedOptions,
     setHighlightedKey,
     setInputValue,
     toggle: menuControl.toggleMenu,
@@ -615,19 +652,13 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
   }
 
   function renderEmptyNode(): JSX.Element {
-    const emptyRender = props.emptyRender?.(context)
-    if (emptyRender) {
-      return emptyRender
-    }
-
-    return props.optionRender(null)
+    return props.emptyRender?.(context) ?? props.optionRender(null)
   }
 
   return {
     context,
     contentElement,
     contentPresence,
-    hasVisibleOptions,
     handleListboxScroll,
     highlightedKey,
     listboxId,
@@ -694,7 +725,10 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
                 )}
                 onScroll={select.handleListboxScroll}
               >
-                <Show when={select.hasVisibleOptions()} fallback={select.renderEmptyNode()}>
+                <Show
+                  when={select.visibleFlatOptions().length > 0}
+                  fallback={select.renderEmptyNode()}
+                >
                   <For each={select.visibleOptions()}>
                     {(item) => (
                       <Show
