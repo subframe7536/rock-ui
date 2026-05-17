@@ -11,13 +11,13 @@ export const selectControlVariants = cva(
     },
     variants: {
       variant: INPUT_VARIANT,
-      size: {
-        xs: 'pe-1',
-        sm: 'pe-1.5',
-        md: 'pe-2',
-        lg: 'pe-2.5',
-        xl: 'pe-3',
-      },
+      // size: {
+      //   xs: 'pe-1',
+      //   sm: 'pe-1.5',
+      //   md: 'pe-2',
+      //   lg: 'pe-2.5',
+      //   xl: 'pe-3',
+      // },
       search: {
         true: 'cursor-text focus-within:effect-fv-border focus-within:data-invalid:effect-invalid',
         false:

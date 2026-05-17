@@ -504,7 +504,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             data-invalid={api.field.invalid() ? '' : undefined}
             style={props.styles?.control}
             class={selectControlVariants(
-              { variant: props.variant, search: api.isSearchable(), size: api.field.size() },
+              { variant: props.variant, search: api.isSearchable() },
               props.classes?.control,
             )}
             {...api.controlComboboxProps()}

@@ -196,7 +196,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
             data-invalid={api.field.invalid() ? '' : undefined}
             style={props.styles?.control}
             class={selectControlVariants(
-              { variant: props.variant, search: api.isSearchable(), size: api.field.size() },
+              { variant: props.variant, search: api.isSearchable() },
               props.classes?.control,
             )}
             onPointerDown={api.controlPointerDown}
