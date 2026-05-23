@@ -1,7 +1,8 @@
 import type { JSX } from 'solid-js'
-import { For, Show, createMemo, createSignal, mergeProps, onCleanup, onMount } from 'solid-js'
+import { For, Show, createMemo, createSignal, mergeProps, onMount } from 'solid-js'
 
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
+import { useEventListener } from '../../shared/use-event-listener'
 import { cn, useId } from '../../shared/utils'
 import { Checkbox } from '../checkbox'
 import type { CheckboxProps } from '../checkbox/checkbox'
@@ -240,10 +241,7 @@ export function CheckboxGroup<TTrue = boolean, TFalse = boolean>(
       })
     }
 
-    form.addEventListener('reset', onReset)
-    onCleanup(() => {
-      form.removeEventListener('reset', onReset)
-    })
+    useEventListener(form, 'reset', onReset)
   })
 
   return (

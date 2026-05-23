@@ -3,6 +3,7 @@ import type { Middleware, Placement, ReferenceElement, VirtualElement } from '@f
 import type { Accessor, JSX } from 'solid-js'
 import { createEffect, createSignal, onCleanup, untrack } from 'solid-js'
 
+import { useEventListenerMap } from '../../../shared/use-event-listener'
 import { focusWithoutScrolling, getTransformOrigin, resolveDirection } from '../utils'
 
 export function getOverlayMenuTextValue(item: {
@@ -618,15 +619,15 @@ export function useOverlayMenuDismiss(options: {
       options.onClose()
     }
 
-    document.addEventListener('pointerdown', onDocumentPointerDown, true)
-    document.addEventListener('focusin', onDocumentFocusIn, true)
-    document.addEventListener('keydown', onDocumentKeyDown, true)
-
-    onCleanup(() => {
-      document.removeEventListener('pointerdown', onDocumentPointerDown, true)
-      document.removeEventListener('focusin', onDocumentFocusIn, true)
-      document.removeEventListener('keydown', onDocumentKeyDown, true)
-    })
+    useEventListenerMap(
+      document,
+      {
+        pointerdown: onDocumentPointerDown,
+        focusin: onDocumentFocusIn,
+        keydown: onDocumentKeyDown,
+      },
+      true,
+    )
   })
 }
 

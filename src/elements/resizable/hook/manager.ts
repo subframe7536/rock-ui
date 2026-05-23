@@ -1,3 +1,5 @@
+import { attachEventListenerMap } from '../../../shared/use-event-listener'
+
 import type { ResizableOrientation } from './types'
 
 export const RESIZABLE_HANDLE_TARGET_HANDLE = 0 as const
@@ -70,6 +72,7 @@ interface DragSession {
   handles: DragHandleSnapshot[]
   startX: number
   startY: number
+  cleanup: () => void
 }
 
 interface HandleSnapshot {
@@ -230,12 +233,7 @@ function clearDragSession(event: PointerEvent | TouchEvent | MouseEvent): void {
     dragHandle.handle.onDragEnd(event)
   }
 
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('pointermove', onPointerMove)
-    window.removeEventListener('pointerup', clearDragSession)
-    window.removeEventListener('pointercancel', clearDragSession)
-    window.removeEventListener('contextmenu', clearDragSession)
-  }
+  current.cleanup()
 }
 
 function onPointerMove(event: PointerEvent): void {
@@ -611,21 +609,25 @@ export function startResizableHandleDrag(
 
   const dragHandles = handles.map(createDragHandleSnapshot)
 
+  const cleanup =
+    typeof window === 'undefined'
+      ? () => {}
+      : attachEventListenerMap(window, {
+          pointermove: onPointerMove,
+          pointerup: clearDragSession,
+          pointercancel: clearDragSession,
+          contextmenu: clearDragSession,
+        })
+
   dragSession = {
     handles: dragHandles,
     startX: event.clientX,
     startY: event.clientY,
+    cleanup,
   }
   lockDocumentTextSelection()
 
   for (const dragHandle of dragHandles) {
     dragHandle.handle.setDragging(true)
-  }
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener('pointermove', onPointerMove)
-    window.addEventListener('pointerup', clearDragSession)
-    window.addEventListener('pointercancel', clearDragSession)
-    window.addEventListener('contextmenu', clearDragSession)
   }
 }

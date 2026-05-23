@@ -1,6 +1,8 @@
 import type { Accessor } from 'solid-js'
 import { createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 
+import { useEventListener } from './use-event-listener'
+
 export type TransitionPresenceMotion = 'animation' | 'transition' | 'both' | 'none'
 
 export interface UseTransitionPresenceOptions {
@@ -106,23 +108,15 @@ export function useTransitionPresence(
     }
 
     if (waitForAnimation) {
-      element.addEventListener('animationend', onAnimationEnd)
+      useEventListener(element, 'animationend', onAnimationEnd)
     }
 
     if (waitForTransition) {
-      element.addEventListener('transitionend', onTransitionEnd)
+      useEventListener(element, 'transitionend', onTransitionEnd)
     }
 
     onCleanup(() => {
       cancelled = true
-
-      if (waitForAnimation) {
-        element?.removeEventListener('animationend', onAnimationEnd)
-      }
-
-      if (waitForTransition) {
-        element?.removeEventListener('transitionend', onTransitionEnd)
-      }
     })
   })
 

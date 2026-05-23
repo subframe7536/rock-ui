@@ -4,6 +4,7 @@ import { Portal } from 'solid-js/web'
 
 import type { SlotClasses, SlotStyles } from '../../shared/types'
 import { useControllableValue } from '../../shared/use-controllable-value'
+import { useEventListenerMap } from '../../shared/use-event-listener'
 import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { cn, useId } from '../../shared/utils'
 
@@ -154,14 +155,17 @@ export function Modal(props: ModalProps): JSX.Element {
       requestClose(event)
     }
 
-    document.addEventListener('pointerdown', onDocumentPointerDown, true)
-    document.addEventListener('focusin', onDocumentFocusIn, true)
-    document.addEventListener('keydown', onDocumentKeyDown, true)
+    useEventListenerMap(
+      document,
+      {
+        pointerdown: onDocumentPointerDown,
+        focusin: onDocumentFocusIn,
+        keydown: onDocumentKeyDown,
+      },
+      true,
+    )
 
     onCleanup(() => {
-      document.removeEventListener('pointerdown', onDocumentPointerDown, true)
-      document.removeEventListener('focusin', onDocumentFocusIn, true)
-      document.removeEventListener('keydown', onDocumentKeyDown, true)
       releaseScrollLock?.()
       focusTrigger(triggerElement)
     })

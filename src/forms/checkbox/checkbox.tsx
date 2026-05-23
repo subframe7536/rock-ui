@@ -1,11 +1,12 @@
 import type { JSX } from 'solid-js'
-import { Show, createEffect, createMemo, mergeProps, onCleanup, onMount } from 'solid-js'
+import { Show, createEffect, createMemo, mergeProps, onMount } from 'solid-js'
 
 import type { IconT } from '../../elements/icon'
 import { Icon } from '../../elements/icon'
 import { HiddenInput } from '../../shared/hidden-input'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { useControllableValue } from '../../shared/use-controllable-value'
+import { useEventListener } from '../../shared/use-event-listener'
 import { callHandler, cn, useId } from '../../shared/utils'
 import { useFormField } from '../form-field/form-field-context'
 import type {
@@ -312,10 +313,7 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       })
     }
 
-    form.addEventListener('reset', onReset)
-    onCleanup(() => {
-      form.removeEventListener('reset', onReset)
-    })
+    useEventListener(form, 'reset', onReset)
   })
 
   function toggle(): void {

@@ -3,6 +3,7 @@ import { createMemo, createSignal, mergeProps, onCleanup, onMount, untrack } fro
 
 import type { IconT } from '../../elements/icon'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
+import { useEventListener } from '../../shared/use-event-listener'
 import { cn, useId } from '../../shared/utils'
 import { OverlayMenu } from '../base/menu'
 import type {
@@ -182,11 +183,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
       openFromPoint(event.clientX, event.clientY)
     }
 
-    document.addEventListener('contextmenu', onDocumentContextMenuCapture, true)
-
-    onCleanup(() => {
-      document.removeEventListener('contextmenu', onDocumentContextMenuCapture, true)
-    })
+    useEventListener(document, 'contextmenu', onDocumentContextMenuCapture, true)
   })
 
   const onContextMenu = (event: MouseEvent): void => {
