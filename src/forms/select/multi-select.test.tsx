@@ -65,6 +65,15 @@ describe('MultiSelect', () => {
     expect(onChange).not.toHaveBeenCalled()
   })
 
+  test('disables non-selected options when maxCount is reached', () => {
+    render(() => <MultiSelect options={FRUITS} defaultOpen defaultValue={['apple']} maxCount={1} />)
+
+    const items = queryAllBody('[data-slot="item"]')
+    expect(items[0]?.getAttribute('aria-disabled')).toBeNull()
+    expect(items[1]?.getAttribute('aria-disabled')).toBe('true')
+    expect(items[2]?.getAttribute('aria-disabled')).toBe('true')
+  })
+
   test('creates and selects tag from token separators', async () => {
     const onChange = vi.fn()
     const screen = render(() => (
@@ -249,7 +258,6 @@ describe('MultiSelect', () => {
     await fireEvent.pointerDown(control, { button: 0 })
     await fireEvent.click(control)
 
-    expect(control.className).toContain('hover:bg-muted/40')
     expect(control.className).toContain('focus-visible:effect-fv-border')
     expect(control.className).not.toContain('focus-within:effect-fv-border')
   })

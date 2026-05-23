@@ -150,6 +150,36 @@ export interface MultiSelectProps<
   TItem extends MultiSelectT.Value = MultiSelectT.Value,
 > extends MultiSelectT.Props<TItem> {}
 
+function disableUnselectedOptionsWhenAtMax<
+  TItem extends {
+    value?: string | number
+    disabled?: boolean
+    children?: TItem[]
+  },
+>(items: TItem[], selectedValueSet: Set<string>, isAtMaxCount: boolean): TItem[] {
+  if (!isAtMaxCount) {
+    return items
+  }
+
+  return items.map((item) => {
+    if (Array.isArray(item.children) && item.children.length > 0) {
+      return {
+        ...item,
+        children: disableUnselectedOptionsWhenAtMax(item.children, selectedValueSet, true),
+      }
+    }
+
+    if (item.disabled || selectedValueSet.has(String(item.value ?? ''))) {
+      return item
+    }
+
+    return {
+      ...item,
+      disabled: true,
+    }
+  })
+}
+
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -184,9 +214,11 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
 
   const options = createMemo<Item[]>(() => {
     const base = props.options ?? []
+    const selected = selectedValueSet()
+    const atMax = isAtMaxCount()
 
     if (!props.allowCreate && !props.tokenSeparators?.length) {
-      return base
+      return disableUnselectedOptionsWhenAtMax(base, selected, atMax)
     }
 
     const existingValues = new Set(
@@ -203,7 +235,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
       .filter((tag) => !existingValues.has(tag.value))
       .map((tag) => tag.raw)
 
-    return [...newTags, ...base]
+    return disableUnselectedOptionsWhenAtMax([...newTags, ...base], selected, atMax)
   })
 
   function getSelectedOptions(
