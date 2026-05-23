@@ -23,7 +23,7 @@ import {
 } from './select.class'
 import {
   createEmptyRenderer,
-  createFindOptionByValue,
+  findNormalizedOptionByValue,
   mapNormalizedToRawValue,
   renderDefaultSelectOption,
 } from './shared'
@@ -124,14 +124,20 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     defaultValue: () => props.defaultValue ?? null,
   })
 
-  function findSelectedOption(api: BaseSelectT.Context<Item>): NormalizedOption<Item> | null {
-    const value = selectedValue()
-    if (value === null || value === undefined) {
-      return null
-    }
+  function getInitialValue(): TItem | '' {
+    return props.defaultValue === null || props.defaultValue === undefined ? '' : props.defaultValue
+  }
 
-    const finder = createFindOptionByValue<Item>(() => api?.allFlatOptions() ?? [])
-    return finder(value) ?? null
+  function getSelectedValues(): TItem[] {
+    const value = selectedValue()
+    return value === null || value === undefined ? [] : [value]
+  }
+
+  function findSelectedOption(
+    api: Pick<BaseSelectT.StateApi<Item>, 'allFlatOptions'>,
+  ): NormalizedOption<Item> | null {
+    const value = selectedValue()
+    return findNormalizedOptionByValue(api.allFlatOptions(), value) ?? null
   }
 
   function updateSelection(
@@ -147,7 +153,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
     api.field.emit('input')
   }
 
-  function displayValue(api: BaseSelectT.Context<Item>): string | JSX.Element {
+  function displayValue(api: BaseSelectT.StateApi<Item>): string | JSX.Element {
     const selected = findSelectedOption(api)
     return selected ? (selected.label ?? selected.key) : props.placeholder
   }
@@ -164,18 +170,14 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
   return (
     <BaseSelect<Item>
       {...props}
-      initialValue={
-        props.defaultValue === null || props.defaultValue === undefined ? '' : props.defaultValue
-      }
-      selectedValues={
-        selectedValue() === null || selectedValue() === undefined ? [] : [selectedValue()!]
-      }
+      initialValue={getInitialValue()}
+      selectedValues={getSelectedValues()}
       onOptionSelect={(option, api) => updateSelection(option, api)}
       emptyRender={createEmptyRenderer({
         emptyRender: props.emptyRender,
         classes: props.classes,
         styles: props.styles,
-        buildContext: (api: BaseSelectT.Context<Item>) => {
+        buildContext: (api: BaseSelectT.StateApi<Item>) => {
           const selected = findSelectedOption(api)
           return {
             inputValue: api.inputValue(),
@@ -190,7 +192,6 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
       {(api) => {
         return (
           <div
-            ref={(el) => api.registerControl(el)}
             data-slot="control"
             data-disabled={api.field.disabled() ? '' : undefined}
             data-invalid={api.field.invalid() ? '' : undefined}
@@ -199,9 +200,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
               { variant: props.variant, search: api.isSearchable() },
               props.classes?.control,
             )}
-            onPointerDown={api.controlPointerDown}
-            onClick={api.controlClick}
-            {...api.controlComboboxProps()}
+            {...api.controlProps()}
           >
             <Show when={props.leadingIcon}>
               {(icon) => (
@@ -230,6 +229,7 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                       size: api.field.size(),
                     },
                     'text-start truncate',
+                    !selectedValue() && 'text-muted-foreground',
                     props.classes?.input,
                   )}
                 >
@@ -238,14 +238,6 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
               }
             >
               <input
-                ref={(el) => api.registerInput(el)}
-                id={api.field.id()}
-                role="combobox"
-                aria-controls={api.listboxId()}
-                aria-expanded={api.isOpen() ? 'true' : 'false'}
-                aria-haspopup="listbox"
-                aria-autocomplete="list"
-                aria-activedescendant={api.activeDescendantId()}
                 data-slot="input"
                 style={props.styles?.input}
                 class={selectInputVariants(
@@ -255,20 +247,12 @@ export function Select<TItem extends SelectT.Value = SelectT.Value>(
                   },
                   props.classes?.input,
                 )}
-                maxLength={props.searchMaxLength}
                 placeholder={props.placeholder}
-                value={api.inputValue()}
-                disabled={api.field.disabled()}
-                required={props.required}
-                aria-invalid={api.field.invalid() ? 'true' : undefined}
+                {...api.inputProps()}
                 onInput={(event) => {
                   api.setInputValue(event.currentTarget.value)
-                  api.inputHandlers.onInput(event)
+                  api.onInput(event)
                 }}
-                onKeyDown={api.inputHandlers.onKeyDown}
-                onFocus={api.inputHandlers.onFocus}
-                onBlur={api.inputHandlers.onBlur}
-                {...api.field.ariaAttrs()}
               />
             </Show>
 

@@ -53,34 +53,25 @@ export namespace BaseSelectT {
     children?: Omit<Item<Val>, 'children'>[]
   }
 
-  export interface Context<TItem extends Item> {
-    activeDescendantId: Accessor<string | undefined>
+  export interface StateApi<TItem extends Item> {
     allFlatOptions: Accessor<NormalizedOption<TItem>[]>
     close: () => void
-    controlComboboxProps: Accessor<JSX.HTMLAttributes<HTMLDivElement>>
-    controlClick: () => void
-    controlPointerDown: (event: PointerEvent) => void
     field: UseFormFieldReturn
-    focusInput: () => void
     highlightedKey: Accessor<string | undefined>
-    inputHandlers: {
-      onBlur: () => void
-      onFocus: () => void
-      onInput: (event: InputEvent) => void
-      onKeyDown: (event: KeyboardEvent) => void
-    }
     inputValue: Accessor<string>
     isOpen: Accessor<boolean>
-    isSearchable: Accessor<boolean>
-    listboxId: Accessor<string>
-    open: () => void
-    registerControl: (element: HTMLDivElement | undefined) => void
-    registerInput: (element: HTMLInputElement | undefined) => void
-    setHighlightedKey: (key: string | undefined) => void
     setInputValue: (value: string) => void
-    toggle: () => void
     visibleFlatOptions: Accessor<NormalizedOption<TItem>[]>
-    visibleOptions: Accessor<Array<NormalizedOption<TItem> | NormalizedGroup<TItem>>>
+  }
+
+  export interface ControlApi<TItem extends Item> extends StateApi<TItem> {
+    controlProps: Accessor<JSX.HTMLAttributes<HTMLDivElement>>
+    focusInput: () => void
+    inputProps: Accessor<JSX.InputHTMLAttributes<HTMLInputElement>>
+    isSearchable: Accessor<boolean>
+    onInput: (event: InputEvent) => void
+    onKeyDown: (event: KeyboardEvent) => void
+    toggle: () => void
   }
 
   export interface OptionSelectContext<TItem extends Item> {
@@ -133,16 +124,20 @@ export namespace BaseSelectT {
     /** Form value used when the field initializes. */
     initialValue?: unknown
     /** Render the trigger/control surface. */
-    children: (api: Context<TItem>) => JSX.Element
+    children: (api: ControlApi<TItem>) => JSX.Element
     /** Renderer for each option in the dropdown. Receives `null` when no option matches. */
     optionRender: (option: (TItem & OptionRenderState) | null) => JSX.Element
     /** Custom rendered empty state. */
-    emptyRender?: (context: Context<TItem>) => JSX.Element | undefined
+    emptyRender?: (context: StateApi<TItem>) => JSX.Element | undefined
     /** Called when an option is selected by pointer or keyboard. */
     onOptionSelect: (option: NormalizedOption<TItem>, context: OptionSelectContext<TItem>) => void
-    /** Allows wrappers to handle keys before BaseSelect default list navigation. */
-    onInputKeyDown?: (event: KeyboardEvent, context: Context<TItem>) => void
-    /** Called when the user scrolls near the bottom of the listbox. Use for infinite loading. */
+    /**
+     * Called on option item keydown. Can be used to intercept keys for custom behavior.
+     */
+    onInputKeyDown?: (event: KeyboardEvent, context: StateApi<TItem>) => void
+    /**
+     * Called when the listbox is scrolled to bottom. Useful for infinite loading scenarios. Make sure to set `overflowPadding` and `scrollBottomThreshold` appropriately to ensure the callback is triggered at the right time.
+     */
     onScrollBottom?: () => void
     /** Distance (px) from the bottom at which onScrollBottom fires. Default: 20. */
     scrollBottomThreshold?: number
@@ -185,7 +180,134 @@ function matchesFilter<TOption extends { key: string }>(
   return (SELECT_FILTER_STRATEGIES[filter] ?? SELECT_FILTER_STRATEGIES.contains)(text, input)
 }
 
-function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps<TItem>) {
+function useSelectNavigation<TItem extends BaseSelectT.Item>(options: {
+  highlightedKey: Accessor<string | undefined>
+  isOpen: Accessor<boolean>
+  setHighlightedKey: (key: string | undefined) => void
+  visibleFlatOptions: Accessor<NormalizedOption<TItem>[]>
+}) {
+  const enabledOptions = createMemo(() =>
+    options.visibleFlatOptions().filter((option) => !option.disabled),
+  )
+
+  function focusItemByOffset(delta: number): void {
+    const currentOptions = enabledOptions()
+    if (currentOptions.length === 0) {
+      return
+    }
+
+    const currentIndex = currentOptions.findIndex(
+      (option) => option.key === options.highlightedKey(),
+    )
+    const nextIndex =
+      currentIndex === -1
+        ? delta > 0
+          ? 0
+          : currentOptions.length - 1
+        : (currentIndex + delta + currentOptions.length) % currentOptions.length
+    options.setHighlightedKey(currentOptions[nextIndex]?.key)
+  }
+
+  function focusBoundaryItem(kind: 'first' | 'last'): void {
+    const currentOptions = enabledOptions()
+    if (currentOptions.length === 0) {
+      return
+    }
+
+    options.setHighlightedKey(
+      kind === 'first' ? currentOptions[0]?.key : currentOptions[currentOptions.length - 1]?.key,
+    )
+  }
+
+  function getFocusedOption(): NormalizedOption<TItem> | undefined {
+    const key = options.highlightedKey() ?? enabledOptions()[0]?.key
+    if (!key) {
+      return undefined
+    }
+
+    return options.visibleFlatOptions().find((option) => option.key === key)
+  }
+
+  createEffect(() => {
+    if (!options.isOpen()) {
+      options.setHighlightedKey(undefined)
+      return
+    }
+
+    const highlighted = options.highlightedKey()
+    if (highlighted && enabledOptions().some((option) => option.key === highlighted)) {
+      return
+    }
+
+    options.setHighlightedKey(undefined)
+  })
+
+  return {
+    focusBoundaryItem,
+    focusItemByOffset,
+    getFocusedOption,
+  }
+}
+
+function useBaseSelectOverlay(options: {
+  closeMenu: () => void
+  contentElement: Accessor<HTMLDivElement | undefined>
+  contentPresence: ReturnType<typeof useTransitionPresence>
+  getControlElement: () => HTMLDivElement | undefined
+  gutter: Accessor<number>
+  isOpen: Accessor<boolean>
+  menuControl: ReturnType<typeof useSelectMenuControl>
+  overflowPadding: Accessor<number>
+  positionerElement: Accessor<HTMLDivElement | undefined>
+}) {
+  useOverlayMenuFloatingPosition({
+    contentElement: options.contentElement,
+    floatingElement: options.positionerElement,
+    getReferenceElement: options.getControlElement,
+    gutter: options.gutter,
+    onPositionedChange: () => undefined,
+    onPlacementChange: () => undefined,
+    open: options.isOpen,
+    overflowPadding: options.overflowPadding,
+    placement: () => 'bottom-start',
+  })
+
+  createEffect(() => {
+    if (!options.contentPresence.present()) {
+      options.contentPresence.setElement(undefined)
+    }
+  })
+
+  createEffect(() => {
+    const positioner = options.positionerElement()
+    const content = options.contentElement()
+    if (!positioner || !content) {
+      return
+    }
+
+    queueMicrotask(() => {
+      positioner.style.zIndex = getComputedStyle(content).zIndex
+    })
+  })
+
+  useOverlayMenuDismiss({
+    containsTarget: (node) => {
+      const positioner = options.positionerElement()
+      return Boolean(
+        options.getControlElement()?.contains(node as Node) || positioner?.contains(node as Node),
+      )
+    },
+    onClose: () => {
+      options.menuControl.onContentInteractOutside()
+      options.closeMenu()
+    },
+    open: options.isOpen,
+  })
+}
+
+export function BaseSelect<TItem extends BaseSelectT.Item>(
+  props: BaseSelectProps<TItem>,
+): JSX.Element {
   const merged = mergeProps(
     {
       variant: 'outline',
@@ -214,9 +336,6 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
   )
   const allFlatOptions = createMemo<NormalizedOption<TItem>[]>(() =>
     flattenOptions(normalizedOptions()),
-  )
-  const selectedValueSet = createMemo(
-    () => new Set((merged.selectedValues ?? []).map((value) => String(value))),
   )
 
   const [openState, setOpenState] = useControllableValue<boolean>({
@@ -294,11 +413,19 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
   const visibleFlatOptions = createMemo<NormalizedOption<TItem>[]>(() =>
     flattenOptions(visibleOptions()),
   )
+  const virtualizedPositions = createMemo<Map<string, number> | undefined>(() => {
+    if (!merged.virtualized) {
+      return undefined
+    }
+
+    return new Map(visibleFlatOptions().map((option, index) => [option.key, index + 1] as const))
+  })
 
   function setMenuOpen(nextOpen: boolean): void {
     if (field.disabled()) {
       return
     }
+
     setOpenState(nextOpen)
     merged.onOpenChange?.(nextOpen)
   }
@@ -308,6 +435,7 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
       setCurrentInputText('')
       merged.onSearch?.('')
     }
+
     setMenuOpen(false)
   }
 
@@ -316,56 +444,20 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
     isOpen,
     open: () => setMenuOpen(true),
   })
-
-  function focusItemByOffset(delta: number): void {
-    const options = visibleFlatOptions().filter((option) => !option.disabled)
-    if (options.length === 0) {
-      return
-    }
-
-    const currentIndex = options.findIndex((option) => option.key === highlightedKey())
-    const nextIndex =
-      currentIndex === -1
-        ? delta > 0
-          ? 0
-          : options.length - 1
-        : (currentIndex + delta + options.length) % options.length
-    setHighlightedKey(options[nextIndex]?.key)
-  }
-
-  function focusBoundaryItem(kind: 'first' | 'last'): void {
-    const options = visibleFlatOptions().filter((option) => !option.disabled)
-    if (options.length === 0) {
-      return
-    }
-    setHighlightedKey(kind === 'first' ? options[0]?.key : options[options.length - 1]?.key)
-  }
-
-  createEffect(() => {
-    if (!isOpen()) {
-      setHighlightedKey(undefined)
-      return
-    }
-
-    const highlighted = highlightedKey()
-    if (
-      highlighted &&
-      visibleFlatOptions().some((option) => option.key === highlighted && !option.disabled)
-    ) {
-      return
-    }
-
-    setHighlightedKey(undefined)
+  const navigation = useSelectNavigation({
+    highlightedKey,
+    isOpen,
+    setHighlightedKey,
+    visibleFlatOptions,
   })
 
   function setInputValue(inputValue: string): void {
     if (!menuControl.isDismissing()) {
       setCurrentInputText(inputValue)
     }
+
     merged.onSearch?.(inputValue)
   }
-
-  let context: BaseSelectT.Context<TItem>
 
   function selectOption(option: NormalizedOption<TItem>): void {
     if (option.disabled) {
@@ -377,120 +469,135 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
       field,
       setInputValue,
     })
+
     if (merged.closeOnSelect) {
       closeMenu()
       queueMicrotask(() => comboboxRef?.focus())
     }
   }
 
-  const inputHandlers = {
-    onInput: (event: InputEvent): void => {
-      if (!isSearchable()) {
-        return
-      }
+  const stateApi: BaseSelectT.StateApi<TItem> = {
+    allFlatOptions,
+    close: closeMenu,
+    field,
+    highlightedKey,
+    inputValue: currentInputText,
+    isOpen,
+    setInputValue,
+    visibleFlatOptions,
+  }
 
-      const nextValue = (event.currentTarget as HTMLInputElement).value
-      if (nextValue.trim() !== '') {
-        menuControl.openMenu()
-      }
-    },
-    onKeyDown: (event: KeyboardEvent): void => {
-      if (event.key === 'Escape' || (event.key === 'Tab' && isOpen())) {
-        menuControl.markDismissing()
-      }
+  function handleInput(event: InputEvent): void {
+    if (!isSearchable()) {
+      return
+    }
 
-      if (event.key === 'Tab') {
-        return
-      }
+    const nextValue = (event.currentTarget as HTMLInputElement).value
+    if (nextValue.trim() !== '') {
+      menuControl.openMenu()
+    }
+  }
 
-      if ((event.key === ' ' || event.key === 'Spacebar') && isOpen()) {
-        const focused =
-          highlightedKey() ?? visibleFlatOptions().find((option) => !option.disabled)?.key
-        const option = focused
-          ? visibleFlatOptions().find((item) => item.key === focused)
-          : undefined
-        event.preventDefault()
-        if (option && !option.disabled) {
-          selectOption(option)
-        }
-        return
-      }
+  function handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' || (event.key === 'Tab' && isOpen())) {
+      menuControl.markDismissing()
+    }
 
-      merged.onInputKeyDown?.(event, context)
-      if (event.defaultPrevented) {
-        return
-      }
+    if (event.key === 'Tab') {
+      return
+    }
 
-      if (event.key === 'ArrowDown') {
-        event.preventDefault()
-        if (!isOpen()) {
-          setMenuOpen(true)
-        }
-        focusItemByOffset(1)
-        return
-      }
+    merged.onInputKeyDown?.(event, stateApi)
+    if (event.defaultPrevented) {
+      return
+    }
 
-      if (event.key === 'ArrowUp') {
-        event.preventDefault()
-        if (!isOpen()) {
-          setMenuOpen(true)
-        }
-        focusItemByOffset(-1)
-        return
-      }
-
-      if (event.key === 'Home') {
-        event.preventDefault()
-        focusBoundaryItem('first')
-        return
-      }
-
-      if (event.key === 'End') {
-        event.preventDefault()
-        focusBoundaryItem('last')
-        return
-      }
-
-      if (event.key === 'Enter') {
-        if (!isOpen()) {
-          setMenuOpen(true)
-          return
-        }
-
-        const key = highlightedKey()
-        if (!key) {
-          return
-        }
-
-        const option = visibleFlatOptions().find((item) => item.key === key)
-        if (!option || option.disabled) {
-          return
-        }
-
-        event.preventDefault()
+    if ((event.key === ' ' || event.key === 'Spacebar') && isOpen()) {
+      const option = navigation.getFocusedOption()
+      event.preventDefault()
+      if (option && !option.disabled) {
         selectOption(option)
+      }
+      return
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      if (!isOpen()) {
+        setMenuOpen(true)
+      }
+      navigation.focusItemByOffset(1)
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      if (!isOpen()) {
+        setMenuOpen(true)
+      }
+      navigation.focusItemByOffset(-1)
+      return
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault()
+      navigation.focusBoundaryItem('first')
+      return
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault()
+      navigation.focusBoundaryItem('last')
+      return
+    }
+
+    if (event.key === 'Enter') {
+      if (!isOpen()) {
+        setMenuOpen(true)
         return
       }
 
-      if (event.key === 'Escape' && isOpen()) {
-        event.preventDefault()
-        closeMenu()
+      const option = navigation.getFocusedOption()
+      if (!option || option.disabled) {
+        return
       }
-    },
-    onFocus: (): void => field.emit('focus'),
-    onBlur: (): void => field.emit('blur'),
+
+      event.preventDefault()
+      selectOption(option)
+      return
+    }
+
+    if (event.key === 'Escape' && isOpen()) {
+      event.preventDefault()
+      closeMenu()
+    }
   }
 
   const activeDescendantId = createMemo(() =>
     highlightedKey() ? `${listboxId()}-${highlightedKey()}` : undefined,
   )
 
-  const controlComboboxProps = createMemo<JSX.HTMLAttributes<HTMLDivElement>>(() => {
+  const controlProps = createMemo<JSX.HTMLAttributes<HTMLDivElement>>(() => {
+    const sharedProps: JSX.HTMLAttributes<HTMLDivElement> = {
+      ref: (element: HTMLDivElement | undefined) => {
+        controlRef = element
+        if (!isSearchable()) {
+          comboboxRef = element
+        }
+      },
+      onPointerDown: (event: PointerEvent) => {
+        event.preventDefault()
+        comboboxRef?.focus()
+      },
+      onClick: menuControl.toggleMenu,
+    }
+
     if (isSearchable()) {
-      return {}
+      return sharedProps
     }
 
     return {
+      ...sharedProps,
       id: field.id(),
       role: 'combobox',
       'aria-controls': listboxId(),
@@ -499,53 +606,48 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
       'aria-activedescendant': activeDescendantId(),
       'aria-invalid': field.invalid() ? 'true' : undefined,
       tabIndex: field.disabled() ? undefined : 0,
-      onKeyDown: inputHandlers.onKeyDown,
-      onFocus: inputHandlers.onFocus,
-      onBlur: inputHandlers.onBlur,
+      onKeyDown: handleKeyDown,
+      onFocus: () => field.emit('focus'),
+      onBlur: () => field.emit('blur'),
       ...field.ariaAttrs(),
     }
   })
 
-  useOverlayMenuFloatingPosition({
+  const inputProps = createMemo<JSX.InputHTMLAttributes<HTMLInputElement>>(() => ({
+    ref: (element: HTMLInputElement | undefined) => {
+      if (element) {
+        comboboxRef = element
+      }
+    },
+    id: field.id(),
+    role: 'combobox',
+    'aria-controls': listboxId(),
+    'aria-expanded': isOpen() ? 'true' : 'false',
+    'aria-haspopup': 'listbox',
+    'aria-autocomplete': 'list',
+    'aria-activedescendant': activeDescendantId(),
+    disabled: field.disabled(),
+    required: merged.required,
+    'aria-invalid': field.invalid() ? 'true' : undefined,
+    maxLength: merged.searchMaxLength,
+    value: currentInputText(),
+    onInput: handleInput,
+    onKeyDown: handleKeyDown,
+    onFocus: () => field.emit('focus'),
+    onBlur: () => field.emit('blur'),
+    ...field.ariaAttrs(),
+  }))
+
+  useBaseSelectOverlay({
+    closeMenu,
     contentElement,
-    floatingElement: positionerElement,
-    getReferenceElement: () => controlRef,
+    contentPresence,
+    getControlElement: () => controlRef,
     gutter: () => merged.gutter ?? 0,
-    onPositionedChange: () => undefined,
-    onPlacementChange: () => undefined,
-    open: isOpen,
-    overflowPadding: () => merged.overflowPadding,
-    placement: () => 'bottom-start',
-  })
-
-  createEffect(() => {
-    if (!contentPresence.present()) {
-      contentPresence.setElement(undefined)
-    }
-  })
-
-  createEffect(() => {
-    const positioner = positionerElement()
-    const content = contentElement()
-    if (!positioner || !content) {
-      return
-    }
-
-    queueMicrotask(() => {
-      positioner.style.zIndex = getComputedStyle(content).zIndex
-    })
-  })
-
-  useOverlayMenuDismiss({
-    containsTarget: (node) => {
-      const positioner = positionerElement()
-      return Boolean(controlRef?.contains(node as Node) || positioner?.contains(node as Node))
-    },
-    onClose: () => {
-      menuControl.onContentInteractOutside()
-      closeMenu()
-    },
-    open: isOpen,
+    isOpen,
+    menuControl,
+    overflowPadding: () => merged.overflowPadding ?? 4,
+    positionerElement,
   })
 
   function handleListboxScroll(event: Event): void {
@@ -568,70 +670,29 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
     hasReachedScrollBottom = false
   }
 
-  context = {
-    activeDescendantId,
-    allFlatOptions,
-    close: closeMenu,
-    controlComboboxProps,
-    controlClick: menuControl.toggleMenu,
-    controlPointerDown: (event) => {
-      event.preventDefault()
-      comboboxRef?.focus()
-    },
-    field,
-    focusInput: () => comboboxRef?.focus(),
-    highlightedKey,
-    inputHandlers,
-    inputValue: currentInputText,
-    isOpen,
-    isSearchable,
-    listboxId,
-    open: () => setMenuOpen(true),
-    registerControl: (element) => {
-      controlRef = element
-      if (!isSearchable()) {
-        comboboxRef = element
-      }
-    },
-    registerInput: (element) => {
-      if (element) {
-        comboboxRef = element
-      }
-    },
-    setHighlightedKey,
-    setInputValue,
-    toggle: menuControl.toggleMenu,
-    visibleFlatOptions,
-    visibleOptions,
-  }
-
-  function renderOptionItem(
-    item: NormalizedOption<TItem>,
-    isSelected: boolean,
-    isHighlighted: boolean,
-    posinset?: number,
-    setsize?: number,
-  ): JSX.Element {
-    const raw = item.raw
+  function renderVisibleOption(option: NormalizedOption<TItem>): JSX.Element {
+    const isSelected = createMemo(() =>
+      (merged.selectedValues ?? []).map((value) => String(value)).includes(option.value),
+    )
 
     return (
       <div
-        id={`${listboxId()}-${item.key}`}
+        id={`${listboxId()}-${option.key}`}
         role="option"
         tabIndex={-1}
         data-slot="item"
-        data-disabled={item.disabled ? '' : undefined}
-        data-highlighted={isHighlighted ? '' : undefined}
-        aria-disabled={item.disabled || undefined}
-        aria-selected={isSelected ? 'true' : 'false'}
-        aria-posinset={posinset}
-        aria-setsize={setsize}
+        data-disabled={option.disabled ? '' : undefined}
+        data-highlighted={highlightedKey() === option.key ? '' : undefined}
+        aria-disabled={option.disabled || undefined}
+        aria-selected={isSelected() ? 'true' : 'false'}
+        aria-posinset={virtualizedPositions()?.get(option.key)}
+        aria-setsize={merged.virtualized ? visibleFlatOptions().length : undefined}
         style={props.styles?.item}
-        onClick={() => selectOption(item)}
+        onClick={() => selectOption(option)}
         onPointerDown={(event) => event.preventDefault()}
         onPointerMove={() => {
-          if (!item.disabled) {
-            setHighlightedKey(item.key)
+          if (!option.disabled) {
+            setHighlightedKey(option.key)
           }
         }}
         class={selectItemVariants(
@@ -642,56 +703,36 @@ function createBaseSelect<TItem extends BaseSelectT.Item>(props: BaseSelectProps
         )}
       >
         {props.optionRender({
-          ...raw,
-          isSelected,
-          isHighlighted,
-          isDisabled: item.disabled,
+          ...option.raw,
+          isSelected: isSelected(),
+          isHighlighted: highlightedKey() === option.key,
+          isDisabled: option.disabled,
         })}
       </div>
     )
   }
 
-  function renderEmptyNode(): JSX.Element {
-    return props.emptyRender?.(context) ?? props.optionRender(null)
-  }
-
-  return {
-    context,
-    contentElement,
-    contentPresence,
-    handleListboxScroll,
-    highlightedKey,
-    listboxId,
-    merged,
-    positionerElement,
-    renderEmptyNode,
-    renderOptionItem,
-    selectedValueSet,
-    setContentElement,
-    setPositionerElement,
-    visibleFlatOptions,
-    visibleOptions,
-  }
-}
-
-/** Shared select foundation used by Select and MultiSelect wrappers. */
-export function BaseSelect<TItem extends BaseSelectT.Item>(
-  props: BaseSelectProps<TItem>,
-): JSX.Element {
-  const select = createBaseSelect(props)
-
   return (
     <div
-      style={select.merged.styles?.root}
-      class={cn('inline-flex h-fit w-full relative', select.merged.classes?.root)}
+      style={merged.styles?.root}
+      class={cn('inline-flex h-fit w-full relative', merged.classes?.root)}
     >
-      {props.children(select.context)}
+      {props.children({
+        ...stateApi,
+        controlProps,
+        focusInput: () => comboboxRef?.focus(),
+        inputProps,
+        isSearchable,
+        onInput: handleInput,
+        onKeyDown: handleKeyDown,
+        toggle: menuControl.toggleMenu,
+      })}
 
-      <Show when={select.contentPresence.present()}>
+      <Show when={contentPresence.present()}>
         <Portal>
           <div
             ref={(element) => {
-              select.setPositionerElement(element)
+              setPositionerElement(element)
               if (element) {
                 element.style.position = 'fixed'
                 element.style.visibility = 'hidden'
@@ -701,53 +742,39 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
             class="left-0 top-0 fixed"
           >
             <div
-              {...select.contentPresence.dataAttrs()}
+              {...contentPresence.dataAttrs()}
               ref={(element) => {
-                select.setContentElement(element)
-                select.contentPresence.setElement(element)
+                setContentElement(element)
+                contentPresence.setElement(element)
               }}
               data-slot="content"
-              style={select.merged.styles?.content}
+              style={merged.styles?.content}
               class={overlayMenuContentVariants(
                 { side: 'bottom' },
                 'w-$mo-popper-anchor-width min-w-$mo-popper-anchor-width max-w-$mo-popper-content-available-width',
-                select.merged.classes?.content,
+                merged.classes?.content,
               )}
             >
               <div
-                id={select.listboxId()}
+                id={listboxId()}
                 role="listbox"
                 data-slot="listbox"
-                style={select.merged.styles?.listbox}
+                style={merged.styles?.listbox}
                 class={cn(
                   'outline-none max-h-$mo-popper-content-available-height overflow-y-auto',
-                  select.merged.classes?.listbox,
+                  merged.classes?.listbox,
                 )}
-                onScroll={select.handleListboxScroll}
+                onScroll={handleListboxScroll}
               >
                 <Show
-                  when={select.visibleFlatOptions().length > 0}
-                  fallback={select.renderEmptyNode()}
+                  when={visibleFlatOptions().length > 0}
+                  fallback={props.emptyRender?.(stateApi) ?? props.optionRender(null)}
                 >
-                  <For each={select.visibleOptions()}>
+                  <For each={visibleOptions()}>
                     {(item) => (
                       <Show
                         when={item.isGroup}
-                        fallback={select.renderOptionItem(
-                          item as NormalizedOption<TItem>,
-                          select.selectedValueSet().has((item as NormalizedOption<TItem>).value),
-                          select.highlightedKey() === (item as NormalizedOption<TItem>).key,
-                          select.merged.virtualized
-                            ? select
-                                .visibleFlatOptions()
-                                .findIndex(
-                                  (option) => option.key === (item as NormalizedOption<TItem>).key,
-                                ) + 1
-                            : undefined,
-                          select.merged.virtualized
-                            ? select.visibleFlatOptions().length
-                            : undefined,
-                        )}
+                        fallback={renderVisibleOption(item as NormalizedOption<TItem>)}
                       >
                         <div>
                           <div
@@ -768,21 +795,7 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
                             </span>
                           </div>
                           <For each={(item as NormalizedGroup<TItem>).options}>
-                            {(option) =>
-                              select.renderOptionItem(
-                                option,
-                                select.selectedValueSet().has(option.value),
-                                select.highlightedKey() === option.key,
-                                select.merged.virtualized
-                                  ? select
-                                      .visibleFlatOptions()
-                                      .findIndex((entry) => entry.key === option.key) + 1
-                                  : undefined,
-                                select.merged.virtualized
-                                  ? select.visibleFlatOptions().length
-                                  : undefined,
-                              )
-                            }
+                            {(option) => renderVisibleOption(option)}
                           </For>
                         </div>
                       </Show>

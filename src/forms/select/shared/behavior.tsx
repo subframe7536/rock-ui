@@ -163,11 +163,32 @@ export function flattenOptions<TItems>(
   return result
 }
 
-export function createFindOptionByValue<TItems>(
-  allFlatOptions: () => NormalizedOption<TItems>[],
-): (val: string | number) => NormalizedOption<TItems> | undefined {
-  return (val: string | number): NormalizedOption<TItems> | undefined =>
-    allFlatOptions().find((option) => option.value === String(val))
+export function findNormalizedOptionByValue<TItems>(
+  options: NormalizedOption<TItems>[],
+  value: string | number | null | undefined,
+): NormalizedOption<TItems> | undefined {
+  if (value === null || value === undefined) {
+    return undefined
+  }
+
+  const normalizedValue = String(value)
+  return options.find((option) => option.value === normalizedValue)
+}
+
+export function findNormalizedOptionByText<TItems>(
+  options: NormalizedOption<TItems>[],
+  value: string,
+): NormalizedOption<TItems> | undefined {
+  const normalizedValue = value.trim().toLowerCase()
+  if (!normalizedValue) {
+    return undefined
+  }
+
+  return options.find(
+    (option) =>
+      option.key.toLowerCase() === normalizedValue ||
+      option.value.toLowerCase() === normalizedValue,
+  )
 }
 
 export function emitSelectValueChange<TValue>(

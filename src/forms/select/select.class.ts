@@ -11,24 +11,17 @@ export const selectControlVariants = cva(
     },
     variants: {
       variant: INPUT_VARIANT,
-      // size: {
-      //   xs: 'pe-1',
-      //   sm: 'pe-1.5',
-      //   md: 'pe-2',
-      //   lg: 'pe-2.5',
-      //   xl: 'pe-3',
-      // },
       search: {
         true: 'cursor-text focus-within:effect-fv-border focus-within:data-invalid:effect-invalid',
         false:
-          'cursor-pointer focus-visible:effect-fv-border hover:bg-muted/40 focus-visible:data-invalid:effect-invalid',
+          'cursor-pointer focus-visible:effect-fv-border focus-visible:data-invalid:effect-invalid',
       },
     },
   },
 )
 
 export const selectInputVariants = cva(
-  'style-placeholder outline-none bg-transparent flex-1 w-full disabled:effect-dis',
+  'outline-none bg-transparent flex-1 w-full disabled:effect-dis',
   {
     defaultVariants: {
       mode: 'single',
@@ -37,7 +30,7 @@ export const selectInputVariants = cva(
     variants: {
       mode: {
         single: 'mx-$s-p p-1.5',
-        multiSearch: 'leading-$s-m ps-$s-p min-w-12',
+        multi: 'leading-$s-m ps-$s-p min-w-12',
       },
       size: {
         xs: 'text-xs var-select-0.5',
