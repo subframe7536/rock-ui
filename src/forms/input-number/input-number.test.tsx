@@ -807,4 +807,216 @@ describe('InputNumber', () => {
       expect(screen.getByText('Count must equal one')).not.toBeNull()
     })
   })
+
+  describe('partial input support', () => {
+    test('allows typing minus sign without committing', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '-' } })
+
+      expect(spinbutton.value).toBe('-')
+      expect(onRawValueChange).not.toHaveBeenCalled()
+    })
+
+    test('allows typing decimal point without committing', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '.' } })
+
+      expect(spinbutton.value).toBe('.')
+      expect(onRawValueChange).not.toHaveBeenCalled()
+    })
+
+    test('allows typing minus and decimal point without committing', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '-.' } })
+
+      expect(spinbutton.value).toBe('-.')
+      expect(onRawValueChange).not.toHaveBeenCalled()
+    })
+
+    test('allows typing number with trailing decimal point', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '12.' } })
+
+      expect(spinbutton.value).toBe('12.')
+      expect(onRawValueChange).not.toHaveBeenCalled()
+    })
+
+    test('commits complete decimal number', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '12.5' } })
+
+      expect(spinbutton.value).toBe('12.5')
+      expect(onRawValueChange).toHaveBeenCalledWith(12.5)
+    })
+
+    test('commits negative number', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '-42' } })
+
+      expect(spinbutton.value).toBe('-42')
+      expect(onRawValueChange).toHaveBeenCalledWith(-42)
+    })
+
+    test('formats value on blur after partial input', async () => {
+      const screen = render(() => <InputNumber defaultValue={5} />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '-' } })
+      expect(spinbutton.value).toBe('-')
+
+      await fireEvent.blur(spinbutton)
+      expect(spinbutton.value).toBe('5')
+    })
+
+    test('completes partial decimal on blur', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '7.' } })
+      expect(spinbutton.value).toBe('7.')
+
+      await fireEvent.blur(spinbutton)
+      expect(spinbutton.value).toBe('7')
+      expect(onRawValueChange).toHaveBeenCalledWith(7)
+    })
+  })
+
+  describe('locale-aware parsing', () => {
+    test('parses comma as decimal separator in de-DE locale', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} locale="de-DE" onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '12,5' } })
+
+      expect(onRawValueChange).toHaveBeenCalledWith(12.5)
+    })
+
+    test('allows typing comma as partial input in de-DE locale', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} locale="de-DE" onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: ',' } })
+
+      expect(spinbutton.value).toBe(',')
+      expect(onRawValueChange).not.toHaveBeenCalled()
+    })
+
+    test('allows typing number with trailing comma in de-DE locale', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} locale="de-DE" onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '12,' } })
+
+      expect(spinbutton.value).toBe('12,')
+      expect(onRawValueChange).not.toHaveBeenCalled()
+    })
+
+    test('formats numbers with comma in de-DE locale', async () => {
+      const screen = render(() => <InputNumber defaultValue={12.5} locale="de-DE" />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      expect(spinbutton.value).toBe('12,5')
+    })
+
+    test('parses dot as decimal separator in en-US locale', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} locale="en-US" onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '12.5' } })
+
+      expect(onRawValueChange).toHaveBeenCalledWith(12.5)
+    })
+
+    test('formats numbers with dot in en-US locale', async () => {
+      const screen = render(() => <InputNumber defaultValue={12.5} locale="en-US" />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      expect(spinbutton.value).toBe('12.5')
+    })
+
+    test('handles fr-FR locale with comma separator', async () => {
+      const onRawValueChange = vi.fn()
+      const screen = render(() => (
+        <InputNumber defaultValue={5} locale="fr-FR" onRawValueChange={onRawValueChange} />
+      ))
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+
+      spinbutton.focus()
+      await fireEvent.input(spinbutton, { target: { value: '99,99' } })
+
+      expect(onRawValueChange).toHaveBeenCalledWith(99.99)
+    })
+
+    test('increments and decrements preserve locale formatting', async () => {
+      const screen = render(() => <InputNumber defaultValue={10.5} locale="de-DE" />)
+      const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement
+      const incrementButton = screen.getByRole('button', { name: 'Increment' })
+      const decrementButton = screen.getByRole('button', { name: 'Decrement' })
+
+      expect(spinbutton.value).toBe('10,5')
+
+      await fireEvent.click(incrementButton)
+      expect(spinbutton.value).toBe('11,5')
+
+      await fireEvent.click(decrementButton)
+      expect(spinbutton.value).toBe('10,5')
+    })
+  })
 })
