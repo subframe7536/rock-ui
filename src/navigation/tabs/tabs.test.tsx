@@ -262,4 +262,36 @@ describe('Tabs', () => {
     expect(trigger?.style.width).toBe('200px')
     expect(content?.style.width).toBe('200px')
   })
+
+  test('supports RTL horizontal navigation', async () => {
+    const screen = render(() => (
+      <div dir="rtl">
+        <Tabs
+          items={[
+            { label: 'One', value: 'one', content: 'Panel one' },
+            { label: 'Two', value: 'two', content: 'Panel two' },
+            { label: 'Three', value: 'three', content: 'Panel three' },
+          ]}
+          defaultValue="two"
+        />
+      </div>
+    ))
+
+    const two = screen.getByRole('tab', { name: 'Two' })
+    const one = screen.getByRole('tab', { name: 'One' })
+    const three = screen.getByRole('tab', { name: 'Three' })
+
+    two.focus()
+
+    // In RTL, ArrowLeft moves forward (to the next item)
+    await fireEvent.keyDown(two, { key: 'ArrowLeft' })
+    expect(three.getAttribute('aria-selected')).toBe('true')
+
+    // In RTL, ArrowRight moves backward (to the previous item)
+    await fireEvent.keyDown(three, { key: 'ArrowRight' })
+    expect(two.getAttribute('aria-selected')).toBe('true')
+
+    await fireEvent.keyDown(two, { key: 'ArrowRight' })
+    expect(one.getAttribute('aria-selected')).toBe('true')
+  })
 })

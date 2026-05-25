@@ -3,16 +3,117 @@ import type { Accessor } from 'solid-js'
 type ActivationMode = 'automatic' | 'manual'
 type Orientation = 'horizontal' | 'vertical'
 
+/**
+ * Options for the selectable collection navigation hook.
+ *
+ * @template TItem - The type of items in the collection
+ * @template TValue - The type of the value identifier (must extend string)
+ */
 export interface UseSelectableCollectionNavigationOptions<TItem, TValue extends string> {
+  /** Accessor returning the array of items in the collection */
   items: Accessor<TItem[]>
+  /** Function to extract the unique value identifier from an item */
   getValue: (item: TItem) => TValue
+  /** Optional function to determine if an item is disabled */
   isDisabled?: (item: TItem) => boolean
+  /** Whether arrow-key navigation wraps from the ends (default: false) */
   loop?: Accessor<boolean>
+  /**
+   * Activation mode for keyboard navigation:
+   * - 'automatic': Arrow keys immediately select the item
+   * - 'manual': Arrow keys only focus, Enter/Space activates
+   * @default 'automatic'
+   */
   activationMode?: Accessor<ActivationMode>
+  /** Optional callback to focus an item by its value */
   focusValue?: (value: TValue) => void
+  /** Callback when an item is selected */
   onSelect: (value: TValue) => void
+  /**
+   * Optional callback for handling keys not covered by standard navigation.
+   * Return true to prevent default navigation behavior.
+   * Useful for implementing typeahead search or custom key handlers.
+   *
+   * @example
+   * ```ts
+   * // Typeahead search implementation
+   * let searchBuffer = ''
+   * const onKeyDown = (event: KeyboardEvent, currentValue: string) => {
+   *   if (event.key.length === 1 && /[a-z]/i.test(event.key)) {
+   *     searchBuffer += event.key.toLowerCase()
+   *     const match = items().find(item =>
+   *       getValue(item).toLowerCase().startsWith(searchBuffer)
+   *     )
+   *     if (match) onSelect(getValue(match))
+   *     setTimeout(() => searchBuffer = '', 500)
+   *     return true // Prevent default navigation
+   *   }
+   *   return false // Allow default navigation
+   * }
+   * ```
+   */
+  onKeyDown?: (event: KeyboardEvent, currentValue: TValue) => boolean | void
+  /**
+   * Optional function to detect RTL direction.
+   * If not provided, direction is detected from the event target's computed style.
+   *
+   * @example
+   * ```ts
+   * // Explicit direction control
+   * getDirection: () => document.dir === 'rtl' ? 'rtl' : 'ltr'
+   * ```
+   */
+  getDirection?: () => 'ltr' | 'rtl'
 }
 
+/**
+ * Hook for keyboard navigation in selectable collections.
+ *
+ * Provides orientation-aware, RTL-compatible keyboard navigation for components
+ * like Tabs, Select, Accordion, and RadioGroup. Handles arrow keys, Home/End,
+ * Enter/Space, and supports both automatic and manual activation modes.
+ *
+ * @template TItem - The type of items in the collection
+ * @template TValue - The type of the value identifier (must extend string)
+ *
+ * @param options - Configuration options for the navigation behavior
+ * @returns Object with navigation methods
+ *
+ * @example
+ * ```tsx
+ * const { onNavigationKeyDown } = useSelectableCollectionNavigation({
+ *   items: () => tabs,
+ *   getValue: (tab) => tab.id,
+ *   isDisabled: (tab) => tab.disabled,
+ *   loop: () => true,
+ *   activationMode: () => 'automatic',
+ *   focusValue: (id) => tabRefs.get(id)?.focus(),
+ *   onSelect: (id) => setSelectedTab(id),
+ * })
+ *
+ * <button
+ *   onKeyDown={(e) => onNavigationKeyDown(e, tab.id, 'horizontal')}
+ * >
+ *   {tab.label}
+ * </button>
+ * ```
+ *
+ * Keyboard behavior:
+ * - Vertical orientation: ArrowUp/ArrowDown navigate
+ * - Horizontal orientation: ArrowLeft/ArrowRight navigate (flipped in RTL)
+ * - Home: Jump to first enabled item
+ * - End: Jump to last enabled item
+ * - Enter/Space: Activate current item (always, regardless of activation mode)
+ *
+ * RTL support:
+ * In horizontal orientation with RTL direction:
+ * - ArrowLeft moves forward (next item)
+ * - ArrowRight moves backward (previous item)
+ *
+ * Activation modes:
+ * - Automatic: Arrow keys immediately select and focus
+ * - Manual: Arrow keys only focus, Enter/Space required to select
+ */
 export function useSelectableCollectionNavigation<TItem, TValue extends string>(
   options: UseSelectableCollectionNavigationOptions<TItem, TValue>,
 ) {
@@ -73,9 +174,29 @@ export function useSelectableCollectionNavigation<TItem, TValue extends string>(
     currentValue: TValue,
     orientation: Orientation,
   ): void {
-    const nextKey = orientation === 'vertical' ? 'ArrowDown' : 'ArrowRight'
-    const previousKey = orientation === 'vertical' ? 'ArrowUp' : 'ArrowLeft'
     const normalizedKey = event.key === 'Spacebar' ? ' ' : event.key
+
+    // Allow custom key handling to intercept before standard navigation
+    if (options.onKeyDown?.(event, currentValue)) {
+      return
+    }
+
+    // Detect text direction for RTL-aware horizontal navigation
+    const direction = options.getDirection?.() ?? getComputedDirection(event.target as Element)
+    const isRtl = direction === 'rtl'
+
+    // Determine next/previous keys based on orientation and direction
+    let nextKey: string
+    let previousKey: string
+
+    if (orientation === 'vertical') {
+      nextKey = 'ArrowDown'
+      previousKey = 'ArrowUp'
+    } else {
+      // Horizontal: flip arrow keys for RTL
+      nextKey = isRtl ? 'ArrowLeft' : 'ArrowRight'
+      previousKey = isRtl ? 'ArrowRight' : 'ArrowLeft'
+    }
 
     if (normalizedKey === nextKey) {
       event.preventDefault()
@@ -111,4 +232,19 @@ export function useSelectableCollectionNavigation<TItem, TValue extends string>(
     moveSelection,
     onNavigationKeyDown,
   }
+}
+
+/**
+ * Detects the computed text direction of an element.
+ * Falls back to 'ltr' if detection fails.
+ */
+function getComputedDirection(element: Element | null): 'ltr' | 'rtl' {
+  if (!element) {
+    return 'ltr'
+  }
+
+  const computed = window.getComputedStyle(element)
+  const direction = computed.direction
+
+  return direction === 'rtl' ? 'rtl' : 'ltr'
 }
