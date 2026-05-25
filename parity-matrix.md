@@ -40,73 +40,73 @@ themselves are not deliverables of this sweep.
 ### `src/elements`
 
 | Moraine target | base-ui reference | kobalte reference |
-| --- | --- | --- |
-| `accordion` | `accordion` | `accordion` |
-| `avatar` | `avatar` | `image` |
-| `badge` | — | `badge` |
-| `button` | `button` | `button` |
-| `card` | — | — |
-| `collapsible` | `collapsible` | `collapsible` |
-| `icon` | — | — |
-| `kbd` | — | — |
-| `progress` | `progress` | `progress` |
-| `resizable` | — | — |
-| `separator` | `separator` | `separator` |
+| -------------- | ----------------- | ----------------- |
+| `accordion`    | `accordion`       | `accordion`       |
+| `avatar`       | `avatar`          | `image`           |
+| `badge`        | —                 | `badge`           |
+| `button`       | `button`          | `button`          |
+| `card`         | —                 | —                 |
+| `collapsible`  | `collapsible`     | `collapsible`     |
+| `icon`         | —                 | —                 |
+| `kbd`          | —                 | —                 |
+| `progress`     | `progress`        | `progress`        |
+| `resizable`    | —                 | —                 |
+| `separator`    | `separator`       | `separator`       |
 
 ### `src/forms`
 
-| Moraine target | base-ui reference | kobalte reference |
-| --- | --- | --- |
-| `checkbox` | `checkbox` | `checkbox` |
-| `checkbox-group` | `checkbox-group` | `checkbox` (group via `form-control`) |
-| `file-upload` | — | `file-field` |
-| `form` | `form` | `form-control` |
-| `form-field` | `field`, `fieldset` | `form-control` |
-| `input` | `input` | `text-field` |
-| `input-number` | `number-field` | `number-field`, `spin-button` |
-| `radio-group` | `radio`, `radio-group` | `radio-group` |
-| `select` (incl. `base-select`, `multi-select`, `shared/behavior`) | `select` | `select`, `listbox` |
-| `slider` | `slider` | `slider` |
-| `switch` | `switch` | `switch` |
-| `textarea` | `input` (semantics) | `text-field` |
+| Moraine target                                                    | base-ui reference      | kobalte reference                     |
+| ----------------------------------------------------------------- | ---------------------- | ------------------------------------- |
+| `checkbox`                                                        | `checkbox`             | `checkbox`                            |
+| `checkbox-group`                                                  | `checkbox-group`       | `checkbox` (group via `form-control`) |
+| `file-upload`                                                     | —                      | `file-field`                          |
+| `form`                                                            | `form`                 | `form-control`                        |
+| `form-field`                                                      | `field`, `fieldset`    | `form-control`                        |
+| `input`                                                           | `input`                | `text-field`                          |
+| `input-number`                                                    | `number-field`         | `number-field`, `spin-button`         |
+| `radio-group`                                                     | `radio`, `radio-group` | `radio-group`                         |
+| `select` (incl. `base-select`, `multi-select`, `shared/behavior`) | `select`               | `select`, `listbox`                   |
+| `slider`                                                          | `slider`               | `slider`                              |
+| `switch`                                                          | `switch`               | `switch`                              |
+| `textarea`                                                        | `input` (semantics)    | `text-field`                          |
 
 ### `src/navigation`
 
-| Moraine target | base-ui reference | kobalte reference |
-| --- | --- | --- |
-| `breadcrumb` | — | `breadcrumbs` |
+| Moraine target    | base-ui reference                        | kobalte reference                                  |
+| ----------------- | ---------------------------------------- | -------------------------------------------------- |
+| `breadcrumb`      | —                                        | `breadcrumbs`                                      |
 | `command-palette` | `menu` (typeahead/listbox patterns only) | `listbox`, `search` (listbox/search patterns only) |
-| `pagination` | — | `pagination` |
-| `sidebar-frame` | — | — |
-| `stepper` | — | — |
-| `tabs` | `tabs` | `tabs` |
+| `pagination`      | —                                        | `pagination`                                       |
+| `sidebar-frame`   | —                                        | —                                                  |
+| `stepper`         | —                                        | —                                                  |
+| `tabs`            | `tabs`                                   | `tabs`                                             |
 
 ### `src/overlays`
 
-| Moraine target | base-ui reference | kobalte reference |
-| --- | --- | --- |
-| `base/modal.tsx` | `dialog`, `utils/InternalBackdrop`, `utils/useAnchoredPopupScrollLock`, `utils/useSwipeDismiss` | `dialog`, `dismissable-layer`, `primitives/create-focus-scope`, `primitives/create-hide-outside`, `primitives/create-interact-outside`, `primitives/create-escape-key-down` |
-| `base/popper.tsx` | `floating-ui-react`, `utils/useAnchorPositioning`, `utils/usePositioner` | `popper` |
-| `base/menu` | `menu` | `menu` |
-| `context-menu` | `context-menu` | `context-menu` |
-| `dialog` | `dialog`, `alert-dialog` | `dialog`, `alert-dialog` |
-| `dropdown-menu` | `menu` | `dropdown-menu`, `menu` |
-| `popover` | `popover` | `popover` |
-| `popup` | `floating-ui-react`, `utils/usePositioner` | `popper`, `dismissable-layer` |
-| `sheet` | `drawer` | `dialog` (no direct sheet; reuse dialog dismissal) |
-| `tooltip` | `tooltip` | `tooltip` |
+| Moraine target    | base-ui reference                                                                               | kobalte reference                                                                                                                                                           |
+| ----------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `base/modal.tsx`  | `dialog`, `utils/InternalBackdrop`, `utils/useAnchoredPopupScrollLock`, `utils/useSwipeDismiss` | `dialog`, `dismissable-layer`, `primitives/create-focus-scope`, `primitives/create-hide-outside`, `primitives/create-interact-outside`, `primitives/create-escape-key-down` |
+| `base/popper.tsx` | `floating-ui-react`, `utils/useAnchorPositioning`, `utils/usePositioner`                        | `popper`                                                                                                                                                                    |
+| `base/menu`       | `menu`                                                                                          | `menu`                                                                                                                                                                      |
+| `context-menu`    | `context-menu`                                                                                  | `context-menu`                                                                                                                                                              |
+| `dialog`          | `dialog`, `alert-dialog`                                                                        | `dialog`, `alert-dialog`                                                                                                                                                    |
+| `dropdown-menu`   | `menu`                                                                                          | `dropdown-menu`, `menu`                                                                                                                                                     |
+| `popover`         | `popover`                                                                                       | `popover`                                                                                                                                                                   |
+| `popup`           | `floating-ui-react`, `utils/usePositioner`                                                      | `popper`, `dismissable-layer`                                                                                                                                               |
+| `sheet`           | `drawer`                                                                                        | `dialog` (no direct sheet; reuse dialog dismissal)                                                                                                                          |
+| `tooltip`         | `tooltip`                                                                                       | `tooltip`                                                                                                                                                                   |
 
 ### `src/shared` (hooks)
 
-| Moraine hook | base-ui reference | kobalte reference |
-| --- | --- | --- |
-| `use-controllable-value` | (internal `useControlled` patterns across components) | `primitives/create-controllable-signal` |
-| `use-disclosure-state` | (internal open-state mappings, `utils/collapsibleOpenStateMapping`, `utils/popupStateMapping`) | `primitives/create-disclosure-state`, `primitives/create-toggle-state` |
-| `use-event-listener` | (component-local listeners) | (component-local listeners) |
-| `use-loading-auto` | — | — |
-| `use-media-query` | `unstable-use-media-query` | (i18n locale primitives only) |
-| `use-selectable-collection-navigation` | `menu`, `select`, `tabs`, `toolbar` (per-component nav) | `primitives/create-collection`, `primitives/create-dom-collection`, `selection`, `list` |
-| `use-transition-presence` | `utils/getDisabledMountTransitionStyles`, `utils/styles.tsx` | `primitives/create-transition` |
+| Moraine hook                           | base-ui reference                                                                              | kobalte reference                                                                       |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `use-controllable-value`               | (internal `useControlled` patterns across components)                                          | `primitives/create-controllable-signal`                                                 |
+| `use-disclosure-state`                 | (internal open-state mappings, `utils/collapsibleOpenStateMapping`, `utils/popupStateMapping`) | `primitives/create-disclosure-state`, `primitives/create-toggle-state`                  |
+| `use-event-listener`                   | (component-local listeners)                                                                    | (component-local listeners)                                                             |
+| `use-loading-auto`                     | —                                                                                              | —                                                                                       |
+| `use-media-query`                      | `unstable-use-media-query`                                                                     | (i18n locale primitives only)                                                           |
+| `use-selectable-collection-navigation` | `menu`, `select`, `tabs`, `toolbar` (per-component nav)                                        | `primitives/create-collection`, `primitives/create-dom-collection`, `selection`, `list` |
+| `use-transition-presence`              | `utils/getDisabledMountTransitionStyles`, `utils/styles.tsx`                                   | `primitives/create-transition`                                                          |
 
 ### Acceptance
 

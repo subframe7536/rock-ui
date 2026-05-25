@@ -15,7 +15,7 @@ export function Variants() {
   const VARIANTS = ['outline', 'subtle', 'ghost', 'none'] as const
 
   return (
-    <div class="w-80 gap-3 grid sm:grid-cols-2">
+    <div class="gap-3 grid w-80 sm:grid-cols-2">
       <For each={VARIANTS}>
         {(variant) => <Select options={FRUIT_OPTIONS} variant={variant} placeholder={variant} />}
       </For>

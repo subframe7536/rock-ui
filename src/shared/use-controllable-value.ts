@@ -25,7 +25,7 @@ export function useControllableValue<T>(options: UseControllableValueOptions<T>)
     return untrack(() => options.defaultValue?.())
   })
 
-  function setValue(nextValue: T): void {
+  function setValue(nextValue: T | undefined): void {
     if (options.value() !== undefined) {
       return
     }

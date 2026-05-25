@@ -15,7 +15,7 @@ export function Sizes() {
   const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 
   return (
-    <div class="w-[42rem] gap-3 grid md:grid-cols-5 sm:grid-cols-3">
+    <div class="gap-3 grid w-[42rem] md:grid-cols-5 sm:grid-cols-3">
       <For each={SIZES}>
         {(size) => <Select options={FRUIT_OPTIONS} size={size} placeholder={`Size: ${size}`} />}
       </For>

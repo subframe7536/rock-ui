@@ -12,7 +12,7 @@ export function MaxCountMaxTagCount() {
   ]
 
   return (
-    <div class="w-[42rem] gap-4 grid sm:grid-cols-2">
+    <div class="gap-4 grid w-[42rem] sm:grid-cols-2">
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground block">maxCount=2</label>
         <MultiSelect options={FRUIT_OPTIONS} maxCount={2} placeholder="Pick up to 2..." />

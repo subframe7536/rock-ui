@@ -44,7 +44,7 @@ Emit exactly this structure, in this order. Use Markdown headings as shown. Do n
 ### Field rules
 
 - **Title** — lead with a verb (Align, Port, Harden, Add, Improve, Stabilize, Tune, Fix, Replace, Migrate). Wrap concrete identifiers (components, hooks, files, APIs) in backticks. Aim for ≤ 120 chars.
-- **Context** — explain *why*, not *what*. If the user gave no motivation, infer the most plausible one from the surrounding signal (parity reference, file under audit, bug report) — but don't fabricate incidents or stakeholders.
+- **Context** — explain _why_, not _what_. If the user gave no motivation, infer the most plausible one from the surrounding signal (parity reference, file under audit, bug report) — but don't fabricate incidents or stakeholders.
 - **Scope** — bullets. Each item is a concrete change or behavior, not a vague theme. If scope is one thing, one bullet is fine.
 - **Non-goals** — bullets. Include this section only if the input implies a boundary that's easy to overstep; otherwise omit the whole section (don't write "None").
 - **Success criteria** — bullets. Each criterion must be checkable: a passing test, an observable behavior, a measured property, a green CI step. Avoid "works correctly" / "is robust" — name the behavior.
