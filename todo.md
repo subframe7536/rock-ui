@@ -1,7 +1,7 @@
 ## Edge-case parity sweep
 
-- [ ] Freeze the parity audit scope and reference matrix
-	Scope this sweep to existing Moraine components and shared hooks under `src/elements`, `src/forms`, `src/navigation`, and `src/overlays`. Map each target to `base-ui` and `kobalte` references, and explicitly exclude new components that do not exist in Moraine yet, such as `ScrollArea`, `OTPField`, and `Combobox`.
+- [x] Freeze the parity audit scope and reference matrix
+	Scope this sweep to existing Moraine components and shared hooks under `src/elements`, `src/forms`, `src/navigation`, and `src/overlays`. Map each target to `base-ui` and `kobalte` references, and explicitly exclude new components that do not exist in Moraine yet, such as `ScrollArea`, `OTPField`, and `Combobox`. Canonical matrix: [`parity-matrix.md`](./parity-matrix.md).
 
 - [ ] Align `useControllableValue` with robust controlled/uncontrolled semantics
 	Add functional updater support, `Object.is` equality short-circuiting, and explicit controlled vs uncontrolled change semantics. Audit all current consumers before changing behavior, and add hook-level regression coverage so downstream components do not silently drift.
