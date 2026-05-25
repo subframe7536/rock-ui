@@ -1,5 +1,6 @@
 node_modules
 dist
+base-ui
 nuxt-ui
 zaidan
 kobalte

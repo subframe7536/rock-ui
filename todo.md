@@ -1,18 +1,43 @@
-# Todo
+## Edge-case parity sweep
 
-- [ ] Create a new `<BaseSelect>` component, the selection part should fully customizable via props, no preset. make `<Select>` and `<MultiSelect>` as the public wrapper.
-  - Port practical Kobalte Select Root options and relative logic to `<BaseSelect>`. reference: kobalte/apps/docs/src/routes/docs/core/components/select.mdx , kobalte/packages/core/src/select/
-  - Remove `openOnClick` prop and relative logic
-  - Refactor `<BaseSelect />`: inline one-usage components / functions, move them into the parent component to bypass jsx props transfer. Remove `emptyRender` prop and relative logic, the empty state should be handled by `optionRender` so the `api` / `context` is useless.
-  - `<Select>` JSX structure
-    - when not seachable: `<div data-slot="control"><span data-slot="select-value" /><Icon /></div>`
-    - when seachable: `<div data-slot="control"><input data-slot="select-value" /><Icon /></div>`. Nothing matched and dismissed will clear the input and show the placeholder again.
-    - drop `allowClear` prop, the `<Icon />` is just a placeholder for down arrow, so DO NOT use `<IconButton />`
-  - `<MultiSelect>` JSX structure
-    - when not seachable: `<div data-slot="control"><div data-slot="tagsContainer">...</div><span data-slot="placeholder" /><IconButton /></div>`. placeholder is only shown when no value is selected, once there is a value, it will be hidden by `<Show>`
-    - when seachable: `<div data-slot="control"><div data-slot="tagsContainer">...</div><input data-slot="input" /><IconButton /></div>`.
-    - when `allowClear` is `true`, the `<IconButton />` will act as a clear button when tags are selected and the icon name should be `x`. when not hovered, the icon name should be `chevron-down` and it will act as a dropdown toggle button. when `allowClear` is `false`, the `<IconButton />` will always be a dropdown toggle button with `chevron-down` icon.
-    - The `<IconButton />` should has full height of the control and be placed at the right end of the control.
+- [ ] Freeze the parity audit scope and reference matrix
+	Scope this sweep to existing Moraine components and shared hooks under `src/elements`, `src/forms`, `src/navigation`, and `src/overlays`. Map each target to `base-ui` and `kobalte` references, and explicitly exclude new components that do not exist in Moraine yet, such as `ScrollArea`, `OTPField`, and `Combobox`.
+
+- [ ] Align `useControllableValue` with robust controlled/uncontrolled semantics
+	Add functional updater support, `Object.is` equality short-circuiting, and explicit controlled vs uncontrolled change semantics. Audit all current consumers before changing behavior, and add hook-level regression coverage so downstream components do not silently drift.
+
+- [ ] Enhance `useSelectableCollectionNavigation` for keyboard and RTL compatibility
+	Port the missing collection-navigation edge cases: orientation-aware arrow handling, RTL-aware horizontal navigation, `Home`/`End`, manual vs automatic activation, and a stable extension point for typeahead behavior.
+
+- [ ] Port non-native button compatibility behavior into `Button`
+	Make polymorphic non-native buttons behave like accessible buttons: keyboard activation with `Enter` and `Space`, correct disabled/loading interaction blocking, and compatibility with anchor rendering without leaking button-only attributes. use `callHandler` to call event listeners in props and `onClick` options with the correct event type.
+
+- [ ] Harden `InputNumber` partial-input and locale parsing behavior
+	Support incomplete but valid in-progress input states such as `-`, `.`, and locale-specific separators without forcing premature commits. Bring parsing and formatting behavior closer to the number-field references, and add regression tests for partial input and localized separators.
+
+- [ ] Port missing `BaseSelect` compatibility and edge-case handlers
+	Fill the state-machine gaps in `src/forms/select/base-select.tsx` and `src/forms/select/shared/behavior.tsx`: typeahead, search input and highlighted-option synchronization, controlled value synchronization, disabled-option skipping, and hidden form value plus ARIA consistency.
+
+- [ ] Add `Slider` commit semantics and multi-thumb keyboard edge cases
+	Separate live value updates from committed value changes, and harden multi-thumb keyboard interactions including boundary movement and thumb selection behavior.
+
+- [ ] Bring `Tabs` navigation behavior up to parity
+	Use the improved collection-navigation behavior to support orientation-aware keys, RTL handling, `Home`/`End`, and correct manual activation where focus and selected state intentionally diverge.
+
+- [ ] Improve `Pagination` accessibility labels
+	Add clearer page-item labels such as current-page announcements and “go to page” labels so the component behaves more like the stronger reference implementations without changing the public API unnecessarily.
+
+- [ ] Stabilize overlay dismissal and focus handling in `Modal`
+	Move outside-interaction, focus trap, focus restoration, and nested overlay stacking behavior toward a reusable dismiss/focus model. Prioritize `pointerdown` outside handling, trigger-content competition, and reliable focus restoration after close.
+
+- [ ] Regress `Dialog`, `Popover`, and `DropdownMenu` against the improved overlay behavior
+	Once `Modal` is stable, validate and patch its consumers. Focus on dialog close/restore behavior, menu timing and typeahead expectations, and hover-gap or safe-polygon behavior only where the current API already supports hover-driven interaction.
+
+- [ ] Sweep remaining component-specific compatibility gaps
+	Use the shared-foundation changes to clean up remaining existing components that still have behavior mismatches, especially `Switch` focus-state handling, `Accordion` DOM collection and registration-based navigation, and any other direct consumers of the updated hooks.
+
+- [ ] Apply regression discipline for every phase
+	For each task above, add or extend the narrowest failing tests first, then implement the behavior, then rerun focused tests and `bun run typecheck`. After the whole sweep is complete, run `bun run qa` and do manual regression passes for keyboard navigation, RTL, pointer types, controlled/uncontrolled transitions, form submission values, and overlay focus restoration.
 
 # V1
 
