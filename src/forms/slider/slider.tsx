@@ -471,24 +471,14 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
     let nextIndex = index
 
     if (key === 'Home') {
-      direction = -1
-      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
-      if (nextIndex !== index) {
-        suppressNextBlurCommit = true
-        thumbRefs()[nextIndex]?.focus()
-      }
-      applyThumbValue(nextIndex, merged.min!)
+      const minValue = getThumbMinValue(interactionValues(), index)
+      applyThumbValue(index, minValue)
       return
     }
 
     if (key === 'End') {
-      direction = 1
-      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
-      if (nextIndex !== index) {
-        suppressNextBlurCommit = true
-        thumbRefs()[nextIndex]?.focus()
-      }
-      applyThumbValue(nextIndex, merged.max!)
+      const maxValue = getThumbMaxValue(interactionValues(), index)
+      applyThumbValue(index, maxValue)
       return
     }
 
@@ -537,18 +527,52 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
       direction = isLTR() ? -1 : 1
     }
 
-    nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
-    if (nextIndex !== index) {
-      suppressNextBlurCommit = true
-      thumbRefs()[nextIndex]?.focus()
-    }
+    const currentValue = interactionValues()[index] ?? merged.min!
+    const candidateValue = currentValue + direction * stepSize
+    const resultIndex = applyThumbValue(index, candidateValue)
 
-    const currentValue = interactionValues()[nextIndex] ?? merged.min!
-    applyThumbValue(nextIndex, currentValue + direction * stepSize)
+    if (resultIndex === undefined && !merged.allowThumbCrossing && interactionValues().length > 1) {
+      const adjacentIndex = direction > 0 ? index + 1 : index - 1
+      if (adjacentIndex >= 0 && adjacentIndex < interactionValues().length) {
+        suppressNextBlurCommit = true
+        thumbRefs()[adjacentIndex]?.focus()
+      }
+    }
   }
 
   function onThumbFocus(): void {
     field.emit('focus')
+  }
+
+  function onThumbKeyUp(event: KeyboardEvent): void {
+    if (isActionDisabled()) {
+      return
+    }
+
+    const key = event.key === 'Spacebar' ? ' ' : event.key
+    const isNavigationKey =
+      key === 'ArrowRight' ||
+      key === 'ArrowUp' ||
+      key === 'ArrowLeft' ||
+      key === 'ArrowDown' ||
+      key === 'Right' ||
+      key === 'Up' ||
+      key === 'Left' ||
+      key === 'Down' ||
+      key === 'Home' ||
+      key === 'End' ||
+      key === 'PageUp' ||
+      key === 'PageDown'
+
+    if (!isNavigationKey || !pendingValues) {
+      return
+    }
+
+    const publicValue = toPublicValue(pendingValues)
+    field.setFormValue(publicValue)
+    merged.onChange?.(publicValue)
+    field.emit('change')
+    pendingValues = undefined
   }
 
   function onThumbBlur(): void {
@@ -693,6 +717,7 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
             onKeyDown={(event) => {
               onThumbKeyDown(thumbIndex, event)
             }}
+            onKeyUp={onThumbKeyUp}
             onFocus={onThumbFocus}
             onBlur={onThumbBlur}
           >

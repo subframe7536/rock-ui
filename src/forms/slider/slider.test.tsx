@@ -696,4 +696,227 @@ describe('Slider', () => {
     expect(root?.style.width).toBe('200px')
     expect(thumb?.style.width).toBe('200px')
   })
+
+  describe('commit semantics', () => {
+    test('keyboard changes commit on keyup without requiring blur', async () => {
+      const onValueChange = vi.fn()
+      const onChange = vi.fn()
+      const screen = render(() => (
+        <Slider defaultValue={50} onValueChange={onValueChange} onChange={onChange} />
+      ))
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+      await fireEvent.focus(thumb)
+      await fireEvent.keyDown(thumb, { key: 'ArrowRight' })
+
+      expect(onValueChange).toHaveBeenLastCalledWith(51)
+      expect(onChange).not.toHaveBeenCalled()
+
+      await fireEvent.keyUp(thumb, { key: 'ArrowRight' })
+
+      expect(onChange).toHaveBeenLastCalledWith(51)
+      expect(onChange).toHaveBeenCalledTimes(1)
+    })
+
+    test('Home key commits on keyup', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => <Slider defaultValue={50} onChange={onChange} />)
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+      await fireEvent.focus(thumb)
+      await fireEvent.keyDown(thumb, { key: 'Home' })
+      expect(onChange).not.toHaveBeenCalled()
+
+      await fireEvent.keyUp(thumb, { key: 'Home' })
+      expect(onChange).toHaveBeenLastCalledWith(0)
+    })
+
+    test('End key commits on keyup', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => <Slider defaultValue={50} onChange={onChange} />)
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+      await fireEvent.focus(thumb)
+      await fireEvent.keyDown(thumb, { key: 'End' })
+      expect(onChange).not.toHaveBeenCalled()
+
+      await fireEvent.keyUp(thumb, { key: 'End' })
+      expect(onChange).toHaveBeenLastCalledWith(100)
+    })
+
+    test('PageUp key commits on keyup', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => <Slider defaultValue={50} onChange={onChange} />)
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+      await fireEvent.focus(thumb)
+      await fireEvent.keyDown(thumb, { key: 'PageUp' })
+      expect(onChange).not.toHaveBeenCalled()
+
+      await fireEvent.keyUp(thumb, { key: 'PageUp' })
+      expect(onChange).toHaveBeenCalledWith(60)
+    })
+
+    test('multiple keydown events only commit once on final keyup', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => <Slider defaultValue={50} onChange={onChange} />)
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+      await fireEvent.focus(thumb)
+      await fireEvent.keyDown(thumb, { key: 'ArrowRight' })
+      await fireEvent.keyUp(thumb, { key: 'ArrowRight' })
+      await fireEvent.keyDown(thumb, { key: 'ArrowRight' })
+      await fireEvent.keyUp(thumb, { key: 'ArrowRight' })
+
+      expect(onChange).toHaveBeenCalledTimes(2)
+      expect(onChange).toHaveBeenNthCalledWith(1, 51)
+      expect(onChange).toHaveBeenNthCalledWith(2, 52)
+    })
+
+    test('blur still commits if keyup was missed', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => <Slider defaultValue={50} onChange={onChange} />)
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+
+      await fireEvent.focus(thumb)
+      await fireEvent.keyDown(thumb, { key: 'ArrowRight' })
+
+      await fireEvent.blur(thumb)
+
+      expect(onChange).toHaveBeenLastCalledWith(51)
+    })
+  })
+
+  describe('multi-thumb keyboard edge cases', () => {
+    test('Home moves current thumb to its minimum boundary, not global min', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => (
+        <Slider
+          defaultValue={[20, 80]}
+          minStepsBetweenThumbs={10}
+          allowThumbCrossing={false}
+          onChange={onChange}
+        />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      await fireEvent.focus(thumbs[1] as HTMLElement)
+      await fireEvent.keyDown(thumbs[1] as HTMLElement, { key: 'Home' })
+      await fireEvent.keyUp(thumbs[1] as HTMLElement, { key: 'Home' })
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenLastCalledWith([20, 30])
+      })
+    })
+
+    test('End moves current thumb to its maximum boundary, not global max', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => (
+        <Slider
+          defaultValue={[20, 80]}
+          minStepsBetweenThumbs={10}
+          allowThumbCrossing={false}
+          onChange={onChange}
+        />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      await fireEvent.focus(thumbs[0] as HTMLElement)
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'End' })
+      await fireEvent.keyUp(thumbs[0] as HTMLElement, { key: 'End' })
+
+      await waitFor(() => {
+        expect(onChange).toHaveBeenLastCalledWith([70, 80])
+      })
+    })
+
+    test('arrow key at boundary switches focus to adjacent thumb when blocked', async () => {
+      const onValueChange = vi.fn()
+      const screen = render(() => (
+        <Slider
+          defaultValue={[20, 50]}
+          minStepsBetweenThumbs={0}
+          allowThumbCrossing={false}
+          onValueChange={onValueChange}
+        />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      await fireEvent.focus(thumbs[0] as HTMLElement)
+
+      for (let i = 0; i < 30; i++) {
+        await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
+      }
+
+      expect(onValueChange).toHaveBeenLastCalledWith([50, 50])
+
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
+
+      expect(onValueChange).toHaveBeenLastCalledWith([50, 50])
+    })
+
+    test('arrow key switches to previous thumb when blocked going left', async () => {
+      const onValueChange = vi.fn()
+      const screen = render(() => (
+        <Slider defaultValue={[20, 50]} allowThumbCrossing={false} onValueChange={onValueChange} />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      await fireEvent.focus(thumbs[1] as HTMLElement)
+
+      for (let i = 0; i < 30; i++) {
+        await fireEvent.keyDown(thumbs[1] as HTMLElement, { key: 'ArrowLeft' })
+      }
+
+      expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('20')
+
+      await fireEvent.keyDown(thumbs[1] as HTMLElement, { key: 'ArrowLeft' })
+
+      expect(onValueChange).toHaveBeenLastCalledWith([20, 20])
+    })
+
+    test('arrow key does not switch thumb when allowThumbCrossing is true', async () => {
+      const onValueChange = vi.fn()
+      const screen = render(() => (
+        <Slider defaultValue={[20, 50]} allowThumbCrossing={true} onValueChange={onValueChange} />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      await fireEvent.focus(thumbs[0] as HTMLElement)
+
+      for (let i = 0; i < 35; i++) {
+        await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
+      }
+
+      expect(onValueChange).toHaveBeenLastCalledWith([52, 53])
+    })
+
+    test('arrow key does not switch thumb at global boundaries', async () => {
+      const onValueChange = vi.fn()
+      const screen = render(() => (
+        <Slider defaultValue={[0, 50]} allowThumbCrossing={false} onValueChange={onValueChange} />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      await fireEvent.focus(thumbs[0] as HTMLElement)
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowLeft' })
+
+      expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('0')
+      expect(onValueChange).toHaveBeenLastCalledWith([0, 50])
+    })
+
+    test('PageUp and PageDown do not switch thumbs, only move current thumb', async () => {
+      const onValueChange = vi.fn()
+      const screen = render(() => (
+        <Slider defaultValue={[40, 60]} allowThumbCrossing={false} onValueChange={onValueChange} />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      await fireEvent.focus(thumbs[0] as HTMLElement)
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'PageUp' })
+
+      expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('50')
+      expect(onValueChange).toHaveBeenLastCalledWith([50, 60])
+    })
+  })
 })
