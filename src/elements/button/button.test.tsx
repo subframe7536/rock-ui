@@ -383,4 +383,268 @@ describe('Button', () => {
     expect(button.hasAttribute('disabled')).toBe(true)
     expect(onclick).not.toHaveBeenCalled()
   })
+
+  describe('non-native button keyboard activation', () => {
+    test('activates on Enter key for div with role=button', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" onClick={onclick}>
+          Click me
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Click me' })
+      expect(button.tagName).toBe('DIV')
+      expect(button.getAttribute('role')).toBe('button')
+      expect(button.getAttribute('tabIndex')).toBe('0')
+
+      await fireEvent.keyDown(button, { key: 'Enter' })
+
+      expect(onclick).toHaveBeenCalledTimes(1)
+    })
+
+    test('activates on Space key for div with role=button', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" onClick={onclick}>
+          Click me
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Click me' })
+
+      await fireEvent.keyDown(button, { key: ' ' })
+
+      expect(onclick).toHaveBeenCalledTimes(1)
+    })
+
+    test('does not activate on other keys for non-native button', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" onClick={onclick}>
+          Click me
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Click me' })
+
+      await fireEvent.keyDown(button, { key: 'a' })
+      await fireEvent.keyDown(button, { key: 'Escape' })
+      await fireEvent.keyDown(button, { key: 'Tab' })
+
+      expect(onclick).not.toHaveBeenCalled()
+    })
+
+    test('blocks Enter key when disabled for non-native button', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" disabled onClick={onclick}>
+          Disabled
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Disabled' })
+      expect(button.getAttribute('aria-disabled')).toBe('true')
+
+      await fireEvent.keyDown(button, { key: 'Enter' })
+
+      expect(onclick).not.toHaveBeenCalled()
+    })
+
+    test('blocks Space key when loading for non-native button', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" loading onClick={onclick}>
+          Loading
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Loading' })
+      expect(button.getAttribute('aria-disabled')).toBe('true')
+      expect(button.getAttribute('aria-busy')).toBe('true')
+
+      await fireEvent.keyDown(button, { key: ' ' })
+
+      expect(onclick).not.toHaveBeenCalled()
+    })
+
+    test('blocks click when disabled for non-native button', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" disabled onClick={onclick}>
+          Disabled
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Disabled' })
+
+      await fireEvent.click(button)
+
+      expect(onclick).not.toHaveBeenCalled()
+    })
+
+    test('blocks click when loading for non-native button', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" loading onClick={onclick}>
+          Loading
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Loading' })
+
+      await fireEvent.click(button)
+
+      expect(onclick).not.toHaveBeenCalled()
+    })
+
+    test('prevents default pointer action when disabled for non-native button', async () => {
+      const onpointerdown = vi.fn((e: PointerEvent) => {
+        // The handler is called, but default should be prevented
+        expect(e.defaultPrevented).toBe(true)
+      })
+      const screen = render(() => (
+        <Button as="div" disabled onPointerDown={onpointerdown}>
+          Disabled
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Disabled' })
+
+      await fireEvent.pointerDown(button)
+
+      expect(onpointerdown).toHaveBeenCalledTimes(1)
+    })
+
+    test('removes tabIndex when disabled for non-native button', () => {
+      const screen = render(() => (
+        <Button as="div" disabled>
+          Disabled
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Disabled' })
+      expect(button.hasAttribute('tabIndex')).toBe(false)
+    })
+
+    test('removes tabIndex when loading for non-native button', () => {
+      const screen = render(() => (
+        <Button as="div" loading>
+          Loading
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Loading' })
+      expect(button.hasAttribute('tabIndex')).toBe(false)
+    })
+
+    test('calls custom onKeyDown handler before activation', async () => {
+      const onkeydown = vi.fn()
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" onKeyDown={onkeydown} onClick={onclick}>
+          Click me
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Click me' })
+
+      await fireEvent.keyDown(button, { key: 'Enter' })
+
+      expect(onkeydown).toHaveBeenCalledTimes(1)
+      expect(onclick).toHaveBeenCalledTimes(1)
+    })
+
+    test('prevents activation when custom onKeyDown calls preventDefault', async () => {
+      const onkeydown = vi.fn((e: KeyboardEvent) => e.preventDefault())
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="div" onKeyDown={onkeydown} onClick={onclick}>
+          Click me
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Click me' })
+
+      await fireEvent.keyDown(button, { key: 'Enter' })
+
+      expect(onkeydown).toHaveBeenCalledTimes(1)
+      expect(onclick).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('anchor rendering compatibility', () => {
+    test('does not emit type attribute on anchor', () => {
+      const screen = render(() => (
+        <Button as="a" href="https://example.com">
+          Link
+        </Button>
+      ))
+
+      const anchor = screen.getByRole('link', { name: 'Link' })
+      expect(anchor.hasAttribute('type')).toBe(false)
+      expect(anchor.hasAttribute('role')).toBe(false)
+      expect(anchor.hasAttribute('tabIndex')).toBe(false)
+    })
+
+    test('does not emit disabled attribute on anchor', () => {
+      const screen = render(() => (
+        <Button as="a" href="https://example.com" disabled>
+          Disabled Link
+        </Button>
+      ))
+
+      const anchor = screen.getByRole('link', { name: 'Disabled Link' })
+      expect(anchor.hasAttribute('disabled')).toBe(false)
+      expect(anchor.getAttribute('aria-disabled')).toBe('true')
+    })
+
+    test('anchor without href gets button role and keyboard activation', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="a" onClick={onclick}>
+          Button-like anchor
+        </Button>
+      ))
+
+      const button = screen.getByRole('button', { name: 'Button-like anchor' })
+      expect(button.tagName).toBe('A')
+      expect(button.getAttribute('role')).toBe('button')
+      expect(button.getAttribute('tabIndex')).toBe('0')
+
+      await fireEvent.keyDown(button, { key: 'Enter' })
+
+      expect(onclick).toHaveBeenCalledTimes(1)
+    })
+
+    test('blocks anchor click when disabled', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="a" href="https://example.com" disabled onClick={onclick}>
+          Disabled Link
+        </Button>
+      ))
+
+      const anchor = screen.getByRole('link', { name: 'Disabled Link' })
+
+      await fireEvent.click(anchor)
+
+      expect(onclick).not.toHaveBeenCalled()
+    })
+
+    test('blocks anchor click when loading', async () => {
+      const onclick = vi.fn()
+      const screen = render(() => (
+        <Button as="a" href="https://example.com" loading onClick={onclick}>
+          Loading Link
+        </Button>
+      ))
+
+      const anchor = screen.getByRole('link', { name: 'Loading Link' })
+
+      await fireEvent.click(anchor)
+
+      expect(onclick).not.toHaveBeenCalled()
+    })
+  })
 })

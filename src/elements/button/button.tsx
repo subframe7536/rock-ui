@@ -6,7 +6,7 @@ import type { MaybeRenderProp } from '../../shared/render-prop'
 import { resolveRenderProp } from '../../shared/render-prop'
 import type { BaseProps, SlotClasses, SlotStyles } from '../../shared/types'
 import { useLoadingAutoClick } from '../../shared/use-loading-auto'
-import { cn } from '../../shared/utils'
+import { callHandler, cn } from '../../shared/utils'
 import { Icon } from '../icon'
 import type { IconT } from '../icon'
 
@@ -95,6 +95,8 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
     'loadingAuto',
     'loadingIcon',
     'onClick',
+    'onKeyDown',
+    'onPointerDown',
     'leading',
     'trailing',
     'children',
@@ -109,8 +111,9 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
   const tag = () => (local.as as ValidComponent) ?? 'button'
   const isNativeBtn = () => typeof tag() === 'string' && (tag() === 'button' || tag() === 'input')
   const isNativeLink = () =>
-    !isNativeBtn() && typeof tag() === 'string' && tag() === 'a' && (rest as any).href !== null
+    !isNativeBtn() && typeof tag() === 'string' && tag() === 'a' && (rest as any).href !== undefined
   const needsButtonRole = () => typeof tag() === 'string' && !isNativeBtn() && !isNativeLink()
+  const isDisabledOrLoading = () => isLoading() || local.disabled
 
   const iconSize = createMemo(() =>
     local.size?.startsWith('icon-') ? local.size.replace('icon-', '') : undefined,
@@ -145,6 +148,56 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
     return local.trailing
   })
 
+  // Handle keyboard activation for non-native buttons
+  const handleKeyDown = (event: KeyboardEvent) => {
+    // Call user's onKeyDown handler first
+    const { defaultPrevented } = callHandler(event, local.onKeyDown)
+
+    if (defaultPrevented) {
+      return
+    }
+
+    // Block keyboard activation when disabled or loading
+    if (isDisabledOrLoading()) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+      }
+      return
+    }
+
+    // For non-native buttons, activate on Enter or Space
+    if (needsButtonRole() && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault()
+      // Simulate a click by calling the click handler directly
+      const target = event.target as HTMLElement
+      target.click()
+    }
+  }
+
+  // Handle click events with disabled/loading blocking
+  const handleClick = (event: MouseEvent) => {
+    // Block clicks when disabled or loading for non-native buttons
+    if (!isNativeBtn() && isDisabledOrLoading()) {
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+
+    // Call the onClick handler through useLoadingAutoClick
+    callHandler(event, onClick)
+  }
+
+  // Handle pointer events to block interaction when disabled/loading
+  const handlePointerDown = (event: PointerEvent) => {
+    if (!isNativeBtn() && isDisabledOrLoading()) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    // Call user's onPointerDown handler after our handling
+    callHandler(event, local.onPointerDown)
+  }
+
   return (
     <Dynamic
       component={tag()}
@@ -159,13 +212,15 @@ export function Button<T extends ValidComponent = 'button'>(props: ButtonProps<T
       )}
       type={isNativeBtn() ? 'button' : undefined}
       role={needsButtonRole() ? 'button' : undefined}
-      tabIndex={needsButtonRole() && !isLoading() && !local.disabled ? 0 : undefined}
+      tabIndex={needsButtonRole() && !isDisabledOrLoading() ? 0 : undefined}
       aria-busy={isLoading() ? true : undefined}
       data-loading={isLoading() ? '' : undefined}
-      disabled={isNativeBtn() ? isLoading() || local.disabled : undefined}
-      aria-disabled={!isNativeBtn() && (isLoading() || local.disabled) ? true : undefined}
+      disabled={isNativeBtn() ? isDisabledOrLoading() : undefined}
+      aria-disabled={!isNativeBtn() && isDisabledOrLoading() ? true : undefined}
       data-disabled={local.disabled ? '' : undefined}
-      onClick={onClick}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
       {...rest}
     >
       <Show when={resolvedLeading()}>
