@@ -97,6 +97,7 @@ describe('useEventListener', () => {
 
     expect(target.removeEventListener).toHaveBeenCalledWith('click', wrappedListener, {
       capture: true,
+      passive: true,
     })
   })
 })

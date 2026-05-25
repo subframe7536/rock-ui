@@ -239,7 +239,9 @@ function useSelectNavigation<TItem extends BaseSelectT.Item>(options: {
       return
     }
 
-    options.setHighlightedKey(undefined)
+    // Highlight first enabled option when menu opens
+    const firstOption = enabledOptions()[0]
+    options.setHighlightedKey(firstOption?.key)
   })
 
   return {

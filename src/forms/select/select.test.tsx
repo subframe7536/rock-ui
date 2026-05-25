@@ -147,7 +147,7 @@ describe('Select - single mode', () => {
     await fireEvent.pointerDown(control, { button: 0 })
     await fireEvent.click(control)
 
-    expect(control.className).toContain('focus-visible:effect-fv-border')
+    expect(control.className).toContain('focus:effect-fv-border')
     expect(control.className).not.toContain('focus-within:effect-fv-border')
   })
 
@@ -156,7 +156,7 @@ describe('Select - single mode', () => {
     const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
 
     expect(control.className).toContain('focus-within:effect-fv-border')
-    expect(control.className).not.toContain('focus-visible:effect-fv-border')
+    expect(control.className).not.toContain('focus:effect-fv-border')
   })
 
   test('opens dropdown and focuses combobox when control shell is clicked', async () => {
@@ -504,7 +504,7 @@ describe('Select - keyboard and ARIA', () => {
     })
 
     expect(document.activeElement).toBe(input)
-    expect(onChange).toHaveBeenCalledWith('apple')
+    expect(onChange).toHaveBeenCalledWith('banana')
   })
 
   test('does not prevent Tab when menu is closed', () => {

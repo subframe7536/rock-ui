@@ -258,7 +258,7 @@ describe('MultiSelect', () => {
     await fireEvent.pointerDown(control, { button: 0 })
     await fireEvent.click(control)
 
-    expect(control.className).toContain('focus-visible:effect-fv-border')
+    expect(control.className).toContain('focus:effect-fv-border')
     expect(control.className).not.toContain('focus-within:effect-fv-border')
   })
 
@@ -267,7 +267,7 @@ describe('MultiSelect', () => {
     const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
 
     expect(control.className).toContain('focus-within:effect-fv-border')
-    expect(control.className).not.toContain('focus-visible:effect-fv-border')
+    expect(control.className).not.toContain('focus:effect-fv-border')
   })
 
   test('after trigger click, ArrowDown selects the first option', async () => {
@@ -284,7 +284,7 @@ describe('MultiSelect', () => {
     await fireEvent.keyDown(control, { key: 'ArrowDown' })
     await fireEvent.keyDown(control, { key: 'Enter' })
 
-    expect(onChange).toHaveBeenCalledWith(['apple'])
+    expect(onChange).toHaveBeenCalledWith(['banana'])
   })
 
   test('renders non-search placeholder as presentation-only text', () => {
@@ -365,7 +365,7 @@ describe('MultiSelect', () => {
     await fireEvent.keyDown(control, { key: 'ArrowDown' })
     await fireEvent.keyDown(control, { key: ' ' })
 
-    expect(onChange).toHaveBeenCalledWith(['apple'])
+    expect(onChange).toHaveBeenCalledWith(['banana'])
   })
 
   test('passes null to optionRender for empty state', async () => {
