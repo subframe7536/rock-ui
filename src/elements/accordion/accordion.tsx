@@ -83,6 +83,12 @@ export namespace AccordionT {
     collapsible?: boolean
 
     /**
+     * Whether arrow-key focus wraps from the last trigger to the first and vice versa.
+     * @default true
+     */
+    loopFocus?: boolean
+
+    /**
      * Callback when the expanded item values change.
      */
     onChange?: (value: string[]) => void
@@ -134,6 +140,7 @@ export function Accordion(props: AccordionProps): JSX.Element {
     {
       multiple: false,
       collapsible: true,
+      loopFocus: true,
       unmountOnHide: true,
       trailing: 'icon-chevron-down' as IconT.Name,
     },
@@ -201,8 +208,7 @@ export function Accordion(props: AccordionProps): JSX.Element {
     currentValue: string,
     key: 'ArrowDown' | 'ArrowUp' | 'Home' | 'End',
   ): void {
-    const items = normalizedItems()
-    const enabledItems = items.filter((item) => !item.disabled)
+    const enabledItems = normalizedItems().filter((item) => !item.disabled)
 
     if (enabledItems.length === 0) {
       return
@@ -224,18 +230,24 @@ export function Accordion(props: AccordionProps): JSX.Element {
       return
     }
 
-    const currentIndex = items.findIndex((item) => item.value === currentValue)
-    const startIndex = currentIndex === -1 ? 0 : currentIndex
+    const currentIndex = enabledItems.findIndex((item) => item.value === currentValue)
+
+    if (currentIndex === -1) {
+      return
+    }
+
     const direction = key === 'ArrowDown' ? 1 : -1
 
-    for (let offset = 1; offset <= items.length; offset += 1) {
-      const nextIndex = (startIndex + offset * direction + items.length) % items.length
-      const nextItem = items[nextIndex]
+    const nextIndex = currentIndex + direction
 
-      if (nextItem && !nextItem.disabled) {
-        focusTrigger(nextItem.value)
-        return
-      }
+    if (!merged.loopFocus && (nextIndex < 0 || nextIndex >= enabledItems.length)) {
+      return
+    }
+
+    const nextItem = enabledItems[(nextIndex + enabledItems.length) % enabledItems.length]
+
+    if (nextItem) {
+      focusTrigger(nextItem.value)
     }
   }
 
@@ -243,6 +255,7 @@ export function Accordion(props: AccordionProps): JSX.Element {
     <div
       id={rootId()}
       data-slot="root"
+      data-disabled={merged.disabled ? '' : undefined}
       style={merged.styles?.root}
       class={cn('flex flex-col w-full', merged.disabled && 'effect-dis', merged.classes?.root)}
     >
@@ -299,11 +312,12 @@ export function Accordion(props: AccordionProps): JSX.Element {
                 data-slot="header"
                 style={merged.styles?.header}
                 class={cn('flex', merged.classes?.header)}
+                {...dataAttrs()}
               >
                 <button
                   id={triggerId()}
                   type="button"
-                  aria-controls={contentId()}
+                  aria-controls={!merged.unmountOnHide || expanded() ? contentId() : undefined}
                   aria-expanded={expanded()}
                   disabled={entry.disabled}
                   data-slot="trigger"

@@ -28,7 +28,9 @@ describe('Accordion', () => {
     const screen = render(() => <Accordion items={BASE_ITEMS} defaultValue={['one']} />)
 
     const triggerOne = screen.getByRole('button', { name: 'One' })
+    const headings = screen.getAllByRole('heading')
 
+    expect(headings).toHaveLength(3)
     expect(triggerOne.getAttribute('aria-expanded')).toBe('true')
     expect(screen.getByText('Content one')).not.toBeNull()
   })
@@ -144,6 +146,23 @@ describe('Accordion', () => {
     expect(document.activeElement).toBe(triggerThree)
   })
 
+  test('does not wrap trigger focus when loopFocus=false', async () => {
+    const screen = render(() => <Accordion items={BASE_ITEMS} loopFocus={false} />)
+
+    const triggerOne = screen.getByRole('button', { name: 'One' })
+    const triggerThree = screen.getByRole('button', { name: 'Three' })
+
+    triggerOne.focus()
+
+    await fireEvent.keyDown(triggerOne, { key: 'ArrowUp' })
+    expect(document.activeElement).toBe(triggerOne)
+
+    triggerThree.focus()
+
+    await fireEvent.keyDown(triggerThree, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(triggerThree)
+  })
+
   test('keyboard navigation skips disabled triggers and tolerates all disabled items', async () => {
     const screen = render(() => (
       <Accordion
@@ -187,6 +206,25 @@ describe('Accordion', () => {
     expect(contentOne.id).toBe('settings-one-content')
     expect(triggerOne.getAttribute('aria-controls')).toBe(contentOne.id)
     expect(contentOne.getAttribute('aria-labelledby')).toBe(triggerOne.id)
+  })
+
+  test('omits aria-controls when content is unmounted and restores it when expanded', async () => {
+    const screen = render(() => <Accordion id="settings" items={BASE_ITEMS} />)
+
+    const triggerOne = screen.getByRole('button', { name: 'One' })
+
+    expect(triggerOne.hasAttribute('aria-controls')).toBe(false)
+
+    await fireEvent.click(triggerOne)
+
+    const contentOne = screen.getByRole('region', { name: 'One' })
+
+    expect(triggerOne.getAttribute('aria-controls')).toBe('settings-one-content')
+    expect(contentOne.id).toBe('settings-one-content')
+
+    await fireEvent.click(triggerOne)
+
+    expect(triggerOne.hasAttribute('aria-controls')).toBe(false)
   })
 
   test('single controlled mode emits onChange and keeps controlled UI state', async () => {
@@ -239,6 +277,51 @@ describe('Accordion', () => {
 
     expect(triggerOne.getAttribute('aria-expanded')).toBe('false')
     expect(onChange).not.toHaveBeenCalled()
+  })
+
+  test('disabled state applies data-disabled to root and disabled item parts', () => {
+    const rootDisabledScreen = render(() => (
+      <Accordion items={BASE_ITEMS} disabled defaultValue={['one']} />
+    ))
+
+    const root = rootDisabledScreen.container.querySelector('[data-slot="root"]')
+    const item = rootDisabledScreen.container.querySelector('[data-slot="item"]')
+    const header = rootDisabledScreen.container.querySelector('[data-slot="header"]')
+    const trigger = rootDisabledScreen.getByRole('button', { name: 'One' })
+    const content = rootDisabledScreen.getByRole('region', { name: 'One' })
+
+    expect(root?.getAttribute('data-disabled')).toBe('')
+    expect(item?.getAttribute('data-disabled')).toBe('')
+    expect(header?.getAttribute('data-disabled')).toBe('')
+    expect(trigger.getAttribute('data-disabled')).toBe('')
+    expect(content.getAttribute('data-disabled')).toBe('')
+
+    const itemDisabledScreen = render(() => (
+      <Accordion
+        items={[
+          {
+            ...BASE_ITEMS[0],
+            disabled: true,
+          },
+          BASE_ITEMS[1],
+        ]}
+        defaultValue={['one']}
+      />
+    ))
+
+    const itemNodes = itemDisabledScreen.container.querySelectorAll('[data-slot="item"]')
+    const headerNodes = itemDisabledScreen.container.querySelectorAll('[data-slot="header"]')
+    const triggerOne = itemDisabledScreen.getByRole('button', { name: 'One' })
+    const triggerTwo = itemDisabledScreen.getByRole('button', { name: 'Two' })
+    const contentOne = itemDisabledScreen.getByRole('region', { name: 'One' })
+
+    expect(itemNodes[0]?.getAttribute('data-disabled')).toBe('')
+    expect(headerNodes[0]?.getAttribute('data-disabled')).toBe('')
+    expect(triggerOne.getAttribute('data-disabled')).toBe('')
+    expect(contentOne.getAttribute('data-disabled')).toBe('')
+    expect(itemNodes[1]?.hasAttribute('data-disabled')).toBe(false)
+    expect(headerNodes[1]?.hasAttribute('data-disabled')).toBe(false)
+    expect(triggerTwo.hasAttribute('data-disabled')).toBe(false)
   })
 
   test('disabled item cannot be toggled while other items still work', async () => {
