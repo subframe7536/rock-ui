@@ -3,7 +3,6 @@
 - [x] Freeze the parity audit scope and reference matrix
       Scope this sweep to existing Moraine components and shared hooks under `src/elements`, `src/forms`, `src/navigation`, and `src/overlays`. Map each target to `base-ui` and `kobalte` references, and explicitly exclude new components that do not exist in Moraine yet, such as `ScrollArea`, `OTPField`, and `Combobox`. Canonical matrix: [`parity-matrix.md`](./parity-matrix.md).
 
-
 - [x] Enhance `useSelectableCollectionNavigation` for keyboard and RTL compatibility
       Port the missing collection-navigation edge cases: orientation-aware arrow handling, RTL-aware horizontal navigation, `Home`/`End`, manual vs automatic activation, and a stable extension point for typeahead behavior.
 
@@ -22,7 +21,7 @@
 - [x] Bring `Tabs` navigation behavior up to parity
       Use the improved collection-navigation behavior to support orientation-aware keys, RTL handling, `Home`/`End`, and correct manual activation where focus and selected state intentionally diverge.
 
-- [ ] Improve `Pagination` accessibility labels
+- [x] Improve `Pagination` accessibility labels
       Add clearer page-item labels such as current-page announcements and “go to page” labels so the component behaves more like the stronger reference implementations without changing the public API unnecessarily.
 
 - [ ] Stabilize overlay dismissal and focus handling in `Modal`

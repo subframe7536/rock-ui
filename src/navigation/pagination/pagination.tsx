@@ -278,6 +278,31 @@ export function Pagination(props: PaginationProps): JSX.Element {
     return href ? { as: 'a', href, rel } : { type: 'button', disabled }
   }
 
+  const getPageLabel = (page: number, isCurrent: boolean): string => {
+    const total = pageCount()
+    if (isCurrent) {
+      return `Page ${page} of ${total}, current page`
+    }
+    return `Go to page ${page} of ${total}`
+  }
+
+  const getPrevLabel = (): string => {
+    const current = resolvedPage()
+    if (current <= 1) {
+      return 'Go to previous page'
+    }
+    return `Go to previous page, page ${current - 1}`
+  }
+
+  const getNextLabel = (): string => {
+    const current = resolvedPage()
+    const total = pageCount()
+    if (current >= total) {
+      return 'Go to next page'
+    }
+    return `Go to next page, page ${current + 1}`
+  }
+
   return (
     <nav
       data-slot="root"
@@ -297,7 +322,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
               style={local.styles?.prev}
               variant={local.controlVariant}
               size={getSize(local.size, local.prevText)}
-              aria-label="Go to previous page"
+              aria-label={getPrevLabel()}
               classes={{ root: local.classes?.prev }}
               onClick={() => selectPage(resolvedPage() - 1)}
               {...getControlProps(resolvedPage() - 1, resolvedPage() <= 1, 'prev')}
@@ -335,7 +360,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
                     variant={isActive() ? local.activeVariant : local.variant}
                     size={getSize(local.size)}
                     aria-current={isActive() ? 'page' : undefined}
-                    aria-label={isActive() ? `Page ${item}, current page` : `Go to page ${item}`}
+                    aria-label={getPageLabel(item, isActive())}
                     data-current={isActive() ? '' : undefined}
                     classes={{ root: ['outline-none', local.classes?.link] }}
                     onClick={() => selectPage(item)}
@@ -356,7 +381,7 @@ export function Pagination(props: PaginationProps): JSX.Element {
               style={local.styles?.next}
               variant={local.controlVariant}
               size={getSize(local.size, local.nextText)}
-              aria-label="Go to next page"
+              aria-label={getNextLabel()}
               classes={{ root: local.classes?.next }}
               onClick={() => selectPage(resolvedPage() + 1)}
               {...getControlProps(resolvedPage() + 1, resolvedPage() >= pageCount(), 'next')}
@@ -367,6 +392,10 @@ export function Pagination(props: PaginationProps): JSX.Element {
           </li>
         </Show>
       </ul>
+
+      <div data-slot="status" role="status" aria-live="polite" aria-atomic="true" class="sr-only">
+        Page {resolvedPage()} of {pageCount()}
+      </div>
     </nav>
   )
 }

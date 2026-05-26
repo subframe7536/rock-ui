@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@solidjs/testing-library'
+import { createSignal } from 'solid-js'
 import { describe, expect, test, vi } from 'vitest'
 
 import { Pagination } from './pagination'
@@ -107,8 +108,8 @@ describe('Pagination', () => {
       <Pagination page={5} total={100} itemsPerPage={10} siblingCount={1} showControls />
     ))
 
-    const currentPage = screen.getByLabelText('Page 5, current page')
-    const anotherPage = screen.getByLabelText('Go to page 4')
+    const currentPage = screen.getByLabelText('Page 5 of 10, current page')
+    const anotherPage = screen.getByLabelText('Go to page 4 of 10')
 
     expect(currentPage?.getAttribute('aria-current')).toBe('page')
     expect(anotherPage?.getAttribute('aria-current')).toBeNull()
@@ -135,6 +136,49 @@ describe('Pagination', () => {
     expect(screen.container.querySelector('[data-slot="next-label"]')).toBeNull()
   })
 
+  test('announces current page via a polite live region', async () => {
+    const [page, setPage] = createSignal(1)
+
+    const screen = render(() => (
+      <Pagination
+        page={page()}
+        onPageChange={setPage}
+        total={50}
+        itemsPerPage={10}
+        showControls={false}
+      />
+    ))
+
+    const status = screen.container.querySelector('[data-slot="status"]') as HTMLElement | null
+    expect(status).not.toBeNull()
+    expect(status?.getAttribute('role')).toBe('status')
+    expect(status?.getAttribute('aria-live')).toBe('polite')
+    expect(status?.getAttribute('aria-atomic')).toBe('true')
+    expect(status?.className).toContain('sr-only')
+    expect(status?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Page 1 of 5')
+
+    await fireEvent.click(screen.getByText('3'))
+
+    expect(status?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Page 3 of 5')
+  })
+
+  test('exposes target page in previous and next labels', () => {
+    const middle = render(() => <Pagination page={3} total={50} itemsPerPage={10} showControls />)
+
+    expect(middle.getByLabelText('Go to previous page, page 2')).not.toBeNull()
+    expect(middle.getByLabelText('Go to next page, page 4')).not.toBeNull()
+
+    const start = render(() => <Pagination page={1} total={50} itemsPerPage={10} showControls />)
+
+    expect(start.getByLabelText('Go to previous page')).not.toBeNull()
+    expect(start.getByLabelText('Go to next page, page 2')).not.toBeNull()
+
+    const end = render(() => <Pagination page={5} total={50} itemsPerPage={10} showControls />)
+
+    expect(end.getByLabelText('Go to previous page, page 4')).not.toBeNull()
+    expect(end.getByLabelText('Go to next page')).not.toBeNull()
+  })
+
   test('applies classes overrides to root, list, item, control, link, prev, next and ellipsis', () => {
     const screen = render(() => (
       <Pagination
@@ -156,7 +200,7 @@ describe('Pagination', () => {
 
     const root = screen.container.querySelector('[data-slot="root"]')
     const list = screen.container.querySelector('[data-slot="list"]')
-    const currentPage = screen.getByLabelText('Page 5, current page')
+    const currentPage = screen.getByLabelText('Page 5 of 10, current page')
     const pageItem = currentPage.closest('li[data-slot="item"]')
     const prev = screen.container.querySelector('[data-slot="prev"]')
     const next = screen.container.querySelector('[data-slot="next"]')
