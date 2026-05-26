@@ -18,6 +18,8 @@ import { useEventListenerMap } from '../../shared/use-event-listener'
 import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { cn, useId } from '../../shared/utils'
 
+import { isInsideDescendantOverlay, isTopOverlay, pushOverlayLayer } from './overlay-stack'
+import type { OverlayStackEntry } from './overlay-stack'
 import {
   acquireBodyScrollLock,
   focusContent,
@@ -339,6 +341,12 @@ export function Popper(props: PopperProps): JSX.Element {
     const releaseScrollLock =
       merged.modal || merged.preventScroll ? acquireBodyScrollLock() : undefined
 
+    const stackEntry: OverlayStackEntry = {
+      contentElement,
+      triggerElement,
+    }
+    const releaseStack = pushOverlayLayer(stackEntry)
+
     if (merged.modal) {
       const currentContent = contentElement()
 
@@ -347,14 +355,22 @@ export function Popper(props: PopperProps): JSX.Element {
       })
     }
 
+    const isInside = (target: Node): boolean => {
+      if (contentElement()?.contains(target) || triggerElement()?.contains(target)) {
+        return true
+      }
+
+      return isInsideDescendantOverlay(stackEntry, target)
+    }
+
     const onDocumentPointerDown = (event: PointerEvent) => {
       const target = event.target
 
-      if (!(target instanceof Node)) {
+      if (!(target instanceof Node) || isInside(target)) {
         return
       }
 
-      if (contentElement()?.contains(target) || triggerElement()?.contains(target)) {
+      if (!isTopOverlay(stackEntry)) {
         return
       }
 
@@ -375,11 +391,11 @@ export function Popper(props: PopperProps): JSX.Element {
     const onDocumentFocusIn = (event: FocusEvent) => {
       const target = event.target
 
-      if (!(target instanceof Node)) {
+      if (!(target instanceof Node) || isInside(target)) {
         return
       }
 
-      if (contentElement()?.contains(target) || triggerElement()?.contains(target)) {
+      if (!isTopOverlay(stackEntry)) {
         return
       }
 
@@ -420,6 +436,10 @@ export function Popper(props: PopperProps): JSX.Element {
         return
       }
 
+      if (!isTopOverlay(stackEntry)) {
+        return
+      }
+
       merged.onEscapeKeyDown?.(event)
 
       if (event.defaultPrevented) {
@@ -446,6 +466,7 @@ export function Popper(props: PopperProps): JSX.Element {
     )
 
     onCleanup(() => {
+      releaseStack()
       releaseScrollLock?.()
       focusTrigger(triggerElement())
     })

@@ -1,4 +1,5 @@
 export * from './menu'
 export * from './modal'
+export * from './overlay-stack'
 export * from './popper'
 export * from './utils'

@@ -4,6 +4,8 @@ import type { Accessor, JSX } from 'solid-js'
 import { createEffect, createSignal, onCleanup, untrack } from 'solid-js'
 
 import { useEventListenerMap } from '../../../shared/use-event-listener'
+import { isInsideDescendantOverlay, isTopOverlay, pushOverlayLayer } from '../overlay-stack'
+import type { OverlayStackEntry } from '../overlay-stack'
 import { focusWithoutScrolling, getTransformOrigin, resolveDirection } from '../utils'
 
 export function getOverlayMenuTextValue(item: {
@@ -578,6 +580,8 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
 
 export function useOverlayMenuDismiss(options: {
   containsTarget: (node: Node) => boolean
+  contentElement?: Accessor<HTMLElement | undefined>
+  triggerElement?: Accessor<HTMLElement | undefined>
   onClose: () => void
   open: Accessor<boolean>
 }): void {
@@ -586,10 +590,28 @@ export function useOverlayMenuDismiss(options: {
       return
     }
 
+    const stackEntry: OverlayStackEntry = {
+      contentElement: options.contentElement ?? (() => undefined),
+      triggerElement: options.triggerElement ?? (() => undefined),
+    }
+    onCleanup(pushOverlayLayer(stackEntry))
+
+    const isInside = (node: Node): boolean => {
+      if (options.containsTarget(node)) {
+        return true
+      }
+
+      return isInsideDescendantOverlay(stackEntry, node)
+    }
+
     const onDocumentPointerDown = (event: PointerEvent): void => {
       const target = event.target
 
-      if (!(target instanceof Node) || options.containsTarget(target)) {
+      if (!(target instanceof Node) || isInside(target)) {
+        return
+      }
+
+      if (!isTopOverlay(stackEntry)) {
         return
       }
 
@@ -598,7 +620,11 @@ export function useOverlayMenuDismiss(options: {
     const onDocumentFocusIn = (event: FocusEvent): void => {
       const target = event.target
 
-      if (!(target instanceof Node) || options.containsTarget(target)) {
+      if (!(target instanceof Node) || isInside(target)) {
+        return
+      }
+
+      if (!isTopOverlay(stackEntry)) {
         return
       }
 
@@ -607,11 +633,15 @@ export function useOverlayMenuDismiss(options: {
     const onDocumentKeyDown = (event: KeyboardEvent): void => {
       const target = event.target
 
-      if (target instanceof Node && options.containsTarget(target)) {
+      if (target instanceof Node && isInside(target)) {
         return
       }
 
       if (event.key !== 'Escape') {
+        return
+      }
+
+      if (!isTopOverlay(stackEntry)) {
         return
       }
 

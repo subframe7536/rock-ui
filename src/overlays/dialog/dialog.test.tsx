@@ -1,18 +1,24 @@
 import { fireEvent, render, waitFor } from '@solidjs/testing-library'
 import { describe, expect, test, vi } from 'vitest'
 
+import { Modal } from '../base'
+
 import { Dialog } from './dialog'
 
 async function finishExitMotion(): Promise<void> {
-  const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
-  const overlay = document.body.querySelector('[data-slot="overlay"]') as HTMLElement | null
+  const contents = Array.from(
+    document.body.querySelectorAll('[data-slot="content"]'),
+  ) as HTMLElement[]
+  const overlays = Array.from(
+    document.body.querySelectorAll('[data-slot="overlay"]'),
+  ) as HTMLElement[]
 
-  if (content) {
+  for (const content of contents) {
     await fireEvent.animationEnd(content)
     await fireEvent.transitionEnd(content)
   }
 
-  if (overlay) {
+  for (const overlay of overlays) {
     await fireEvent.animationEnd(overlay)
     await fireEvent.transitionEnd(overlay)
   }
@@ -302,5 +308,81 @@ describe('Modal', () => {
 
     const content = document.body.querySelector('[data-slot="content"]') as HTMLElement | null
     expect(content?.style.width).toBe('200px')
+  })
+
+  test('escape only closes the topmost overlay when modals are nested', async () => {
+    const onOuterChange = vi.fn()
+    const onInnerChange = vi.fn()
+
+    render(() => (
+      <>
+        <Modal
+          defaultOpen
+          overlay
+          onOpenChange={onOuterChange}
+          trigger={<button type="button">Outer trigger</button>}
+          content={<div data-testid="outer-body">Outer body</div>}
+        />
+        <Modal
+          defaultOpen
+          overlay
+          onOpenChange={onInnerChange}
+          trigger={<button type="button">Inner trigger</button>}
+          content={<div data-testid="inner-body">Inner body</div>}
+        />
+      </>
+    ))
+
+    const contents = document.body.querySelectorAll('[data-slot="content"]')
+    expect(contents.length).toBe(2)
+
+    const innerContent = contents[contents.length - 1] as HTMLElement
+    innerContent.focus()
+    await fireEvent.keyDown(innerContent, { key: 'Escape' })
+
+    await finishExitMotion()
+
+    await waitFor(() => {
+      expect(onInnerChange).toHaveBeenCalledWith(false)
+      expect(onOuterChange).not.toHaveBeenCalled()
+      expect(document.body.querySelectorAll('[data-slot="content"]').length).toBe(1)
+    })
+  })
+
+  test('outer modal ignores pointerdown that lands inside a nested modal', async () => {
+    const onOuterChange = vi.fn()
+    const onInnerChange = vi.fn()
+
+    render(() => (
+      <>
+        <Modal
+          defaultOpen
+          overlay
+          onOpenChange={onOuterChange}
+          trigger={<button type="button">Outer trigger</button>}
+          content={<div data-testid="outer-body">Outer body</div>}
+        />
+        <Modal
+          defaultOpen
+          overlay
+          onOpenChange={onInnerChange}
+          trigger={<button type="button">Inner trigger</button>}
+          content={
+            <button type="button" data-testid="inner-button">
+              Inner button
+            </button>
+          }
+        />
+      </>
+    ))
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    const innerButton = document.body.querySelector('[data-testid="inner-button"]')!
+    await fireEvent.pointerDown(innerButton)
+
+    expect(onOuterChange).not.toHaveBeenCalled()
+    expect(onInnerChange).not.toHaveBeenCalled()
+    expect(document.body.querySelectorAll('[data-slot="content"]').length).toBe(2)
   })
 })

@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { Show, createEffect, createMemo, onCleanup } from 'solid-js'
+import { Show, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
 import type { SlotClasses, SlotStyles } from '../../shared/types'
@@ -8,6 +8,7 @@ import { useEventListenerMap } from '../../shared/use-event-listener'
 import { useTransitionPresence } from '../../shared/use-transition-presence'
 import { cn, useId } from '../../shared/utils'
 
+import { isInsideDescendantOverlay, isTopOverlay, pushOverlayLayer } from './overlay-stack'
 import { acquireBodyScrollLock, focusContent, focusTrigger, trapFocusInContainer } from './utils'
 
 type ModalSlot = 'trigger' | 'overlay' | 'content'
@@ -57,8 +58,15 @@ export function Modal(props: ModalProps): JSX.Element {
     defaultValue: () => props.defaultOpen ?? false,
   })
 
-  let triggerElement: HTMLSpanElement | undefined
-  let contentElement: HTMLDivElement | undefined
+  const [triggerElement, setTriggerElement] = createSignal<HTMLSpanElement | undefined>()
+  const [contentElement, setContentElement] = createSignal<HTMLDivElement | undefined>()
+  const dismissible = createMemo(() => props.dismissible ?? true)
+  const dismissEntry = {
+    contentElement,
+    triggerElement,
+  }
+
+  let capturedTrigger: HTMLSpanElement | undefined
 
   function updateOpen(nextOpen: boolean): void {
     if (nextOpen === !!open()) {
@@ -69,18 +77,8 @@ export function Modal(props: ModalProps): JSX.Element {
     props.onOpenChange?.(nextOpen)
   }
 
-  function requestClose(event?: Event): void {
-    if (props.dismissible ?? true) {
-      updateOpen(false)
-      return
-    }
-
-    event?.preventDefault()
-    props.onClosePrevent?.()
-  }
-
   function onContentKeyDown(event: KeyboardEvent): void {
-    trapFocusInContainer(event, contentElement)
+    trapFocusInContainer(event, contentElement())
   }
 
   const resolvedContent = createMemo(() =>
@@ -108,7 +106,7 @@ export function Modal(props: ModalProps): JSX.Element {
       return
     }
 
-    contentElement = undefined
+    setContentElement(undefined)
     contentPresence.setElement(undefined)
   })
 
@@ -117,42 +115,107 @@ export function Modal(props: ModalProps): JSX.Element {
       return
     }
 
+    const currentContent = contentElement()
+
     queueMicrotask(() => {
-      focusContent(contentElement)
+      focusContent(currentContent)
     })
 
     const releaseScrollLock = props.preventScroll === false ? undefined : acquireBodyScrollLock()
-    const onDocumentPointerDown = (event: PointerEvent) => {
+
+    onCleanup(() => {
+      releaseScrollLock?.()
+    })
+  })
+
+  createEffect(() => {
+    if (!isPresent() || typeof document === 'undefined') {
+      return
+    }
+
+    const release = pushOverlayLayer(dismissEntry)
+
+    capturedTrigger = triggerElement() ?? capturedTrigger
+
+    const isInside = (target: Node): boolean => {
+      if (contentElement()?.contains(target)) {
+        return true
+      }
+
+      if (triggerElement()?.contains(target)) {
+        return true
+      }
+
+      return isInsideDescendantOverlay(dismissEntry, target)
+    }
+
+    const onDocumentPointerDown = (event: PointerEvent): void => {
       const target = event.target
 
-      if (!(target instanceof Node)) {
+      if (!(target instanceof Node) || isInside(target)) {
         return
       }
 
-      if (contentElement?.contains(target) || triggerElement?.contains(target)) {
+      if (!isTopOverlay(dismissEntry)) {
+        return
+      }
+
+      if (event.defaultPrevented) {
+        return
+      }
+
+      if (dismissible()) {
+        event.preventDefault()
+        updateOpen(false)
         return
       }
 
       event.preventDefault()
-      requestClose(event)
+      props.onClosePrevent?.()
     }
-    const onDocumentFocusIn = (event: FocusEvent) => {
+
+    const onDocumentFocusIn = (event: FocusEvent): void => {
       const target = event.target
 
-      if (!(target instanceof Node) || !contentElement || contentElement.contains(target)) {
+      if (!(target instanceof Node) || isInside(target)) {
         return
       }
 
+      if (!isTopOverlay(dismissEntry)) {
+        return
+      }
+
+      const currentContent = contentElement()
+
       queueMicrotask(() => {
-        focusContent(contentElement)
+        focusContent(currentContent)
       })
+
+      if (!dismissible()) {
+        props.onClosePrevent?.()
+      }
     }
-    const onDocumentKeyDown = (event: KeyboardEvent) => {
+
+    const onDocumentKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') {
         return
       }
 
-      requestClose(event)
+      if (!isTopOverlay(dismissEntry)) {
+        return
+      }
+
+      if (event.defaultPrevented) {
+        return
+      }
+
+      if (dismissible()) {
+        updateOpen(false)
+        return
+      }
+
+      event.preventDefault()
+      props.onClosePrevent?.()
     }
 
     useEventListenerMap(
@@ -166,8 +229,8 @@ export function Modal(props: ModalProps): JSX.Element {
     )
 
     onCleanup(() => {
-      releaseScrollLock?.()
-      focusTrigger(triggerElement)
+      release()
+      focusTrigger(capturedTrigger)
     })
   })
 
@@ -178,7 +241,7 @@ export function Modal(props: ModalProps): JSX.Element {
           {...props.contentAttributes}
           {...contentPresence.dataAttrs()}
           ref={(element) => {
-            contentElement = element
+            setContentElement(element)
             contentPresence.setElement(element)
           }}
           id={contentId()}
@@ -202,9 +265,7 @@ export function Modal(props: ModalProps): JSX.Element {
     <>
       <Show when={props.trigger}>
         <span
-          ref={(element) => {
-            triggerElement = element
-          }}
+          ref={setTriggerElement}
           tabIndex={-1}
           data-slot="trigger"
           style={props.styles?.trigger}

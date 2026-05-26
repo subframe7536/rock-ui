@@ -1260,6 +1260,8 @@ export function OverlayMenu<TItem extends OverlayMenuSharedItem<TItem>>(
 
   useOverlayMenuDismiss({
     containsTarget,
+    contentElement: () => rootLayerState()?.contentElement(),
+    triggerElement: () => merged.triggerElement,
     onClose: () => {
       closeRoot()
     },
