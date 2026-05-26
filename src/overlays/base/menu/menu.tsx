@@ -34,11 +34,11 @@ import {
 import { overlayMenuContentVariants, overlayMenuItemVariants } from './menu.class'
 import type { OverlayMenuItemVariantProps } from './menu.class'
 import {
+  createPointerGraceIntent,
   createVirtualReference,
   getOverlayMenuTextValue,
   focusElement,
   focusLayerFromStrategy,
-  getPointerGraceArea,
   hasOverlayMenuChildren,
   onLayerKeyDown,
   resolveMenuGroups,
@@ -981,14 +981,22 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
             const submenuPlacement = submenuLayerState?.currentPlacement() ?? 'right-start'
 
             if (!contentElement) {
-              layer.setPointerGraceIntent(null)
+              layer.setPointerGraceIntent(null, [event.clientX, event.clientY])
               layer.focusContent()
               return
             }
 
-            layer.setPointerGraceIntent({
-              area: getPointerGraceArea(submenuPlacement, event, contentElement),
-            })
+            layer.setPointerGraceIntent(
+              {
+                ...createPointerGraceIntent(
+                  submenuPlacement,
+                  [event.clientX, event.clientY],
+                  event.currentTarget,
+                  contentElement,
+                ),
+              },
+              [event.clientX, event.clientY],
+            )
           }}
         >
           <RenderItemContent
@@ -1143,7 +1151,7 @@ function OverlayMenuLayer<TItem extends OverlayMenuSharedItem<TItem>>(
                         data-slot="separator"
                         role="separator"
                         style={props.styles?.separator}
-                        class={cn('mx--1 my-1 b-t-border h-px', props.classes?.separator)}
+                        class={cn('mx--1 my-1 b-t-(1 foreground/15)', props.classes?.separator)}
                       />
                     </Match>
 

@@ -102,6 +102,12 @@ export interface OverlayMenuRegisteredSubmenu {
 
 export interface OverlayMenuPointerGraceIntent {
   area: Array<[number, number]>
+  trough: {
+    bottom: number
+    left: number
+    right: number
+    top: number
+  }
 }
 
 const POINTER_GRACE_SHADOW_PADDING = 12
@@ -123,9 +129,13 @@ export interface OverlayMenuLayerState {
   setContentElement: (element: HTMLDivElement | undefined) => void
   setCurrentPlacement: (placement: Placement) => void
   setHighlightedItemId: (id?: string) => void
-  setPointerGraceIntent: (intent: OverlayMenuPointerGraceIntent | null) => void
+  setPointerGraceIntent: (
+    intent: OverlayMenuPointerGraceIntent | null,
+    point?: [number, number],
+  ) => void
   shouldBlockPointerEnter: (event: PointerEvent) => boolean
 }
+const POINTER_GRACE_TIMEOUT = 300
 
 export interface OverlayMenuCloseOptions {
   restoreFocus?: boolean
@@ -149,50 +159,104 @@ function isPointInPolygon(point: [number, number], polygon: Array<[number, numbe
   return inside
 }
 
-export function getPointerGraceArea(
+function isPointInRect(
+  point: [number, number],
+  rect: OverlayMenuPointerGraceIntent['trough'],
+): boolean {
+  return (
+    point[0] >= Math.min(rect.left, rect.right) &&
+    point[0] <= Math.max(rect.left, rect.right) &&
+    point[1] >= Math.min(rect.top, rect.bottom) &&
+    point[1] <= Math.max(rect.top, rect.bottom)
+  )
+}
+
+export function createPointerGraceIntent(
   placement: Placement,
-  event: PointerEvent,
+  exitPoint: [number, number],
+  triggerElement: Element,
   contentElement: Element,
-): Array<[number, number]> {
+): OverlayMenuPointerGraceIntent {
   const basePlacement = placement.split('-')[0] as Placement extends `${infer T}-${string}`
     ? T
     : string
+  const triggerRect = triggerElement.getBoundingClientRect()
   const rect = contentElement.getBoundingClientRect()
+  const [exitX, exitY] = exitPoint
 
   switch (basePlacement) {
     case 'top':
-      return [
-        [event.clientX, event.clientY + 5],
-        [rect.left, rect.bottom + POINTER_GRACE_SHADOW_PADDING],
-        [rect.left, rect.top],
-        [rect.right, rect.top],
-        [rect.right, rect.bottom + POINTER_GRACE_SHADOW_PADDING],
-      ]
+      return {
+        area: [
+          [exitX, exitY + 5],
+          [rect.left, rect.bottom + POINTER_GRACE_SHADOW_PADDING],
+          [rect.left, rect.top],
+          [rect.right, rect.top],
+          [rect.right, rect.bottom + POINTER_GRACE_SHADOW_PADDING],
+        ],
+        trough: {
+          bottom: Math.max(triggerRect.top, rect.bottom + POINTER_GRACE_SHADOW_PADDING),
+          left: Math.min(triggerRect.left, rect.left),
+          right: Math.max(triggerRect.right, rect.right),
+          top: Math.min(triggerRect.top, rect.bottom + POINTER_GRACE_SHADOW_PADDING),
+        },
+      }
     case 'left':
-      return [
-        [event.clientX + 5, event.clientY],
-        [rect.right + POINTER_GRACE_SHADOW_PADDING, rect.bottom],
-        [rect.left, rect.bottom],
-        [rect.left, rect.top],
-        [rect.right + POINTER_GRACE_SHADOW_PADDING, rect.top],
-      ]
+      return {
+        area: [
+          [exitX + 5, exitY],
+          [rect.right + POINTER_GRACE_SHADOW_PADDING, rect.bottom],
+          [rect.left, rect.bottom],
+          [rect.left, rect.top],
+          [rect.right + POINTER_GRACE_SHADOW_PADDING, rect.top],
+        ],
+        trough: {
+          bottom: Math.max(triggerRect.bottom, rect.bottom),
+          left: Math.min(rect.right, triggerRect.left),
+          right: Math.max(rect.right + POINTER_GRACE_SHADOW_PADDING, triggerRect.left),
+          top: Math.min(triggerRect.top, rect.top),
+        },
+      }
     case 'bottom':
-      return [
-        [event.clientX, event.clientY - 5],
-        [rect.right, rect.top - POINTER_GRACE_SHADOW_PADDING],
-        [rect.right, rect.bottom],
-        [rect.left, rect.bottom],
-        [rect.left, rect.top - POINTER_GRACE_SHADOW_PADDING],
-      ]
+      return {
+        area: [
+          [exitX, exitY - 5],
+          [rect.right, rect.top - POINTER_GRACE_SHADOW_PADDING],
+          [rect.right, rect.bottom],
+          [rect.left, rect.bottom],
+          [rect.left, rect.top - POINTER_GRACE_SHADOW_PADDING],
+        ],
+        trough: {
+          bottom: Math.max(rect.bottom, triggerRect.bottom),
+          left: Math.min(triggerRect.left, rect.left),
+          right: Math.max(triggerRect.right, rect.right),
+          top: Math.min(rect.top - POINTER_GRACE_SHADOW_PADDING, triggerRect.bottom),
+        },
+      }
     default:
-      return [
-        [event.clientX - 5, event.clientY],
-        [rect.left - POINTER_GRACE_SHADOW_PADDING, rect.top],
-        [rect.right, rect.top],
-        [rect.right, rect.bottom],
-        [rect.left - POINTER_GRACE_SHADOW_PADDING, rect.bottom],
-      ]
+      return {
+        area: [
+          [exitX - 5, exitY],
+          [rect.left - POINTER_GRACE_SHADOW_PADDING, rect.top],
+          [rect.right, rect.top],
+          [rect.right, rect.bottom],
+          [rect.left - POINTER_GRACE_SHADOW_PADDING, rect.bottom],
+        ],
+        trough: {
+          bottom: Math.max(triggerRect.bottom, rect.bottom),
+          left: Math.min(triggerRect.right, rect.left - POINTER_GRACE_SHADOW_PADDING),
+          right: Math.max(triggerRect.right, rect.left),
+          top: Math.min(triggerRect.top, rect.top),
+        },
+      }
   }
+}
+
+export function isPointInPointerGraceIntent(
+  point: [number, number],
+  intent: OverlayMenuPointerGraceIntent,
+): boolean {
+  return isPointInRect(point, intent.trough) || isPointInPolygon(point, intent.area)
 }
 
 function toDomRect(rect: OverlayMenuAnchorRect): DOMRect {
@@ -525,17 +589,38 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
     queuedPointerEnter = undefined
   }
 
-  const setPointerGraceIntent = (intent: OverlayMenuPointerGraceIntent | null): void => {
-    pointerGraceIntent = intent
-    window.clearTimeout(pointerGraceTimeoutId)
+  const setPointerGraceIntent = (
+    intent: OverlayMenuPointerGraceIntent | null,
+    point?: [number, number],
+  ): void => {
+    const shouldPreserveDeadline =
+      pointerGraceIntent !== null &&
+      point !== undefined &&
+      isPointInPointerGraceIntent(point, pointerGraceIntent)
 
     if (!intent) {
+      if (shouldPreserveDeadline) {
+        return
+      }
+
+      pointerGraceIntent = null
+      window.clearTimeout(pointerGraceTimeoutId)
+      pointerGraceTimeoutId = 0
       clearQueuedPointerEnter()
       return
     }
 
+    pointerGraceIntent = intent
+
+    if (shouldPreserveDeadline) {
+      return
+    }
+
+    window.clearTimeout(pointerGraceTimeoutId)
+
     pointerGraceTimeoutId = window.setTimeout(() => {
       pointerGraceIntent = null
+      pointerGraceTimeoutId = 0
 
       const pendingPointerEnter = queuedPointerEnter
 
@@ -545,7 +630,7 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
 
       queuedPointerEnter = undefined
       pendingPointerEnter.callback()
-    }, 300)
+    }, POINTER_GRACE_TIMEOUT)
   }
 
   onCleanup(() => {
@@ -574,7 +659,7 @@ export function useOverlayMenuLayerState(): OverlayMenuLayerState {
     setPointerGraceIntent,
     shouldBlockPointerEnter: (event) =>
       pointerGraceIntent !== null &&
-      isPointInPolygon([event.clientX, event.clientY], pointerGraceIntent.area),
+      isPointInPointerGraceIntent([event.clientX, event.clientY], pointerGraceIntent),
   }
 }
 

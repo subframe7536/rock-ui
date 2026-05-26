@@ -22,6 +22,40 @@ export function ProjectIssueActions() {
           label: 'Open Issue',
           icon: 'i-lucide-external-link',
         },
+
+        {
+          label: 'Move to Sprint',
+          icon: 'i-lucide-calendar-range',
+          children: [
+            {
+              type: 'group',
+              children: [
+                {
+                  label: 'Sprint 18',
+                },
+                {
+                  label: 'Sprint 19',
+                },
+                {
+                  label: 'Sprint 20',
+                },
+                {
+                  label: 'Sprint 21',
+                },
+                {
+                  label: 'Sprint 22',
+                },
+                {
+                  label: 'Backlog',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Edit Details',
+          icon: 'i-lucide-pencil',
+        },
         {
           label: 'Assign',
           icon: 'i-lucide-user-round-plus',
@@ -47,35 +81,6 @@ export function ProjectIssueActions() {
               ],
             },
           ],
-        },
-        {
-          label: 'Move to Sprint',
-          icon: 'i-lucide-calendar-range',
-          children: [
-            {
-              type: 'group',
-              children: [
-                {
-                  label: 'Sprint 18',
-                },
-                {
-                  label: 'Sprint 19',
-                },
-                {
-                  label: 'Backlog',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      type: 'group',
-      children: [
-        {
-          label: 'Edit Details',
-          icon: 'i-lucide-pencil',
         },
         {
           label: 'Share Update',
