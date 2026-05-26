@@ -194,6 +194,19 @@ export function Tabs(props: TabsProps): JSX.Element {
     return firstEnabledValue()
   })
   const triggerRefs = new Map<string, HTMLButtonElement>()
+  const [highlightedValue, setHighlightedValue] = createSignal<string | undefined>()
+  const effectiveHighlighted = createMemo<string | undefined>(() => {
+    const focused = highlightedValue()
+
+    if (
+      focused !== undefined &&
+      normalizedItems().some((item) => item.value === focused && !item.disabled)
+    ) {
+      return focused
+    }
+
+    return selectedValue()
+  })
   const [indicatorStyle, setIndicatorStyle] = createSignal<JSX.CSSProperties>({
     transform: undefined,
     width: undefined,
@@ -206,7 +219,10 @@ export function Tabs(props: TabsProps): JSX.Element {
     isDisabled: (item) => Boolean(merged.disabled || item.disabled),
     loop: () => merged.keyboardLoop ?? true,
     activationMode: () => merged.activationMode ?? 'automatic',
-    focusValue: (value) => triggerRefs.get(value)?.focus(),
+    focusValue: (value) => {
+      setHighlightedValue(value)
+      triggerRefs.get(value)?.focus()
+    },
     onSelect: (value) => selectValue(value),
   })
 
@@ -343,6 +359,7 @@ export function Tabs(props: TabsProps): JSX.Element {
         <For each={normalizedItems()}>
           {(item) => {
             const selected = createMemo(() => selectedValue() === item.value)
+            const highlighted = createMemo(() => effectiveHighlighted() === item.value)
 
             return (
               <button
@@ -352,10 +369,11 @@ export function Tabs(props: TabsProps): JSX.Element {
                 }}
                 type="button"
                 role="tab"
-                tabIndex={selected() ? 0 : -1}
+                tabIndex={highlighted() ? 0 : -1}
                 aria-controls={getContentId(item.value)}
                 aria-selected={selected()}
                 data-selected={selected() ? '' : undefined}
+                data-highlighted={highlighted() && !selected() ? '' : undefined}
                 disabled={Boolean(merged.disabled || item.disabled)}
                 data-slot="trigger"
                 style={merged.styles?.trigger}
@@ -367,7 +385,11 @@ export function Tabs(props: TabsProps): JSX.Element {
                   },
                   merged.classes?.trigger,
                 )}
-                onClick={() => selectValue(item.value)}
+                onClick={() => {
+                  setHighlightedValue(item.value)
+                  selectValue(item.value)
+                }}
+                onFocus={() => setHighlightedValue(item.value)}
                 onKeyDown={(event) => {
                   onNavigationKeyDown(event, item.value, merged.orientation)
                 }}

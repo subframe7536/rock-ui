@@ -294,4 +294,67 @@ describe('Tabs', () => {
     await fireEvent.keyDown(two, { key: 'ArrowRight' })
     expect(one.getAttribute('aria-selected')).toBe('true')
   })
+
+  test('skips disabled tabs during keyboard navigation', async () => {
+    const screen = render(() => (
+      <Tabs
+        items={[
+          { label: 'One', value: 'one', content: 'Panel one' },
+          { label: 'Two', value: 'two', content: 'Panel two', disabled: true },
+          { label: 'Three', value: 'three', content: 'Panel three' },
+        ]}
+        defaultValue="one"
+      />
+    ))
+
+    const one = screen.getByRole('tab', { name: 'One' })
+    const two = screen.getByRole('tab', { name: 'Two' })
+    const three = screen.getByRole('tab', { name: 'Three' })
+
+    one.focus()
+
+    await fireEvent.keyDown(one, { key: 'ArrowRight' })
+    expect(three.getAttribute('aria-selected')).toBe('true')
+    expect(two.getAttribute('aria-selected')).toBe('false')
+
+    await fireEvent.keyDown(three, { key: 'ArrowLeft' })
+    expect(one.getAttribute('aria-selected')).toBe('true')
+  })
+
+  test('roving tabindex follows highlighted tab in manual mode', async () => {
+    const screen = render(() => (
+      <Tabs
+        activationMode="manual"
+        defaultValue="one"
+        items={[
+          { label: 'One', value: 'one', content: 'Panel one' },
+          { label: 'Two', value: 'two', content: 'Panel two' },
+          { label: 'Three', value: 'three', content: 'Panel three' },
+        ]}
+      />
+    ))
+
+    const one = screen.getByRole('tab', { name: 'One' })
+    const two = screen.getByRole('tab', { name: 'Two' })
+    const three = screen.getByRole('tab', { name: 'Three' })
+
+    expect(one.getAttribute('tabindex')).toBe('0')
+    expect(two.getAttribute('tabindex')).toBe('-1')
+
+    one.focus()
+
+    await fireEvent.keyDown(one, { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(two)
+    expect(two.getAttribute('tabindex')).toBe('0')
+    expect(one.getAttribute('tabindex')).toBe('-1')
+    expect(two.getAttribute('data-highlighted')).toBe('')
+    expect(one.getAttribute('aria-selected')).toBe('true')
+    expect(two.getAttribute('aria-selected')).toBe('false')
+
+    await fireEvent.keyDown(two, { key: 'Enter' })
+    expect(two.getAttribute('aria-selected')).toBe('true')
+    expect(two.getAttribute('tabindex')).toBe('0')
+    expect(two.getAttribute('data-highlighted')).toBe(null)
+    expect(three.getAttribute('tabindex')).toBe('-1')
+  })
 })

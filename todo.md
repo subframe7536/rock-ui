@@ -3,25 +3,23 @@
 - [x] Freeze the parity audit scope and reference matrix
       Scope this sweep to existing Moraine components and shared hooks under `src/elements`, `src/forms`, `src/navigation`, and `src/overlays`. Map each target to `base-ui` and `kobalte` references, and explicitly exclude new components that do not exist in Moraine yet, such as `ScrollArea`, `OTPField`, and `Combobox`. Canonical matrix: [`parity-matrix.md`](./parity-matrix.md).
 
-- [ ] Align `useControllableValue` with robust controlled/uncontrolled semantics
-      Add functional updater support, `Object.is` equality short-circuiting, and explicit controlled vs uncontrolled change semantics. Audit all current consumers before changing behavior, and add hook-level regression coverage so downstream components do not silently drift.
 
-- [ ] Enhance `useSelectableCollectionNavigation` for keyboard and RTL compatibility
+- [x] Enhance `useSelectableCollectionNavigation` for keyboard and RTL compatibility
       Port the missing collection-navigation edge cases: orientation-aware arrow handling, RTL-aware horizontal navigation, `Home`/`End`, manual vs automatic activation, and a stable extension point for typeahead behavior.
 
-- [ ] Port non-native button compatibility behavior into `Button`
+- [x] Port non-native button compatibility behavior into `Button`
       Make polymorphic non-native buttons behave like accessible buttons: keyboard activation with `Enter` and `Space`, correct disabled/loading interaction blocking, and compatibility with anchor rendering without leaking button-only attributes. use `callHandler` to call event listeners in props and `onClick` options with the correct event type.
 
-- [ ] Harden `InputNumber` partial-input and locale parsing behavior
+- [x] Harden `InputNumber` partial-input and locale parsing behavior
       Support incomplete but valid in-progress input states such as `-`, `.`, and locale-specific separators without forcing premature commits. Bring parsing and formatting behavior closer to the number-field references, and add regression tests for partial input and localized separators.
 
-- [ ] Port missing `BaseSelect` compatibility and edge-case handlers
+- [x] Port missing `BaseSelect` compatibility and edge-case handlers
       Fill the state-machine gaps in `src/forms/select/base-select.tsx` and `src/forms/select/shared/behavior.tsx`: typeahead, search input and highlighted-option synchronization, controlled value synchronization, disabled-option skipping, and hidden form value plus ARIA consistency.
 
-- [ ] Add `Slider` commit semantics and multi-thumb keyboard edge cases
+- [x] Add `Slider` commit semantics and multi-thumb keyboard edge cases
       Separate live value updates from committed value changes, and harden multi-thumb keyboard interactions including boundary movement and thumb selection behavior.
 
-- [ ] Bring `Tabs` navigation behavior up to parity
+- [x] Bring `Tabs` navigation behavior up to parity
       Use the improved collection-navigation behavior to support orientation-aware keys, RTL handling, `Home`/`End`, and correct manual activation where focus and selected state intentionally diverge.
 
 - [ ] Improve `Pagination` accessibility labels
