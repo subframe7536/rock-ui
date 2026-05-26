@@ -29,7 +29,6 @@ import {
   moveSortedValue,
   normalizeSliderValues,
   resolveSliderEdges,
-  resolveThumbIndexForDirection,
   snapValueToStep,
 } from './utils'
 
@@ -449,6 +448,8 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
       key === 'ArrowRight' || key === 'ArrowUp' || key === 'Right' || key === 'Up'
     const isDecrementKey =
       key === 'ArrowLeft' || key === 'ArrowDown' || key === 'Left' || key === 'Down'
+    const isPageUp = key === 'PageUp'
+    const isPageDown = key === 'PageDown'
     const isLTR = () =>
       typeof document === 'undefined'
         ? true
@@ -459,59 +460,30 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
       !isDecrementKey &&
       key !== 'Home' &&
       key !== 'End' &&
-      key !== 'PageUp' &&
-      key !== 'PageDown'
+      !isPageUp &&
+      !isPageDown
     ) {
       return
     }
 
     event.preventDefault()
 
-    let direction = 0
-    let nextIndex = index
-
     if (key === 'Home') {
-      const minValue = getThumbMinValue(interactionValues(), index)
-      applyThumbValue(index, minValue)
+      applyThumbValue(index, getThumbMinValue(interactionValues(), index))
       return
     }
 
     if (key === 'End') {
-      const maxValue = getThumbMaxValue(interactionValues(), index)
-      applyThumbValue(index, maxValue)
+      applyThumbValue(index, getThumbMaxValue(interactionValues(), index))
       return
     }
 
-    const stepSize =
-      key === 'PageUp' || key === 'PageDown'
-        ? pageSize()
-        : event.shiftKey && (isIncrementKey || isDecrementKey)
-          ? pageSize()
-          : merged.step!
-
-    if (key === 'PageUp') {
+    let direction = 0
+    if (isPageUp) {
       direction = 1
-      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
-      if (nextIndex !== index) {
-        suppressNextBlurCommit = true
-        thumbRefs()[nextIndex]?.focus()
-      }
-      applyThumbValue(nextIndex, interactionValues()[nextIndex]! + stepSize)
-      return
-    }
-
-    if (key === 'PageDown') {
+    } else if (isPageDown) {
       direction = -1
-      nextIndex = resolveThumbIndexForDirection(interactionValues(), index, direction)
-      if (nextIndex !== index) {
-        suppressNextBlurCommit = true
-        thumbRefs()[nextIndex]?.focus()
-      }
-      applyThumbValue(nextIndex, interactionValues()[nextIndex]! - stepSize)
-      return
-    }
-
-    if (merged.orientation === 'vertical') {
+    } else if (merged.orientation === 'vertical') {
       if (key === 'ArrowDown' || key === 'Down') {
         direction = merged.inverted ? -1 : 1
       } else if (key === 'ArrowUp' || key === 'Up') {
@@ -527,15 +499,22 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
       direction = isLTR() ? -1 : 1
     }
 
-    const currentValue = interactionValues()[index] ?? merged.min!
-    const candidateValue = currentValue + direction * stepSize
-    const resultIndex = applyThumbValue(index, candidateValue)
+    const stepSize = isPageUp || isPageDown || event.shiftKey ? pageSize() : merged.step!
 
-    if (resultIndex === undefined && !merged.allowThumbCrossing && interactionValues().length > 1) {
-      const adjacentIndex = direction > 0 ? index + 1 : index - 1
-      if (adjacentIndex >= 0 && adjacentIndex < interactionValues().length) {
-        suppressNextBlurCommit = true
-        thumbRefs()[adjacentIndex]?.focus()
+    const oldValue = interactionValues()[index] ?? merged.min!
+    const candidateValue = oldValue + direction * stepSize
+    applyThumbValue(index, candidateValue)
+    const newValue = interactionValues()[index] ?? merged.min!
+
+    if (!merged.allowThumbCrossing && interactionValues().length > 1 && newValue === oldValue) {
+      const atGlobalBoundary =
+        (direction > 0 && oldValue === merged.max!) || (direction < 0 && oldValue === merged.min!)
+      if (!atGlobalBoundary) {
+        const adjacentIndex = direction > 0 ? index + 1 : index - 1
+        if (adjacentIndex >= 0 && adjacentIndex < interactionValues().length) {
+          suppressNextBlurCommit = true
+          thumbRefs()[adjacentIndex]?.focus()
+        }
       }
     }
   }

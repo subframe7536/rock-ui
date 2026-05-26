@@ -160,30 +160,3 @@ export function resolveSliderEdges(
     ? { startEdge: 'left', endEdge: 'right' }
     : { startEdge: 'right', endEdge: 'left' }
 }
-
-export function resolveThumbIndexForDirection(
-  values: number[],
-  index: number,
-  direction: number,
-): number {
-  const currentValue = values[index]
-  if (currentValue === undefined) {
-    return index
-  }
-
-  let nextIndex = index
-
-  if (direction > 0) {
-    while (nextIndex < values.length - 1 && values[nextIndex + 1] === currentValue) {
-      nextIndex += 1
-    }
-
-    return nextIndex
-  }
-
-  while (nextIndex > 0 && values[nextIndex - 1] === currentValue) {
-    nextIndex -= 1
-  }
-
-  return nextIndex
-}

@@ -842,7 +842,7 @@ describe('Slider', () => {
       ))
       const thumbs = getThumbs(screen.container)
 
-      await fireEvent.focus(thumbs[0] as HTMLElement)
+      ;(thumbs[0] as HTMLElement).focus()
 
       for (let i = 0; i < 30; i++) {
         await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
@@ -853,6 +853,7 @@ describe('Slider', () => {
       await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
 
       expect(onValueChange).toHaveBeenLastCalledWith([50, 50])
+      expect(document.activeElement).toBe(thumbs[1])
     })
 
     test('arrow key switches to previous thumb when blocked going left', async () => {
@@ -862,7 +863,7 @@ describe('Slider', () => {
       ))
       const thumbs = getThumbs(screen.container)
 
-      await fireEvent.focus(thumbs[1] as HTMLElement)
+      ;(thumbs[1] as HTMLElement).focus()
 
       for (let i = 0; i < 30; i++) {
         await fireEvent.keyDown(thumbs[1] as HTMLElement, { key: 'ArrowLeft' })
@@ -873,6 +874,7 @@ describe('Slider', () => {
       await fireEvent.keyDown(thumbs[1] as HTMLElement, { key: 'ArrowLeft' })
 
       expect(onValueChange).toHaveBeenLastCalledWith([20, 20])
+      expect(document.activeElement).toBe(thumbs[0])
     })
 
     test('arrow key does not switch thumb when allowThumbCrossing is true', async () => {
@@ -882,13 +884,14 @@ describe('Slider', () => {
       ))
       const thumbs = getThumbs(screen.container)
 
-      await fireEvent.focus(thumbs[0] as HTMLElement)
+      ;(thumbs[0] as HTMLElement).focus()
 
       for (let i = 0; i < 35; i++) {
         await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
       }
 
       expect(onValueChange).toHaveBeenLastCalledWith([52, 53])
+      expect(document.activeElement).toBe(thumbs[0])
     })
 
     test('arrow key does not switch thumb at global boundaries', async () => {
@@ -898,11 +901,12 @@ describe('Slider', () => {
       ))
       const thumbs = getThumbs(screen.container)
 
-      await fireEvent.focus(thumbs[0] as HTMLElement)
+      ;(thumbs[0] as HTMLElement).focus()
       await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowLeft' })
 
       expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('0')
       expect(onValueChange).toHaveBeenLastCalledWith([0, 50])
+      expect(document.activeElement).toBe(thumbs[0])
     })
 
     test('PageUp and PageDown do not switch thumbs, only move current thumb', async () => {
@@ -912,11 +916,124 @@ describe('Slider', () => {
       ))
       const thumbs = getThumbs(screen.container)
 
-      await fireEvent.focus(thumbs[0] as HTMLElement)
+      ;(thumbs[0] as HTMLElement).focus()
       await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'PageUp' })
 
       expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('50')
       expect(onValueChange).toHaveBeenLastCalledWith([50, 60])
+      expect(document.activeElement).toBe(thumbs[0])
+    })
+
+    test('PageUp switches focus to adjacent thumb when blocked at thumb boundary', async () => {
+      const screen = render(() => <Slider defaultValue={[40, 50]} allowThumbCrossing={false} />)
+      const thumbs = getThumbs(screen.container)
+
+      ;(thumbs[0] as HTMLElement).focus()
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'PageUp' })
+
+      expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('50')
+      expect(document.activeElement).toBe(thumbs[0])
+
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'PageUp' })
+
+      expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('50')
+      expect(document.activeElement).toBe(thumbs[1])
+    })
+
+    test('PageDown switches focus to previous thumb when blocked at thumb boundary', async () => {
+      const screen = render(() => <Slider defaultValue={[40, 50]} allowThumbCrossing={false} />)
+      const thumbs = getThumbs(screen.container)
+
+      ;(thumbs[1] as HTMLElement).focus()
+      await fireEvent.keyDown(thumbs[1] as HTMLElement, { key: 'PageDown' })
+
+      expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('40')
+      expect(document.activeElement).toBe(thumbs[1])
+
+      await fireEvent.keyDown(thumbs[1] as HTMLElement, { key: 'PageDown' })
+
+      expect(thumbs[1]?.getAttribute('aria-valuenow')).toBe('40')
+      expect(document.activeElement).toBe(thumbs[0])
+    })
+
+    test('blur during programmatic focus shift does not double-commit', async () => {
+      const onChange = vi.fn()
+      const screen = render(() => (
+        <Slider defaultValue={[20, 50]} allowThumbCrossing={false} onChange={onChange} />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      ;(thumbs[0] as HTMLElement).focus()
+
+      for (let i = 0; i < 30; i++) {
+        await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
+      }
+      await fireEvent.keyUp(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
+
+      const commitsBefore = onChange.mock.calls.length
+
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
+
+      expect(document.activeElement).toBe(thumbs[1])
+      expect(onChange).toHaveBeenCalledTimes(commitsBefore)
+    })
+
+    test('minStepsBetweenThumbs prevents move and switches focus', async () => {
+      const screen = render(() => (
+        <Slider defaultValue={[20, 30]} minStepsBetweenThumbs={10} allowThumbCrossing={false} />
+      ))
+      const thumbs = getThumbs(screen.container)
+
+      ;(thumbs[0] as HTMLElement).focus()
+
+      await fireEvent.keyDown(thumbs[0] as HTMLElement, { key: 'ArrowRight' })
+
+      expect(thumbs[0]?.getAttribute('aria-valuenow')).toBe('20')
+      expect(document.activeElement).toBe(thumbs[1])
+    })
+  })
+
+  describe('pointer commit semantics', () => {
+    test('pointer drag emits live updates but commits only on release', async () => {
+      const onValueChange = vi.fn()
+      const onChange = vi.fn()
+      const screen = render(() => (
+        <Slider defaultValue={20} onValueChange={onValueChange} onChange={onChange} />
+      ))
+      const thumb = getThumbs(screen.container)[0] as HTMLElement
+      const track = screen.container.querySelector('[data-slot="track"]') as HTMLElement
+
+      mockPointerCapture(thumb)
+      mockTrackRect(track)
+
+      await fireEvent.pointerDown(thumb, {
+        button: 0,
+        pointerId: 1,
+        clientX: 20,
+        clientY: 0,
+      })
+      await fireEvent.pointerMove(thumb, {
+        pointerId: 1,
+        clientX: 40,
+        clientY: 0,
+      })
+      await fireEvent.pointerMove(thumb, {
+        pointerId: 1,
+        clientX: 60,
+        clientY: 0,
+      })
+
+      expect(onValueChange).toHaveBeenCalled()
+      expect(onChange).not.toHaveBeenCalled()
+
+      await fireEvent.pointerUp(thumb, {
+        pointerId: 1,
+        clientX: 60,
+        clientY: 0,
+      })
+
+      expect(onChange).toHaveBeenCalledTimes(1)
+      expect(onChange).toHaveBeenLastCalledWith(60)
     })
   })
 })
