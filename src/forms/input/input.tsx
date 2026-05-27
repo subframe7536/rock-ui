@@ -236,6 +236,13 @@ export function Input<M extends ModelModifiers | undefined = ModelModifiers | un
   const isTrailingLoading = createMemo(() =>
     Boolean(merged.loading && loadingTarget() === 'trailing'),
   )
+  const readOnly = createMemo(() => Boolean(merged.readOnly))
+  const dataAttrs = createMemo(() => ({
+    'data-invalid': field.invalid() ? '' : undefined,
+    'data-disabled': field.disabled() ? '' : undefined,
+    'data-required': merged.required ? '' : undefined,
+    'data-readonly': readOnly() ? '' : undefined,
+  }))
 
   function updateInputValue(value: string): void {
     const nextValue = applyInputModifiers<ModifierValue<M>>(value, merged.modelModifiers)
@@ -300,8 +307,6 @@ export function Input<M extends ModelModifiers | undefined = ModelModifiers | un
     <div
       data-slot="root"
       style={merged.styles?.root}
-      data-invalid={field.invalid() ? '' : undefined}
-      data-disabled={field.disabled() ? '' : undefined}
       class={inputRootVariants(
         {
           size: field.size(),
@@ -310,6 +315,7 @@ export function Input<M extends ModelModifiers | undefined = ModelModifiers | un
         merged.classes?.root,
       )}
       onPointerDown={onRootPointerDown}
+      {...dataAttrs()}
     >
       <Show when={resolvedLeading()}>
         {(iconName) => (
@@ -340,9 +346,12 @@ export function Input<M extends ModelModifiers | undefined = ModelModifiers | un
         placeholder={merged.placeholder}
         required={merged.required}
         disabled={field.disabled()}
-        readOnly={merged.readOnly}
+        readOnly={readOnly()}
         autocomplete={merged.autocomplete}
         maxLength={merged.maxLength}
+        aria-required={merged.required || undefined}
+        aria-disabled={field.disabled() || undefined}
+        aria-readonly={readOnly() || undefined}
         data-slot="input"
         style={merged.styles?.input}
         class={inputInputVariants(
@@ -358,6 +367,7 @@ export function Input<M extends ModelModifiers | undefined = ModelModifiers | un
         onChange={onChange}
         onBlur={onBlur}
         onFocus={onFocus}
+        {...dataAttrs()}
         {...field.ariaAttrs()}
         {...inputValueProps()}
       />

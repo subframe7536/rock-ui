@@ -218,6 +218,12 @@ export function Textarea<M extends ModelModifiers | undefined = ModelModifiers |
 
     return {}
   })
+  const dataAttrs = createMemo(() => ({
+    'data-invalid': field.invalid() ? '' : undefined,
+    'data-disabled': field.disabled() ? '' : undefined,
+    'data-required': merged.required ? '' : undefined,
+    'data-readonly': merged.readOnly ? '' : undefined,
+  }))
 
   function updateInputValue(value: string): void {
     const nextValue = applyInputModifiers<ModifierValue<M>>(value, merged.modelModifiers)
@@ -323,8 +329,6 @@ export function Textarea<M extends ModelModifiers | undefined = ModelModifiers |
     <div
       data-slot="root"
       style={merged.styles?.root}
-      data-invalid={field.invalid() ? '' : undefined}
-      data-disabled={field.disabled() ? '' : undefined}
       class={textareaRootVariants(
         {
           size: field.size(),
@@ -333,6 +337,7 @@ export function Textarea<M extends ModelModifiers | undefined = ModelModifiers |
         merged.classes?.root,
       )}
       onPointerDown={onRootPointerDown}
+      {...dataAttrs()}
     >
       <Show when={merged.header}>
         <div
@@ -359,6 +364,9 @@ export function Textarea<M extends ModelModifiers | undefined = ModelModifiers |
         disabled={field.disabled()}
         readOnly={merged.readOnly}
         maxLength={merged.maxLength}
+        aria-required={merged.required || undefined}
+        aria-disabled={field.disabled() || undefined}
+        aria-readonly={merged.readOnly || undefined}
         data-slot="input"
         style={merged.styles?.input}
         class={textareaBaseVariants(
@@ -372,6 +380,7 @@ export function Textarea<M extends ModelModifiers | undefined = ModelModifiers |
         onChange={onChange}
         onBlur={onBlur}
         onFocus={onFocus}
+        {...dataAttrs()}
         {...field.ariaAttrs()}
         {...textareaValueProps()}
       />

@@ -61,12 +61,30 @@ describe('Textarea', () => {
       <Textarea id="bio" name="bio" rows={4} placeholder="Write bio" required disabled />
     ))
     const textarea = screen.getByPlaceholderText('Write bio') as HTMLTextAreaElement
+    const root = screen.container.querySelector('[data-slot="root"]')
 
     expect(textarea.getAttribute('id')).toBe('bio')
     expect(textarea.getAttribute('name')).toBe('bio')
     expect(textarea.rows).toBe(4)
     expect(textarea.required).toBe(true)
     expect(textarea.disabled).toBe(true)
+    expect(textarea.getAttribute('aria-required')).toBe('true')
+    expect(textarea.getAttribute('aria-disabled')).toBe('true')
+    expect(root?.getAttribute('data-required')).toBe('')
+    expect(root?.getAttribute('data-disabled')).toBe('')
+    expect(textarea.getAttribute('data-required')).toBe('')
+    expect(textarea.getAttribute('data-disabled')).toBe('')
+  })
+
+  test('exposes readonly state through aria and data attributes', () => {
+    const screen = render(() => <Textarea readOnly />)
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    const root = screen.container.querySelector('[data-slot="root"]')
+
+    expect(textarea.readOnly).toBe(true)
+    expect(textarea.getAttribute('aria-readonly')).toBe('true')
+    expect(root?.getAttribute('data-readonly')).toBe('')
+    expect(textarea.getAttribute('data-readonly')).toBe('')
   })
 
   test('keeps header and footer slots absent by default', () => {

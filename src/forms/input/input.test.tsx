@@ -64,12 +64,30 @@ describe('Input', () => {
       />
     ))
     const input = screen.getByPlaceholderText('Enter email') as HTMLInputElement
+    const root = screen.container.querySelector('[data-slot="root"]')
 
     expect(input.getAttribute('id')).toBe('email-input')
     expect(input.getAttribute('name')).toBe('email')
     expect(input.getAttribute('type')).toBe('email')
     expect(input.disabled).toBe(true)
     expect(input.required).toBe(true)
+    expect(input.getAttribute('aria-required')).toBe('true')
+    expect(input.getAttribute('aria-disabled')).toBe('true')
+    expect(root?.getAttribute('data-required')).toBe('')
+    expect(root?.getAttribute('data-disabled')).toBe('')
+    expect(input.getAttribute('data-required')).toBe('')
+    expect(input.getAttribute('data-disabled')).toBe('')
+  })
+
+  test('exposes readonly state through aria and data attributes', () => {
+    const screen = render(() => <Input readOnly />)
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    const root = screen.container.querySelector('[data-slot="root"]')
+
+    expect(input.readOnly).toBe(true)
+    expect(input.getAttribute('aria-readonly')).toBe('true')
+    expect(root?.getAttribute('data-readonly')).toBe('')
+    expect(input.getAttribute('data-readonly')).toBe('')
   })
 
   test('renders leading and trailing slots through Icon', () => {
