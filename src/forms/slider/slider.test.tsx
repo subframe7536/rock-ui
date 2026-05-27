@@ -152,6 +152,15 @@ describe('Slider', () => {
     expect(inputs[0]?.disabled).toBe(true)
     expect(inputs[0]?.readOnly).toBe(true)
     expect(root?.getAttribute('data-orientation')).toBe('vertical')
+    expect(root?.getAttribute('data-required')).toBe('')
+    expect(root?.getAttribute('data-disabled')).toBe('')
+    expect(root?.getAttribute('data-readonly')).toBe('')
+    expect(thumb?.getAttribute('data-required')).toBe('')
+    expect(thumb?.getAttribute('data-disabled')).toBe('')
+    expect(thumb?.getAttribute('data-readonly')).toBe('')
+    expect(thumb?.getAttribute('aria-required')).toBe('true')
+    expect(thumb?.getAttribute('aria-disabled')).toBe('true')
+    expect(thumb?.getAttribute('aria-readonly')).toBe('true')
     expect(track?.className).toContain('bg-input')
     expect(thumb?.className).toContain('absolute')
     expect(thumb?.style.translate).toBe('')
@@ -662,6 +671,11 @@ describe('Slider', () => {
     })
 
     const inputEl = input()
+    const root = screen.container.querySelector('[data-slot="root"][id$="-root"]')
+    const thumb = screen.container.querySelector('[data-slot="thumb"]')
+
+    expect(root?.getAttribute('data-invalid')).toBe('')
+    expect(thumb?.getAttribute('data-invalid')).toBe('')
     expect(inputEl.getAttribute('aria-invalid')).toBe('true')
 
     const describedBy = inputEl.getAttribute('aria-describedby') ?? ''

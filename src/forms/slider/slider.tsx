@@ -186,6 +186,12 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
   const isActionDisabled = createMemo(() => field.disabled() || merged.readOnly)
   const currentValues = createMemo(() => getControlledValues() ?? displayValues())
   const interactionValues = () => pendingValues ?? currentValues()
+  const dataAttrs = createMemo(() => ({
+    'data-disabled': field.disabled() ? '' : undefined,
+    'data-invalid': field.invalid() ? '' : undefined,
+    'data-readonly': merged.readOnly ? '' : undefined,
+    'data-required': merged.required ? '' : undefined,
+  }))
   const thumbStyles = createMemo<JSX.CSSProperties[]>(() => {
     const { startEdge } = getSliderEdges()
 
@@ -592,8 +598,7 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
       role="group"
       data-slot="root"
       data-orientation={merged.orientation}
-      data-disabled={field.disabled() ? '' : undefined}
-      data-readonly={merged.readOnly ? '' : undefined}
+      {...dataAttrs()}
       style={merged.styles?.root}
       class={sliderRootVariants(
         {
@@ -654,8 +659,7 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
             }}
             data-slot="thumb"
             data-dragging={dragging() && activeThumbIndexState() === thumbIndex ? '' : undefined}
-            data-disabled={field.disabled() ? '' : undefined}
-            data-readonly={merged.readOnly ? '' : undefined}
+            {...dataAttrs()}
             role="slider"
             tabIndex={field.disabled() ? undefined : 0}
             style={{
@@ -682,6 +686,7 @@ export function Slider<TValue extends SliderT.Value = SliderT.Value>(
                 ? 'Thumb'
                 : `Thumb ${thumbIndex + 1} of ${currentValues().length}`
             }
+            aria-required={merged.required || undefined}
             aria-disabled={field.disabled() || undefined}
             aria-readonly={merged.readOnly || undefined}
             onPointerDown={(event) => {
