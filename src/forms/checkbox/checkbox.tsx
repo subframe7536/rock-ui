@@ -276,11 +276,25 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
   }
 
   const readOnly = createMemo(() => Boolean(merged.readOnly))
+  const descriptionId = createMemo(() =>
+    merged.description ? `${field.id()}-description` : undefined,
+  )
+  const inputAriaAttrs = createMemo(() => {
+    const attrs = { ...field.ariaAttrs() }
+    const describedBy = [attrs['aria-describedby'], descriptionId()].filter(Boolean).join(' ')
+
+    if (describedBy) {
+      attrs['aria-describedby'] = describedBy
+    }
+
+    return attrs
+  })
   const dataAttrs = createMemo(() => ({
     'data-checked': resolvedChecked() ? '' : undefined,
     'data-disabled': field.disabled() ? '' : undefined,
     'data-indeterminate': indeterminate() ? '' : undefined,
     'data-readonly': readOnly() ? '' : undefined,
+    'data-required': merged.required ? '' : undefined,
   }))
 
   createEffect(() => {
@@ -410,7 +424,7 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
           }}
           onKeyDown={onInputKeyDown}
           {...dataAttrs()}
-          {...field.ariaAttrs()}
+          {...inputAriaAttrs()}
         />
 
         <div
@@ -499,6 +513,7 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
 
           <Show when={merged.description}>
             <p
+              id={descriptionId()}
               data-slot="description"
               style={merged.styles?.description}
               class={cn('text-muted-foreground', merged.classes?.description)}

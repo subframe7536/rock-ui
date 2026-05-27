@@ -18,6 +18,31 @@ describe('Checkbox', () => {
     expect(checkbox).not.toBeNull()
     expect(label.getAttribute('for')).toBe(checkbox.getAttribute('id'))
     expect(screen.getByText('Required to continue')).not.toBeNull()
+    expect(checkbox.getAttribute('aria-describedby')).toBe(
+      `${checkbox.getAttribute('id')}-description`,
+    )
+  })
+
+  test('combines local description with form field aria description', async () => {
+    const state = { agree: false }
+
+    const screen = render(() => (
+      <Form state={state}>
+        <FormField name="agree" label="Agree" description="Field description" help="Field help">
+          <Checkbox description="Checkbox description" />
+        </FormField>
+      </Form>
+    ))
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Agree' }) as HTMLInputElement
+    const describedBy = checkbox.getAttribute('aria-describedby') ?? ''
+
+    expect(screen.getByText('Field description')).not.toBeNull()
+    expect(screen.getByText('Field help')).not.toBeNull()
+    expect(screen.getByText('Checkbox description')).not.toBeNull()
+    expect(describedBy).toContain('-description')
+    expect(describedBy).toContain('-help')
+    expect(describedBy).toContain(`${checkbox.id}-description`)
   })
 
   test('supports uncontrolled toggle and custom checked icon content', async () => {
@@ -124,11 +149,15 @@ describe('Checkbox', () => {
     ))
 
     const checkbox = screen.getByRole('checkbox', { name: 'Terms' })
+    const root = screen.container.querySelector('[data-slot="root"]')
+    const control = screen.container.querySelector('[data-slot="control"]')
 
     expect(checkbox.getAttribute('id')).toBe('terms-checkbox')
     expect(checkbox.getAttribute('name')).toBe('terms')
     expect(checkbox.getAttribute('value')).toBe('accepted')
     expect(checkbox.getAttribute('required')).not.toBeNull()
+    expect(root?.getAttribute('data-required')).toBe('')
+    expect(control?.getAttribute('data-required')).toBe('')
   })
 
   test('keeps controlled state while emitting onChange', async () => {
