@@ -15,6 +15,60 @@ describe('InputNumber', () => {
     expect(screen.getByRole('button', { name: 'Decrement' })).not.toBeNull()
   })
 
+  test('exposes required, disabled and readonly state through aria and data attributes', () => {
+    const disabledScreen = render(() => (
+      <InputNumber defaultValue={1} required disabled placeholder="Qty" />
+    ))
+    const disabledSpinbutton = disabledScreen.getByRole('spinbutton') as HTMLInputElement
+    const disabledRoot = disabledScreen.container.querySelector('[data-slot="root"]')
+
+    expect(disabledSpinbutton.required).toBe(true)
+    expect(disabledSpinbutton.disabled).toBe(true)
+    expect(disabledSpinbutton.getAttribute('aria-required')).toBe('true')
+    expect(disabledSpinbutton.getAttribute('aria-disabled')).toBe('true')
+    expect(disabledRoot?.getAttribute('data-required')).toBe('')
+    expect(disabledRoot?.getAttribute('data-disabled')).toBe('')
+    expect(disabledSpinbutton.getAttribute('data-required')).toBe('')
+    expect(disabledSpinbutton.getAttribute('data-disabled')).toBe('')
+
+    disabledScreen.unmount()
+
+    const readOnlyScreen = render(() => <InputNumber defaultValue={1} readOnly />)
+    const readOnlySpinbutton = readOnlyScreen.getByRole('spinbutton') as HTMLInputElement
+    const readOnlyRoot = readOnlyScreen.container.querySelector('[data-slot="root"]')
+
+    expect(readOnlySpinbutton.readOnly).toBe(true)
+    expect(readOnlySpinbutton.getAttribute('aria-readonly')).toBe('true')
+    expect(readOnlyRoot?.getAttribute('data-readonly')).toBe('')
+    expect(readOnlySpinbutton.getAttribute('data-readonly')).toBe('')
+  })
+
+  test('disables steppers at min and max boundaries', async () => {
+    const maxScreen = render(() => <InputNumber defaultValue={10} minValue={0} maxValue={10} />)
+    const maxSpinbutton = maxScreen.getByRole('spinbutton') as HTMLInputElement
+    const maxIncrement = maxScreen.getByRole('button', { name: 'Increment' }) as HTMLButtonElement
+    const maxDecrement = maxScreen.getByRole('button', { name: 'Decrement' }) as HTMLButtonElement
+
+    expect(maxIncrement.disabled).toBe(true)
+    expect(maxDecrement.disabled).toBe(false)
+
+    await fireEvent.click(maxIncrement)
+    expect(maxSpinbutton.value).toBe('10')
+
+    maxScreen.unmount()
+
+    const minScreen = render(() => <InputNumber defaultValue={0} minValue={0} maxValue={10} />)
+    const minSpinbutton = minScreen.getByRole('spinbutton') as HTMLInputElement
+    const minIncrement = minScreen.getByRole('button', { name: 'Increment' }) as HTMLButtonElement
+    const minDecrement = minScreen.getByRole('button', { name: 'Decrement' }) as HTMLButtonElement
+
+    expect(minDecrement.disabled).toBe(true)
+    expect(minIncrement.disabled).toBe(false)
+
+    await fireEvent.click(minDecrement)
+    expect(minSpinbutton.value).toBe('0')
+  })
+
   test('supports uncontrolled increment and decrement behavior', async () => {
     const screen = render(() => <InputNumber defaultValue={1} />)
     const spinbutton = screen.getByRole('spinbutton') as HTMLInputElement

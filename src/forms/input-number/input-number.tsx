@@ -403,6 +403,12 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
   const readOnly = createMemo(() => Boolean(merged.readOnly))
 
   const currentValue = createMemo(() => clamp(resolvedValue() ?? 0, minValue(), maxValue()))
+  const dataAttrs = createMemo(() => ({
+    'data-invalid': field.invalid() ? '' : undefined,
+    'data-disabled': field.disabled() ? '' : undefined,
+    'data-readonly': readOnly() ? '' : undefined,
+    'data-required': merged.required ? '' : undefined,
+  }))
 
   // Sync inputText with currentValue when it changes externally
   createEffect(() => {
@@ -413,8 +419,6 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
     setInputText(formatted)
   })
 
-  const resolvedIncrement = createMemo(() => Boolean(merged.increment))
-  const resolvedDecrement = createMemo(() => Boolean(merged.decrement))
   const resolvedOrientation = createMemo<InputNumberOrientation>(
     () => merged.orientation ?? 'horizontal',
   )
@@ -715,7 +719,10 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       slotName: kind,
       styles: { root: merged.styles?.[kind] },
       disabled:
-        field.disabled() || (isIncrement ? merged.incrementDisabled : merged.decrementDisabled),
+        field.disabled() ||
+        (isIncrement
+          ? merged.incrementDisabled || currentValue() >= maxValue()
+          : merged.decrementDisabled || currentValue() <= minValue()),
       variant: 'ghost',
       size: `icon-${field.size()}`,
       'aria-label': isIncrement ? 'Increment' : 'Decrement',
@@ -730,7 +737,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
         root: inputNumberControlButtonVariants(
           {
             control: kind,
-            divided: !isIncrement && isVertical() && resolvedIncrement(),
+            divided: !isIncrement && isVertical() && merged.increment,
             orientation: resolvedOrientation(),
           },
           'select-none touch-none',
@@ -813,9 +820,6 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
       role="group"
       data-slot="root"
       style={merged.styles?.root}
-      data-invalid={field.invalid() ? '' : undefined}
-      data-disabled={field.disabled() ? '' : undefined}
-      data-readonly={readOnly() ? '' : undefined}
       class={inputNumberRootVariants(
         {
           size: field.size(),
@@ -823,8 +827,9 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
         },
         merged.classes?.root,
       )}
+      {...dataAttrs()}
     >
-      <Show when={!isVertical() && resolvedDecrement()}>
+      <Show when={!isVertical() && merged.decrement}>
         <DecrementControl />
       </Show>
 
@@ -839,6 +844,9 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
         required={merged.required}
         disabled={field.disabled()}
         readOnly={readOnly()}
+        aria-required={merged.required || undefined}
+        aria-disabled={field.disabled() || undefined}
+        aria-readonly={readOnly() || undefined}
         aria-valuemin={minValue()}
         aria-valuemax={maxValue()}
         aria-valuenow={currentValue()}
@@ -848,7 +856,7 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
         class={inputNumberBaseVariants(
           {
             size: field.size(),
-            align: resolveInputNumberAlign(resolvedOrientation(), resolvedDecrement()),
+            align: resolveInputNumberAlign(resolvedOrientation(), merged.decrement),
           },
           merged.classes?.input,
         )}
@@ -917,12 +925,13 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
         onBlur={onBlur}
         onFocus={onFocus}
         onWheel={onWheel}
+        {...dataAttrs()}
         {...field.ariaAttrs()}
       />
 
       <HiddenInput type="hidden" visuallyHidden={false} name={field.name()} value={inputText()} />
 
-      <Show when={isVertical() && (resolvedIncrement() || resolvedDecrement())}>
+      <Show when={isVertical() && (merged.increment || merged.decrement)}>
         <div
           data-slot="controls"
           class={inputNumberControlColumnVariants({
@@ -930,16 +939,16 @@ export function InputNumber(props: InputNumberProps): JSX.Element {
             borderless: isBorderless(),
           })}
         >
-          <Show when={resolvedIncrement()}>
+          <Show when={merged.increment}>
             <IncrementControl />
           </Show>
-          <Show when={resolvedDecrement()}>
+          <Show when={merged.decrement}>
             <DecrementControl />
           </Show>
         </div>
       </Show>
 
-      <Show when={!isVertical() && resolvedIncrement()}>
+      <Show when={!isVertical() && merged.increment}>
         <IncrementControl />
       </Show>
     </div>
