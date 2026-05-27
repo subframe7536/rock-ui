@@ -21,7 +21,7 @@ Use this skill when the user wants to close interaction parity gaps between the 
 
 1. Identify the exact component surface, state machine, and user flows in scope.
 2. Find the original implemention of component in `src/<category>/*`
-3. Find the closest prior art in `kobalte/packages/core/src/*` and `base-ui/packages/react/src/*`. clone it if not available.
+3. Find the closest upstream components in `kobalte/packages/core/src/*` and `base-ui/packages/react/src/*`. clone it if not available.
 4. Compare the target across:
    - keyboard map and focus order
    - ARIA roles, labels, and disabled semantics
