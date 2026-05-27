@@ -155,8 +155,10 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
   })
   const inputRefs = new Map<string, HTMLInputElement>()
   const dataAttrs = createMemo(() => ({
+    'data-invalid': field.invalid() ? '' : undefined,
     'data-disabled': field.disabled() ? '' : undefined,
     'data-readonly': readOnly() ? '' : undefined,
+    'data-required': merged.required ? '' : undefined,
   }))
 
   const legendId = createMemo(() => `${groupId()}-legend`)
@@ -263,8 +265,10 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
             const selected = createMemo(() => item.value === selectedValue())
             const itemDataAttrs = createMemo(() => ({
               'data-checked': selected() ? '' : undefined,
+              'data-invalid': field.invalid() ? '' : undefined,
               'data-disabled': disabled() ? '' : undefined,
               'data-readonly': readOnly() ? '' : undefined,
+              'data-required': merged.required ? '' : undefined,
             }))
 
             return (
@@ -306,6 +310,9 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                     required={merged.required}
                     disabled={disabled()}
                     readOnly={readOnly()}
+                    aria-required={merged.required || undefined}
+                    aria-disabled={disabled() || undefined}
+                    aria-readonly={readOnly() || undefined}
                     class="peer"
                     data-slot="input"
                     onChange={(event) => {
@@ -322,7 +329,6 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
                   <div
                     data-slot="control"
                     style={merged.styles?.control}
-                    data-invalid={field.invalid() ? '' : undefined}
                     class={radioGroupBaseVariants(
                       {
                         size: field.size(),
