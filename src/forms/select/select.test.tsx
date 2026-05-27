@@ -507,6 +507,39 @@ describe('Select - keyboard and ARIA', () => {
     expect(onChange).toHaveBeenCalledWith('banana')
   })
 
+  test('opens with the selected option highlighted', async () => {
+    const screen = render(() => <Select options={FRUITS} value="banana" placeholder="Pick" />)
+    const input = screen.getByRole('combobox') as HTMLElement
+
+    await fireEvent.click(input)
+
+    await waitFor(() => {
+      expect(queryBody('[data-slot="item"][data-highlighted]')?.textContent).toContain('Banana')
+    })
+
+    expect(input.getAttribute('aria-activedescendant')).toContain('Banana')
+  })
+
+  test('keeps selected highlight metadata when virtualized', async () => {
+    const screen = render(() => (
+      <Select options={GROUPED_OPTIONS} value="daikon" virtualized placeholder="Pick" />
+    ))
+    const input = screen.getByRole('combobox') as HTMLElement
+
+    await fireEvent.click(input)
+
+    await waitFor(() => {
+      expect(input.getAttribute('aria-expanded')).toBe('true')
+      expect(queryBody('[data-slot="item"][data-highlighted]')?.textContent).toContain('Daikon')
+    })
+
+    const highlighted = queryBody('[data-slot="item"][data-highlighted]')
+
+    expect(input.getAttribute('aria-activedescendant')).toBe(highlighted?.id)
+    expect(highlighted?.getAttribute('aria-posinset')).toBe('4')
+    expect(highlighted?.getAttribute('aria-setsize')).toBe('4')
+  })
+
   test('does not prevent Tab when menu is closed', () => {
     const screen = render(() => <Select options={FRUITS} placeholder="Pick" />)
     const input = screen.getByRole('combobox') as HTMLInputElement
@@ -547,6 +580,23 @@ describe('Select - keyboard and ARIA', () => {
     const input = screen.getByRole('combobox')
     expect(input.getAttribute('aria-haspopup')).toBe('listbox')
     expect(input.getAttribute('aria-autocomplete')).toBe('list')
+  })
+
+  test('propagates required and disabled state to root, control, and combobox', () => {
+    const screen = render(() => (
+      <Select options={FRUITS} required disabled placeholder="Pick a fruit" />
+    ))
+
+    const root = screen.container.querySelector('[data-slot="root"]')
+    const control = screen.container.querySelector('[data-slot="control"]')
+    const input = screen.getByRole('combobox')
+
+    expect(root?.getAttribute('data-required')).toBe('')
+    expect(root?.getAttribute('data-disabled')).toBe('')
+    expect(control?.getAttribute('data-required')).toBe('')
+    expect(control?.getAttribute('data-disabled')).toBe('')
+    expect(input.getAttribute('aria-required')).toBe('true')
+    expect(input.getAttribute('aria-disabled')).toBe('true')
   })
 })
 

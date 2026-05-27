@@ -183,6 +183,7 @@ function matchesFilter<TOption extends { key: string }>(
 function useSelectNavigation<TItem extends BaseSelectT.Item>(options: {
   highlightedKey: Accessor<string | undefined>
   isOpen: Accessor<boolean>
+  selectedValues: Accessor<BaseSelectT.Value[]>
   setHighlightedKey: (key: string | undefined) => void
   visibleFlatOptions: Accessor<NormalizedOption<TItem>[]>
 }) {
@@ -239,9 +240,10 @@ function useSelectNavigation<TItem extends BaseSelectT.Item>(options: {
       return
     }
 
-    // Highlight first enabled option when menu opens
-    const firstOption = enabledOptions()[0]
-    options.setHighlightedKey(firstOption?.key)
+    const selectedValueSet = new Set(options.selectedValues().map((value) => String(value)))
+    const selectedOption = enabledOptions().find((option) => selectedValueSet.has(option.value))
+
+    options.setHighlightedKey(selectedOption?.key ?? enabledOptions()[0]?.key)
   })
 
   return {
@@ -449,6 +451,7 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
   const navigation = useSelectNavigation({
     highlightedKey,
     isOpen,
+    selectedValues: () => merged.selectedValues ?? [],
     setHighlightedKey,
     visibleFlatOptions,
   })
@@ -607,6 +610,8 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
       'aria-haspopup': 'listbox',
       'aria-activedescendant': activeDescendantId(),
       'aria-invalid': field.invalid() ? 'true' : undefined,
+      'aria-required': merged.required || undefined,
+      'aria-disabled': field.disabled() || undefined,
       tabIndex: field.disabled() ? undefined : 0,
       onKeyDown: handleKeyDown,
       onFocus: () => field.emit('focus'),
@@ -631,6 +636,8 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
     disabled: field.disabled(),
     required: merged.required,
     'aria-invalid': field.invalid() ? 'true' : undefined,
+    'aria-required': merged.required || undefined,
+    'aria-disabled': field.disabled() || undefined,
     maxLength: merged.searchMaxLength,
     value: currentInputText(),
     onInput: handleInput,
@@ -716,6 +723,10 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
 
   return (
     <div
+      data-slot="root"
+      data-disabled={field.disabled() ? '' : undefined}
+      data-invalid={field.invalid() ? '' : undefined}
+      data-required={merged.required ? '' : undefined}
       style={merged.styles?.root}
       class={cn('inline-flex h-fit w-full relative', merged.classes?.root)}
     >

@@ -541,6 +541,7 @@ export function MultiSelect<TItem extends MultiSelectT.Value = MultiSelectT.Valu
             data-slot="control"
             data-disabled={api.field.disabled() ? '' : undefined}
             data-invalid={api.field.invalid() ? '' : undefined}
+            data-required={props.required ? '' : undefined}
             style={props.styles?.control}
             class={selectControlVariants(
               { variant: props.variant, search: api.isSearchable() },
