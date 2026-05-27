@@ -28,6 +28,7 @@ export interface PropsTableSection {
   id: string
   heading: string
   description?: string
+  nameColumn?: string
   badges?: string[]
   props: PropDoc[]
   groups?: {
@@ -42,13 +43,13 @@ function normalizeType(type: string): string {
   return result
 }
 
-function PropRows(tableProps: { props: PropDoc[] }): JSX.Element {
+function PropRows(tableProps: { props: PropDoc[]; nameColumn?: string }): JSX.Element {
   return (
     <div class="mb-6 mt-4 b-1 b-border rounded-lg overflow-x-auto">
       <table class="text-sm m-0 w-full border-collapse">
         <thead>
           <tr class="text-xs text-muted-foreground tracking-wider text-left bg-muted uppercase">
-            <th class="font-medium px-3 py-2">Prop</th>
+            <th class="font-medium px-3 py-2">{tableProps.nameColumn ?? 'Prop'}</th>
             <th class="font-medium px-3 py-2">Type</th>
             <th class="font-medium px-3 py-2">Default</th>
             <th class="font-medium px-3 py-2">Description</th>
@@ -149,7 +150,12 @@ function SectionTableBlock(sectionProps: { section: PropsTableSection }): JSX.El
       >
         <Show
           when={sectionProps.section.groups?.length}
-          fallback={<PropRows props={sectionProps.section.props} />}
+          fallback={
+            <PropRows
+              props={sectionProps.section.props}
+              nameColumn={sectionProps.section.nameColumn}
+            />
+          }
         >
           <For each={sectionProps.section.groups}>
             {(group) => (
@@ -159,7 +165,7 @@ function SectionTableBlock(sectionProps: { section: PropsTableSection }): JSX.El
                   // oxlint-disable-next-line subf/solid-no-innerhtml
                   innerHTML={group.description}
                 />
-                <PropRows props={group.props} />
+                <PropRows props={group.props} nameColumn={sectionProps.section.nameColumn} />
               </>
             )}
           </For>

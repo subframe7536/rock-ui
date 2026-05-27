@@ -86,7 +86,13 @@ name: Variants
     expect(code).toContain('"id":"variants"')
     expect(code).toContain('"id":"api-ref"')
     expect(code).toContain('"id":"api-props"')
+    expect(code).toContain('"id":"api-aria"')
+    expect(code).toContain('"id":"api-data-attributes"')
     expect(code).toContain('"label":"Props"')
+    expect(code).toContain('"label":"ARIA"')
+    expect(code).toContain('"label":"Data Attributes"')
+    expect(code).toContain('"name":"aria-disabled"')
+    expect(code).toContain('"name":"data-slot"')
     expect((code.match(/"id":"api-ref","label":"API Reference","level":1/g) ?? []).length).toBe(1)
   })
 

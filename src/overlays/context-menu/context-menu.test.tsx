@@ -111,7 +111,10 @@ describe('ContextMenu', () => {
     expect(enabledTrigger.getAttribute('data-closed')).toBe('')
     expect(enabledTrigger.hasAttribute('data-expanded')).toBe(false)
 
-    await fireEvent.contextMenu(enabledScreen.getByText('Enabled Row'), { clientX: 12, clientY: 18 })
+    await fireEvent.contextMenu(enabledScreen.getByText('Enabled Row'), {
+      clientX: 12,
+      clientY: 18,
+    })
 
     await waitFor(() => {
       expect(enabledTrigger.getAttribute('data-expanded')).toBe('')

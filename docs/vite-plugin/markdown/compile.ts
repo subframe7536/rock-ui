@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import MarkdownIt from 'markdown-it'
+import ts from 'typescript'
 import { mergeConfig } from 'vite'
 
 import { loadComponentApiDoc } from '../api-doc/load'
@@ -71,9 +72,66 @@ interface TocApiDocShape {
   items?: unknown
 }
 
+interface ApiAttributeDoc {
+  name: string
+  required: false
+  type: string
+  description: string
+}
+
+interface SourceAttributeReference {
+  aria: ApiAttributeDoc[]
+  data: ApiAttributeDoc[]
+}
+
 const KOBALTE_COMPONENT_DOCS_BASE_URL = 'https://kobalte.dev/docs/core/components'
 const KOBALTE_IGNORED_MODULES = new Set(['popper', 'polymorphic'])
 const KOBALTE_IMPORT_PATTERN = /from\s+['"]@kobalte\/core\/([^'"]+)['"]/g
+
+const ARIA_ATTRIBUTE_DESCRIPTIONS: Record<string, string> = {
+  role: 'Defines the semantic role exposed to assistive technology.',
+  'aria-controls': 'References the controlled element while the related content is mounted.',
+  'aria-current': 'Marks the current item in a set or navigation trail.',
+  'aria-describedby': 'References descriptive text associated with the control.',
+  'aria-disabled': 'Indicates that the control is disabled.',
+  'aria-expanded': 'Indicates whether the controlled content is expanded.',
+  'aria-hidden': 'Hides decorative content from assistive technology.',
+  'aria-invalid': 'Indicates that the field has a validation error.',
+  'aria-label': 'Provides an accessible label when visible text is not sufficient.',
+  'aria-labelledby': 'References the element that labels the control or region.',
+  'aria-live': 'Announces dynamic status changes to assistive technology.',
+  'aria-modal': 'Identifies modal content that traps interaction outside the dialog.',
+  'aria-orientation': 'Communicates horizontal or vertical orientation.',
+  'aria-readonly': 'Indicates that the control value cannot be changed by the user.',
+  'aria-required': 'Indicates that user input is required.',
+  'aria-selected': 'Indicates the currently selected option or tab.',
+  'aria-valuemax': 'Defines the maximum value for range-like controls.',
+  'aria-valuemin': 'Defines the minimum value for range-like controls.',
+  'aria-valuenow': 'Defines the current numeric value for range-like controls.',
+  'aria-valuetext': 'Provides human-readable text for the current value.',
+}
+
+const DATA_ATTRIBUTE_DESCRIPTIONS: Record<string, string> = {
+  'data-active': 'Present when the item is active.',
+  'data-checked': 'Present when the item is checked or selected.',
+  'data-current': 'Present when the item represents the current location.',
+  'data-disabled': 'Present when the component or item is disabled.',
+  'data-dragging': 'Present while the related thumb or handle is being dragged.',
+  'data-highlighted': 'Present when the item is highlighted by pointer or keyboard navigation.',
+  'data-invalid': 'Present when the field has a validation error.',
+  'data-loading': 'Present when the component is loading.',
+  'data-open': 'Present when the disclosure or overlay is open.',
+  'data-orientation': 'Stores the rendered orientation.',
+  'data-readonly': 'Present when the field is read-only.',
+  'data-required': 'Present when the field is required.',
+  'data-selected': 'Present when the item is selected.',
+  'data-side': 'Stores the resolved floating content side.',
+  'data-size': 'Stores the resolved size variant.',
+  'data-slot': 'Identifies the rendered slot for styling hooks and selectors.',
+  'data-state': 'Stores the component state used by styling hooks.',
+  'data-status': 'Stores async loading, loaded, or error status.',
+  'data-variant': 'Stores the resolved visual variant.',
+}
 
 function normalizeMarkdownLang(value: string): MarkdownHighlightLang | null {
   const key = value.trim().toLowerCase()
@@ -414,6 +472,7 @@ function renderApiReferenceDescriptions(
       id: string
       heading: string
       description?: string
+      nameColumn?: string
       badges?: string[]
       props: unknown[]
       groups?: Array<{ description: string; props: unknown[] }>
@@ -464,6 +523,187 @@ function createCodeTabsItems(
     value: command.value,
     html: highlightCode?.(command.source, 'bash') ?? createPlainCodeBlockHtml(command.source),
   }))
+}
+
+function getJsxAttributeName(name: ts.JsxAttributeName): string | null {
+  if (ts.isIdentifier(name) || ts.isJsxNamespacedName(name)) {
+    return name.getText()
+  }
+  return null
+}
+
+function getJsxTagName(tagName: ts.JsxTagNameExpression): string | null {
+  if (ts.isIdentifier(tagName)) {
+    return tagName.text
+  }
+  if (ts.isPropertyAccessExpression(tagName)) {
+    return tagName.name.text
+  }
+  return null
+}
+
+function resolveLocalImportPath(importerPath: string, specifier: string): string | null {
+  if (!specifier.startsWith('.')) {
+    return null
+  }
+
+  const basePath = path.resolve(path.dirname(importerPath), specifier)
+  const candidates = [
+    `${basePath}.tsx`,
+    `${basePath}.ts`,
+    path.join(basePath, 'index.tsx'),
+    path.join(basePath, 'index.ts'),
+  ]
+
+  for (const candidate of candidates) {
+    try {
+      readFileSync(candidate, 'utf8')
+      return candidate
+    } catch {
+      // Try the next source candidate.
+    }
+  }
+
+  return null
+}
+
+function getAttributeType(name: string): string {
+  if (name === 'role' || name === 'aria-current' || name === 'aria-live') {
+    return 'string'
+  }
+  if (name === 'data-slot' || name === 'data-size' || name === 'data-variant') {
+    return 'string'
+  }
+  if (name.startsWith('data-')) {
+    return 'string | undefined'
+  }
+  return 'boolean | string | undefined'
+}
+
+function createAttributeDoc(name: string): ApiAttributeDoc {
+  const isAria = name === 'role' || name.startsWith('aria-')
+  const descriptions = isAria ? ARIA_ATTRIBUTE_DESCRIPTIONS : DATA_ATTRIBUTE_DESCRIPTIONS
+  return {
+    name,
+    required: false,
+    type: getAttributeType(name),
+    description:
+      descriptions[name] ??
+      (isAria
+        ? 'Accessibility attribute forwarded by the rendered component.'
+        : 'State or slot attribute exposed for styling hooks and selectors.'),
+  }
+}
+
+function extractSourceAttributeReference(
+  projectRoot: string | undefined,
+  sourcePath: string | undefined,
+): SourceAttributeReference {
+  if (!projectRoot || !sourcePath) {
+    return { aria: [], data: [] }
+  }
+
+  const ariaNames = new Set<string>()
+  const dataNames = new Set<string>()
+  const visited = new Set<string>()
+
+  const collectFromSource = (absoluteSourcePath: string) => {
+    if (visited.has(absoluteSourcePath)) {
+      return
+    }
+    visited.add(absoluteSourcePath)
+
+    let sourceCode = ''
+    try {
+      sourceCode = readFileSync(absoluteSourcePath, 'utf8')
+    } catch {
+      return
+    }
+
+    const sourceFile = ts.createSourceFile(
+      absoluteSourcePath,
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    )
+    const localComponentImports = new Map<string, string>()
+    const usedLocalComponents = new Set<string>()
+
+    for (const statement of sourceFile.statements) {
+      if (ts.isExportDeclaration(statement)) {
+        const moduleSpecifier = statement.moduleSpecifier
+        if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
+          const resolvedPath = resolveLocalImportPath(absoluteSourcePath, moduleSpecifier.text)
+          if (resolvedPath) {
+            collectFromSource(resolvedPath)
+          }
+        }
+        continue
+      }
+
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) {
+        continue
+      }
+      const resolvedPath = resolveLocalImportPath(
+        absoluteSourcePath,
+        statement.moduleSpecifier.text,
+      )
+      if (!resolvedPath) {
+        continue
+      }
+
+      const clause = statement.importClause
+      if (clause?.name) {
+        localComponentImports.set(clause.name.text, resolvedPath)
+      }
+
+      const namedBindings = clause?.namedBindings
+      if (!namedBindings || !ts.isNamedImports(namedBindings)) {
+        continue
+      }
+
+      for (const element of namedBindings.elements) {
+        localComponentImports.set(element.name.text, resolvedPath)
+      }
+    }
+
+    const visit = (node: ts.Node) => {
+      if (ts.isJsxAttribute(node)) {
+        const name = getJsxAttributeName(node.name)
+        if (name === 'role' || name?.startsWith('aria-')) {
+          ariaNames.add(name)
+        } else if (name?.startsWith('data-')) {
+          dataNames.add(name)
+        }
+      }
+
+      if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+        const tagName = getJsxTagName(node.tagName)
+        if (tagName && /^[A-Z]/.test(tagName)) {
+          usedLocalComponents.add(tagName)
+        }
+      }
+
+      ts.forEachChild(node, visit)
+    }
+
+    visit(sourceFile)
+
+    for (const componentName of usedLocalComponents) {
+      const importedPath = localComponentImports.get(componentName)
+      if (importedPath) {
+        collectFromSource(importedPath)
+      }
+    }
+  }
+
+  collectFromSource(path.join(projectRoot, sourcePath))
+
+  return {
+    aria: [...ariaNames].sort().map(createAttributeDoc),
+    data: [...dataNames].sort().map(createAttributeDoc),
+  }
 }
 
 function asTocApiDoc(value: unknown): TocApiDocShape | null {
@@ -696,7 +936,19 @@ export function compileMarkdownPage(
   const hasMainProps = Boolean(tocApiDoc?.props.own.length)
   const hasMainItems = Boolean(tocApiDoc?.items)
   const hasMainInherited = Boolean(tocApiDoc?.props.inherited.length)
-  const hasMainApiReference = hasMainSlots || hasMainProps || hasMainItems || hasMainInherited
+  const sourceAttributes = extractSourceAttributeReference(
+    options.projectRoot,
+    tocApiDoc?.component.sourcePath,
+  )
+  const hasMainAria = sourceAttributes.aria.length > 0
+  const hasMainDataAttributes = sourceAttributes.data.length > 0
+  const hasMainApiReference =
+    hasMainSlots ||
+    hasMainProps ||
+    hasMainItems ||
+    hasMainInherited ||
+    hasMainAria ||
+    hasMainDataAttributes
 
   const apiReferenceModel =
     tocApiDoc && hasDocsApiReferenceWidget && hasMainApiReference
@@ -705,6 +957,7 @@ export function compileMarkdownPage(
             id: string
             heading: string
             description?: string
+            nameColumn?: string
             badges?: string[]
             props: unknown[]
             groups?: Array<{ description: string; props: unknown[] }>
@@ -736,6 +989,26 @@ export function compileMarkdownPage(
               heading: 'Items',
               description: itemsDoc?.description,
               props: itemsDoc?.props ?? [],
+            })
+          }
+
+          if (hasMainAria) {
+            sections.push({
+              id: 'api-aria',
+              heading: 'ARIA',
+              description: 'Accessibility attributes and roles emitted by the component markup.',
+              nameColumn: 'Attribute',
+              props: sourceAttributes.aria,
+            })
+          }
+
+          if (hasMainDataAttributes) {
+            sections.push({
+              id: 'api-data-attributes',
+              heading: 'Data Attributes',
+              description: 'State and slot attributes exposed for styling hooks and selectors.',
+              nameColumn: 'Attribute',
+              props: sourceAttributes.data,
             })
           }
 

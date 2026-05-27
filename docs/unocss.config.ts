@@ -6,23 +6,24 @@ import { presetMoraine } from '../src/unocss/theme'
 
 const transformer = transformerVariantGroup()
 const markdownShortCuts = {
-  'docs-h1': 'text-3xl text-foreground font-bold mb-3 mt-5 sm:mt-8',
-  'docs-h2': 'text-xl sm:text-2xl text-foreground font-semibold mb-3 sm:mb-4 mt-5 sm:mt-8',
-  'docs-h3': 'text-lg sm:text-xl text-foreground font-semibold mb-2 mt-3 sm:mt-4',
-  'docs-h4': 'text-sm sm:text-base text-foreground font-semibold mb-1.5 mt-3',
+  'docs-h1': 'text-3xl text-foreground font-bold mb-3 mt-6 sm:mt-10',
+  'docs-h2':
+    'text-xl sm:text-2xl text-foreground font-semibold mb-3 sm:mb-4 mt-8 sm:mt-11 pb-2 border-b border-border/80',
+  'docs-h3': 'text-lg sm:text-xl text-foreground font-semibold mb-2 mt-5 sm:mt-7',
+  'docs-h4': 'text-sm sm:text-base text-foreground font-semibold mb-1.5 mt-4',
   'docs-h5': 'text-sm text-foreground font-semibold mb-1 mt-3',
   'docs-p': 'text-muted-foreground leading-6 mb-3',
   'docs-ul': 'list-disc list-outside pl-5 mb-3 text-muted-foreground',
   'docs-ol': 'list-decimal list-outside pl-5 mb-3 text-muted-foreground',
   'docs-li': 'leading-6',
   'docs-a': 'text-primary underline underline-offset-2 hover:text-primary/80',
-  'docs-blockquote': 'pl-4 border-l-2 border-border text-muted-foreground italic my-4',
+  'docs-blockquote': 'my-4 rounded-md bg-muted/60 b-1 b-border px-4 py-3 text-muted-foreground',
   'docs-strong': 'text-foreground font-semibold',
   'docs-hr': 'border-t border-border my-6',
   'docs-inline-code':
-    'mx-[0.1rem] px-[0.25rem] py-0 bg-muted border border-border rounded-[0.4em] text-sm font-mono [h2>&]:text-xl [h2>&]:lg:text-2xl',
-  'docs-pre': 'b-1 b-border rounded-xl bg-muted overflow-x-auto text-sm my-4 p-5',
-  'docs-code-block': 'b-1 b-border rounded-xl overflow-hidden my-4',
+    'mx-[0.1rem] px-[0.3rem] py-0 bg-muted border border-border rounded-[0.35rem] text-sm font-mono [h2>&]:text-xl [h2>&]:lg:text-2xl',
+  'docs-pre': 'b-1 b-border rounded-lg bg-muted overflow-x-auto text-sm my-4 p-5',
+  'docs-code-block': 'b-1 b-border rounded-lg overflow-hidden my-4 bg-muted/80',
   'docs-code-block-inner': 'text-xs leading-relaxed overflow-x-auto font-mono',
 }
 export default defineConfig<PresetWind4Theme>({
@@ -70,38 +71,38 @@ export default defineConfig<PresetWind4Theme>({
     {
       getCSS: () => `
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(222.2 84% 4.9%);
-  --card: hsl(220 4% 99%);
-  --card-foreground: hsl(222.2 84% 4.9%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222.2 84% 4.9%);
-  --primary: hsl(221.2 63.2% 58.3%);
-  --primary-foreground: hsl(210 40% 98%);
-  --secondary: hsl(221.2 40% 90.1%);
-  --secondary-foreground: hsl(222.2 47.4% 11.2%);
-  --muted: hsl(210 40% 96.1%);
-  --muted-foreground: hsl(215.4 16.3% 46.9%);
-  --accent: hsl(210 40% 88.1%);
-  --accent-foreground: hsl(222.2 47.4% 11.2%);
-  --destructive: hsl(351.74 100% 40.54%);
-  --destructive-foreground: hsl(359.81 59.23% 96.94%);
-  --border: hsl(214.3 31.8% 91.4%);
-  --input: hsl(214.3 31.8% 91.4%);
-  --ring: hsl(221.2 43.2% 58.3%);
-  --chart-1: hsl(221.2 83.2% 53.3%);
-  --chart-2: hsl(212 95% 68%);
-  --chart-3: hsl(216 92% 60%);
-  --chart-4: hsl(210 98% 78%);
-  --chart-5: hsl(212 97% 87%);
-  --sidebar: hsl(210 40% 98%);
-  --sidebar-foreground: hsl(222.2 47.4% 11.2%);
-  --sidebar-primary: hsl(221.2 83.2% 53.3%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(214.3 31.8% 91.4%);
-  --sidebar-accent-foreground: hsl(221.2 83.2% 53.3%);
-  --sidebar-border: hsl(214.3 31.8% 91.4%);
-  --sidebar-ring: hsl(221.2 83.2% 53.3%);
+  --background: oklch(0.985 0.006 210);
+  --foreground: oklch(0.22 0.025 238);
+  --card: oklch(0.996 0.004 210);
+  --card-foreground: oklch(0.22 0.025 238);
+  --popover: oklch(0.996 0.004 210);
+  --popover-foreground: oklch(0.22 0.025 238);
+  --primary: oklch(0.55 0.14 210);
+  --primary-foreground: oklch(0.985 0.006 210);
+  --secondary: oklch(0.93 0.022 202);
+  --secondary-foreground: oklch(0.28 0.04 238);
+  --muted: oklch(0.94 0.014 220);
+  --muted-foreground: oklch(0.49 0.035 238);
+  --accent: oklch(0.9 0.04 196);
+  --accent-foreground: oklch(0.28 0.05 238);
+  --destructive: oklch(0.57 0.21 25);
+  --destructive-foreground: oklch(0.985 0.006 25);
+  --border: oklch(0.88 0.018 225);
+  --input: oklch(0.88 0.018 225);
+  --ring: oklch(0.58 0.13 210);
+  --chart-1: oklch(0.55 0.14 210);
+  --chart-2: oklch(0.62 0.12 178);
+  --chart-3: oklch(0.64 0.15 37);
+  --chart-4: oklch(0.56 0.12 285);
+  --chart-5: oklch(0.62 0.12 140);
+  --sidebar: oklch(0.955 0.012 225);
+  --sidebar-foreground: oklch(0.25 0.035 238);
+  --sidebar-primary: oklch(0.55 0.14 210);
+  --sidebar-primary-foreground: oklch(0.985 0.006 210);
+  --sidebar-accent: oklch(0.9 0.025 218);
+  --sidebar-accent-foreground: oklch(0.31 0.055 224);
+  --sidebar-border: oklch(0.86 0.018 225);
+  --sidebar-ring: oklch(0.58 0.13 210);
   --radius: 0.5rem;
   --shadow-x: 0;
   --shadow-y: 1px;
@@ -117,43 +118,43 @@ export default defineConfig<PresetWind4Theme>({
   --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
   --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-  --tracking-normal: -0.015em;
+  --tracking-normal: 0;
   --spacing: 0.25rem;
 }
 
 .dark {
-  --background: hsl(222.2 84% 4.9%);
-  --foreground: hsl(210 40% 98%);
-  --card: hsl(222.2 84% 4.9%);
-  --card-foreground: hsl(210 40% 98%);
-  --popover: hsl(222.2 84% 4.9%);
-  --popover-foreground: hsl(210 40% 98%);
-  --primary: hsl(217.2 71.2% 45.8%);
-  --primary-foreground: hsl(222.2 47.4% 96.2%);
-  --secondary: hsl(217.2 46.6% 17.5%);
-  --secondary-foreground: hsl(210 40% 90%);
-  --muted: hsl(217.2 32.6% 17.5%);
-  --muted-foreground: hsl(215 20.2% 65.1%);
-  --accent: hsl(217.2 32.6% 32.5%);
-  --accent-foreground: hsl(210 40% 98%);
-  --destructive: hsl(358.77 100% 69.84%);
-  --destructive-foreground: hsl(358.88 74.66% 50.36%);
-  --border: hsl(217.2 32.6% 24.5%);
-  --input: hsl(217.2 32.6% 20.5%);
-  --ring: hsl(224.3 76.3% 58%);
-  --chart-1: hsl(224.3 76.3% 48%);
-  --chart-2: hsl(221 83% 53%);
-  --chart-3: hsl(199 89% 48%);
-  --chart-4: hsl(215 25% 27%);
-  --chart-5: hsl(224 71% 45%);
-  --sidebar: hsl(222.2 84% 4.9%);
-  --sidebar-foreground: hsl(210 40% 98%);
-  --sidebar-primary: hsl(217.2 91.2% 59.8%);
-  --sidebar-primary-foreground: hsl(222.2 84% 4.9%);
-  --sidebar-accent: hsl(217.2 32.6% 17.5%);
-  --sidebar-accent-foreground: hsl(210 40% 98%);
-  --sidebar-border: hsl(217.2 32.6% 17.5%);
-  --sidebar-ring: hsl(224.3 76.3% 48%);
+  --background: oklch(0.18 0.02 238);
+  --foreground: oklch(0.93 0.012 215);
+  --card: oklch(0.205 0.022 238);
+  --card-foreground: oklch(0.93 0.012 215);
+  --popover: oklch(0.205 0.022 238);
+  --popover-foreground: oklch(0.93 0.012 215);
+  --primary: oklch(0.68 0.12 202);
+  --primary-foreground: oklch(0.17 0.02 238);
+  --secondary: oklch(0.27 0.03 235);
+  --secondary-foreground: oklch(0.9 0.012 215);
+  --muted: oklch(0.25 0.026 235);
+  --muted-foreground: oklch(0.7 0.025 220);
+  --accent: oklch(0.31 0.045 218);
+  --accent-foreground: oklch(0.94 0.012 215);
+  --destructive: oklch(0.68 0.18 25);
+  --destructive-foreground: oklch(0.18 0.02 25);
+  --border: oklch(0.33 0.026 235);
+  --input: oklch(0.31 0.026 235);
+  --ring: oklch(0.68 0.12 202);
+  --chart-1: oklch(0.68 0.12 202);
+  --chart-2: oklch(0.7 0.11 165);
+  --chart-3: oklch(0.75 0.13 58);
+  --chart-4: oklch(0.7 0.12 285);
+  --chart-5: oklch(0.68 0.11 140);
+  --sidebar: oklch(0.16 0.018 238);
+  --sidebar-foreground: oklch(0.9 0.012 215);
+  --sidebar-primary: oklch(0.68 0.12 202);
+  --sidebar-primary-foreground: oklch(0.17 0.02 238);
+  --sidebar-accent: oklch(0.25 0.026 235);
+  --sidebar-accent-foreground: oklch(0.93 0.012 215);
+  --sidebar-border: oklch(0.29 0.024 235);
+  --sidebar-ring: oklch(0.68 0.12 202);
   --shadow-x: 0;
   --shadow-y: 1px;
   --shadow-blur: 3px;

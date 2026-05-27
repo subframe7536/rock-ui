@@ -53,9 +53,9 @@ export interface RenderExampleMarkdownPageInput {
 
 export function Markdown(input: RenderExampleMarkdownPageInput) {
   return (
-    <main class="text-foreground px-6 min-h-screen w-full sm:px-8">
+    <main class="text-foreground px-5 min-h-screen w-full sm:px-8">
       <div class="mx-auto flex gap-8 max-w-7xl items-start">
-        <div class="mx-auto mb-20 max-w-4xl min-w-0">
+        <div class="mx-auto mb-24 max-w-4xl min-w-0 w-full">
           <For each={input.segments}>
             {(segment) => <SegmentRenderer segment={segment} pageContext={input} />}
           </For>
