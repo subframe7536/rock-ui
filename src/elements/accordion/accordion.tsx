@@ -310,6 +310,7 @@ export function Accordion(props: AccordionProps): JSX.Element {
             >
               <div
                 data-slot="header"
+                role="heading"
                 style={merged.styles?.header}
                 class={cn('flex', merged.classes?.header)}
                 {...dataAttrs()}
