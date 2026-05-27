@@ -45,9 +45,24 @@ export namespace ContextMenuT {
 export interface ContextMenuProps extends ContextMenuT.Props {}
 
 const CONTEXT_MENU_LONG_PRESS_DELAY = 700
+const CONTEXT_MENU_LONG_PRESS_MOVE_TOLERANCE = 10
 
 function isTouchOrPen(pointerType: string): boolean {
   return pointerType === 'touch' || pointerType === 'pen'
+}
+
+function hasLongPressMovedBeyondTolerance(
+  startPoint: { x: number; y: number } | undefined,
+  event: PointerEvent,
+): boolean {
+  if (!startPoint) {
+    return false
+  }
+
+  const x = event.clientX - startPoint.x
+  const y = event.clientY - startPoint.y
+
+  return x * x + y * y > CONTEXT_MENU_LONG_PRESS_MOVE_TOLERANCE ** 2
 }
 
 /**
@@ -75,6 +90,7 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
   const resolvedId = useId(() => merged.id, 'contextmenu')
   const contentId = createMemo(() => `${resolvedId()}-content`)
   let longPressTimeoutId = 0
+  let longPressStartPoint: { x: number; y: number } | undefined
   let triggerElement: HTMLElement | undefined
 
   const commitOpen = (open: boolean): void => {
@@ -133,6 +149,8 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     }
 
     window.clearTimeout(longPressTimeoutId)
+    longPressTimeoutId = 0
+    longPressStartPoint = undefined
   }
 
   onCleanup(() => {
@@ -232,11 +250,15 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
     }
 
     setAnchorPoint({ x: event.clientX, y: event.clientY })
+    longPressStartPoint = { x: event.clientX, y: event.clientY }
 
     const isUncontrolled = merged.open === undefined
     const onOpenChange = merged.onOpenChange
 
     longPressTimeoutId = window.setTimeout(() => {
+      longPressTimeoutId = 0
+      longPressStartPoint = undefined
+
       if (isUncontrolled) {
         setUncontrolledOpen(true)
       }
@@ -250,7 +272,9 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
       return
     }
 
-    clearLongPressTimeout()
+    if (hasLongPressMovedBeyondTolerance(longPressStartPoint, event)) {
+      clearLongPressTimeout()
+    }
   }
 
   const onPointerCancel = (event: PointerEvent): void => {
@@ -299,6 +323,9 @@ export function ContextMenu(props: ContextMenuProps): JSX.Element {
           triggerElement = element
         }}
         data-slot="trigger"
+        data-disabled={merged.disabled ? '' : undefined}
+        data-expanded={resolvedOpen() ? '' : undefined}
+        data-closed={resolvedOpen() ? undefined : ''}
         tabIndex={-1}
         aria-haspopup="menu"
         aria-controls={resolvedOpen() ? contentId() : undefined}

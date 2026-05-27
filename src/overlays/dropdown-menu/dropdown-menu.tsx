@@ -102,6 +102,9 @@ export function DropdownMenu(props: DropdownMenuProps): JSX.Element {
           triggerElement = element
         }}
         data-slot="trigger"
+        data-disabled={merged.disabled ? '' : undefined}
+        data-expanded={isOpen() ? '' : undefined}
+        data-closed={isOpen() ? undefined : ''}
         tabIndex={-1}
         aria-haspopup="menu"
         aria-controls={isOpen() ? contentId() : undefined}

@@ -82,6 +82,43 @@ describe('ContextMenu', () => {
     expect(onSelect).toHaveBeenCalledTimes(1)
   })
 
+  test('exposes trigger data state while opened, closed, and disabled', async () => {
+    const screen = render(() => (
+      <ContextMenu disabled items={[{ label: 'Disabled action' }]}>
+        <div>Row Item</div>
+      </ContextMenu>
+    ))
+
+    const trigger = screen.getByText('Row Item').closest('[data-slot="trigger"]') as HTMLElement
+
+    expect(trigger.getAttribute('data-disabled')).toBe('')
+    expect(trigger.getAttribute('data-closed')).toBe('')
+    expect(trigger.hasAttribute('data-expanded')).toBe(false)
+
+    screen.unmount()
+
+    const enabledScreen = render(() => (
+      <ContextMenu items={[{ label: 'Open item' }]}>
+        <div>Enabled Row</div>
+      </ContextMenu>
+    ))
+
+    const enabledTrigger = enabledScreen
+      .getByText('Enabled Row')
+      .closest('[data-slot="trigger"]') as HTMLElement
+
+    expect(enabledTrigger.hasAttribute('data-disabled')).toBe(false)
+    expect(enabledTrigger.getAttribute('data-closed')).toBe('')
+    expect(enabledTrigger.hasAttribute('data-expanded')).toBe(false)
+
+    await fireEvent.contextMenu(enabledScreen.getByText('Enabled Row'), { clientX: 12, clientY: 18 })
+
+    await waitFor(() => {
+      expect(enabledTrigger.getAttribute('data-expanded')).toBe('')
+      expect(enabledTrigger.hasAttribute('data-closed')).toBe(false)
+    })
+  })
+
   test('focuses content on open, supports typeahead, and restores trigger wrapper focus on escape', async () => {
     const screen = render(() => (
       <ContextMenu items={[{ label: 'Archive' }, { label: 'Duplicate' }, { label: 'Delete' }]}>
@@ -233,6 +270,70 @@ describe('ContextMenu', () => {
       await vi.advanceTimersByTimeAsync(1)
       expect(onOpenChange).toHaveBeenCalledWith(true)
       expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('keeps long press active through small touch movement', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const onOpenChange = vi.fn()
+      const screen = render(() => (
+        <ContextMenu onOpenChange={onOpenChange} items={[{ label: 'Touch action' }]}>
+          <div>Row Item</div>
+        </ContextMenu>
+      ))
+
+      const row = screen.getByText('Row Item')
+      await fireEvent.pointerDown(row, {
+        pointerType: 'touch',
+        clientX: 21,
+        clientY: 34,
+      })
+      await fireEvent.pointerMove(row, {
+        pointerType: 'touch',
+        clientX: 26,
+        clientY: 37,
+      })
+
+      await vi.advanceTimersByTimeAsync(700)
+
+      expect(onOpenChange).toHaveBeenCalledWith(true)
+      expect(document.body.querySelector('[data-slot="content"]')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('cancels touch long press after movement exceeds tolerance', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const onOpenChange = vi.fn()
+      const screen = render(() => (
+        <ContextMenu onOpenChange={onOpenChange} items={[{ label: 'Touch action' }]}>
+          <div>Row Item</div>
+        </ContextMenu>
+      ))
+
+      const row = screen.getByText('Row Item')
+      await fireEvent.pointerDown(row, {
+        pointerType: 'touch',
+        clientX: 21,
+        clientY: 34,
+      })
+      await fireEvent.pointerMove(row, {
+        pointerType: 'touch',
+        clientX: 40,
+        clientY: 34,
+      })
+
+      await vi.advanceTimersByTimeAsync(700)
+
+      expect(onOpenChange).not.toHaveBeenCalled()
+      expect(document.body.querySelector('[data-slot="content"]')).toBeNull()
     } finally {
       vi.useRealTimers()
     }
