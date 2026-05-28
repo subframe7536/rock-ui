@@ -87,10 +87,12 @@ export namespace SidebarFrameT {
   export interface Base {
     /**
      * The variant of the sidebar frame.
+     * @default 'default'
      */
     variant?: Variant
     /**
      * The side of the sidebar.
+     * @default 'left'
      */
     side?: Side
     /**

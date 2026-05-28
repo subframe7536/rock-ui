@@ -80,9 +80,15 @@ export namespace CommandPaletteT {
   }
 
   export interface Base {
-    /** Command groups to display initially. */
+    /**
+     * Command groups to display initially.
+     * @default []
+     */
     items?: Item[]
-    /** Placeholder text for the search input. */
+    /**
+     * Placeholder text for the search input.
+     * @default 'Search...'
+     */
     placeholder?: string
     /** Controlled search term. */
     searchTerm?: string
@@ -90,25 +96,52 @@ export namespace CommandPaletteT {
     onSearchTermChange?: (term: string) => void
     /** Maximum allowed length for the search text. */
     searchMaxLength?: number
-    /** Whether to focus the search input automatically on mount. */
+    /**
+     * Whether to focus the search input automatically on mount.
+     * @default true
+     */
     autofocus?: boolean
-    /** Icon name for the search indicator. */
+    /**
+     * Icon name for the search indicator.
+     * @default 'icon-search'
+     */
     searchIcon?: IconT.Name
-    /** Icon name for the loading state. */
+    /**
+     * Icon name for the loading state.
+     * @default 'icon-loading'
+     */
     loadingIcon?: IconT.Name
-    /** Icon name for items with sub-groups. */
+    /**
+     * Icon name for items with sub-groups.
+     * @default 'icon-chevron-right'
+     */
     childIcon?: IconT.Name
-    /** Icon name for the group navigation back button. */
+    /**
+     * Icon name for the group navigation back button.
+     * @default 'icon-arrow-left'
+     */
     backIcon?: IconT.Name
-    /** Icon name for the palette close button. */
+    /**
+     * Icon name for the palette close button.
+     * @default 'icon-close'
+     */
     closeIcon?: IconT.Name
-    /** Whether to show a close button in the header. */
+    /**
+     * Whether to show a close button in the header.
+     * @default false
+     */
     close?: boolean
     /** Callback triggered when the close button is clicked. */
     onClose?: () => void
-    /** Whether the palette is in a loading state. */
+    /**
+     * Whether the palette is in a loading state.
+     * @default false
+     */
     loading?: boolean
-    /** Elements to show when no items match the search. */
+    /**
+     * Elements to show when no items match the search.
+     * @default 'No results.'
+     */
     empty?: JSX.Element
     /** Content to render at bottom of the palette. */
     footer?: JSX.Element
