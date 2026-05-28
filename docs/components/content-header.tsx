@@ -9,14 +9,16 @@ export interface ContentHeaderProps {
   theme: Accessor<'light' | 'dark'>
   setTheme: (theme: 'light' | 'dark') => void
   leading?: JSX.Element
+  search?: JSX.Element
 }
 
 export function ContentHeader(props: ContentHeaderProps) {
   return (
     <header
+      data-scrolled={props.scrolled() ? '' : undefined}
       class={cn(
-        'px-4 border-b border-transparent bg-background/78 flex h-13 transition-([border-color,box-shadow,background-color] duration-200 ease-out) items-center top-0 justify-between sticky z-10 backdrop-blur-md sm:px-8',
-        props.scrolled() && 'border-border/80 bg-background/90 shadow-xs',
+        'px-4 b-(b transparent) bg-transparent flex h-13 transition-([border-color,box-shadow,background-color] duration-200 ease-out) items-center top-0 justify-between sticky z-10 backdrop-blur-md sm:px-8',
+        'data-scrolled:(border-border/80 bg-background/90 shadow-xs)',
       )}
     >
       <div class="flex gap-1 min-w-0 items-center">
@@ -33,6 +35,7 @@ export function ContentHeader(props: ContentHeaderProps) {
         </span>
       </div>
       <div class="flex shrink-0 gap-3 items-center" aria-label="Page actions">
+        {props.search}
         <Switch
           size="sm"
           checked={props.theme() === 'dark'}

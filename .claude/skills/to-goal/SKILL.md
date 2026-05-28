@@ -55,7 +55,7 @@ Emit exactly this structure, in this order. Use Markdown headings as shown. Do n
 - Preserve the user's intent — do **not** invent scope, files, components, criteria, or non-goals the user didn't imply.
 - Never invent file paths, component names, ticket IDs, or people. If unsure, leave the detail out.
 - Output **only** the goal-spec markdown — no preamble, no trailing commentary, no surrounding code fence.
-- If the input clearly contains multiple distinct goals, emit each as its own spec separated by a `---` horizontal rule.
+- If the input clearly contains multiple distinct goals, merge them into one unified goal.
 - Do not append to any file automatically. Just produce the text; the user places it.
 
 ## Steps

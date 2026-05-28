@@ -438,6 +438,7 @@ export function CommandPalette(props: CommandPaletteProps): JSX.Element {
             <IconButton
               name={merged.searchIcon}
               data-slot="search"
+              tabIndex={-1}
               styles={{ root: merged.styles?.search }}
               loading={merged.loading}
               loadingIcon={merged.loadingIcon}

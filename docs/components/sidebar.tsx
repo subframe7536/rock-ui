@@ -2,7 +2,7 @@ import type { Accessor } from 'solid-js'
 import { For, Show, createMemo } from 'solid-js'
 
 import { version } from '../../package.json'
-import { Badge, Button, cn, Input } from '../../src'
+import { Badge, Button, cn } from '../../src'
 
 type SidebarPageStatus = 'new' | 'update' | 'unreleased'
 
@@ -23,12 +23,9 @@ export interface SidebarProps {
   pages: SidebarPage[]
   activePage: Accessor<string>
   setActivePage: (key: string) => void
-  search: Accessor<string>
 }
 
 export interface SidebarHeaderProps {
-  search: Accessor<string>
-  setSearch: (value: string) => void
   onClose?: () => void
 }
 
@@ -38,19 +35,11 @@ interface SidebarSection {
 }
 
 export const Sidebar = (props: SidebarProps) => {
-  const filtered = createMemo(() => {
-    const q = props.search().toLowerCase().trim()
-    if (!q) {
-      return props.pages
-    }
-    return props.pages.filter((p) => p.label.toLowerCase().includes(q))
-  })
-
   const grouped = createMemo<SidebarSection[]>(() => {
     const ungrouped: SidebarPage[] = []
     const groupedMap = new Map<string, SidebarPage[]>()
 
-    for (const page of filtered()) {
+    for (const page of props.pages) {
       const group = page.group?.trim()
       if (!group) {
         ungrouped.push(page)
@@ -121,42 +110,25 @@ export const Sidebar = (props: SidebarProps) => {
 
 export const SidebarHeader = (props: SidebarHeaderProps) => {
   return (
-    <div class="p-4 pb-3 b-(b border)">
-      <div class="px-2 flex items-center justify-between">
-        <div class="flex gap-2 items-center justify-between">
-          <div class="flex gap-2.5 min-w-0 items-center">
-            <img src="/favicon.svg" alt="icon" class="size-7" />
-            <div class="min-w-0">
-              <p class="text-lg font-semibold truncate">
-                Moraine
-                <Badge size="xs" variant="outline" classes={{ root: 'font-mono ms-1.5' }}>
-                  v{version}
-                </Badge>
-              </p>
-            </div>
-          </div>
-        </div>
-        <Show when={props.onClose}>
-          <Button
-            variant="ghost"
-            size="sm"
-            leading="i-lucide-x"
-            aria-label="Close sidebar"
-            onClick={props.onClose}
-          />
-        </Show>
+    <div class="px-4 b-(b border) flex shrink-0 h-13 items-center justify-between">
+      <div class="flex gap-2.5 min-w-0 items-center">
+        <img src="/favicon.svg" alt="icon" class="size-7" />
+        <p class="text-lg font-semibold truncate">
+          Moraine
+          <Badge size="xs" variant="outline" classes={{ root: 'font-mono ms-1.5' }}>
+            v{version}
+          </Badge>
+        </p>
       </div>
-
-      <div class="mt-4 px-1">
-        <Input
-          type="text"
-          placeholder="Search component..."
-          value={props.search()}
-          onInput={(e) => props.setSearch(e.currentTarget.value)}
-          leading="icon-search"
-          classes={{ root: 'bg-background/75 b-border' }}
+      <Show when={props.onClose}>
+        <Button
+          variant="ghost"
+          size="sm"
+          leading="i-lucide-x"
+          aria-label="Close sidebar"
+          onClick={props.onClose}
         />
-      </div>
+      </Show>
     </div>
   )
 }

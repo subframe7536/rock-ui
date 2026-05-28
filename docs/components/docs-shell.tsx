@@ -67,11 +67,7 @@ export function DocsShell(props: DocsShellProps) {
           syncScrolled()
         }}
         data-docs-scroll-root="true"
-        class={cn(
-          'scroll-smooth bg-background h-full overflow-y-auto',
-          'md:ml-72',
-          'bg-[radial-gradient(circle_at_38%_-12%,oklch(0.83_0.08_198/.22),transparent_34rem)]',
-        )}
+        class={cn('scroll-smooth bg-background h-full overflow-y-auto', 'md:ml-72')}
         onScroll={syncScrolled}
       >
         {props.main(context)}

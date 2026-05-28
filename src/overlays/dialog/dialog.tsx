@@ -249,12 +249,12 @@ export function Dialog(props: DialogProps): JSX.Element {
           footer={merged.footer}
           classes={{
             root: dialogCardVariants({ layout: popupLayout() }),
-            header: cn('p-6 flex gap-1.5 items-start', merged.classes?.header),
-            body: cn('text-sm pb-6', merged.classes?.body),
-            footer: cn(
+            header: ['p-6 flex gap-1.5 items-start', merged.classes?.header],
+            body: ['text-sm', merged.classes?.body],
+            footer: [
               'px-6 pb-6 pt-0 flex flex-col-reverse gap-2 sm:(flex-row justify-end)',
               merged.classes?.footer,
-            ),
+            ],
           }}
         >
           {merged.body}

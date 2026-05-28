@@ -7,6 +7,7 @@ import { exampleMap, pages } from 'virtual:example-pages'
 import { Button } from '../src'
 
 import { ContentHeader } from './components/content-header'
+import { DocsCommandPalette, DocsSearchTrigger } from './components/docs-command-palette'
 import { DocsShell } from './components/docs-shell'
 import { Sidebar, SidebarHeader } from './components/sidebar'
 import { useRouting } from './hooks/use-routing'
@@ -18,7 +19,7 @@ function App() {
 
   const { theme, updateTheme } = useTheme()
   const { page, navigate } = useRouting(pageKeys, fallbackPage)
-  const [sidebarSearch, setSidebarSearch] = createSignal('')
+  const [paletteOpen, setPaletteOpen] = createSignal(false)
 
   const ActiveExample = createMemo(
     () => exampleMap[page()] ?? (fallbackPage ? exampleMap[fallbackPage] : undefined),
@@ -27,53 +28,62 @@ function App() {
   const pageTitle = createMemo(() => pages.find((p) => p.key === page())?.label ?? '')
 
   return (
-    <DocsShell
-      sidebar={(ctx) => (
-        <div class="flex flex-col h-full min-h-0">
-          <SidebarHeader
-            search={sidebarSearch}
-            setSearch={setSidebarSearch}
-            onClose={ctx.isMobile() ? () => ctx.setSidebarOpen(false) : undefined}
-          />
-          <Sidebar
-            pages={pages}
-            activePage={page}
-            search={sidebarSearch}
-            setActivePage={(key) => {
-              navigate(key)
-              ctx.setSidebarOpen(false)
-            }}
-          />
-        </div>
-      )}
-      main={(ctx) => (
-        <>
-          <ContentHeader
-            leading={
-              <Show when={ctx.isMobile()}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  leading="i-lucide-menu"
-                  aria-label="Toggle sidebar"
-                  onClick={ctx.toggleSidebar}
+    <>
+      <DocsShell
+        sidebar={(ctx) => (
+          <div class="flex flex-col h-full min-h-0">
+            <SidebarHeader onClose={ctx.isMobile() ? () => ctx.setSidebarOpen(false) : undefined} />
+            <Sidebar
+              pages={pages}
+              activePage={page}
+              setActivePage={(key) => {
+                navigate(key)
+                ctx.setSidebarOpen(false)
+              }}
+            />
+          </div>
+        )}
+        main={(ctx) => (
+          <>
+            <ContentHeader
+              leading={
+                <Show when={ctx.isMobile()}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leading="i-lucide-menu"
+                    aria-label="Toggle sidebar"
+                    onClick={ctx.toggleSidebar}
+                  />
+                </Show>
+              }
+              pageTitle={pageTitle}
+              scrolled={ctx.scrolled}
+              theme={theme}
+              setTheme={updateTheme}
+              search={
+                <DocsSearchTrigger
+                  variant={ctx.isMobile() ? 'mobile' : 'desktop'}
+                  onOpen={() => setPaletteOpen(true)}
                 />
-              </Show>
-            }
-            pageTitle={pageTitle}
-            scrolled={ctx.scrolled}
-            theme={theme}
-            setTheme={updateTheme}
-          />
-          <Show
-            when={ActiveExample()}
-            fallback={<div class="text-sm text-muted-foreground p-6">Example not found.</div>}
-          >
-            <Dynamic component={ActiveExample()!} />
-          </Show>
-        </>
-      )}
-    />
+              }
+            />
+            <Show
+              when={ActiveExample()}
+              fallback={<div class="text-sm text-muted-foreground p-6">Example not found.</div>}
+            >
+              <Dynamic component={ActiveExample()!} />
+            </Show>
+          </>
+        )}
+      />
+      <DocsCommandPalette
+        pages={pages}
+        open={paletteOpen}
+        setOpen={setPaletteOpen}
+        onNavigate={(key) => navigate(key)}
+      />
+    </>
   )
 }
 

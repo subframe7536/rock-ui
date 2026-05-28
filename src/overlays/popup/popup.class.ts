@@ -28,7 +28,7 @@ export const popupContentVariants = cva(
         default:
           'grid max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] left-1/2 top-1/2 fixed sm:max-w-lg -translate-x-1/2 -translate-y-1/2',
         scrollable: 'grid max-w-[calc(100%-2rem)] w-full relative sm:max-w-lg',
-        fullscreen: 'flex flex-col h-full max-w-none inset-0 fixed',
+        fullscreen: 'flex flex-col size-full max-w-none inset-0 fixed',
       },
     },
   },
