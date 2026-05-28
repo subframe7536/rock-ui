@@ -43,7 +43,7 @@ export function DocsShell(props: DocsShellProps) {
 
   return (
     <div class="text-foreground bg-background h-screen overflow-hidden">
-      <aside class="bg-sidebar text-sidebar-foreground border-sidebar-border border-r shrink-0 h-full w-72 hidden overflow-hidden md:block md:inset-y-0 md:left-0 md:fixed">
+      <aside class="b-(r border) shrink-0 h-full w-72 hidden overflow-hidden md:block md:inset-y-0 md:left-0 md:fixed">
         {props.sidebar(context)}
       </aside>
 
@@ -55,7 +55,7 @@ export function DocsShell(props: DocsShellProps) {
             class="bg-foreground/25 inset-0 absolute"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside class="bg-sidebar text-sidebar-foreground border-sidebar-border border-r h-full w-[min(20rem,calc(100vw-3rem))] shadow-xl relative z-10 overflow-hidden">
+          <aside class="b-(r border) h-full w-[min(20rem,calc(100vw-3rem))] shadow-xl relative z-10 overflow-hidden">
             {props.sidebar(context)}
           </aside>
         </div>

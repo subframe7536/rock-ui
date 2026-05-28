@@ -199,6 +199,9 @@ function createNormalizedGroups(
   }))
 }
 
+/**
+ * CommandPalette is a component for displaying a searchable list of commands or options, optionally grouped into categories. It supports nested groups, keyboard navigation, and customizable rendering through slots and styles.
+ */
 export function CommandPalette(props: CommandPaletteProps): JSX.Element {
   const merged = mergeProps(
     {

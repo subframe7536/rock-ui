@@ -69,7 +69,7 @@ export const Sidebar = (props: SidebarProps) => {
   })
 
   return (
-    <div class="text-sidebar-foreground bg-sidebar px-3 pb-10 pt-3 h-full min-h-0 overflow-y-auto">
+    <div class="px-3 pb-10 pt-3 h-full min-h-0 overflow-y-auto">
       <nav class="pb-2 flex flex-col gap-5">
         <For each={grouped()}>
           {(section) => (
@@ -88,8 +88,8 @@ export const Sidebar = (props: SidebarProps) => {
                       class={cn(
                         'text-sm text-muted-foreground px-2.5 py-1.75 text-left rounded-md transition-([background-color,color] duration-150 ease-out) hover:cursor-pointer',
                         props.activePage() === page.key
-                          ? 'text-sidebar-accent-foreground bg-sidebar-accent font-medium'
-                          : 'hover:text-sidebar-foreground hover:bg-sidebar-accent/60',
+                          ? 'text-accent-foreground font-medium bg-accent'
+                          : 'hover:text-foreground hover:bg-accent/30',
                       )}
                       onClick={() => props.setActivePage(page.key)}
                     >
@@ -97,7 +97,7 @@ export const Sidebar = (props: SidebarProps) => {
                         <span class="truncate">{page.label}</span>
                         <Show when={page.status}>
                           {(status) => (
-                            <span class="text-sidebar-foreground border-sidebar-border text-[0.6rem] leading-none font-semibold px-1.25 py-0.75 border rounded-sm bg-background/70 shrink-0 uppercase">
+                            <span class="text-[0.6rem] leading-none font-semibold px-1.25 py-0.75 border rounded-sm bg-background/70 shrink-0 uppercase">
                               {SIDEBAR_PAGE_STATUS_LABELS[status()]}
                             </span>
                           )}
@@ -121,9 +121,9 @@ export const Sidebar = (props: SidebarProps) => {
 
 export const SidebarHeader = (props: SidebarHeaderProps) => {
   return (
-    <div class="text-sidebar-foreground border-sidebar-border bg-sidebar p-4 pb-3 border-b">
+    <div class="p-4 pb-3 b-(b border)">
       <div class="px-2 flex items-center justify-between">
-        <div class="text-sidebar-foreground flex gap-2 items-center justify-between">
+        <div class="flex gap-2 items-center justify-between">
           <div class="flex gap-2.5 min-w-0 items-center">
             <img src="/favicon.svg" alt="icon" class="size-7" />
             <div class="min-w-0">
@@ -154,7 +154,7 @@ export const SidebarHeader = (props: SidebarHeaderProps) => {
           value={props.search()}
           onInput={(e) => props.setSearch(e.currentTarget.value)}
           leading="icon-search"
-          classes={{ root: 'bg-background/75 border-sidebar-border' }}
+          classes={{ root: 'bg-background/75 b-border' }}
         />
       </div>
     </div>
