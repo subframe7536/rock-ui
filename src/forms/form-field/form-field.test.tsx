@@ -315,8 +315,38 @@ describe('FormField', () => {
       expect(screen.getByTestId('field-render-error').textContent).toBe('Error message')
     })
 
-    expect(renderChildren).toHaveBeenCalled()
-    expect(renderChildren.mock.calls.some(([props]) => props?.error === 'Error message')).toBe(true)
+    expect(renderChildren).toHaveBeenCalledTimes(1)
+  })
+
+  test('keeps render prop children mounted when error changes', async () => {
+    const state = { value: '' }
+    const renderChildren = vi.fn((props: FormFieldT.RenderContext) => (
+      <input
+        data-testid="field-render-control"
+        placeholder={props.error ? 'Required value' : 'Value'}
+      />
+    ))
+
+    const screen = render(() => (
+      <Form state={state} validate={() => [{ name: 'value', message: 'Error message' }]}>
+        <FormField name="value" label="Value">
+          {renderChildren}
+        </FormField>
+      </Form>
+    ))
+
+    const input = screen.getByTestId('field-render-control') as HTMLInputElement
+    input.focus()
+
+    await fireEvent.submit(screen.container.querySelector('form') as HTMLFormElement)
+
+    await waitFor(() => {
+      expect(input.placeholder).toBe('Required value')
+    })
+
+    expect(renderChildren).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('field-render-control')).toBe(input)
+    expect(document.activeElement).toBe(input)
   })
 
   test('supports children render prop without params', () => {

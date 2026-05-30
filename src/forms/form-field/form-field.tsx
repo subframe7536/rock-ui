@@ -387,7 +387,9 @@ export function FormField(props: FormFieldProps): JSX.Element {
           }
         >
           {resolveRenderProp<FormFieldT.RenderContext>(local.children, () => ({
-            error: resolvedError(),
+            get error() {
+              return resolvedError()
+            },
           }))}
 
           <Show

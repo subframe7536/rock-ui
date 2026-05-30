@@ -18,13 +18,13 @@ export function RenderContext() {
       classes={{ root: 'mx-auto max-w-xl w-full space-y-4' }}
     >
       <FormField name="releaseTitle" label="Release Title" required>
-        {({ error }) => (
+        {(props) => (
           <Input
             value={state().releaseTitle}
             onValueChange={(value) =>
               setState((prev) => ({ ...prev, releaseTitle: String(value) }))
             }
-            placeholder={error ? 'Title is required' : 'v2.14.0'}
+            placeholder={props.error ? 'Title is required' : 'v2.14.0'}
           />
         )}
       </FormField>
