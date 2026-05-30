@@ -1,6 +1,6 @@
 import { createSignal, onCleanup, onMount } from 'solid-js'
 
-import { resolvePageKeyFromLocation, toPagePath } from '../routing'
+import { resolvePageKeyFromLocation, toPagePath } from './routing'
 
 export function useRouting(pageKeys: string[], fallbackPage?: string) {
   const initialPage = resolvePageKeyFromLocation(location, pageKeys) ?? fallbackPage ?? ''
