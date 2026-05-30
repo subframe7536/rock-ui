@@ -143,7 +143,7 @@ function SlotReferencePanel(props: { sectionId: string; slot: SlotReferenceDoc }
             props={props.slot.cssVariables}
             nameColumn="CSS Variable"
             nameColumnClass="font-bold"
-            class="mt-0"
+            class="!mt-0"
             minimal
           />
         </Show>
@@ -153,7 +153,7 @@ function SlotReferencePanel(props: { sectionId: string; slot: SlotReferenceDoc }
             props={props.slot.dataAttributes}
             nameColumn="Data Attribute"
             nameColumnClass="font-bold"
-            class="mt-0"
+            class="!mt-0"
             minimal
           />
         </Show>
@@ -163,7 +163,7 @@ function SlotReferencePanel(props: { sectionId: string; slot: SlotReferenceDoc }
             props={props.slot.ariaAttributes}
             nameColumn="ARIA Attribute"
             nameColumnClass="font-bold"
-            class="mt-0"
+            class="!mt-0"
             minimal
           />
         </Show>
