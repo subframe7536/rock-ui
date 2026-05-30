@@ -223,11 +223,7 @@ function SectionTableBlock(sectionProps: { section: PropsTableSection }): JSX.El
             variant="pill"
             size="md"
             classes={{
-              root: 'mt-6 flex-col gap-4 md:flex-row md:items-start md:gap-8',
-              list: 'w-full max-w-none shrink-0 self-start rounded-xl bg-muted/35 p-1.5 md:max-w-52',
-              indicator: 'rounded-lg',
-              trigger: 'min-h-10 rounded-lg px-3 py-2.5 font-mono text-xs sm:text-sm',
-              content: 'min-w-0 flex-1 self-start pt-0',
+              root: 'mt-6 flex-col gap-4 md:flex-row md:items-start md:gap-5',
             }}
             items={(sectionProps.section.slots ?? []).map((slot) => ({
               label: slot.name,

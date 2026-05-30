@@ -38,7 +38,7 @@ export const tabsIndicatorVariants = cva('rounded-md transition-all duration-200
       vertical: 'top-0',
     },
     variant: {
-      pill: 'bg-background shadow-xs',
+      pill: 'surface-border bg-background shadow-xs',
       link: 'bg-primary',
     },
   },
@@ -79,8 +79,8 @@ export const tabsTriggerVariants = cva(
         vertical: 'w-full justify-start',
       },
       variant: {
-        pill: 'rounded-md data-selected:text-foreground',
-        link: 'data-selected:text-primary',
+        pill: 'rounded-md data-selected:text-foreground hover:data-highlighted:not-disabled:text-foreground',
+        link: 'data-selected:text-primary hover:data-highlighted:not-disabled:text-foreground',
       },
       size: {
         xs: 'text-xs px-1.5 py-0.5',
