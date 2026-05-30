@@ -147,8 +147,18 @@ describe('Select - single mode', () => {
     await fireEvent.pointerDown(control, { button: 0 })
     await fireEvent.click(control)
 
-    expect(control.className).toContain('focus:effect-fv-border')
+    expect(control.className).toContain('focus-visible:effect-fv-border')
     expect(control.className).not.toContain('focus-within:effect-fv-border')
+  })
+
+  test('non-search control uses focus-visible ring styling for keyboard focus', () => {
+    const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    control.focus()
+
+    expect(document.activeElement).toBe(control)
+    expect(control.className).toContain('focus-visible:effect-fv-border')
   })
 
   test('searchable control keeps focus-within ring styling', () => {
@@ -198,6 +208,21 @@ describe('Select - single mode', () => {
       expect(content).not.toBeNull()
       expect(content?.className).toContain('w-$mo-popper-anchor-width')
       expect(content?.className).toContain('min-w-$mo-popper-anchor-width')
+    })
+  })
+
+  test('popup animation origin defaults to the trigger center', async () => {
+    const screen = render(() => <Select options={FRUITS} placeholder="Pick a fruit" />)
+    const input = screen.getByRole('combobox')
+
+    await fireEvent.click(input)
+
+    await waitFor(() => {
+      const content = queryBody('[data-slot="content"]') as HTMLElement | null
+      expect(content).not.toBeNull()
+      expect(content?.style.getPropertyValue('--mo-popper-content-transform-origin')).toBe(
+        'top center',
+      )
     })
   })
 

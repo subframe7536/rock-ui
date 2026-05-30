@@ -258,8 +258,18 @@ describe('MultiSelect', () => {
     await fireEvent.pointerDown(control, { button: 0 })
     await fireEvent.click(control)
 
-    expect(control.className).toContain('focus:effect-fv-border')
+    expect(control.className).toContain('focus-visible:effect-fv-border')
     expect(control.className).not.toContain('focus-within:effect-fv-border')
+  })
+
+  test('non-search control uses focus-visible ring styling for keyboard focus', () => {
+    const screen = render(() => <MultiSelect options={FRUITS} placeholder="Pick fruits" />)
+    const control = screen.container.querySelector('[data-slot="control"]') as HTMLElement
+
+    control.focus()
+
+    expect(document.activeElement).toBe(control)
+    expect(control.className).toContain('focus-visible:effect-fv-border')
   })
 
   test('searchable control keeps focus-within ring styling', () => {

@@ -190,6 +190,31 @@ const SELECT_FILTER_STRATEGIES: Record<SelectFilterMode, (text: string, input: s
     contains: (text, input) => text.includes(input),
   }
 
+function resolveSelectContentSide(placement: string): 'top' | 'right' | 'bottom' | 'left' {
+  const [side] = placement.split('-')
+
+  if (side === 'top' || side === 'right' || side === 'bottom' || side === 'left') {
+    return side
+  }
+
+  return 'bottom'
+}
+
+function resolveSelectContentOrigin(
+  side: 'top' | 'right' | 'bottom' | 'left',
+): 'bottom center' | 'center left' | 'top center' | 'center right' {
+  switch (side) {
+    case 'top':
+      return 'bottom center'
+    case 'right':
+      return 'center left'
+    case 'left':
+      return 'center right'
+    default:
+      return 'top center'
+  }
+}
+
 function matchesFilter<TOption extends { key: string }>(
   option: TOption,
   inputValue: string,
@@ -285,6 +310,7 @@ function useBaseSelectOverlay(options: {
   gutter: Accessor<number>
   isOpen: Accessor<boolean>
   menuControl: ReturnType<typeof useSelectMenuControl>
+  onPlacementChange: (placement: `${'top' | 'right' | 'bottom' | 'left'}${string}`) => void
   overflowPadding: Accessor<number>
   positionerElement: Accessor<HTMLDivElement | undefined>
 }) {
@@ -294,7 +320,7 @@ function useBaseSelectOverlay(options: {
     getReferenceElement: options.getControlElement,
     gutter: options.gutter,
     onPositionedChange: () => undefined,
-    onPlacementChange: () => undefined,
+    onPlacementChange: options.onPlacementChange,
     open: options.isOpen,
     overflowPadding: options.overflowPadding,
     placement: () => 'bottom-start',
@@ -378,6 +404,7 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
 
   const [currentInputText, setCurrentInputText] = createSignal(merged.defaultSearchValue ?? '')
   const [highlightedKey, setHighlightedKey] = createSignal<string | undefined>()
+  const [contentSide, setContentSide] = createSignal<'top' | 'right' | 'bottom' | 'left'>('bottom')
   const [positionerElement, setPositionerElement] = createSignal<HTMLDivElement | undefined>()
   const [contentElement, setContentElement] = createSignal<HTMLDivElement | undefined>()
   const contentPresence = useTransitionPresence({
@@ -679,6 +706,9 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
     gutter: () => merged.gutter ?? 0,
     isOpen,
     menuControl,
+    onPlacementChange: (placement) => {
+      setContentSide(resolveSelectContentSide(placement))
+    },
     overflowPadding: () => merged.overflowPadding ?? 4,
     positionerElement,
   })
@@ -785,9 +815,12 @@ export function BaseSelect<TItem extends BaseSelectT.Item>(
                 contentPresence.setElement(element)
               }}
               data-slot="content"
-              style={merged.styles?.content}
+              style={{
+                ...merged.styles?.content,
+                '--mo-popper-content-transform-origin': resolveSelectContentOrigin(contentSide()),
+              }}
               class={overlayMenuContentVariants(
-                { side: 'bottom' },
+                { side: contentSide() },
                 'w-$mo-popper-anchor-width min-w-$mo-popper-anchor-width max-w-$mo-popper-content-available-width',
                 merged.classes?.content,
               )}
