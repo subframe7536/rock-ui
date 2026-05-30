@@ -285,7 +285,9 @@ function extractSlotNames(node: ts.ModuleDeclaration, checker: ts.TypeChecker): 
 
 function extractSlotNamesFromTypeNode(typeNode: ts.TypeNode, checker: ts.TypeChecker): string[] {
   if (ts.isUnionTypeNode(typeNode)) {
-    return uniqueStrings(typeNode.types.flatMap((node) => extractSlotNamesFromTypeNode(node, checker)))
+    return uniqueStrings(
+      typeNode.types.flatMap((node) => extractSlotNamesFromTypeNode(node, checker)),
+    )
   }
 
   if (ts.isLiteralTypeNode(typeNode)) {

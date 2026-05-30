@@ -13,7 +13,8 @@ export const selectControlVariants = cva(
       variant: INPUT_VARIANT,
       search: {
         true: 'cursor-text focus-within:effect-fv-border focus-within:data-invalid:effect-invalid',
-        false: 'cursor-pointer focus-visible:effect-fv-border focus-visible:data-invalid:effect-invalid',
+        false:
+          'cursor-pointer focus-visible:effect-fv-border focus-visible:data-invalid:effect-invalid',
       },
     },
   },

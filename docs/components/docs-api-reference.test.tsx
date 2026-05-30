@@ -1,3 +1,4 @@
+// oxlint-disable class-methods-use-this
 import { fireEvent, render } from '@solidjs/testing-library'
 import { describe, expect, test } from 'vitest'
 
