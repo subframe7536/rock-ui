@@ -93,17 +93,26 @@ export namespace BaseSelectT {
     options?: TItem[]
     /** Controlled open state. */
     open?: boolean
-    /** Initial open state. */
+    /**
+     * Initial open state.
+     * @default false
+     */
     defaultOpen?: boolean
     /** Called whenever the popup open state changes. */
     onOpenChange?: (open: boolean) => void
     /** Enables virtualized-like aria metadata on options. */
     virtualized?: boolean
-    /** Enable search input. Defaults to `false`. */
+    /**
+     * Enable search input.
+     * @default false
+     */
     search?: boolean
     /** Controlled search value. */
     searchValue?: string
-    /** Default search value. */
+    /**
+     * Default search value.
+     * @default ''
+     */
     defaultSearchValue?: string
     /** Called when the search input changes. */
     onSearch?: (value: string) => void
@@ -119,7 +128,10 @@ export namespace BaseSelectT {
       | 'endsWith'
       | 'contains'
       | ((inputValue: string, option: TItem) => boolean)
-    /** Current selected values used only to derive selected option state. */
+    /**
+     * Current selected values used only to derive selected option state.
+     * @default []
+     */
     selectedValues?: Value[]
     /** Form value used when the field initializes. */
     initialValue?: unknown
@@ -139,13 +151,25 @@ export namespace BaseSelectT {
      * Called when the listbox is scrolled to bottom. Useful for infinite loading scenarios. Make sure to set `overflowPadding` and `scrollBottomThreshold` appropriately to ensure the callback is triggered at the right time.
      */
     onScrollBottom?: () => void
-    /** Distance (px) from the bottom at which onScrollBottom fires. Default: 20. */
+    /**
+     * Distance (px) from the bottom at which onScrollBottom fires.
+     * @default 20
+     */
     scrollBottomThreshold?: number
-    /** Padding (px) used when calculating popup overflow and viewport collision. Default: 4. */
+    /**
+     * Padding (px) used when calculating popup overflow and viewport collision.
+     * @default 4
+     */
     overflowPadding?: number
-    /** Gap (px) between the control and popup content. Default: 0. */
+    /**
+     * Gap (px) between the control and popup content.
+     * @default 0
+     */
     gutter?: number
-    /** Whether the select closes after selection. */
+    /**
+     * Whether the select closes after selection.
+     * @default true
+     */
     closeOnSelect?: boolean
   }
 

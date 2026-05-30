@@ -18,6 +18,7 @@ export const checkboxRootVariants = cva('flex items-start relative data-disabled
   variants: {
     variant: {
       card: 'b-1 b-border rounded-lg data-checked:b-primary',
+      list: '',
     },
     indicator: CHECKABLE_INDICATOR_VARIANT,
   },

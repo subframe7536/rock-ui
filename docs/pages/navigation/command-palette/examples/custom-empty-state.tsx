@@ -2,13 +2,14 @@ import { CommandPalette } from '@src'
 
 export function CustomEmptyState() {
   return (
-    <div class="b-1 b-border rounded-lg w-lg shadow-lg overflow-hidden">
+    <div class="max-w-full w-lg">
       <CommandPalette
         items={[]}
         empty={
-          <span class="flex flex-col gap-1 items-center">
-            <span>Nothing here yet.</span>
-            <span class="text-xs">Try a different search term.</span>
+          <span class="flex flex-col gap-2 items-center">
+            <span class="i-lucide-search-x text-muted-foreground size-6" aria-hidden="true" />
+            <span class="text-foreground font-medium">No commands found</span>
+            <span class="text-xs">Try a different keyword or clear the search.</span>
           </span>
         }
       />

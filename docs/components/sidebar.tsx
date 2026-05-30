@@ -2,7 +2,7 @@ import type { Accessor } from 'solid-js'
 import { For, Show, createMemo } from 'solid-js'
 
 import { version } from '../../package.json'
-import { Badge, Button, cn, Input } from '../../src'
+import { Badge, Button, cn } from '../../src'
 
 type SidebarPageStatus = 'new' | 'update' | 'unreleased'
 
@@ -23,12 +23,9 @@ export interface SidebarProps {
   pages: SidebarPage[]
   activePage: Accessor<string>
   setActivePage: (key: string) => void
-  search: Accessor<string>
 }
 
 export interface SidebarHeaderProps {
-  search: Accessor<string>
-  setSearch: (value: string) => void
   onClose?: () => void
 }
 
@@ -38,19 +35,11 @@ interface SidebarSection {
 }
 
 export const Sidebar = (props: SidebarProps) => {
-  const filtered = createMemo(() => {
-    const q = props.search().toLowerCase().trim()
-    if (!q) {
-      return props.pages
-    }
-    return props.pages.filter((p) => p.label.toLowerCase().includes(q))
-  })
-
   const grouped = createMemo<SidebarSection[]>(() => {
     const ungrouped: SidebarPage[] = []
     const groupedMap = new Map<string, SidebarPage[]>()
 
-    for (const page of filtered()) {
+    for (const page of props.pages) {
       const group = page.group?.trim()
       if (!group) {
         ungrouped.push(page)
@@ -69,13 +58,13 @@ export const Sidebar = (props: SidebarProps) => {
   })
 
   return (
-    <div class="text-foreground p-4 pb-10 pt-3 bg-muted/50 h-full min-h-0 overflow-y-auto">
-      <nav class="pb-2 flex flex-col gap-4">
+    <div class="px-3 pb-10 pt-3 h-full min-h-0 overflow-y-auto">
+      <nav class="pb-2 flex flex-col gap-5">
         <For each={grouped()}>
           {(section) => (
             <section>
               <Show when={section.group}>
-                <div class="text-(sm muted-foreground) font-bold mb-1 mt-3 px-2">
+                <div class="text-[0.68rem] text-muted-foreground tracking-[0.14em] font-semibold mb-1.5 mt-3 px-2 uppercase">
                   {section.group}
                 </div>
               </Show>
@@ -86,10 +75,10 @@ export const Sidebar = (props: SidebarProps) => {
                     <button
                       type="button"
                       class={cn(
-                        'text-sm text-muted-foreground px-2.5 py-1.5 text-left rounded-lg hover:cursor-pointer',
+                        'text-sm text-muted-foreground px-2.5 py-1.75 text-left rounded-md transition-([background-color,color] duration-150 ease-out) hover:cursor-pointer',
                         props.activePage() === page.key
-                          ? 'text-foreground bg-accent/80'
-                          : 'hover:(text-muted-foreground bg-muted)',
+                          ? 'text-accent-foreground font-medium bg-accent'
+                          : 'hover:text-foreground hover:bg-accent/30',
                       )}
                       onClick={() => props.setActivePage(page.key)}
                     >
@@ -97,7 +86,7 @@ export const Sidebar = (props: SidebarProps) => {
                         <span class="truncate">{page.label}</span>
                         <Show when={page.status}>
                           {(status) => (
-                            <span class="text-2.4 text-foreground leading-none font-semibold px-1 py-0.5 border border-border rounded-xs bg-background/80 shrink-0 uppercase">
+                            <span class="text-[0.6rem] leading-none font-semibold px-1.25 py-0.75 border rounded-sm bg-background/70 shrink-0 uppercase">
                               {SIDEBAR_PAGE_STATUS_LABELS[status()]}
                             </span>
                           )}
@@ -112,7 +101,7 @@ export const Sidebar = (props: SidebarProps) => {
         </For>
 
         <Show when={grouped().length === 0}>
-          <p class="text-xs text-muted-foreground px-2">No results</p>
+          <p class="text-xs text-muted-foreground px-2 py-3">No results</p>
         </Show>
       </nav>
     </div>
@@ -121,42 +110,25 @@ export const Sidebar = (props: SidebarProps) => {
 
 export const SidebarHeader = (props: SidebarHeaderProps) => {
   return (
-    <div class="text-foreground p-4 pb-3 border-b border-border bg-muted/50">
-      <div class="px-2 flex items-center justify-between">
-        <div class="text-foreground flex gap-2 items-center justify-between">
-          <div class="flex gap-2 min-w-0 items-center">
-            <img src="/favicon.svg" alt="icon" class="size-6" />
-            <div class="min-w-0">
-              <p class="text-lg font-semibold truncate">
-                Moraine
-                <Badge size="xs" classes={{ root: 'font-mono ms-1.5' }}>
-                  v{version}
-                </Badge>
-              </p>
-            </div>
-          </div>
-        </div>
-        <Show when={props.onClose}>
-          <Button
-            variant="ghost"
-            size="sm"
-            leading="i-lucide-x"
-            aria-label="Close sidebar"
-            onClick={props.onClose}
-          />
-        </Show>
+    <div class="px-4 b-(b border) flex shrink-0 h-13 items-center justify-between">
+      <div class="flex gap-2.5 min-w-0 items-center">
+        <img src="/favicon.svg" alt="icon" class="size-7" />
+        <p class="text-lg font-semibold truncate">
+          Moraine
+          <Badge size="xs" variant="outline" classes={{ root: 'font-mono ms-1.5' }}>
+            v{version}
+          </Badge>
+        </p>
       </div>
-
-      <div class="mt-4 px-1">
-        <Input
-          type="text"
-          placeholder="Search component..."
-          value={props.search()}
-          onInput={(e) => props.setSearch(e.currentTarget.value)}
-          leading="icon-search"
-          classes={{ root: 'bg-background' }}
+      <Show when={props.onClose}>
+        <Button
+          variant="ghost"
+          size="sm"
+          leading="i-lucide-x"
+          aria-label="Close sidebar"
+          onClick={props.onClose}
         />
-      </div>
+      </Show>
     </div>
   )
 }

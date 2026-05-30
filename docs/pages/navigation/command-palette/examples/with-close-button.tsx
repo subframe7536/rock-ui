@@ -5,17 +5,21 @@ import { createSignal } from 'solid-js'
 export function WithCloseButton() {
   const BASIC_GROUPS: CommandPaletteT.Item[] = [
     {
-      id: 'actions',
-      label: 'Actions',
+      id: 'workspace',
+      label: 'Workspace',
       children: [
-        { value: 'new-file', label: 'New File', icon: 'i-lucide-file-plus', kbds: ['⌘', 'N'] },
-        { value: 'open-file', label: 'Open File', icon: 'i-lucide-folder-open', kbds: ['⌘', 'O'] },
-        { value: 'save', label: 'Save', icon: 'i-lucide-save', kbds: ['⌘', 'S'] },
+        { value: 'new-issue', label: 'New Issue', icon: 'i-lucide-circle-plus', kbds: ['⌘', 'N'] },
         {
-          value: 'export-pdf',
-          label: 'Export as PDF',
-          icon: 'i-lucide-file-text',
-          description: 'Export current document to PDF',
+          value: 'open-inbox',
+          label: 'Open Inbox',
+          icon: 'i-lucide-inbox',
+          kbds: ['G', 'I'],
+        },
+        {
+          value: 'sync-roadmap',
+          label: 'Sync Roadmap',
+          icon: 'i-lucide-refresh-cw',
+          description: 'Pull the latest planning updates',
         },
       ],
     },
@@ -23,17 +27,15 @@ export function WithCloseButton() {
       id: 'navigation',
       label: 'Navigation',
       children: [
-        { value: 'dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
-        { value: 'settings', label: 'Settings', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'profile', label: 'Profile', icon: 'i-lucide-user', disabled: true },
-        { value: 'setting', label: 'Setting1', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'setting', label: 'Setting2', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'setting', label: 'Setting3', icon: 'i-lucide-settings', suffix: 'Preferences' },
-        { value: 'setting', label: 'Setting10', icon: 'i-lucide-settings', suffix: 'Preferences' },
+        { value: 'go-dashboard', label: 'Dashboard', icon: 'i-lucide-layout-dashboard' },
+        { value: 'go-projects', label: 'Projects', icon: 'i-lucide-folder-kanban' },
+        {
+          value: 'go-settings',
+          label: 'Settings',
+          icon: 'i-lucide-settings',
+          suffix: 'Preferences',
+        },
+        { value: 'go-billing', label: 'Billing', icon: 'i-lucide-credit-card', disabled: true },
       ],
     },
   ]
@@ -42,7 +44,7 @@ export function WithCloseButton() {
 
   return (
     <>
-      <div class="b-1 b-border rounded-lg w-lg shadow-lg overflow-hidden">
+      <div class="max-w-full w-lg">
         <CommandPalette items={BASIC_GROUPS} close onClose={() => setCloseCount((c) => c + 1)} />
       </div>
       <p class="text-sm text-muted-foreground mt-2">Close clicked: {closeCount()} time(s)</p>

@@ -82,7 +82,6 @@ export function SegmentRenderer(props: {
           <DocsHeader
             componentKey={props.pageContext.componentKey}
             apiDoc={props.pageContext.apiDoc}
-            upstreamHref={props.pageContext.upstreamHref}
             {...segment().props}
           />
         )}

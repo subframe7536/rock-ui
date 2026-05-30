@@ -7,7 +7,6 @@ import { Sidebar } from './sidebar'
 describe('Sidebar', () => {
   test('renders optional status labels for pages', () => {
     const [activePage] = createSignal('button')
-    const [search] = createSignal('')
 
     const screen = render(() => (
       <Sidebar
@@ -24,7 +23,6 @@ describe('Sidebar', () => {
         ]}
         activePage={activePage}
         setActivePage={() => undefined}
-        search={search}
       />
     ))
 
@@ -35,7 +33,6 @@ describe('Sidebar', () => {
 
   test('keeps unreleased pages clickable', async () => {
     const [activePage] = createSignal('button')
-    const [search] = createSignal('')
     const setActivePage = vi.fn()
 
     const screen = render(() => (
@@ -50,7 +47,6 @@ describe('Sidebar', () => {
         ]}
         activePage={activePage}
         setActivePage={setActivePage}
-        search={search}
       />
     ))
 

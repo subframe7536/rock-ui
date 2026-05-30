@@ -364,7 +364,7 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       style={merged.styles?.root}
       class={checkboxRootVariants(
         {
-          variant: merged.variant === 'card' ? 'card' : undefined,
+          variant: merged.variant,
           indicator: merged.indicator === 'hidden' ? undefined : merged.indicator,
         },
         merged.variant === 'card' &&
@@ -378,7 +378,7 @@ export function Checkbox<TTrue = boolean, TFalse = boolean>(
       {...dataAttrs()}
     >
       <Show when={merged.variant === 'card'}>
-        <label for={field.id()} class="inset-0 absolute" />
+        <label for={field.id()} class="cursor-pointer inset-0 absolute" />
       </Show>
       <div
         data-slot="container"

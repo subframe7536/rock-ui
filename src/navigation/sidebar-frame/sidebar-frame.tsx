@@ -87,10 +87,12 @@ export namespace SidebarFrameT {
   export interface Base {
     /**
      * The variant of the sidebar frame.
+     * @default 'default'
      */
     variant?: Variant
     /**
      * The side of the sidebar.
+     * @default 'left'
      */
     side?: Side
     /**
@@ -341,7 +343,6 @@ export function SidebarFrame(props: SidebarFrameProps): JSX.Element {
               'h-full min-h-0 overflow-y-auto',
               merged.variant === 'inset' && 'b-1 b-border rounded-2xl bg-background shadow-xs',
             )}
-            data-docs-scroll-root="true"
             onScroll={(event) => {
               setScrolled(event.currentTarget.scrollTop > (merged.scrollThreshold ?? 60))
             }}

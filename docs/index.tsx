@@ -4,9 +4,11 @@ import { Show, createMemo, createSignal } from 'solid-js'
 import { Dynamic, render } from 'solid-js/web'
 import { exampleMap, pages } from 'virtual:example-pages'
 
-import { Button, SidebarFrame, SidebarFrameSheetResizableRender } from '../src'
+import { Button } from '../src'
 
 import { ContentHeader } from './components/content-header'
+import { DocsCommandPalette, DocsSearchTrigger } from './components/docs-command-palette'
+import { DocsShell } from './components/docs-shell'
 import { Sidebar, SidebarHeader } from './components/sidebar'
 import { useRouting } from './hooks/use-routing'
 import { useTheme } from './hooks/use-theme'
@@ -17,7 +19,7 @@ function App() {
 
   const { theme, updateTheme } = useTheme()
   const { page, navigate } = useRouting(pageKeys, fallbackPage)
-  const [sidebarSearch, setSidebarSearch] = createSignal('')
+  const [paletteOpen, setPaletteOpen] = createSignal(false)
 
   const ActiveExample = createMemo(
     () => exampleMap[page()] ?? (fallbackPage ? exampleMap[fallbackPage] : undefined),
@@ -26,43 +28,22 @@ function App() {
   const pageTitle = createMemo(() => pages.find((p) => p.key === page())?.label ?? '')
 
   return (
-    <div class="h-screen overflow-hidden">
-      <SidebarFrame
-        renderFrame={(ctx) => (
-          <SidebarFrameSheetResizableRender
-            {...ctx}
-            resizableOptions={{
-              classes: {
-                divider:
-                  'after:(transition duration-200 ease-out z-20) hover:after:(bg-accent w-1.5)',
-              },
-            }}
-            resizablePanelOptions={{
-              defaultSize: '18%',
-              min: 240,
-              max: 400,
-            }}
-          />
+    <>
+      <DocsShell
+        sidebar={(ctx) => (
+          <div class="flex flex-col h-full min-h-0">
+            <SidebarHeader onClose={ctx.isMobile() ? () => ctx.setSidebarOpen(false) : undefined} />
+            <Sidebar
+              pages={pages}
+              activePage={page}
+              setActivePage={(key) => {
+                navigate(key)
+                ctx.setSidebarOpen(false)
+              }}
+            />
+          </div>
         )}
-        renderSidebarHeader={(ctx) => (
-          <SidebarHeader
-            search={sidebarSearch}
-            setSearch={setSidebarSearch}
-            onClose={ctx.isMobile() ? () => ctx.setOpen(false) : undefined}
-          />
-        )}
-        renderSidebarBody={(ctx) => (
-          <Sidebar
-            pages={pages}
-            activePage={page}
-            search={sidebarSearch}
-            setActivePage={(key) => {
-              navigate(key)
-              ctx.setOpen(false)
-            }}
-          />
-        )}
-        renderMain={(ctx) => (
+        main={(ctx) => (
           <>
             <ContentHeader
               leading={
@@ -72,7 +53,7 @@ function App() {
                     size="sm"
                     leading="i-lucide-menu"
                     aria-label="Toggle sidebar"
-                    onClick={ctx.toggle}
+                    onClick={ctx.toggleSidebar}
                   />
                 </Show>
               }
@@ -80,6 +61,12 @@ function App() {
               scrolled={ctx.scrolled}
               theme={theme}
               setTheme={updateTheme}
+              search={
+                <DocsSearchTrigger
+                  variant={ctx.isMobile() ? 'mobile' : 'desktop'}
+                  onOpen={() => setPaletteOpen(true)}
+                />
+              }
             />
             <Show
               when={ActiveExample()}
@@ -90,7 +77,13 @@ function App() {
           </>
         )}
       />
-    </div>
+      <DocsCommandPalette
+        pages={pages}
+        open={paletteOpen}
+        setOpen={setPaletteOpen}
+        onNavigate={(key) => navigate(key)}
+      />
+    </>
   )
 }
 

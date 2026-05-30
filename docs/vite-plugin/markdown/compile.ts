@@ -2,12 +2,14 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import MarkdownIt from 'markdown-it'
+import ts from 'typescript'
 import { mergeConfig } from 'vite'
 
 import { loadComponentApiDoc } from '../api-doc/load'
 import { resolveDocsPageContext, toImportPath } from '../core/paths'
 import { toKebabCase, toSingleQuoted } from '../core/strings'
 
+import { ARIA_ATTRIBUTE_DESCRIPTIONS, DATA_ATTRIBUTE_DESCRIPTIONS } from './descriptions'
 import { parseSegments } from './directives'
 import { parseFrontmatter } from './frontmatter'
 import {
@@ -71,9 +73,25 @@ interface TocApiDocShape {
   items?: unknown
 }
 
-const KOBALTE_COMPONENT_DOCS_BASE_URL = 'https://kobalte.dev/docs/core/components'
-const KOBALTE_IGNORED_MODULES = new Set(['popper', 'polymorphic'])
-const KOBALTE_IMPORT_PATTERN = /from\s+['"]@kobalte\/core\/([^'"]+)['"]/g
+interface ApiAttributeDoc {
+  name: string
+  required: false
+  type: string
+  description: string
+}
+
+interface SourceSlotReference {
+  name: string
+  cssVariables: ApiAttributeDoc[]
+  dataAttributes: ApiAttributeDoc[]
+  ariaAttributes: ApiAttributeDoc[]
+}
+
+interface SourceAttributeReference {
+  aria: ApiAttributeDoc[]
+  data: ApiAttributeDoc[]
+  slots: SourceSlotReference[]
+}
 
 function normalizeMarkdownLang(value: string): MarkdownHighlightLang | null {
   const key = value.trim().toLowerCase()
@@ -414,8 +432,15 @@ function renderApiReferenceDescriptions(
       id: string
       heading: string
       description?: string
+      nameColumn?: string
       badges?: string[]
       props: unknown[]
+      slots?: Array<{
+        name: string
+        cssVariables: unknown[]
+        dataAttributes: unknown[]
+        ariaAttributes: unknown[]
+      }>
       groups?: Array<{ description: string; props: unknown[] }>
     }>
   } | null,
@@ -430,6 +455,12 @@ function renderApiReferenceDescriptions(
     sections: model.sections.map((section) => ({
       ...renderDescriptionField(section, markdown),
       props: renderPropDescriptions(section.props, markdown),
+      slots: section.slots?.map((slot) => ({
+        ...slot,
+        cssVariables: renderPropDescriptions(slot.cssVariables, markdown),
+        dataAttributes: renderPropDescriptions(slot.dataAttributes, markdown),
+        ariaAttributes: renderPropDescriptions(slot.ariaAttributes, markdown),
+      })),
       groups: section.groups?.map((group) => ({
         ...renderDescriptionField(group, markdown),
         props: renderPropDescriptions(group.props, markdown),
@@ -464,6 +495,324 @@ function createCodeTabsItems(
     value: command.value,
     html: highlightCode?.(command.source, 'bash') ?? createPlainCodeBlockHtml(command.source),
   }))
+}
+
+function getJsxAttributeName(name: ts.JsxAttributeName): string | null {
+  if (ts.isIdentifier(name) || ts.isJsxNamespacedName(name)) {
+    return name.getText()
+  }
+  return null
+}
+
+function getJsxAttributeStaticValue(attribute: ts.JsxAttribute): string | null {
+  const initializer = attribute.initializer
+  if (!initializer) {
+    return ''
+  }
+  if (ts.isStringLiteral(initializer)) {
+    return initializer.text
+  }
+  if (
+    ts.isJsxExpression(initializer) &&
+    initializer.expression &&
+    ts.isStringLiteralLike(initializer.expression)
+  ) {
+    return initializer.expression.text
+  }
+  return null
+}
+
+function getJsxAttributes(
+  node: ts.JsxOpeningElement | ts.JsxSelfClosingElement,
+): ts.JsxAttribute[] {
+  return node.attributes.properties.filter(ts.isJsxAttribute)
+}
+
+function getJsxTagName(tagName: ts.JsxTagNameExpression): string | null {
+  if (ts.isIdentifier(tagName)) {
+    return tagName.text
+  }
+  if (ts.isPropertyAccessExpression(tagName)) {
+    return tagName.name.text
+  }
+  return null
+}
+
+function resolveLocalImportPath(importerPath: string, specifier: string): string | null {
+  if (!specifier.startsWith('.')) {
+    return null
+  }
+
+  const basePath = path.resolve(path.dirname(importerPath), specifier)
+  const candidates = [
+    `${basePath}.tsx`,
+    `${basePath}.ts`,
+    path.join(basePath, 'index.tsx'),
+    path.join(basePath, 'index.ts'),
+  ]
+
+  for (const candidate of candidates) {
+    try {
+      readFileSync(candidate, 'utf8')
+      return candidate
+    } catch {
+      // Try the next source candidate.
+    }
+  }
+
+  return null
+}
+
+function resolveReadableSourcePath(projectRoot: string, sourcePath: string): string | null {
+  const absoluteSourcePath = path.join(projectRoot, sourcePath)
+  const implementationBasePath = absoluteSourcePath.replace(/\.d\.(cts|mts|ts)$/, '')
+  const candidates = [
+    absoluteSourcePath,
+    `${implementationBasePath}.tsx`,
+    `${implementationBasePath}.ts`,
+    `${implementationBasePath}.jsx`,
+    `${implementationBasePath}.js`,
+  ]
+
+  for (const candidate of candidates) {
+    try {
+      readFileSync(candidate, 'utf8')
+      return candidate
+    } catch {
+      // Try the next candidate.
+    }
+  }
+
+  return null
+}
+
+function getAttributeType(name: string): string {
+  if (name === 'role' || name === 'aria-current' || name === 'aria-live') {
+    return 'string'
+  }
+  if (name === 'data-slot' || name === 'data-size' || name === 'data-variant') {
+    return 'string'
+  }
+  if (name.startsWith('data-')) {
+    return 'string | undefined'
+  }
+  return 'boolean | string | undefined'
+}
+
+function createAttributeDoc(name: string): ApiAttributeDoc {
+  const isAria = name === 'role' || name.startsWith('aria-')
+  const descriptions = isAria ? ARIA_ATTRIBUTE_DESCRIPTIONS : DATA_ATTRIBUTE_DESCRIPTIONS
+  return {
+    name,
+    required: false,
+    type: getAttributeType(name),
+    description:
+      descriptions[name] ??
+      (isAria
+        ? 'Accessibility attribute forwarded by the rendered component.'
+        : 'State or slot attribute exposed for styling hooks and selectors.'),
+  }
+}
+
+function createCssVariableDoc(name: string): ApiAttributeDoc {
+  return {
+    name,
+    required: false,
+    type: 'string',
+    description: 'CSS custom property exposed by this slot.',
+  }
+}
+
+function createEmptySlotReference(name: string): SourceSlotReference {
+  return {
+    name,
+    cssVariables: [],
+    dataAttributes: [],
+    ariaAttributes: [],
+  }
+}
+
+function extractSourceAttributeReference(
+  projectRoot: string | undefined,
+  sourcePath: string | undefined,
+): SourceAttributeReference {
+  if (!projectRoot || !sourcePath) {
+    return { aria: [], data: [], slots: [] }
+  }
+
+  const ariaNames = new Set<string>()
+  const dataNames = new Set<string>()
+  const slotReferenceByName = new Map<
+    string,
+    {
+      cssVariables: Set<string>
+      dataAttributes: Set<string>
+      ariaAttributes: Set<string>
+    }
+  >()
+  const visited = new Set<string>()
+
+  const getSlotReference = (slotName: string) => {
+    let reference = slotReferenceByName.get(slotName)
+    if (!reference) {
+      reference = {
+        cssVariables: new Set<string>(),
+        dataAttributes: new Set<string>(),
+        ariaAttributes: new Set<string>(),
+      }
+      slotReferenceByName.set(slotName, reference)
+    }
+    return reference
+  }
+
+  const collectFromSource = (absoluteSourcePath: string) => {
+    if (visited.has(absoluteSourcePath)) {
+      return
+    }
+    visited.add(absoluteSourcePath)
+
+    let sourceCode = ''
+    try {
+      sourceCode = readFileSync(absoluteSourcePath, 'utf8')
+    } catch {
+      return
+    }
+
+    const sourceFile = ts.createSourceFile(
+      absoluteSourcePath,
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    )
+    const localComponentImports = new Map<string, string>()
+    const usedLocalComponents = new Set<string>()
+
+    for (const statement of sourceFile.statements) {
+      if (ts.isExportDeclaration(statement)) {
+        const moduleSpecifier = statement.moduleSpecifier
+        if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
+          const resolvedPath = resolveLocalImportPath(absoluteSourcePath, moduleSpecifier.text)
+          if (resolvedPath) {
+            collectFromSource(resolvedPath)
+          }
+        }
+        continue
+      }
+
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) {
+        continue
+      }
+      const resolvedPath = resolveLocalImportPath(
+        absoluteSourcePath,
+        statement.moduleSpecifier.text,
+      )
+      if (!resolvedPath) {
+        continue
+      }
+
+      const clause = statement.importClause
+      if (clause?.name) {
+        localComponentImports.set(clause.name.text, resolvedPath)
+      }
+
+      const namedBindings = clause?.namedBindings
+      if (!namedBindings || !ts.isNamedImports(namedBindings)) {
+        continue
+      }
+
+      for (const element of namedBindings.elements) {
+        localComponentImports.set(element.name.text, resolvedPath)
+      }
+    }
+
+    const visit = (node: ts.Node) => {
+      if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+        const attributes = getJsxAttributes(node)
+        const slotAttribute = attributes.find((attribute) => {
+          const name = getJsxAttributeName(attribute.name)
+          return name === 'data-slot' || name === 'slotName'
+        })
+        const slotName = slotAttribute ? getJsxAttributeStaticValue(slotAttribute) : null
+
+        for (const attribute of attributes) {
+          const name = getJsxAttributeName(attribute.name)
+          if (!name) {
+            continue
+          }
+
+          if (name === 'role' || name.startsWith('aria-')) {
+            ariaNames.add(name)
+            if (slotName) {
+              getSlotReference(slotName).ariaAttributes.add(name)
+            }
+            continue
+          }
+
+          if (name.startsWith('data-')) {
+            dataNames.add(name)
+            if (slotName && name !== 'data-slot') {
+              getSlotReference(slotName).dataAttributes.add(name)
+            }
+          }
+        }
+
+        if (slotName) {
+          const slotReference = getSlotReference(slotName)
+          for (const match of node.getText(sourceFile).matchAll(/--[A-Za-z_][\w-]*/g)) {
+            slotReference.cssVariables.add(match[0])
+          }
+        }
+
+        const tagName = getJsxTagName(node.tagName)
+        if (tagName && /^[A-Z]/.test(tagName)) {
+          usedLocalComponents.add(tagName)
+        }
+      }
+
+      ts.forEachChild(node, visit)
+    }
+
+    visit(sourceFile)
+
+    for (const componentName of usedLocalComponents) {
+      const importedPath = localComponentImports.get(componentName)
+      if (importedPath) {
+        collectFromSource(importedPath)
+      }
+    }
+  }
+
+  const resolvedSourcePath = resolveReadableSourcePath(projectRoot, sourcePath)
+  if (!resolvedSourcePath) {
+    return { aria: [], data: [], slots: [] }
+  }
+
+  collectFromSource(resolvedSourcePath)
+
+  return {
+    aria: [...ariaNames].sort().map(createAttributeDoc),
+    data: [...dataNames].sort().map(createAttributeDoc),
+    slots: [...slotReferenceByName.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([name, reference]) => ({
+        name,
+        cssVariables: [...reference.cssVariables].sort().map(createCssVariableDoc),
+        dataAttributes: [...reference.dataAttributes].sort().map(createAttributeDoc),
+        ariaAttributes: [...reference.ariaAttributes].sort().map(createAttributeDoc),
+      })),
+  }
+}
+
+function createSlotReferenceDocs(
+  slotNames: unknown[],
+  sourceAttributes: SourceAttributeReference,
+): SourceSlotReference[] {
+  const sourceSlotByName = new Map(sourceAttributes.slots.map((slot) => [slot.name, slot]))
+
+  return slotNames
+    .filter((slotName): slotName is string => typeof slotName === 'string' && slotName.length > 0)
+    .map((slotName) => sourceSlotByName.get(slotName) ?? createEmptySlotReference(slotName))
 }
 
 function asTocApiDoc(value: unknown): TocApiDocShape | null {
@@ -510,35 +859,6 @@ function asTocApiDoc(value: unknown): TocApiDocShape | null {
     props: { own: props.own, inherited },
     items: doc.items,
   }
-}
-
-function inferKobalteComponentDocsHref(
-  projectRoot: string | undefined,
-  sourcePath: string | undefined,
-): string | null {
-  if (!projectRoot || !sourcePath) {
-    return null
-  }
-
-  const absoluteSourcePath = path.join(projectRoot, sourcePath)
-  let sourceCode = ''
-  try {
-    sourceCode = readFileSync(absoluteSourcePath, 'utf8')
-  } catch {
-    return null
-  }
-
-  for (const match of sourceCode.matchAll(KOBALTE_IMPORT_PATTERN)) {
-    const rawModulePath = match[1]
-    const moduleName = rawModulePath?.split('/')[0]
-    if (!moduleName || KOBALTE_IGNORED_MODULES.has(moduleName)) {
-      continue
-    }
-
-    return `${KOBALTE_COMPONENT_DOCS_BASE_URL}/${moduleName}`
-  }
-
-  return null
 }
 
 function extractHeaderApiDocOverride(segments: ParsedSegment[]): Record<string, unknown> | null {
@@ -687,16 +1007,26 @@ export function compileMarkdownPage(
   const renderedApiDoc = renderApiDocDescriptions(mergedApiDoc, markdown)
 
   const shouldExposeComponentKey = Boolean(mergedApiDoc)
-  const upstreamHref = inferKobalteComponentDocsHref(
-    options.projectRoot,
-    tocApiDoc?.component.sourcePath,
-  )
   const onThisPageEntries: OnThisPageEntryLiteral[] = []
   const hasMainSlots = Boolean(tocApiDoc?.slots.length)
   const hasMainProps = Boolean(tocApiDoc?.props.own.length)
   const hasMainItems = Boolean(tocApiDoc?.items)
   const hasMainInherited = Boolean(tocApiDoc?.props.inherited.length)
-  const hasMainApiReference = hasMainSlots || hasMainProps || hasMainItems || hasMainInherited
+  const sourceAttributes = extractSourceAttributeReference(
+    options.projectRoot,
+    tocApiDoc?.component.sourcePath,
+  )
+  const hasMainAria = sourceAttributes.aria.length > 0
+  const hasMainDataAttributes = sourceAttributes.data.length > 0
+  const hasGlobalAria = !hasMainSlots && hasMainAria
+  const hasGlobalDataAttributes = !hasMainSlots && hasMainDataAttributes
+  const hasMainApiReference =
+    hasMainSlots ||
+    hasMainProps ||
+    hasMainItems ||
+    hasMainInherited ||
+    hasGlobalAria ||
+    hasGlobalDataAttributes
 
   const apiReferenceModel =
     tocApiDoc && hasDocsApiReferenceWidget && hasMainApiReference
@@ -705,16 +1035,18 @@ export function compileMarkdownPage(
             id: string
             heading: string
             description?: string
+            nameColumn?: string
             badges?: string[]
             props: unknown[]
+            slots?: SourceSlotReference[]
             groups?: Array<{ description: string; props: unknown[] }>
           }> = []
 
           if (hasMainSlots) {
             sections.push({
-              id: 'api-slots',
-              heading: 'Slots',
-              badges: tocApiDoc.slots as string[],
+              id: 'attributes',
+              heading: 'Attributes',
+              slots: createSlotReferenceDocs(tocApiDoc.slots, sourceAttributes),
               props: [],
             })
           }
@@ -736,6 +1068,26 @@ export function compileMarkdownPage(
               heading: 'Items',
               description: itemsDoc?.description,
               props: itemsDoc?.props ?? [],
+            })
+          }
+
+          if (hasGlobalAria) {
+            sections.push({
+              id: 'api-aria',
+              heading: 'ARIA',
+              description: 'Accessibility attributes and roles emitted by the component markup.',
+              nameColumn: 'Attribute',
+              props: sourceAttributes.aria,
+            })
+          }
+
+          if (hasGlobalDataAttributes) {
+            sections.push({
+              id: 'api-data-attributes',
+              heading: 'Data Attributes',
+              description: 'State and slot attributes exposed for styling hooks and selectors.',
+              nameColumn: 'Attribute',
+              props: sourceAttributes.data,
             })
           }
 
@@ -781,7 +1133,6 @@ export function compileMarkdownPage(
       : '',
     renderedApiDoc ? `apiDoc: ${JSON.stringify(renderedApiDoc)}` : '',
     renderedApiReferenceModel ? `apiReference: ${JSON.stringify(renderedApiReferenceModel)}` : '',
-    upstreamHref ? `upstreamHref: ${JSON.stringify(upstreamHref)}` : '',
     `onThisPageEntries: ${JSON.stringify(onThisPageEntries)}`,
     'segments',
   ].filter(Boolean)
