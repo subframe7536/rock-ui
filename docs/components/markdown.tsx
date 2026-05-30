@@ -46,7 +46,6 @@ export interface RenderExampleMarkdownPageInput {
   frontmatter?: FrontmatterData
   apiDoc?: ExamplePageApiDoc
   apiReference?: DocsApiReferenceModel
-  upstreamHref?: string
   onThisPageEntries?: OnThisPageEntry[]
   segments: RenderSegment[]
 }

@@ -36,7 +36,8 @@ export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
     if (!target) {
       return false
     }
-    target.scrollIntoView?.()
+
+    target.scrollIntoView?.({ block: 'start' })
     return true
   }
 
@@ -54,9 +55,14 @@ export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
     }
 
     syncActiveIdWithHashWithEntries()
-    scrollToAnchor()
 
-    const scrollRoot = document.querySelector<HTMLElement>('[data-docs-scroll-root="true"]')
+    let initialAnchorFrame = 0
+    if (location.hash) {
+      initialAnchorFrame = requestAnimationFrame(() => {
+        scrollToAnchor()
+      })
+    }
+
     const observer =
       typeof IntersectionObserver === 'function' && entries.length > 0
         ? new IntersectionObserver(
@@ -80,9 +86,9 @@ export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
               }
             },
             {
-              root: scrollRoot,
-              rootMargin: '0px',
-              threshold: 0.98,
+              root: document.body,
+              rootMargin: '-80px 0px -66% 0px',
+              threshold: 0,
             },
           )
         : null
@@ -103,6 +109,9 @@ export function useTableOfContents(getEntries: () => OnThisPageEntry[]) {
 
     window.addEventListener('hashchange', handleHashChange)
     onCleanup(() => {
+      if (initialAnchorFrame) {
+        cancelAnimationFrame(initialAnchorFrame)
+      }
       window.removeEventListener('hashchange', handleHashChange)
       observer?.disconnect()
     })

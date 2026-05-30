@@ -85,15 +85,68 @@ name: Variants
     expect(code).not.toContain('"id":"input"')
     expect(code).toContain('"id":"variants"')
     expect(code).toContain('"id":"api-ref"')
+    expect(code).toContain('"id":"attributes"')
     expect(code).toContain('"id":"api-props"')
-    expect(code).toContain('"id":"api-aria"')
-    expect(code).toContain('"id":"api-data-attributes"')
+    expect(code).not.toContain('"id":"api-aria"')
+    expect(code).not.toContain('"id":"api-data-attributes"')
+    expect(code).toContain('"label":"Attributes"')
     expect(code).toContain('"label":"Props"')
-    expect(code).toContain('"label":"ARIA"')
-    expect(code).toContain('"label":"Data Attributes"')
     expect(code).toContain('"name":"aria-disabled"')
-    expect(code).toContain('"name":"data-slot"')
     expect((code.match(/"id":"api-ref","label":"API Reference","level":1/g) ?? []).length).toBe(1)
+  })
+
+  test('renders api slots as titled sections with slot-specific metadata tables', () => {
+    const markdown = `
+:::docs-api-reference
+:::
+`
+
+    const code = compileMarkdownPage(
+      markdown,
+      '/tmp/docs/pages/navigation/command-palette/command-palette.md',
+      {
+        projectRoot: process.cwd(),
+      },
+    )
+
+    expect(code).toContain('"id":"attributes"')
+    expect(code).toContain('"slots":[{"name":"root"')
+    expect(code).toContain('"name":"item"')
+    expect(code).toContain('"dataAttributes":[{"name":"data-disabled"')
+    expect(code).toContain('"name":"data-highlighted"')
+    expect(code).toContain('"ariaAttributes":[{"name":"aria-disabled"')
+  })
+
+  test('keeps slots section for select and multi-select docs pages', () => {
+    const selectCode = compileMarkdownPage(
+      `
+:::docs-api-reference
+:::
+`,
+      '/tmp/docs/pages/form/select/select.md',
+      {
+        projectRoot: process.cwd(),
+      },
+    )
+
+    expect(selectCode).toContain('"id":"attributes"')
+    expect(selectCode).toContain('"slots":[{"name":"root"')
+    expect(selectCode).toContain('"name":"control"')
+
+    const multiSelectCode = compileMarkdownPage(
+      `
+:::docs-api-reference
+:::
+`,
+      '/tmp/docs/pages/form/multi-select/multi-select.md',
+      {
+        projectRoot: process.cwd(),
+      },
+    )
+
+    expect(multiSelectCode).toContain('"id":"attributes"')
+    expect(multiSelectCode).toContain('"slots":[{"name":"root"')
+    expect(multiSelectCode).toContain('"name":"tagsContainer"')
   })
 
   test('does not inject api toc entries without docs-api-reference widget', () => {
@@ -107,13 +160,13 @@ name: Variants
 
     expect(code).toContain('"id":"variants"')
     expect(code).not.toContain('"id":"api-reference"')
-    expect(code).not.toContain('"id":"api-slots"')
+    expect(code).not.toContain('"id":"attributes"')
     expect(code).not.toContain('"id":"api-props"')
     expect(code).not.toContain('"id":"api-items"')
     expect(code).not.toContain('"id":"api-inherited"')
   })
 
-  test('does not inject upstreamHref for non-kobalte component pages', () => {
+  test('does not inject upstreamHref automatically from component source imports', () => {
     const markdown = `
 ## Demo
 
@@ -126,6 +179,27 @@ name: Variants
     })
 
     expect(code).not.toContain('upstreamHref:')
+  })
+
+  test('preserves explicit upstreamHref passed to docs-header', () => {
+    const markdown = `
+:::docs-header
+componentKey: toast
+name: Toast
+category: overlays
+upstreamHref: https://github.com/subframe7536/solid-toaster
+:::
+
+:::docs-api-reference
+:::
+`
+
+    const code = compileMarkdownPage(markdown, '/tmp/docs/pages/overlay/toast/toast.md', {
+      projectRoot: process.cwd(),
+    })
+
+    expect(code).toContain('"upstreamHref":"https://github.com/subframe7536/solid-toaster"')
+    expect(code).not.toContain('return Markdown({ componentKey: "toast", upstreamHref:')
   })
 
   test('injects conditional api toc entries for slots/items/inherited', () => {
@@ -157,7 +231,7 @@ apiDocOverride:
 
     const code = compileMarkdownPage(markdown, '/tmp/docs/pages/form/custom/custom.md')
     expect(code).toContain('"id":"api-ref"')
-    expect(code).toContain('"id":"api-slots"')
+    expect(code).toContain('"id":"attributes"')
     expect(code).toContain('"id":"api-items"')
     expect(code).toContain('"id":"api-inherited"')
     expect(code).toContain('"label":"Inherited"')

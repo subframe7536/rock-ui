@@ -39,7 +39,7 @@ export function SubNavigation() {
   ]
 
   return (
-    <div class="b-1 b-border rounded-lg w-lg shadow-lg overflow-hidden">
+    <div class="max-w-full w-lg">
       <CommandPalette items={SUB_NAV_GROUPS} />
     </div>
   )

@@ -1,6 +1,6 @@
 # Document Website TODO
 
-- [ ] slot tags in "Api Reference" should become titles and the content is its css variables, data attribute and aria attribute tables
+- [ ] slot tags in "Api Reference" should become titles and the content is slot's css variables, data attribute and aria attribute tables, similar to base-ui's documentation.
 - [ ] polish command palette UI reference from base-ui or nuxt-ui
 
 # V1

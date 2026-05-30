@@ -274,21 +274,7 @@ function extractSlotNames(node: ts.ModuleDeclaration, checker: ts.TypeChecker): 
       continue
     }
 
-    if (ts.isUnionTypeNode(statement.type)) {
-      return statement.type.types
-        .filter((typeNode): typeNode is ts.LiteralTypeNode => ts.isLiteralTypeNode(typeNode))
-        .map((typeNode) => getLiteralStringText(typeNode.literal))
-        .filter((name): name is string => Boolean(name))
-    }
-
-    if (ts.isLiteralTypeNode(statement.type)) {
-      const name = getLiteralStringText(statement.type.literal)
-      return name ? [name] : []
-    }
-
-    // Fallback: resolve via type checker (handles alias references like `export type Slot = SomeSharedSlots`)
-    const resolvedType = checker.getTypeFromTypeNode(statement.type)
-    const names = extractStringLiteralsFromType(resolvedType)
+    const names = extractSlotNamesFromTypeNode(statement.type, checker)
     if (names.length > 0) {
       return names
     }
@@ -297,14 +283,32 @@ function extractSlotNames(node: ts.ModuleDeclaration, checker: ts.TypeChecker): 
   return []
 }
 
+function extractSlotNamesFromTypeNode(typeNode: ts.TypeNode, checker: ts.TypeChecker): string[] {
+  if (ts.isUnionTypeNode(typeNode)) {
+    return uniqueStrings(typeNode.types.flatMap((node) => extractSlotNamesFromTypeNode(node, checker)))
+  }
+
+  if (ts.isLiteralTypeNode(typeNode)) {
+    const name = getLiteralStringText(typeNode.literal)
+    return name ? [name] : []
+  }
+
+  // Resolve aliases and namespace references such as `BaseSelectT.Slot`.
+  return extractStringLiteralsFromType(checker.getTypeFromTypeNode(typeNode))
+}
+
 function extractStringLiteralsFromType(type: ts.Type): string[] {
   if (type.isStringLiteral()) {
     return [type.value]
   }
   if (type.isUnion()) {
-    return type.types.flatMap(extractStringLiteralsFromType)
+    return uniqueStrings(type.types.flatMap(extractStringLiteralsFromType))
   }
   return []
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)]
 }
 
 function extractItemsAliasPropDocs(

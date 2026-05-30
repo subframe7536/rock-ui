@@ -66,7 +66,6 @@ export function DocsShell(props: DocsShellProps) {
           scrollRoot = element
           syncScrolled()
         }}
-        data-docs-scroll-root="true"
         class={cn('scroll-smooth bg-background h-full overflow-y-auto', 'md:ml-72')}
         onScroll={syncScrolled}
       >
